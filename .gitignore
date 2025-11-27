@@ -1,0 +1,65 @@
+# ----------------------------
+# Node Modules  
+# ----------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ----------------------------
+# Environment Variables  
+# ----------------------------
+.env
+.env.local
+.env.*.local
+
+# Do NOT upload secrets
+config/google-vision-key.json
+config/*.json
+
+# ----------------------------
+# Build / Cache  
+# ----------------------------
+dist/
+build/
+coverage/
+tmp/
+temp/
+.cache/
+logs/
+*.log
+
+# ----------------------------
+# OS / IDE Files  
+# ----------------------------
+.DS_Store
+Thumbs.db
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# JetBrains (WebStorm)
+.idea/
+*.iml
+
+# ----------------------------
+# Uploads / Static Temp Files  
+# ----------------------------
+uploads/
+public/uploads/
+public/temp/
+
+# ----------------------------
+# Mongoose / Database Dumps  
+# ----------------------------
+*.bson
+*.gz
+dump/
+
+# ----------------------------
+# Generated Files  
+# ----------------------------
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

@@ -1,0 +1,61 @@
+<h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white">
+  Welcome back, <%= user ? user.name : "User" %> 👋
+</h1>
+
+<!-- Featured Properties -->
+<section class="mt-8">
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+    Featured Properties
+  </h2>
+
+  <% if (properties && properties.length > 0) { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+      <% properties.forEach(p => { %>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group">
+          <img
+            alt="<%= p.title %>"
+            class="w-full h-48 object-cover"
+            src="<%= p.image || 'https://via.placeholder.com/400x250' %>"
+          />
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><%= p.title %></h3>
+            <p class="text-gray-500 dark:text-gray-400 mt-1"><%= p.details %></p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">No featured properties available.</p>
+  <% } %>
+</section>
+
+<!-- Active Tenders -->
+<section class="mt-12">
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+    Active Tenders
+  </h2>
+
+  <% if (tenders && tenders.length > 0) { %>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+      <% tenders.forEach(t => { %>
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group">
+          <img
+            alt="<%= t.title %>"
+            class="w-full h-48 object-cover"
+            src="<%= t.image || 'https://via.placeholder.com/400x250' %>"
+          />
+          <div class="p-5">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><%= t.title %></h3>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">
+              <%= t.location %> |
+              Deadline:
+              <%= t.deadline ? new Date(t.deadline).toDateString() : "N/A" %>
+            </p>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } else { %>
+    <p class="text-gray-500 dark:text-gray-400 text-sm">No active tenders available.</p>
+  <% } %>
+</section>

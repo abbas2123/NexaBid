@@ -1,0 +1,199 @@
+<div>
+
+  <!-- PAGE TITLE -->
+  <h1 class="text-2xl font-bold mb-6">User Management</h1>
+
+  <!-- SEARCH BAR -->
+  <div class="flex justify-between mb-4">
+    <input 
+      type="text"
+      id="searchInput"
+      placeholder="Search users..."
+      class="border px-4 py-2 rounded w-1/3"
+    />
+
+    <select id="roleFilter" class="border px-4 py-2 rounded">
+      <option value="">All Roles</option>
+      <option value="user">Users</option>
+      <option value="vendor">Vendors</option>
+      <option value="admin">Admins</option>
+    </select>
+  </div>
+
+  <!-- USER TABLE -->
+  <div class="bg-white rounded-lg border p-4 overflow-x-auto">
+    <table class="w-full text-left" id="userTable">
+      <thead>
+        <tr class="text-gray-600 border-b">
+          <th class="py-3">Name</th>
+          <th class="py-3">Email</th>
+          <th class="py-3">Phone</th>
+          <th class="py-3">Role</th>
+          <th class="py-3">Status</th>
+          <th class="py-3">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% users.forEach(u => { %>
+          <tr class="border-b user-row">
+            <td class="py-3"><%= u.name %></td>
+            <td><%= u.email %></td>
+            <td><%= u.phone %></td>
+            <td><%= u.role %></td>
+            <td>
+  <span 
+    id="status-<%= u._id %>"
+    class="px-3 py-1 rounded-lg 
+    <%= u.status === 'active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800' %>">
+    
+    <%= u.status %>
+  </span>
+</td>
+           <td class="flex gap-2">
+
+        <!-- BLOCK BUTTON -->
+        <button
+          id="block-<%= u._id %>"
+          data-id="<%= u._id %>"
+          class="block-btn px-3 py-1 bg-red-500 text-white rounded
+                 <%= u.status === 'blocked' ? 'hidden' : '' %>">
+          Block
+        </button>
+
+        <!-- UNBLOCK BUTTON -->
+        <button
+          id="unblock-<%= u._id %>"
+          data-id="<%= u._id %>"
+          class="unblock-btn px-3 py-1 bg-green-500 text-white rounded
+                 <%= u.status === 'active' ? 'hidden' : '' %>">
+          Unblock
+        </button>
+
+      </td>
+          </tr>
+        <% }) %>
+      </tbody>
+
+    </table>
+  </div>
+
+</div>
+
+<!-- BLOCK / UNBLOCK AJAX -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.getElementById("searchInput").addEventListener("input", filterUsers);
+document.getElementById("roleFilter").addEventListener("change", filterUsers);
+
+function filterUsers() {
+  let query = document.getElementById("searchInput").value.toLowerCase();
+  let roleFilter = document.getElementById("roleFilter").value;
+
+  document.querySelectorAll(".user-row").forEach(row => {
+    let name = row.children[0].textContent.toLowerCase();
+    let email = row.children[1].textContent.toLowerCase();
+    let role = row.children[3].textContent;
+
+    let matchSearch = name.includes(query) || email.includes(query);
+    let matchRole = !roleFilter || role === roleFilter;
+
+    row.style.display = matchSearch && matchRole ? "" : "none";
+  });
+}
+document.addEventListener("DOMContentLoaded", () => {
+
+    // BLOCK USER
+    document.querySelectorAll(".block-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const userId = btn.dataset.id;
+
+            const confirm = await Swal.fire({
+                title: "Block User?",
+                text: "This user will not be able to login.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#e02424",
+                confirmButtonText: "Block",
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await fetch(`/admin/user/block/${userId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire("Blocked!", data.message, "success");
+
+                // Update UI instantly
+                btn.classList.add("hidden");
+                document.querySelector(`#unblock-${userId}`).classList.remove("hidden");
+
+                const status = document.querySelector(`#status-${userId}`);
+
+status.textContent = "blocked";
+
+// REMOVE active styles
+status.classList.remove("bg-green-200", "text-green-800");
+
+// ADD blocked styles
+status.classList.add("bg-red-200", "text-red-800");
+            } else {
+                Swal.fire("Error", data.message, "error");
+            }
+        });
+    });
+
+
+    // UNBLOCK USER
+    document.querySelectorAll(".unblock-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const userId = btn.dataset.id;
+
+            const confirm = await Swal.fire({
+                title: "Unblock User?",
+                text: "This user will be able to login again.",
+                icon: "info",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Unblock"
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            const res = await fetch(`/admin/user/unblock/${userId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" }
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                Swal.fire("Unblocked!", data.message, "success");
+
+                // Update UI instantly
+                btn.classList.add("hidden");
+                document.querySelector(`#block-${userId}`).classList.remove("hidden");
+
+               const status = document.querySelector(`#status-${userId}`);
+
+status.textContent = "active";
+
+// REMOVE blocked styles
+status.classList.remove("bg-red-200", "text-red-800");
+
+// ADD active styles
+status.classList.add("bg-green-200", "text-green-800");
+            } else {
+                Swal.fire("Error", data.message, "error");
+            }
+        });
+    });
+
+});
+</script>

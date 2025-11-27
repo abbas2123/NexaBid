@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title><%= title %> - NexaBid</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#007AFF",
+            "background-light": "#F7FAFC",
+            "background-dark": "#1A202C",
+          },
+          fontFamily: {
+            display: ["Inter", "sans-serif"],
+          },
+          borderRadius: {
+            DEFAULT: "0.75rem",
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display">
+  <div class="min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <%- include("../../partials/user/header.ejs", { user }) %>
+
+    <!-- Main Content -->
+    <main class="w-full flex justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
+      <div class="w-full max-w-[1800px] grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-14">
+        
+        <!-- Center content: page body -->
+        <div class="lg:col-span-2 space-y-10">
+          <%- body %>
+        </div>
+
+       <aside class="space-y-6 lg:pt-10">
+          <%- include("../../partials/user/quickActions.ejs", { user }) %>
+        </aside>
+
+
+      </div> 
+    </main>
+
+    <!-- Footer -->
+    <%- include("../../partials/user/footer.ejs") %>
+  </div>
+ <script>
+window.alert = function(message) {
+  Swal.fire({
+    icon: "info",
+    title: "Notice",
+    text: message
+  });
+};
+</script>
+</body>
+</html>

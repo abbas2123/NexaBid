@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title><%= title || "Verify OTP - NexaBid" %></title>
+
+<!-- TailwindCSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+body {
+  font-family: 'Public Sans', sans-serif;
+}
+.otp-input {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 20px;
+}
+</style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center px-4">
+
+<!-- Mobile Header with Hamburger -->
+<div class="w-full flex justify-between items-center py-4 md:hidden">
+  <h1 class="text-xl font-bold text-gray-900">NexaBid</h1>
+  <button id="menu-toggle" class="text-2xl text-gray-600">☰</button>
+</div>
+
+<!-- Mobile Dropdown -->
+<div id="mobile-menu" class="hidden md:hidden w-full bg-gray-200 p-4 text-center space-y-2">
+  <a href="/" class="block text-gray-700 hover:text-primary">Home</a>
+  <a href="/auth/login" class="block text-gray-700 hover:text-primary">Login</a>
+  <a href="/auth/signup" class="block text-gray-700 hover:text-primary">Sign up</a>
+</div>
+
+<!-- OTP Card -->
+<div class="bg-white shadow-md rounded-xl p-6 w-full max-w-md text-center">
+
+  <h2 class="text-2xl font-bold text-gray-900 mb-2">Enter the Code</h2>
+  <p class="text-gray-700 text-sm mb-6">We sent a 6-digit code to your email.</p>
+
+  <!-- OTP Form -->
+  <form id="otpForm" class="space-y-6" method="post">
+    <div class="flex justify-center gap-3">
+      <% for(let i = 1; i <= 6; i++) { %>
+        <input
+          id="otp<%= i %>"
+          maxlength="1"
+          type="text"
+          class="otp-input border-b-2 border-gray-400 focus:border-blue-600 outline-none"
+        />
+      <% } %>
+    </div>
+
+    <p id="otp-timer" class="text-red-500 font-semibold">05:00</p>
+<button id="resendOtpBtn" class="hidden text-blue-600 underline">
+  Resend OTP
+</button>
+    <button
+  id="verifyBtn"
+  type="submit"
+  class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700"
+>
+  Verify
+</button>
+  </form>
+</div>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Hamburger toggle
+document.getElementById("menu-toggle").addEventListener("click", () => {
+  document.getElementById("mobile-menu").classList.toggle("hidden");
+});
+
+// OTP auto-focus
+const inputs = document.querySelectorAll(".otp-input");
+inputs.forEach((input, idx) => {
+  input.addEventListener("input", () => {
+    if (input.value.length === 1 && idx < inputs.length - 1) {
+      inputs[idx + 1].focus();
+    }
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Backspace" && !input.value && idx > 0) {
+      inputs[idx - 1].focus();
+    }
+  });
+});
+
+// Timer countdown
+let time = 300; // 5 minutes in seconds
+const timerElement = document.getElementById("otp-timer");
+const verifyBtn = document.getElementById("verifyBtn");
+const resendBtn = document.getElementById("resendOtpBtn");
+
+const countdown = setInterval(() => {
+  let minutes = Math.floor(time / 60);
+  let seconds = time % 60;
+
+  timerElement.textContent =
+    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+  time--;
+
+  // When time ends
+  if (time < 0) {
+    clearInterval(countdown);
+
+    timerElement.textContent = "OTP Expired ❌";
+    verifyBtn.disabled = true;
+
+    // 👇 Show "Resend OTP" button
+    resendBtn.classList.remove("hidden");
+  }
+}, 1000);
+
+// Submit OTP
+document.getElementById("otpForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const otp = Array.from(inputs).map(i => i.value).join("");
+
+  if (otp.length !== 6) {
+    return Swal.fire("Invalid OTP", "Please enter 6 digits", "error");
+  }
+
+  const route = "<%= mode %>" === "forgot"
+    ? "/auth/forgot-otp"
+    : "/auth/verify-otp";
+
+  const res = await fetch(route, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId: "<%= userId %>", otp })
+  });
+
+  const data = await res.json();
+
+  if (!data.success) {
+    return Swal.fire("Error", data.message, "error");
+  }
+
+  Swal.fire("Verified!", "Redirecting...", "success");
+
+  setTimeout(() => {
+    if ("<%= mode %>" === "forgot") {
+        // Forgot password flow → go to reset password
+        window.location.replace (`/auth/reset-password?userId=<%= userId %>&mode=forgot`);
+    } else {
+        // Signup flow → go directly to dashboard
+        window.location.href = "/auth/dashboard";
+    }
+}, 1500);
+});
+</script>
+
+</body>
+</html>

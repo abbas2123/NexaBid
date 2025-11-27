@@ -1,0 +1,82 @@
+<header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+  <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16">
+
+    <div class="flex items-center justify-between h-16 sm:h-20">
+      <div class="flex items-center space-x-8">
+
+  <!-- Updated Logo -->
+  <a href="/" class="flex items-center gap-2">
+    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+    <span class="text-[#111518] text-lg sm:text-xl font-bold leading-tight">
+      NexaBid
+    </span>
+  </a>
+
+  <!-- Desktop Nav -->
+  <nav class="hidden md:flex items-center space-x-6 lg:space-x-8">
+    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/">Home</a>
+    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/tenders">Tenders</a>
+    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/properties">Properties</a>
+    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/contact">Contact Us</a>
+  </nav>
+
+</div>
+
+      <!-- RIGHT: Search + Icons + Avatar + Mobile menu -->
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        <!-- Search (hidden on very small screens) -->
+        <div class="relative hidden sm:block">
+          <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Search"
+            class="bg-gray-100 dark:bg-gray-800 border-none rounded-lg pl-10 pr-4 py-2 w-44 md:w-64 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
+          />
+        </div>
+
+        <!-- Chat Icon -->
+        <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="material-icons text-gray-600 dark:text-gray-400">chat_bubble_outline</span>
+        </button>
+
+        <!-- Notifications Icon -->
+        <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="material-icons text-gray-600 dark:text-gray-400">notifications_none</span>
+        </button>
+
+        <!-- User Avatar or Login -->
+        <% if (user) { %>
+  <div class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-700">
+    <span class="material-icons text-lg">person</span>
+  </div>
+<% } else { %>
+  <a href="/auth/login" class="text-sm sm:text-base font-semibold text-primary">
+    Login
+  </a>
+<% } %>
+
+        <!-- Mobile Menu Button -->
+        <button id="menu-btn" class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="material-icons text-gray-600 dark:text-gray-300">menu</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Nav -->
+    <div id="mobile-menu" class="md:hidden hidden pb-4 space-y-2">
+      <a href="/" class="block text-gray-700 dark:text-gray-200 font-medium">Home</a>
+      <a href="/tenders" class="block text-gray-700 dark:text-gray-200 font-medium">Tenders</a>
+      <a href="/properties" class="block text-gray-700 dark:text-gray-200 font-medium">Properties</a>
+      <a href="/contact" class="block text-gray-700 dark:text-gray-200 font-medium">Contact Us</a>
+    </div>
+  </div>
+</header>
+
+<script>
+  document.getElementById("menu-btn")?.addEventListener("click", () => {
+    const menu = document.getElementById("mobile-menu");
+    if (menu) menu.classList.toggle("hidden");
+  });
+</script>

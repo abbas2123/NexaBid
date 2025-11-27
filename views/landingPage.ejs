@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %></title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-[#f8f9fc] font-[Inter]">
+
+    <!-- HEADER -->
+<header class="flex items-center justify-between px-4 md:px-10 py-4 border-b bg-white sticky top-0 z-50">
+    <div class="flex gap-3 items-center text-[#0d121b]">
+        <svg class="w-6" viewBox="0 0 48 48" fill="currentColor">
+            <path d="M24 4H6V17.3V30.7H24V44H42V30.7V17.3H24V4Z"/>
+        </svg>
+        <h2 class="font-bold text-lg">NexaBid</h2>
+    </div>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex gap-8 text-sm font-medium">
+        <a href="/auth/signup" class="hover:text-[#2b6cee]">Properties</a>
+        <a href="/auth/signup" class="hover:text-[#2b6cee]">About Us</a>
+        <a href="/auth/signup" class="hover:text-[#2b6cee]">Contact</a>
+    </nav>
+
+    <!-- Desktop Buttons -->
+    <div class="hidden md:flex gap-2">
+        <a href="/auth/login" class="bg-[#2b6cee] text-white px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center">
+            Login
+        </a>
+        <a href="/auth/signup" class="bg-[#e7ebf3] text-[#0d121b] px-4 py-2 rounded-lg font-bold text-sm flex items-center justify-center">
+            Sign Up
+        </a>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button id="menuBtn" class="md:hidden focus:outline-none">
+        <svg class="w-7 h-7 text-[#0d121b]" fill="none" stroke="currentColor" stroke-width="2"
+             viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+</header>
+
+<!-- Mobile Dropdown Menu -->
+<div id="mobileMenu"
+     class="hidden md:hidden flex-col bg-white px-4 py-4 gap-4 text-[#0d121b] font-medium border-b">
+    <a href="/auth/signup" class="hover:text-[#2b6cee]">Properties</a>
+    <a href="/auth/signup" class="hover:text-[#2b6cee]">About Us</a>
+    <a href="/auth/signup" class="hover:text-[#2b6cee]">Contact</a>
+
+    <div class="flex gap-2 pt-3">
+        <a href="/auth/login" class="bg-[#2b6cee] text-white px-4 py-2 rounded-lg font-bold text-sm w-full text-center">
+            Login
+        </a>
+        <a href="/auth/signup" class="bg-[#e7ebf3] text-[#0d121b] px-4 py-2 rounded-lg font-bold text-sm w-full text-center">
+            Sign Up
+        </a>
+    </div>
+</div>
+
+
+
+    <!-- HERO SECTION -->
+    <section class="w-full relative">
+        <div class="min-h-[480px] flex flex-col items-center justify-center text-center gap-4 px-4 md:px-10 pb-10 bg-cover bg-center"
+            style="background-image:linear-gradient(rgba(0,0,0,.2),rgba(0,0,0,.4)),url('/images/langingPage.png');">
+            
+            <h1 class="text-white text-3xl md:text-5xl font-black">
+                Kerala's Premier Verified Marketplace
+            </h1>
+            <p class="text-white text-sm md:text-base max-w-lg">
+                Discover a secure platform for property listings, ensuring trust and transparency in every transaction.
+            </p>
+
+            <div class="flex gap-3 flex-wrap justify-center">
+                <a href="/auth/signup" class="bg-[#2b6cee] text-white px-4 py-3 rounded-lg font-bold text-center">
+                    Explore Tender
+                </a>
+                <a href="/auth/signup" class="bg-[#e7ebf3] text-[#0d121b] px-4 py-3 rounded-lg font-bold text-center">
+                    Browse Properties
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURED LISTINGS -->
+    <section class="px-4 md:px-10 mt-4">
+        <h2 class="text-lg md:text-xl font-bold text-[#0d121b] mb-3">Featured Listings</h2>
+
+        <div class="flex gap-4 overflow-x-auto pb-4 md:grid md:grid-cols-3 md:overflow-visible">
+
+            <% if (!featuredProperties || featuredProperties.length === 0) { %>
+                <p class="text-gray-600">No featured properties available</p>
+            <% } else { %>
+                <% featuredProperties.forEach(property => { %>
+                    <div class="bg-white rounded-lg shadow-sm min-w-[240px] md:min-w-0">
+                        <div class="aspect-video bg-cover bg-center rounded-t-lg"
+                            style="background-image:url('<%= property.media?.[0] || "https://via.placeholder.com/300" %>');">
+                        </div>
+                        <div class="p-3">
+                            <p class="font-medium text-[#0d121b] truncate"><%= property.title %></p>
+                            <p class="text-[#4c669a] text-sm truncate"><%= property.address || "Kerala" %></p>
+                            <p class="text-[#0d121b] font-bold mt-2">₹ <%= property.basePrice?.toLocaleString("en-IN") %></p>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } %>
+
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="text-center text-[#4c669a] mt-10 py-8 border-t text-sm">
+        <p>© <%= new Date().getFullYear() %> NexaBid. All rights reserved.</p>
+    </footer>
+<script>
+    const menuBtn = document.getElementById("menuBtn");
+    const mobileMenu = document.getElementById("mobileMenu");
+
+    menuBtn.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+        mobileMenu.classList.toggle("flex");
+    });
+</script>
+</body>
+</html>

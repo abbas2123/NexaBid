@@ -1,0 +1,53 @@
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: #333;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.sidebar-item:hover {
+  background: #f0f2f4;
+}
+
+.sidebar-item.active {
+  background: #f0f2f4;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #e5e7eb;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.analytics-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #dbe0e6;
+}
+
+.chart-placeholder {
+  height: 120px;
+  background: #f0f2f4;
+  margin-top: 20px;
+  border-radius: 8px;
+}
+
+.chart-placeholder-line {
+  height: 120px;
+  background: #eef1f3;
+  margin-top: 20px;
+  border-radius: 8px;
+}
+.sidebar-item.active {
+  background: #e5f0ff;
+  color: #0b79e0;
+  font-weight: 600;
+}

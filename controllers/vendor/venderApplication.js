@@ -1,34 +1,44 @@
-const vendorService = require('../../services/vender/applicationService');
-const statusCode = require('../../utils/statusCode');
-const OCRResult = require('../../models/OCR_Result');
-const { application } = require('express');
-const vendorApplication = require('../../models/vendorApplication');
+const vendorService = require("../../services/vender/applicationService");
+const statusCode = require("../../utils/statusCode");
+const OCRResult = require("../../models/OCR_Result");
+const { application } = require("express");
+const vendorApplication = require("../../models/vendorApplication");
 
-exports.getVendorApplicationPage = async ( req, res) =>{
+exports.getVendorApplicationPage = async (req, res) => {
   try {
-    console.log("Auth: JWT user")
+    console.log("Auth: JWT user");
 
-    const userId = req.user._id
+    if (!req.user) {
+      console.log("❌ No user — redirecting to login");
+      return res.redirect("/auth/login");
+    }
+    const user = req.user;
 
-   const existingApp = await vendorService.getApplicationStatus(req.user._id);
+    console.log("user.......", user.role);
+    if (user.role === "vendor") {
+      console.log("klndjafnladjfad");
+      return res.redirect("/auth/dashboard");
+    }
+    const existingApp = await vendorService.getApplicationStatus(user._id);
     let ocrResult = null;
+
     if (existingApp?.ocrResultId) {
       const ocrDoc = await OCRResult.findById(existingApp.ocrResultId);
-      ocrResult = ocrDoc?.extracted || null; // normalized data
+      ocrResult = ocrDoc?.extracted || null;
     }
-    res.render('vendor/vendorApplication.ejs',{
-     layout: "layouts/user/userLayout",
+    res.render("vendor/vendorApplication.ejs", {
+      layout: "layouts/user/userLayout",
       title: "Vendor Application",
       vendor: req.user,
-       user: req.user,
-      application:existingApp || null, 
-      ocrResult: ocrResult || null,    
+      user,
+      application: existingApp || null,
+      ocrResult,
       error: null,
-      success: null
-    })
+      success: null,
+    });
   } catch (err) {
-    console.error('error loading vender page:',err);
-    res.status(statusCode.INTERNAL_ERROR).send('server Error');
+    console.error("error loading vender page:", err);
+    res.status(statusCode.INTERNAL_ERROR).send("server Error");
   }
 };
 
@@ -52,20 +62,26 @@ exports.submitVendorApplication = async (req, res) => {
     // ---- 1) OCR SCAN FLOW ----
     if (actionType === "scan") {
       if (!req.files || req.files.length === 0) {
-         return res.json({
+        return res.json({
           success: false,
-          message: "Please upload at least one document"
+          message: "Please upload at least one document",
         });
       }
-
-      result = await vendorService.submitApplicationService(req.user, req.files, "scan");
-
-      updatedApp = await vendorService.getApplicationStatus(userId);
+      try {
+        result = await vendorService.submitApplicationService(
+          req.user,
+          req.files,
+          "scan"
+        );
+      } catch (err) {
+        return res.json({ success: false, message: err.message });
+      }
+      // updatedApp = await vendorService.getApplicationStatus(userId);
 
       return res.json({
         success: true,
         message: "OCR scan completed! Please confirm & submit",
-        redirectUrl: "/vendor/apply"
+        redirectUrl: "/vendor/apply",
       });
     }
 
@@ -75,15 +91,15 @@ exports.submitVendorApplication = async (req, res) => {
     if (!isConfirmed) {
       return res.json({
         success: false,
-        message: "Please confirm your details first"
+        message: "Please confirm your details first",
       });
     }
 
     // ---- 3) TERMS REQUIRED ----
     if (!req.body.terms) {
-     return res.json({
+      return res.json({
         success: false,
-        message: "You must agree to the terms"
+        message: "You must agree to the terms",
       });
     }
 
@@ -94,17 +110,16 @@ exports.submitVendorApplication = async (req, res) => {
       { new: true }
     );
 
-   return res.status(statusCode.OK).json({
-    success: true,
-    message: "Application submitted successfullt!",
-    redirectUrl: "/auth/dashboard"
-   })
-
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: "Application submitted successfullt!",
+      redirectUrl: "/auth/dashboard",
+    });
   } catch (err) {
     console.error("Submit Vendor Error:", err);
     return res.json({
       success: false,
-      message: err.message || "Something went wrong"
+      message: err.message || "Something went wrong",
     });
   }
 };

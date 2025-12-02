@@ -1,0 +1,114 @@
+<!-- PAGE TITLE -->
+<h1 class="text-3xl sm:text-4xl font-bold mb-8">All Properties</h1>
+
+<!-- PROPERTY GRID -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-auto-fit gap-10 mt-10">
+
+  <% if (properties && properties.length > 0) { %>
+
+    <% properties.forEach(p => { %>
+
+      <a 
+        href="/properties/<%= p._id %>" 
+        class="block group flex flex-col"
+      >
+
+        <!-- IMAGE -->
+        <img
+          src="<%=
+            p.media && p.media.length > 0
+              ? (p.media[0].startsWith('http') ? p.media[0] : '/' + p.media[0].replace(/^\/+/, ''))
+              : '/images/default-property.jpg'
+          %>"
+          onerror="this.onerror=null;this.src='/images/default-property.jpg';"
+          alt="<%= p.title %>"
+          loading="lazy"
+          class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105"
+        />
+
+        <!-- TITLE -->
+        <h3 class="font-semibold text-lg truncate text-slate-900 dark:text-slate-100">
+          <%= p.title %>
+        </h3>
+
+        <!-- BHK | SIZE | LOCATION -->
+        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
+
+          <% if (p.bhk) { %>
+            <span><%= p.bhk %></span>
+          <% } %>
+
+          <% if (p.size) { %>
+            <span class="mx-1">|</span>
+            <span><%= p.size %></span>
+          <% } %>
+
+          <% if (p.locationDistrict || p.location) { %>
+            <span class="mx-1">|</span>
+            <span><%= p.locationDistrict || p.location %></span>
+          <% } %>
+
+        </p>
+
+      </a>
+
+    <% }) %>
+
+  <% } else { %>
+
+    <p class="text-gray-500 col-span-full text-center text-lg py-10">
+      No properties found.
+    </p>
+
+  <% } %>
+
+</div>
+
+
+<!-- PAGINATION -->
+<div class="flex justify-center mt-12">
+
+  <% if (pagination && pagination.totalPages > 1) { %>
+
+    <div class="flex items-center space-x-2">
+
+      <!-- PREV -->
+      <% if (pagination.currentPage > 1) { %>
+        <a
+            href="/properties?page=<%= pagination.currentPage - 1 %>"
+          class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition"
+        >
+          <span class="material-symbols-outlined">chevron_left</span>
+        </a>
+      <% } %>
+
+      <!-- PAGE NUMBERS -->
+      <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+        <a
+         href="/properties?page=<%= i %>"
+          class="
+            w-10 h-10 flex items-center justify-center rounded-lg
+            <%= i === pagination.currentPage
+                ? 'bg-blue-600 text-white font-semibold'
+                : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+            %>"
+        >
+          <%= i %>
+        </a>
+      <% } %>
+
+      <!-- NEXT -->
+      <% if (pagination.currentPage < pagination.totalPages) { %>
+        <a
+         href="/properties?page=<%= pagination.currentPage + 1 %>"
+          class="p-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700 transition"
+        >
+          <span class="material-symbols-outlined">chevron_right</span>
+        </a>
+      <% } %>
+
+    </div>
+
+  <% } %>
+
+</div>

@@ -8,6 +8,8 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link rel="stylesheet"
+href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -47,6 +49,15 @@
       direction: ltr;
       -webkit-font-feature-settings: 'liga';
       -webkit-font-smoothing: antialiased;
+    }
+  </style>
+  <!-- your meta, tailwind, fonts -->
+
+  <style>
+    @layer utilities {
+      .grid-cols-auto-fit {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
     }
   </style>
 </head>

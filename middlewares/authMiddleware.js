@@ -11,12 +11,25 @@ const protectRoute = async (req, res, next) => {
     if (!token) return res.redirect("/auth/login");
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const updatedUser = await User.findById(decoded.id).lean();
 
-   const user = await User.findById(decoded.id).lean();
+    if (!updatedUser) return res.redirect("/auth/login");
 
-if(!user) return res.redirect("/auth/login");
+    if (decoded.role !== updatedUser.role) {
+      const newToken = jwt.sign(
+        { id: updatedUser._id, role: updatedUser.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" },
+      );
 
-req.user = user
+      res.cookie("user_jwt", newToken, {
+        httpOnly: true,
+        secure: false,
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+    }
+
+    req.user = updatedUser;
     next();
   } catch (err) {
     console.log("protectRoute ERROR:", err.message);
@@ -31,31 +44,31 @@ const preventAuthPages = (req, res, next) => {
   const adminToken = req.cookies.adminToken;
   console.log("Token from cookies:", token);
 
-  if(adminToken){
+  if (adminToken) {
     try {
-        const decoded = jwt.verify(adminToken,process.env.JWT_SECRET);
-        if(decoded.role==='admin'){
-            return res.redirect('/admin/dashboard');
-        }
+      const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
+      if (decoded.role === "admin") {
+        return res.redirect("/admin/dashboard");
+      }
     } catch (err) {
-        res.clearCookie(adminToken)
+      res.clearCookie(adminToken);
     }
   }
 
   if (token) {
     try {
-        const decoded = jwt.verify(token,process.env.JWT_SECRET);
-        if(decoded.role === "user"||decoded.role==="vendor"){
-            return res.redirect('/auth/dashboard');
-        }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.role === "user" || decoded.role === "vendor") {
+        return res.redirect("/auth/dashboard");
+      }
     } catch (err) {
-        res.clearCookie('token')
+      res.clearCookie("token");
     }
   }
-  
+
   next();
 };
- const isAuthenticated = (req, res, next) => {
+const isAuthenticated = (req, res, next) => {
   // If user already exists from Passport session -> OK
   if (req.user) {
     console.log("Auth: Passport session user");
@@ -64,8 +77,7 @@ const preventAuthPages = (req, res, next) => {
 
   // Else check for JWT token
   const token =
-    req.cookies?.token ||
-    req.headers["authorization"]?.replace("Bearer ", "");
+    req.cookies?.token || req.headers["authorization"]?.replace("Bearer ", "");
 
   if (!token) {
     console.log("Auth: No token found");
@@ -93,7 +105,6 @@ const checkForgotOtp = (req, res, next) => {
   next();
 };
 
-
 const checkResetPassword = (req, res, next) => {
   const { userId, mode } = req.query;
 
@@ -103,12 +114,19 @@ const checkResetPassword = (req, res, next) => {
 
   next();
 };
- const nochache = function noCache(req, res, next) {
-    console.log("nocache..hit");
+const nochache = function noCache(req, res, next) {
+  console.log("nocache..hit");
   res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   res.setHeader("Pragma", "no-cache");
   res.setHeader("Expires", "0");
   next();
-}
+};
 
-module.exports = { protectRoute, preventAuthPages ,isAuthenticated,checkResetPassword,checkForgotOtp,nochache};
+module.exports = {
+  protectRoute,
+  preventAuthPages,
+  isAuthenticated,
+  checkResetPassword,
+  checkForgotOtp,
+  nochache,
+};

@@ -1,11 +1,11 @@
 const mongoose = require("mongoose");
-const bcrypt = require('bcrypt');
+const bcrypt = require("bcrypt");
 const User = require("./models/user");
 require("dotenv").config();
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => console.log("DB Connected"))
-  .catch(err => console.log(err));
+  .catch((err) => console.log(err));
 
 async function createAdmin() {
   const hash = await bcrypt.hash("Admin@123", 10);

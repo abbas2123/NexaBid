@@ -2,7 +2,11 @@ const mongoose = require("mongoose");
 
 const propertySchema = new mongoose.Schema(
   {
-    sellerId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    sellerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
 
     title: String,
     description: String,
@@ -33,14 +37,22 @@ const propertySchema = new mongoose.Schema(
     currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
     status: { type: String, default: "draft" },
-    verificationStatus: { type: String, default: "pending", enum: ["pending","submitted", "approved", "rejected"], },
+    verificationStatus: {
+      type: String,
+      default: "pending",
+      enum: ["pending", "submitted", "approved", "rejected"],
+    },
     verificationRequestedAt: Date,
     verificationReviewedAt: Date,
-    verificationReviewerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    verificationReviewerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
 
     media: { type: Array, default: [] },
     docs: { type: Array, default: [] },
-
+bhk: String,         
+size: String,
     views: { type: Number, default: 0 },
     favouritesCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
@@ -49,9 +61,9 @@ const propertySchema = new mongoose.Schema(
     soldTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     soldAt: Date,
 
-    deletedAt: Date
+    deletedAt: Date,
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Property", propertySchema);

@@ -28,12 +28,12 @@
       Go to Admin Panel
     </button>
 
-  <% } else if (isVendor) { %>
+  <% } else if (user&&user?.role==="vendor") { %>
 
     <button
       disabled
-      class="w-full bg-gray-300 text-gray-500 font-semibold py-3 rounded-lg rounded-lg cursor-not-allowed shadow-md">
-      You are a Verified Vendor ✔
+      class="w-full bg-primary text-white font-semibold py-3 rounded-lg shadow-md hover:opacity-90 transition-opacity">
+      Create Tender 
     </button>
 
   <% } else { %>

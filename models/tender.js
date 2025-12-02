@@ -5,106 +5,106 @@ const tenderSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     dept: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     category: {
       type: String,
       required: true,
-      trim: true
+      trim: true,
     },
 
     description: {
       type: String,
-      default: null
+      default: null,
     },
 
     eligibility: {
       categories: {
         type: [String],
-        default: []
+        default: [],
       },
       minGrade: {
         type: String,
-        default: null
-      }
+        default: null,
+      },
     },
 
     type: {
       type: String,
       enum: ["open", "restricted"],
-      default: "open"
+      default: "open",
     },
 
     emdAmount: {
       type: Number,
-      default: null
+      default: null,
     },
 
     docFee: {
       type: Number,
-      default: null
+      default: null,
     },
 
     publishAt: {
       type: Date,
-      default: null
+      default: null,
     },
 
     bidStartAt: {
       type: Date,
-      default: null
+      default: null,
     },
 
     bidEndAt: {
       type: Date,
-      required: true
+      required: true,
     },
 
     techOpenAt: {
       type: Date,
-      default: null
+      default: null,
     },
 
     finOpenAt: {
       type: Date,
-      default: null
+      default: null,
     },
 
     files: {
       type: Array,
-      default: []
+      default: [],
     },
 
     version: {
       type: Number,
-      default: 1
+      default: 1,
     },
 
     status: {
       type: String,
       enum: ["draft", "published", "closed", "awarded", "cancelled"],
-      default: "draft"
+      default: "draft",
     },
 
     awardedTo: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      default: null
+      default: null,
     },
 
     awardedAt: {
       type: Date,
-      default: null
-    }
+      default: null,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Indexes

@@ -23,13 +23,13 @@ exports.getLandingPageData = async () => {
 
     const featuredProperties = await Property.find({
       isFeatured: true,
-      featuredUntil: { $gte: now }
+      featuredUntil: { $gte: now },
     }).limit(6);
 
     return {
       liveAuctions,
       upcomingAuctions,
-      featuredProperties
+      featuredProperties,
     };
   } catch (err) {
     throw err;

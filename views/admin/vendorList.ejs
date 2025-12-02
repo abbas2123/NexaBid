@@ -1,0 +1,308 @@
+<div>
+  <h1 class="text-2xl font-bold mb-6">Vendor Applications</h1>
+
+  <!-- FILTERS + SEARCH -->
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+  <!-- Search -->
+  <input 
+    id="searchInput"
+    type="text"
+    placeholder="Search by name, owner, email..."
+    class="w-full md:w-1/2 border rounded px-3 py-2"
+  />
+
+  <!-- Status Filter -->
+  <select id="statusFilter"
+      class="w-full md:w-40 border px-3 py-2 rounded">
+      <option value="">All Status</option>
+      <option value="submitted">Submitted</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+  </select>
+
+</div>
+
+  <div class="bg-white rounded-lg border p-4 overflow-x-auto">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="text-gray-600 border-b">
+          <th class="py-3">Business Name</th>
+          <th class="py-3">Owner</th>
+          <th class="py-3">Status</th>
+          <th class="py-3">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% vendorApps.forEach(v => { %>
+        <tr class="border-b">
+          <td class="py-3"><%= v.businessName %></td>
+          <td><%= v.userId?.name %></td>
+
+          <td>
+  <span id="status-<%= v._id %>"
+    class="px-3 py-1 rounded-lg 
+      <%= v.status === 'pending'
+        ? 'bg-yellow-200 text-yellow-800'
+        : v.status === 'approved'
+        ? 'bg-green-200 text-green-800'
+        : 'bg-red-200 text-red-800' %>">
+    <%= v.status %>
+  </span>
+</td>
+         <td>
+
+  <% if (v.status === "approved") { %>
+
+      <!-- REMOVE AS VENDOR BUTTON -->
+      <button 
+        class="remove-vendor-btn text-red-500 font-semibold"
+        data-id="<%= v._id %>">
+        Remove Vendor
+      </button>
+
+  <% } else { %>
+
+      <!-- REVIEW BUTTON (for pending/submitted) -->
+      <button 
+        class="review-btn text-blue-500 font-semibold"
+        data-id="<%= v._id %>">
+        Review
+      </button>
+
+  <% } %>
+
+</td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+
+<!-- ===================================== -->
+<!-- SINGLE REVIEW MODAL (FINAL CLEAN VERSION) -->
+<!-- ===================================== -->
+
+<div id="reviewModal"
+  class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
+
+  <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg p-6 relative max-h-[90vh] overflow-y-auto">
+
+    <button id="closeReviewModal" class="absolute top-3 right-3 text-gray-700 text-xl">✖</button>
+
+    <h2 class="text-2xl font-bold mb-4">Vendor Application Review</h2>
+
+    <div id="reviewContent" class="space-y-3 text-gray-700"></div>
+
+    <div class="mt-4">
+      <label class="font-semibold">Admin Comments</label>
+      <textarea id="adminComment"
+        class="w-full border rounded px-3 py-2 mt-2"
+        placeholder="Write comments here..."
+        rows="3"></textarea>
+    </div>
+
+    <div class="flex justify-end gap-3 mt-6">
+      <button id="rejectBtn" class="px-4 py-2 bg-red-500 text-white rounded">Reject</button>
+      <button id="approveBtn" class="px-4 py-2 bg-green-600 text-white rounded">Approve</button>
+    </div>
+
+  </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+let currentVendorId = null;
+
+const modal = document.getElementById("reviewModal");
+const closeModal = document.getElementById("closeReviewModal");
+const content = document.getElementById("reviewContent");
+const commentBox = document.getElementById("adminComment");
+
+
+// SAFE JSON FETCH
+async function safeFetch(url, options = {}) {
+  const res = await fetch(url, {
+    credentials: "include",
+    ...options
+  });
+
+  const text = await res.text();
+  try {
+    return { ok: res.ok, status: res.status, json: JSON.parse(text) };
+  } catch {
+    return { ok: res.ok, status: res.status, json: text };
+  }
+}
+
+
+// -------------------- OPEN REVIEW MODAL --------------------
+document.querySelectorAll(".review-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const id = btn.dataset.id;
+    currentVendorId = id;
+
+    // Update status submitted → pending
+    await safeFetch(`/admin/vendor/start-review/${id}`, { method: "PATCH" });
+
+    // Load vendor details
+    const details = await safeFetch(`/admin/vendor/details/${id}`);
+
+    if (!details.ok || !details.json.vendor) {
+      Swal.fire("Error", "Failed to load vendor details.", "error");
+      return;
+    }
+
+    const v = details.json.vendor;
+
+    // Build document list
+    let docsHTML = "";
+    if (v.documents?.length) {
+      docsHTML = `
+        <p class="font-semibold mt-3">Documents:</p>
+        <div class="grid grid-cols-2 gap-3 mt-2">
+          ${v.documents
+            .map(doc => `
+              <a href="/uploads/vendor-docs/${doc.fileId.fileName}"
+                 class="text-blue-600 underline"
+                 target="_blank">
+                 ${doc.type}
+              </a>
+            `)
+            .join("")}
+        </div>
+      `;
+    }
+
+    // Fill modal
+    content.innerHTML = `
+      <p><b>Business Name:</b> ${v.businessName}</p>
+      <p><b>PAN:</b> ${v.panNumber}</p>
+      <p><b>GST:</b> ${v.gstNumber}</p>
+      <p><b>Owner:</b> ${v.userId?.name}</p>
+      <p><b>Email:</b> ${v.userId?.email}</p>
+      <p><b>Phone:</b> ${v.userId?.phone}</p>
+      ${docsHTML}
+    `;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  });
+});
+
+
+// -------------------- CLOSE MODAL --------------------
+closeModal.addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
+
+
+// -------------------- APPROVE --------------------
+document.getElementById("approveBtn").addEventListener("click", async () => {
+  const res = await safeFetch(`/admin/vendor/approve/${currentVendorId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comment: commentBox.value })
+  });
+
+  console.log("APPROVE RESPONSE:", res);
+
+  if (!res.ok || res.json.success === false) {
+    return Swal.fire("Approval Failed", res.json.message || "Unknown error", "error");
+  }
+
+  Swal.fire("Approved!", "The vendor has been approved.", "success")
+    .then(() => location.reload());
+});
+
+
+// -------------------- REJECT --------------------
+document.getElementById("rejectBtn").addEventListener("click", async () => {
+  const res = await safeFetch(`/admin/vendor/reject/${currentVendorId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ comment: commentBox.value })
+  });
+
+  console.log("REJECT RESPONSE:", res);
+
+  if (!res.ok || res.json.success === false) {
+    return Swal.fire("Rejection Failed", res.json.message || "Unknown error", "error");
+  }
+
+  Swal.fire("Rejected", "The vendor has been rejected.", "info")
+    .then(() => location.reload());
+});
+
+document.querySelectorAll(".remove-vendor-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+
+    const id = btn.dataset.id;
+const result = await Swal.fire({
+      title: "Remove Vendor?",
+      text: "This will remove vendor access and revert the user back to a normal user.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, Remove",
+      cancelButtonText: "Cancel"
+    });
+    if (!result.isConfirmed) return;
+
+    const res = await fetch(`/admin/vendor/remove/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" }
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+        swal.fire({text:"Vendor rights removed!",
+        title:'Removed',
+        icon:"success",
+        showCancelButton:false}).then(() => location.reload());
+        //  setTimeout(() => location.reload(), 1600);
+    } else {
+        swal.fire("Failed to remove vendor");
+    }
+  });
+});
+</script>
+
+<script>
+// LIVE SEARCH + STATUS FILTER
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+
+function filterTable() {
+  const searchText = searchInput.value.toLowerCase();
+  const statusValue = statusFilter.value.toLowerCase();
+
+  document.querySelectorAll("tbody tr").forEach(row => {
+    const name = row.children[0].innerText.toLowerCase();
+    const owner = row.children[1].innerText.toLowerCase();
+    const status = row.children[2].innerText.toLowerCase();
+
+    const matchesSearch =
+      name.includes(searchText) ||
+      owner.includes(searchText);
+
+    const matchesStatus =
+      statusValue === "" || status.includes(statusValue);
+
+    row.style.display = matchesSearch && matchesStatus ? "" : "none";
+  });
+}
+
+searchInput.addEventListener("input", filterTable);
+statusFilter.addEventListener("change", filterTable);
+</script>

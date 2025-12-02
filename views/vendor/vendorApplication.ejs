@@ -406,14 +406,25 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
   /* ------------------------------
         OCR SCAN BUTTON (AJAX)
   ------------------------------ */
-  btnStartOCR?.addEventListener("click", async () => {
+ btnStartOCR?.addEventListener("click", async () => {
 
-    if (!fileInput.files.length) {
-      return Swal.fire("Error", "Please upload at least 1 document", "error");
-    }
+  if (!fileInput.files.length) {
+    return Swal.fire("Error", "Please upload at least 1 document", "error");
+  }
+
+  // Show alert immediately (no delay)
+  Swal.fire({
+    title: "Scanning...",
+    text: "OCR is processing your document.",
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => Swal.showLoading()
+  });
+
+  // tiny delay to allow UI to render the modal
+  setTimeout(async () => {
 
     actionTypeInput.value = "scan";
-
     const form = document.getElementById("vendorForm");
     const formData = new FormData(form);
 
@@ -423,7 +434,6 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
     });
 
     const data = await res.json();
-    console.log("SCAN RESPONSE:", data);
 
     if (!data.success) {
       return Swal.fire("Error", data.message, "error");
@@ -434,8 +444,9 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
     setTimeout(() => {
       window.location.href = data.redirectUrl;
     }, 1200);
-  });
 
+  }, 10);  // 👈 Very small delay makes modal instant
+});
 
   /* ------------------------------
         CONFIRM BUTTON

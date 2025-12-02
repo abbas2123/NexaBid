@@ -48,9 +48,10 @@
 
         <!-- User Avatar or Login -->
         <% if (user) { %>
-  <div class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-700">
-    <span class="material-icons text-lg">person</span>
-  </div>
+  <a href="/user/profile" 
+   class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+  <span class="material-icons text-lg">person</span>
+</a>
 <% } else { %>
   <a href="/auth/login" class="text-sm sm:text-base font-semibold text-primary">
     Login

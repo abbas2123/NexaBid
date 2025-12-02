@@ -1,23 +1,19 @@
 module.exports = (err, req, res, next) => {
   console.error("🔥 GLOBAL ERROR HANDLER:", err);
 
-  const statusCode = err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-
-  // If request is AJAX / API → return JSON
-  if (req.xhr || req.originalUrl.includes("/api")) {
-    return res.status(statusCode).json({
+  // 1️⃣ Handle Multer errors properly
+  if (err instanceof require("multer").MulterError) {
+    return res.status(400).json({
       success: false,
-      status: statusCode,
-      message,
+      message: err.code === "LIMIT_FILE_SIZE"
+        ? "File too large"
+        : err.message || "Upload error",
     });
   }
 
-  // Default → render a styled error page
-  return res.status(statusCode).render("error", {
-    layout: false,
-    title: "Error",
-    statusCode,
-    message
+  // 2️⃣ Normal error fallback
+  return res.status(500).json({
+    success: false,
+    message: err.message || "Server Error",
   });
 };

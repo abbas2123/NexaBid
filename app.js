@@ -16,6 +16,11 @@ const adminRoute = require("./routes/admin/authRoute");
 const profileRoute = require("./routes/user/userProfile");
 const fileRoute = require("./routes/admin/fileRoute");
 const authProperty = require('./routes/user/property');
+const authTender = require("./routes/user/tender");
+
+
+
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.set("view engine", "ejs");
@@ -83,7 +88,8 @@ app.use("/vendor", authVender);
 app.use("/admin", adminRoute);
 app.use("/admin/file", fileRoute);
 app.use("/user", profileRoute);
-app.use('/properties',authProperty)
+app.use('/properties',authProperty);
+app.use('/tenders',authTender);
 
 
 app.use(errorHandler);

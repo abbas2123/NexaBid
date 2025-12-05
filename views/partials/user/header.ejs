@@ -30,22 +30,84 @@
             search
           </span>
           <input
+           id="globalSearchInput"
             type="text"
             placeholder="Search"
             class="bg-gray-100 dark:bg-gray-800 border-none rounded-lg pl-10 pr-4 py-2 w-44 md:w-64 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
           />
+          <div id="searchResultsBox"
+       class="absolute left-0 top-12 w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg 
+              hidden max-h-80 overflow-y-auto z-50">
+               </div>
         </div>
-
+<script src="/js/search.js"></script>
         <!-- Chat Icon -->
         <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
           <span class="material-icons text-gray-600 dark:text-gray-400">chat_bubble_outline</span>
         </button>
 
         <!-- Notifications Icon -->
-        <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-          <span class="material-icons text-gray-600 dark:text-gray-400">notifications_none</span>
+       <!-- Notification Button -->
+<button id="notificationBtn"
+  class="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+>
+  <span class="material-icons text-gray-600 dark:text-gray-400">notifications_none</span>
+
+  <!-- Unread Count Badge -->
+  <span id="notificationBadge"
+      class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full hidden">
+</span>
+</button>
+
+<!-- Notification Modal -->
+<div id="notificationModal"
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex items-start justify-end p-4">
+
+  <div class="w-full sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 mt-16 animate-slide-down">
+
+    <div class="flex justify-between items-center mb-3">
+
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        Notifications
+      </h2>
+
+      <div class="flex items-center gap-3">
+
+        <!-- Clear All (Mark as Read) -->
+        <button id="markAllRead"
+                class="text-xs px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
+          Clear
         </button>
 
+        <!-- Close Modal -->
+        <button id="closeNotification"
+                class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Notifications List -->
+    <div id="notificationsList"
+         class="space-y-3 max-h-64 overflow-y-auto"></div>
+
+    <!-- Empty State -->
+    <div id="noNotifications"
+         class="py-6 text-center text-gray-500 dark:text-gray-400 hidden">
+      No notifications yet.
+    </div>
+
+  </div>
+</div>
+
+<style>
+  @keyframes slideDown {
+    0% { transform: translateY(-10px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  .animate-slide-down { animation: slideDown 0.25s ease-out; }
+</style>
         <!-- User Avatar or Login -->
         <% if (user) { %>
   <a href="/user/profile" 
@@ -80,4 +142,57 @@
     const menu = document.getElementById("mobile-menu");
     if (menu) menu.classList.toggle("hidden");
   });
+</script>
+
+<script>
+  const btn = document.getElementById("notificationBtn");
+  const modal = document.getElementById("notificationModal");
+  const closeBtn = document.getElementById("closeNotification");
+
+  btn.addEventListener("click", () => {
+    modal.classList.remove("hidden");
+  });
+
+  closeBtn.addEventListener("click", () => {
+    modal.classList.add("hidden");
+  });
+
+  // Click Outside Close
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.classList.add("hidden");
+    }
+  });
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const clearBtn = document.getElementById("markAllRead");
+  const list = document.getElementById("notificationsList");
+  const emptyMsg = document.getElementById("noNotifications");
+  const badge = document.getElementById("notificationBadge");
+
+  if (clearBtn) {
+    clearBtn.addEventListener("click", async () => {
+      try {
+        const res = await fetch("/notifications/mark-read", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+
+        if (res.ok) {
+          // Clear UI instantly
+          list.innerHTML = "";
+          emptyMsg.classList.remove("hidden");
+          badge.classList.add("hidden");
+
+          console.log("Notifications cleared");
+        }
+      } catch (err) {
+        console.error("Clear notifications failed", err);
+      }
+    });
+  }
+
+});
 </script>

@@ -1,17 +1,17 @@
-const { ZodError, success}=require('zod');
+const { ZodError } = require("zod");
 
+module.exports = (schema) => (req, res, next) => {
+  const result = schema.safeParse(req.body);
 
-module.exports =(schema) =>(req,res,next)=>{
-    try {
-        req.validatedData = schema.parse(req.body);
-        next();
-    } catch (err) {
-        if(err instanceof ZodError){
-            return res.status(400).json({
-                success:false,
-                message:err.errors[0].message,
-            });
-        }
-        return res.status(400).json({success:false,message:'Invalid data'});
-    }
+  if (!result.success) {
+    const issues = result.error.issues ?? [];
+
+    return res.status(400).json({
+      success: false,
+      message: issues[0]?.message || "Validation failed",
+    });
+  }
+
+  req.validatedData = result.data;
+  next();
 };

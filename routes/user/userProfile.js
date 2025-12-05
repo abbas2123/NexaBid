@@ -16,14 +16,8 @@ router.get("/logout", authController.logOut);
 router.get("/my-profile", authMiddleware.protectRoute, authController.getMyProfile);
 
 // CHANGE PASSWORD — NO FILES
-router.post(
-  "/change-password",
-  authMiddleware.protectRoute,
-  
-  authController.changePassword
-);
+router.post("/change-password",authMiddleware.protectRoute,authController.changePassword);
 
-// UPDATE PROFILE — WITH FILES!!!
 router.post(
   "/update-profile",
   authMiddleware.protectRoute,
@@ -31,7 +25,7 @@ router.post(
     console.log("🔥 BEFORE MULTER");
     next();
   },
-  uploadAvatar.any(),     // <--- TEMP: accept any fields
+  uploadAvatar.any(),     
   (req, res, next) => {
     console.log("📄 AFTER MULTER: req.file =", req.file, "req.files =", req.files && req.files.length);
     next();

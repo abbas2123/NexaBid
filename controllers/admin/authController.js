@@ -91,7 +91,7 @@ exports.getUserManagement = async (req, res) => {
 
 exports.blockUser = async (req, res) => {
   try {
-    await adminAuthService.blockUser(req.params.id);
+    await adminAuthService.blockUser(req.params.id,req);
 
     return res.json({
       success: true,

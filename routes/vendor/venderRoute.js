@@ -18,7 +18,7 @@ router.post(
   authMiddleware.isAuthenticated,
   authMiddleware.protectRoute,
   vendorUploads.array("documents", 5),
-   validate(vendorVerificationSchema),
+  //  validate(vendorVerificationSchema),
   vendorApplication.submitVendorApplication,
 );
 

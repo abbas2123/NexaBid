@@ -17,12 +17,30 @@ const profileRoute = require("./routes/user/userProfile");
 const fileRoute = require("./routes/admin/fileRoute");
 const authProperty = require('./routes/user/property');
 const authTender = require("./routes/user/tender");
+const http = require("http");
+const { Server } = require("socket.io");
+
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+app.set("io", io);
+
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
+  socket.on("join", (userId) => {
+    socket.join(userId);
+    console.log(`User joined room: ${userId}`);
+  });
+});
 
 
-
-
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(expressLayouts);
@@ -88,12 +106,13 @@ app.use("/vendor", authVender);
 app.use("/admin", adminRoute);
 app.use("/admin/file", fileRoute);
 app.use("/user", profileRoute);
-app.use('/properties',authProperty);
-app.use('/tenders',authTender);
-
+app.use("/properties", authProperty);
+app.use("/tenders", authTender);
+app.use("/search", require("./routes/user/search"));
+app.use("/notifications", require("./routes/user/notification"));
 
 app.use(errorHandler);
 
-app.listen(process.env.PORT || 3000, () => {
+server.listen(process.env.PORT || 3000, () => {
   console.log(`Server running on http://localhost:${process.env.PORT}`);
 });

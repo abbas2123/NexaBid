@@ -32,7 +32,7 @@ exports.getVendorDetails = async (req, res) => {
   try {
     const id = req.params.id;
     const vendor = await vendorService.getAllVentdorApplicationById(id);
-    console.log(vendor.documents);
+    console.log('ndsklnkdvndv',vendor.documents);
     return res.json({ success: true, vendor });
   } catch (err) {
     return res.json({ success: false, message: "Unable to load vendor" });
@@ -42,7 +42,7 @@ exports.approveVendor = async (req, res) => {
   try {
     const id = req.params.id;
     const comment = req.body.comment;
-    const vendor = await vendorService.approveVendor(id, comment);
+    const vendor = await vendorService.approveVendor(id, comment,req);
 
     res.json({ success: true, message: "Vendor approved" });
 
@@ -63,7 +63,7 @@ exports.rejectVendor = async (req, res) => {
   try {
     const id = req.params.id;
     const comment = req.body.comment;
-    const vendor = await vendorService.rejectVendor(id, comment);
+    const vendor = await vendorService.rejectVendor(id, comment,req);
 
     if (!vendor) {
       return res.json({ success: false, message: "vendor not found" });
@@ -96,7 +96,7 @@ exports.removeVendor = async (req, res) => {
   try {
     const id = req.params.id;
 
-    const result = await vendorService.removeVendorService(id);
+    const result = await vendorService.removeVendorService(id,req);
 
     return res.json({
       success: true,

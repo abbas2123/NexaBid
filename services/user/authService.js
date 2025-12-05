@@ -6,7 +6,7 @@ const { sendOtpEmail } = require("../../utils/email");
 const Property = require("../../models/property");
 const Tender = require("../../models/tender");
 const Otp = require("../../models/otp");
-const { status } = require("init");
+
 
 // ---------------- REGISTER USER ----------------
 exports.registerUser = async ({ name, email, phone, password }) => {
@@ -39,6 +39,7 @@ exports.registerUser = async ({ name, email, phone, password }) => {
   await Otp.create({
     userId: newUser._id,
     otpHash,
+    expiresAt: Date.now() + 60 * 1000,
   });
 
   sendOtpEmail(email, otp).catch((err) =>
@@ -61,6 +62,13 @@ exports.verifyOtpService = async ({ userId, otp }) => {
   if (!otpRecord) {
     const err = new Error("OTP expired or not found");
     err.statusCode = statusCode.NOT_FOUND;
+    throw err;
+  }
+
+  if (otpRecord.expiresAt < Date.now()) {
+    await Otp.deleteOne({ userId });
+    const err = new Error("OTP expired");
+    err.statusCode = statusCode.UNAUTHORIZED;
     throw err;
   }
 
@@ -200,4 +208,34 @@ exports.getDashboard = async () => {
   const property = await Property.find().limit(6);
   const tender = await Tender.find().limit(6);
   return { property, tender };
+};
+
+exports.resendOtpByUserId = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    const err = new Error("User not found");
+    err.statusCode = statusCode.NOT_FOUND;
+    throw err;
+  }
+
+  await Otp.deleteOne({ userId });
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const salt = await bcrypt.genSalt(10);
+  const otpHash = await bcrypt.hash(otp, salt);
+
+  await Otp.create({
+    userId,
+    otpHash,
+    expiresAt: Date.now() + 60 * 1000,
+  });
+
+  await sendOtpEmail(user.email, otp).catch((err) =>
+    console.log("Resend OTP email error:", err)
+  );
+
+  return {
+    success: true,
+    message: "New OTP sent to your email",
+  };
 };

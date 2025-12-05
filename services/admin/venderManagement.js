@@ -1,7 +1,6 @@
 const User = require("../../models/user");
 const vendorApplication = require("../../models/vendorApplication");
-const Tender = require("../../models/tender");
-const Property = require("../../models/property");
+const notificationService = require('../notificationService');
 
 exports.getAllVendorApplication = async () => {
   return await vendorApplication
@@ -10,7 +9,14 @@ exports.getAllVendorApplication = async () => {
     .sort({ createdAt: -1 });
 };
 exports.getAllVentdorApplicationById = async (id) => {
-  return await vendorApplication.findById(id).populate("userId");
+  return await vendorApplication
+    .findById(id)
+    .populate("userId")
+    .populate({
+      path: "documents.fileId",  // IMPORTANT
+      select: "fileName filePath type uploadedAt" // You need these in frontend
+    })
+    .lean();
 };
 
 exports.startReview = async (id) => {
@@ -25,7 +31,7 @@ exports.startReview = async (id) => {
   return vendor;
 };
 
-exports.approveVendor = async (id, comment) => {
+exports.approveVendor = async (id, comment,req) => {
   const vendor = await vendorApplication
     .findByIdAndUpdate(
       id,
@@ -37,10 +43,18 @@ exports.approveVendor = async (id, comment) => {
     role: "vendor",
     isVendor: true,
   });
+
+
+await notificationService.sendNotification(
+  vendor.userId._id,
+  "Your vendor application has been approved 🎉",
+  "/vendor/dashboard",
+  req.app.get("io")
+);
   return vendor;
 };
 
-exports.rejectVendor = async (id, comment) => {
+exports.rejectVendor = async (id, comment,req) => {
   const vendor = await vendorApplication
     .findByIdAndUpdate(
       id,
@@ -52,10 +66,18 @@ exports.rejectVendor = async (id, comment) => {
     role: "user",
     isVendor: false,
   });
+
+  await notificationService.sendNotification(
+  vendor.userId._id,
+  "Your vendor application has been rejected ",
+  "/vendor/dashboard",
+  req.app.get("io")
+);
+
   return vendor;
 };
 
-exports.removeVendorService = async (id) => {
+exports.removeVendorService = async (id,req) => {
   const vendor = await vendorApplication
     .findByIdAndUpdate(
       id,
@@ -72,5 +94,14 @@ exports.removeVendorService = async (id) => {
 
   await User.findByIdAndUpdate(vendor.userId._id, { role: "user" });
 
+  await notificationService.sendNotification(
+  vendor.userId._id,
+  "Vendor access removed by admin",
+  "/vendor/dashboard",
+  req.app.get("io")
+);
+
   return vendor;
+
+  
 };

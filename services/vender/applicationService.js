@@ -35,12 +35,11 @@ exports.submitApplicationService = async (user, files, actionType) => {
   }
   const existingApp =
     (await vendorApplication.findOne({ userId: user._id })) || {};
-  // const applicationHasOCR = existingApp?.ocrResultId ? true : false;
-
+  
   const golobalChecksums = await fileModel
     .find({ relatedType: "vendor_application" })
     .then((files) => files.map((f) => f.checksum));
-  // Load existing checksums
+  
   const existingFileChecksums = await fileModel
     .find({
       _id: { $in: existingApp.documents?.map((d) => d.fileId) || [] },
@@ -68,7 +67,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
     const fileBuffer = fs.readFileSync(filePath);
     const checksum = crypto.createHash("md5").update(fileBuffer).digest("hex");
 
-    // DUPLICATE PREVENTION — even inside single upload batch
+    
     if (existingFilesums.includes(checksum)) {
       console.log("⛔ Duplicate prevented:", file.filename);
       fs.unlinkSync(filePath);
@@ -77,10 +76,10 @@ exports.submitApplicationService = async (user, files, actionType) => {
       );
     }
 
-    // Add checksum to prevent duplicates in same upload
+    
     existingFilesums.push(checksum);
 
-    // Create file metadata
+   
     const fileData = await fileModel.create({
       ownerId: user._id,
       relatedType: "vendor_application",
@@ -100,7 +99,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
     const ocrResult = await ocrService.extractTextFromImage(filePath);
     extractedData.text += "\n" + (ocrResult.text || "");
 
-    // 🔍 Merge OCR fields
+    
     if (!extractedData.businessName && ocrResult.businessName)
       extractedData.businessName = ocrResult.businessName;
 
@@ -120,12 +119,12 @@ exports.submitApplicationService = async (user, files, actionType) => {
 
   let ocrFileId = newDocs[0]?.fileId;
 
-  // If no new file (duplicate), use last document fileId
+  
   if (!ocrFileId && existingApp?.documents?.length > 0) {
     ocrFileId = existingApp.documents[existingApp.documents.length - 1].fileId;
   }
 
-  // If STILL no fileId → block OCR
+  
   if (!ocrFileId) {
     throw new Error("Cannot run OCR — no valid document uploaded.");
   }

@@ -165,12 +165,23 @@ exports.getAllUsers = async () => {
   return await User.find().sort({ createdAt: -1 });
 };
 
-exports.blockUser = async (userId) => {
-  return await User.findByIdAndUpdate(
+exports.blockUser = async (userId, req) => {
+  const user = await User.findByIdAndUpdate(
     userId,
     { status: "blocked" },
-    { new: true },
+    { new: true }
   );
+
+  if (user) {
+    const io = req.app.get("io");
+    console.log("🚨 Forcing logout of:", userId);
+
+    io.to(userId.toString()).emit("forceLogout", {
+      message: "Your account has been blocked by admin"
+    });
+  }
+
+  return user;
 };
 
 exports.unblockUser = async (userId) => {

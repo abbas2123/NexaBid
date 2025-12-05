@@ -23,6 +23,7 @@ exports.adminLoginSchema = z.object({
 // Reset password validation
 exports.resetPasswordSchema = z
   .object({
+    userId: z.string().min(1, "User ID missing"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string(),
   })

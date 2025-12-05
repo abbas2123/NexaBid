@@ -45,6 +45,7 @@ body {
 
   <!-- OTP Form -->
   <form id="otpForm" class="space-y-6" method="post">
+    <input type="hidden" id="userIdHidden" value="<%= userId %>" />
     <div class="flex justify-center gap-3">
       <% for(let i = 1; i <= 6; i++) { %>
         <input
@@ -56,7 +57,7 @@ body {
       <% } %>
     </div>
 
-    <p id="otp-timer" class="text-red-500 font-semibold">05:00</p>
+    <p id="otp-timer" class="text-red-500 font-semibold">00:59</p>
 <button id="resendOtpBtn" class="hidden text-blue-600 underline">
   Resend OTP
 </button>
@@ -95,7 +96,7 @@ inputs.forEach((input, idx) => {
 });
 
 // Timer countdown
-let time = 300; // 5 minutes in seconds
+let time = 50; 
 const timerElement = document.getElementById("otp-timer");
 const verifyBtn = document.getElementById("verifyBtn");
 const resendBtn = document.getElementById("resendOtpBtn");
@@ -120,6 +121,29 @@ const countdown = setInterval(() => {
     resendBtn.classList.remove("hidden");
   }
 }, 1000);
+
+function restartTimer() {
+  time = 50;
+  verifyBtn.disabled = false;
+  resendBtn.classList.add("hidden");
+
+  countdown = setInterval(() => {
+    let minutes = Math.floor(time / 60);
+    let seconds = time % 60;
+
+    timerElement.textContent =
+      `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+    time--;
+
+    if (time === 0) {
+      clearInterval(countdown);
+      timerElement.textContent = "OTP Expired ❌";
+      verifyBtn.disabled = true;
+      resendBtn.classList.remove("hidden");
+    }
+  }, 1000);
+}
 
 // Submit OTP
 document.getElementById("otpForm").addEventListener("submit", async (e) => {
@@ -158,6 +182,38 @@ document.getElementById("otpForm").addEventListener("submit", async (e) => {
         window.location.href = "/auth/dashboard";
     }
 }, 1500);
+});
+
+resendBtn.addEventListener("click", async (e) => {
+  e.preventDefault(); 
+  
+  const userId = document.getElementById("userIdHidden").value;
+  
+  verifyBtn.disabled = true; 
+
+  const res = await fetch("/auth/resend-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId })
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    Swal.fire({
+      icon: "success",
+      title: "New OTP Sent",
+      text: "Your new OTP has been sent to your email"
+    });
+
+    restartTimer(); 
+  } else {
+    Swal.fire({
+      icon: "error",
+      title: "Failed",
+      text: data.message
+    });
+  }
 });
 </script>
 

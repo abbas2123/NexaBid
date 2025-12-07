@@ -1,0 +1,266 @@
+<div>
+  <h1 class="text-2xl font-bold mb-6">Property Management</h1>
+
+  <!-- FILTERS -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+
+    <!-- Search -->
+    <input 
+      id="searchInput"
+      type="text"
+      placeholder="Search by property, seller, location..."
+      class="w-full md:w-1/2 border rounded px-3 py-2"
+    />
+
+    <!-- Status Filter -->
+    <select id="statusFilter"
+      class="w-full md:w-48 border px-3 py-2 rounded">
+      <option value="">All Status</option>
+      <option value="submitted">Submitted</option>
+      <option value="approved">Approved</option>
+      <option value="rejected">Rejected</option>
+    </select>
+  </div>
+
+
+  <!-- TABLE -->
+  <div class="bg-white rounded-lg border p-4 overflow-x-auto">
+    <table class="w-full text-left">
+      <thead>
+        <tr class="text-gray-600 border-b">
+          <th class="py-3 w-20">Image</th>
+          <th class="py-3">Title</th>
+          <th class="py-3">Seller</th>
+          <th class="py-3">Price</th>
+          <th class="py-3">Verification</th>
+          <th class="py-3">Action</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <% properties.forEach(p => { %>
+        <tr class="border-b hover:bg-gray-50">
+
+          <td class="py-3">
+            <img src="<%= p.media?.length ? p.media[0].url : '/public/no-img.png' %>"
+                 class="w-16 h-16 object-cover rounded" />
+          </td>
+
+          <td class="py-3 font-semibold"><%= p.title %></td>
+
+          <td><%= p.sellerId?.name %></td>
+
+          <td class="text-green-600 font-bold">
+  <% if (p.isAuction) { %>
+    ₹<%= p.basePrice?.toLocaleString() || "-" %>
+  <% } else { %>
+    ₹<%= p.buyNowPrice?.toLocaleString() || "-" %>
+  <% } %>
+</td>
+
+          <td>
+            <% if (p.verificationStatus === "submitted") { %>
+              <span class="px-3 py-1 bg-yellow-200 text-yellow-700 rounded">Submitted</span>
+            <% } else if (p.verificationStatus === "approved") { %>
+              <span class="px-3 py-1 bg-green-200 text-green-700 rounded">Approved</span>
+            <% } else if (p.verificationStatus === "rejected") { %>
+              <span class="px-3 py-1 bg-red-200 text-red-700 rounded">Rejected</span>
+            <% } else if (p.verificationStatus === "pending") { %>
+              <span class="px-3 py-1 bg-orange-200 text-orange-700 rounded">Pending</span>
+            <% } %>
+          </td>
+
+          <td>
+            <button class="review-btn text-blue-600 font-semibold" 
+              data-id="<%= p._id %>">
+              Review
+            </button>
+          </td>
+
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- REVIEW MODAL -->
+<div id="reviewModal"
+  class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
+
+  <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg relative">
+
+    <!-- Modal Header -->
+    <div class="flex justify-between items-center p-4 border-b sticky top-0 z-50 bg-white">
+      <h2 class="text-xl font-bold">Property Review</h2>
+      <button id="closeReviewModal"
+        class="text-gray-700 text-xl font-bold hover:text-black">✖</button>
+    </div>
+
+    <!-- Modal Scrollable Content -->
+    <div class="p-4 overflow-y-auto max-h-[60vh] space-y-4">
+
+      <!-- Dynamic Content -->
+      <div id="reviewContent" class="space-y-3 text-gray-700"></div>
+
+      <!-- Admin Comments -->
+      <div>
+        <label class="font-semibold">Admin Comments</label>
+        <textarea id="adminComment"
+          class="w-full border rounded px-3 py-2 mt-2"
+          rows="3"
+          placeholder="Write comments here..."></textarea>
+      </div>
+    </div>
+
+    <!-- Footer Buttons -->
+    <div class="flex justify-end gap-3 p-4 border-t sticky bottom-0 bg-white z-50">
+      <button id="rejectBtn"
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+        Reject
+      </button>
+
+      <button id="approveBtn"
+        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+        Approve & Publish
+      </button>
+    </div>
+
+  </div>
+</div>
+<!-- SWEETALERT -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+<script>
+let currentPropertyId = null;
+const modal = document.getElementById("reviewModal");
+const closeModal = document.getElementById("closeReviewModal");
+const commentBox = document.getElementById("adminComment");
+const content = document.getElementById("reviewContent");
+
+async function safeFetch(url, options={}) {
+  const res = await fetch(url, options);
+  const text = await res.text();
+  try { return JSON.parse(text); } catch { return text; }
+}
+
+document.querySelectorAll(".review-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const id = btn.dataset.id;
+    currentPropertyId = id;
+
+    const res = await safeFetch(`/admin/property-management/${id}`);
+
+    const p = res.property;
+
+    content.innerHTML = `
+      <p><b>Title:</b> ${p.title}</p>
+      <p><b>Type:</b> ${p.type}</p>
+      <p><b>Address:</b> ${p.address}</p>
+      <p><b>Seller:</b> ${p.sellerId?.name || "Unknown"}</p>
+      <p><b>Price:</b> 
+  ${p.isAuction 
+      ? "₹" + (p.basePrice?.toLocaleString() || "-") 
+      : "₹" + (p.buyNowPrice?.toLocaleString() || "-")}
+</p>
+      <p><b>Description:</b> ${p.description}</p>
+      <p><b>Status:</b> ${p.verificationStatus}</p>
+
+      <h3 class="font-semibold mt-4">Media Files:</h3>
+      ${
+        p.media?.length
+        ? `<div class="grid grid-cols-3 gap-3 mt-2">
+            ${p.media.map(img => `
+              <div class="cursor-pointer border rounded overflow-hidden hover:ring-2 hover:ring-blue-400">
+                <img 
+                  src="${img.url}" 
+                  class="w-full h-24 object-cover modal-image" 
+                  data-url="${img.url}" />
+              </div>`).join("")}
+          </div>`
+        : `<p class="text-gray-400">No media uploaded.</p>`
+      }
+
+      <h3 class="font-semibold mt-4">Documents:</h3>
+      ${
+        p.docs?.length
+        ? `<ul class="list-disc pl-6 space-y-1 mt-2">
+            ${p.docs.map(d => `
+              <li>
+                <a href="${d.url}" 
+                   target="_blank" 
+                   class="text-blue-600 underline">
+                    ${d.name || "View Document"}
+                </a>
+              </li>`).join("")}
+          </ul>`
+        : `<p class="text-gray-400">No documents uploaded.</p>`
+      }
+    `;
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+  });
+});
+
+closeModal.addEventListener("click", () => modal.classList.add("hidden"));
+
+
+// APPROVE ACTION
+document.getElementById("approveBtn").addEventListener("click", async ()=>{
+  const res = await safeFetch(`/admin/property-management/approve/${currentPropertyId}`, {
+    method:"PATCH",
+    body: JSON.stringify({ comment: commentBox.value }),
+    headers: { "Content-Type":"application/json" }
+  });
+
+  Swal.fire({
+    title: res.success ? "Property Approved and Published!" : "Approval Failed",
+    icon: res.success ? "success" : "error",
+    confirmButtonColor: "#10b981"
+  }).then(()=> location.reload());
+});
+
+// REJECT ACTION
+document.getElementById("rejectBtn").addEventListener("click", async ()=>{
+  const res = await safeFetch(`/admin/property-management/reject/${currentPropertyId}`, {
+    method:"PATCH",
+    body: JSON.stringify({ comment: commentBox.value }),
+    headers: { "Content-Type":"application/json" }
+  });
+
+  Swal.fire({
+    title: res.success ? "Property Rejected" : "Rejection Failed",
+    icon: res.success ? "info" : "error",
+    confirmButtonColor: "#ef4444"
+  }).then(()=> location.reload());
+});
+
+
+// FILTERING
+const searchInput = document.getElementById("searchInput");
+const statusFilter = document.getElementById("statusFilter");
+
+function filterTable(){
+  const s = searchInput.value.toLowerCase();
+  const st = statusFilter.value.toLowerCase();
+
+  document.querySelectorAll("tbody tr").forEach(row=>{
+    const title = row.children[1].innerText.toLowerCase();
+    const seller = row.children[2].innerText.toLowerCase();
+    const status = row.children[4].innerText.toLowerCase();
+
+    const match =
+      (title.includes(s) || seller.includes(s)) &&
+      (st === "" || status.includes(st));
+
+    row.style.display = match ? "" : "none";
+  });
+}
+
+searchInput.addEventListener("input", filterTable);
+statusFilter.addEventListener("change", filterTable);
+
+</script>

@@ -110,9 +110,14 @@ app.use("/properties", authProperty);
 app.use("/tenders", authTender);
 app.use("/search", require("./routes/user/search"));
 app.use("/notifications", require("./routes/user/notification"));
+app.use('/admin/property-management',require('./routes/admin/propertyRoute'));
+
 
 app.use(errorHandler);
 
-server.listen(process.env.PORT || 3000, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on`);
+  console.log(`➡ Local:   http://localhost:${PORT}`);
 });

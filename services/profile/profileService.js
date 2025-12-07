@@ -10,18 +10,39 @@ const fs = require("fs");
 
 
 exports.userStatus = async (userId) => {
+ 
   const vendorApp = await vendorApplication
     .findOne({ userId })
     .populate("documents.fileId")
     .populate("ocrResultId");
 
-  const tenderStatus = null;
-  const propertyStatus = null;
+const query = { sellerId: userId, deletedAt: null };
+  const userProperties = await Property.find(query)
+    .sort({ createdAt: -1 })
+    .lean();
+
+
+  let propertyStatus = "No Properties Submitted";
+
+  if (userProperties.length > 0) {
+    const latest = userProperties[0];
+
+    propertyStatus = latest.verificationStatus === "submitted"
+      ? "Pending Review"
+      : latest.verificationStatus === "approved"
+      ? "Approved"
+      : latest.verificationStatus === "rejected"
+      ? "Rejected"
+      : "Unknown";
+  }
+
+  const tenderStatus = "No Tender Activity";
 
   return {
     vendorApp,
     tenderStatus,
     propertyStatus,
+    userProperties,
   };
 };
 exports.changePassword = async(userId,currectPassword,newPassword,confirmPassword)=>{

@@ -5,6 +5,7 @@ const sendMail = require("../../utils/email");
 exports.getVendorApplication = async (req, res) => {
   const vendorApps = await vendorService.getAllVendorApplication();
   console.log("vendorApps", vendorApps);
+   
   res.render("admin/vendorList", {
     layout: "layouts/admin/adminLayout",
     title: "Vendor Management - NexaBid",

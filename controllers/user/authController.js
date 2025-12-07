@@ -248,8 +248,8 @@ exports.postRestPasswordPage = async (req, res) => {
 exports.getDashboard = async (req, res) => {
   try {
     console.log("Dashboard Route Hit!");
-    const { property: properties, tender: tenders } =
-      await authService.getDashboard();
+
+    const { property: properties, tender: tenders } =await authService.getDashboard();
     return res.status(statusCode.OK).render("user/dashboard", {
       layout: "layouts/user/userLayout",
       title: "Dashboard",

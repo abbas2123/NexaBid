@@ -1,7 +1,8 @@
 const express = require("express");
 const router = express.Router();
-
+const  PropertyRequest = require('../../models/fraudFlag')
 const authController = require("../../controllers/admin/authController");
+const authProperty = require('../../controllers/admin/propertyManagement');
 const {
   adminProtect,
   preventAdminBack,
@@ -48,6 +49,10 @@ router.patch(
   adminProtect,
   venderManagement.approveVendor,
 );
+
 router.patch("/vendor/reject/:id", adminProtect, venderManagement.rejectVendor);
 router.patch("/vendor/remove/:id", adminProtect, venderManagement.removeVendor);
+
+
+
 module.exports = router;

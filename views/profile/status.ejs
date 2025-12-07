@@ -113,11 +113,11 @@
     <% } %>
 
  <!-- VIEW DOCUMENTS -->
-        <% if (application.documents?.length > 0) { %>
+      <% if (vendorApp && vendorApp.documents && vendorApp.documents.length > 0) { %>
           <p class="font-semibold mt-4">Uploaded Documents:</p>
 
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
-            <% application.documents.forEach(doc => { %>
+          <% vendorApp.documents.forEach(doc => { %>
               <a href="/uploads/vendor-docs/<%= doc.fileId.fileName %>"
                  target="_blank"
                  class="bg-gray-100 p-2 text-center rounded block hover:bg-gray-200">
@@ -148,14 +148,24 @@
   <!-- PROPERTY VERIFICATION -->
   <!-- ======================= -->
 
-  <div class="bg-white shadow rounded-lg p-6">
-    <h2 class="text-xl font-semibold mb-4">Property Verification</h2>
+ <div class="bg-white shadow rounded-lg p-6 cursor-pointer hover:bg-gray-50 transition"
+     onclick="window.location.href='/user/propertyStatus'">
 
-    <% if (!propertyStatus) { %>
-      <p class="text-gray-600">No property verification required.</p>
-    <% } else { %>
-      <p><b>Status:</b> <%= propertyStatus %></p>
-    <% } %>
+  <div class="flex justify-between items-center">
+    <h2 class="text-xl font-semibold">Property Verification</h2>
+
+    <span class="material-symbols-outlined text-gray-500">
+      chevron_right
+    </span>
   </div>
+
+  <% if (!properties || properties.length === 0) { %>
+    <p class="text-gray-600 mt-2">No property requests found.</p>
+  <% } else { %>
+    <p class="mt-3">
+      You submitted <b><%= properties.length %></b> properties. Click to view details.
+    </p>
+  <% } %>
+</div>
 
 </div>

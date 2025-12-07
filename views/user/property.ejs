@@ -1,6 +1,61 @@
 <!-- PAGE TITLE -->
 <h1 class="text-3xl sm:text-4xl font-bold mb-8">All Properties</h1>
 
+<form action="/properties" method="GET" 
+  class="flex flex-col sm:flex-row flex-wrap gap-4 bg-white border rounded-lg shadow p-4">
+
+  <!-- TYPE FILTER -->
+  <select name="type" class="border p-2 rounded w-full sm:w-auto">
+    <option value="">All Types</option>
+    <option value="house" <%= applied?.type==="house" ? "selected" : "" %>>House</option>
+    <option value="apartment" <%= applied?.type==="apartment" ? "selected" : "" %>>Apartment</option>
+    <option value="land" <%= applied?.type==="land" ? "selected" : "" %>>Land</option>
+    <option value="commercial" <%= applied?.type==="commercial" ? "selected" : "" %>>Commercial</option>
+  </select>
+
+  <!-- DISTRICT FILTER -->
+  <input 
+    name="district"
+    placeholder="District"
+    value="<%= applied?.district || '' %>" 
+    class="border p-2 rounded w-full sm:w-auto"
+  />
+
+  <!-- MIN PRICE -->
+  <input 
+    name="minPrice"
+    type="number"
+    placeholder="Min Price"
+    value="<%= applied?.minPrice || '' %>" 
+    class="border p-2 rounded w-full sm:w-auto"
+  />
+
+  <!-- MAX PRICE -->
+  <input 
+    name="maxPrice"
+    type="number"
+    placeholder="Max Price"
+    value="<%= applied?.maxPrice || '' %>" 
+    class="border p-2 rounded w-full sm:w-auto"
+  />
+
+  <!-- SUBMIT -->
+  <button 
+    class="bg-primary text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-700"
+  >
+    Filter
+  </button>
+
+  <!-- RESET BUTTON -->
+  <% if (applied && Object.keys(applied).length > 0) { %>
+    <a href="/properties" 
+       class="px-6 py-2 rounded border hover:bg-gray-100">
+      Reset
+    </a>
+  <% } %>
+
+</form>
+
 <!-- PROPERTY GRID -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-auto-fit gap-10 mt-10">
 
@@ -16,10 +71,12 @@
         <!-- IMAGE -->
         <img
           src="<%=
-            p.media && p.media.length > 0
-              ? (p.media[0].startsWith('http') ? p.media[0] : '/' + p.media[0].replace(/^\/+/, ''))
-              : '/images/default-property.jpg'
-          %>"
+  p.media && p.media.length > 0
+    ? p.media[0].url.startsWith('/')
+      ? p.media[0].url
+      : '/' + p.media[0].url
+    : 'https://via.placeholder.com/400x250'
+%>"
           onerror="this.onerror=null;this.src='/images/default-property.jpg';"
           alt="<%= p.title %>"
           loading="lazy"

@@ -1,12 +1,19 @@
 <aside id="sidebar"
-  class="fixed md:static left-0 top-0 h-screen w-64 bg-white border-r border-gray-200
-         flex flex-col transition-transform duration-300 transform -translate-x-full 
-         md:translate-x-0 z-50">
+  class="
+    fixed md:sticky
+    left-0 top-0
+    h-screen md:h-screen
+    w-64 bg-white border-r border-gray-200
+    flex flex-col
+    transition-transform duration-300
+    -translate-x-full md:translate-x-0
+    z-50
+  ">
 
   <!-- TOP SECTION -->
-  <div class="flex flex-col flex-grow">
+  <div class="flex flex-col flex-grow overflow-y-auto">
 
-    <h1 class="text-xl font-bold mb-8 px-5">Admin Panel</h1>
+    <h1 class="text-xl font-bold mb-8 px-5 mt-4">Admin Panel</h1>
 
     <nav class="flex flex-col flex-grow justify-between px-5">
 
@@ -50,17 +57,18 @@
 
       </div>
 
-      <!-- EMPTY FLEX BOX pushes logout down -->
+      <!-- PUSH LOGOUT TO BOTTOM -->
       <div class="flex-grow"></div>
 
     </nav>
   </div>
 
   <!-- LOGOUT -->
-  <div class="px-5 pb-5">
+  <div class="px-5 pb-5 border-t border-gray-200 mt-4">
     <a href="/admin/logout" id="logoutBtn" 
        class="sidebar-item flex items-center gap-2 cursor-pointer">
       <span class="material-icons">logout</span> 
+    
     </a>
   </div>
 

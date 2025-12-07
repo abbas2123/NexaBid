@@ -36,12 +36,17 @@ const propertySchema = new mongoose.Schema(
     currentHighestBid: { type: Number, default: 0 },
     currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 
-    status: { type: String, default: "draft" },
+    status: {
+  type: String,
+  enum: ["draft", "published", "archived"],
+  default: "draft"
+},
     verificationStatus: {
       type: String,
-      default: "pending",
-      enum: ["pending", "submitted", "approved", "rejected"],
+      default: "submitted",
+      enum: [ "submitted", "approved", "rejected"],
     },
+    rejectionMessage: { type: String, default: null },
     verificationRequestedAt: Date,
     verificationReviewedAt: Date,
     verificationReviewerId: {
@@ -49,8 +54,21 @@ const propertySchema = new mongoose.Schema(
       ref: "User",
     },
 
-    media: { type: Array, default: [] },
-    docs: { type: Array, default: [] },
+   media: [
+  {
+    url: { type: String, required: true },
+    type: { type: String, default: "image" }, // image/pdf/video
+    uploadedAt: { type: Date, default: Date.now }
+  }
+],
+   docs: [
+  {
+    url: { type: String, required: true },
+    name: String,
+    type: { type: String, default: "doc" },
+    uploadedAt: { type: Date, default: Date.now }
+  }
+],
 bhk: String,         
 size: String,
     views: { type: Number, default: 0 },

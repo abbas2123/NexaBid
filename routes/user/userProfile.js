@@ -32,5 +32,31 @@ router.post(
   },
   authController.updateProfile
 );
+router.get('/propertyStatus',authMiddleware.protectRoute,authController.propertyStatus);
+router.get('/propertyStatus/edit/:id', 
+    authMiddleware.protectRoute, 
+    authController.getEditPropertyPage);
 
+    router.get(
+  "/property/view/:id",
+  authMiddleware.protectRoute,
+  authController.getSinglePropertyForOwner
+);
+
+router.post(
+  "/property/delete/:id",
+  authMiddleware.protectRoute,
+  authController.deleteProperty
+);
+router.delete(
+  "/property/delete-media/:propertyId/:mediaId",
+  authMiddleware.protectRoute,
+  authController.deleteSingleMedia
+);
+
+router.delete(
+  "/property/delete-doc/:propertyId/:docId",
+  authMiddleware.protectRoute,
+  authController.deleteSingleDoc
+);
 module.exports = router;

@@ -18,4 +18,4 @@ router.get("/:id", authMiddleware.protectRoute, authController.getPropertyDetail
     { name: "docs", maxCount: 10 }
   ]),authController.updatePropertyController);
 
-module.exports=router;
+module.exports=router;      

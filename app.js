@@ -19,6 +19,28 @@ const authProperty = require('./routes/user/property');
 const authTender = require("./routes/user/tender");
 const http = require("http");
 const { Server } = require("socket.io");
+const rateLimit = require("express-rate-limit");
+
+
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000, 
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  handler: (req, res) => {
+    return res.status(429).render("error", {
+      layout: "layouts/user/userLayout",
+      message: "⚠️ Too many requests. Please wait 1 minute and try again.",
+    });
+  },
+});
+
+app.use(limiter);
+
+
+
 
 const server = http.createServer(app);
 
@@ -111,8 +133,22 @@ app.use("/tenders", authTender);
 app.use("/search", require("./routes/user/search"));
 app.use("/notifications", require("./routes/user/notification"));
 app.use('/admin/property-management',require('./routes/admin/propertyRoute'));
+app.use('/user/status',require('./routes/user/status'));
+app.use('/user/status',require('./routes/user/myProfile'));
+app.use('/admin/tender-management',require('./routes/admin/tenderRoute'));
 
 
+
+
+
+app.use((req, res) => {
+  console.log("wevdvd",req.user)
+  res.status(404).render("error", {
+    layout: 'layouts/user/userLayout',
+    message: "The page you are looking for does not exist.",
+  
+  });
+});
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;

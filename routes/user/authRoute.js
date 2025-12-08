@@ -11,6 +11,7 @@ const {
   resetPasswordSchema,
 } = require("../../validators/auth");
 const jwt = require("jsonwebtoken");
+const statusCode = require("../../utils/statusCode");
 
 router.get(
   "/signup",
@@ -28,10 +29,14 @@ router.get(
 router.get(
   "/google/callback",
   passport.authenticate("google", {
-    failureRedirect: "/auth/login",
+    failureRedirect: "/auth/login?error=google",
   }),
   async (req, res) => {
     try {
+
+       if (req.user.status === "blocked") {
+        return res.redirect("/auth/login?error=blocked");
+      }
       const token = jwt.sign(
         { id: req.user._id, role: req.user.role },
         process.env.JWT_SECRET,

@@ -85,6 +85,7 @@ exports.removeVendorService = async (id,req) => {
         status: "rejected",
         adminNote: "Vendor access removed by admin",
         role: "user",
+        isVendor: false,
       },
       { new: true },
     )

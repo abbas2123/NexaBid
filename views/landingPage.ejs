@@ -104,12 +104,21 @@
                 <% featuredProperties.forEach(property => { %>
                     <div class="bg-white rounded-lg shadow-sm min-w-[240px] md:min-w-0">
                         <div class="aspect-video bg-cover bg-center rounded-t-lg"
-                            style="background-image:url('<%= property.media?.[0] || "https://via.placeholder.com/300" %>');">
+                           style="background-image:url('<%= property.media?.[0]?.url 
+        ? property.media[0].url.startsWith('/') 
+          ? property.media[0].url 
+          : '/' + property.media[0].url 
+        : "https://via.placeholder.com/300" %>');">
                         </div>
                         <div class="p-3">
                             <p class="font-medium text-[#0d121b] truncate"><%= property.title %></p>
                             <p class="text-[#4c669a] text-sm truncate"><%= property.address || "Kerala" %></p>
-                            <p class="text-[#0d121b] font-bold mt-2">₹ <%= property.basePrice?.toLocaleString("en-IN") %></p>
+                            <p class="text-[#0d121b] font-bold mt-2">
+  ₹ <%= property.isAuction 
+        ? property.basePrice?.toLocaleString("en-IN") 
+        : property.buyNowPrice?.toLocaleString("en-IN") 
+     || "N/A" %>
+</p>
                         </div>
                     </div>
                 <% }) %>

@@ -238,7 +238,7 @@ exports.getSinglePropertyOwnedByUser = async (propertyId, userId) => {
   const property = await Property.findOne({
     _id: propertyId,
     sellerId: userId,
-    deletedAt: null, // optional but recommended
+    deletedAt: null, 
   }).lean();
 
   if (!property) {

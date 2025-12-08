@@ -14,7 +14,7 @@
 
  <!-- Profile Edit Form -->
 <form id="profileForm" 
-      action="/user/update-profile" 
+      action="/user/status/update-profile" 
       method="POST"
       enctype="multipart/form-data"
       class="space-y-6">
@@ -80,7 +80,7 @@
 
     <% if (user && user.passwordHash) { %>
 
-      <form id="passwordForm" action="/user/change-password" method="POST" class="space-y-6">
+      <form id="passwordForm" action="/user/status/change-password" method="POST" class="space-y-6">
 
         <input type="hidden" name="userId" value="<%= user._id %>">
 
@@ -140,7 +140,7 @@ document.getElementById("passwordForm")?.addEventListener("submit", async (e) =>
     didOpen: () => Swal.showLoading(),
   });
 
-  const res = await fetch("/user/change-password", {
+  const res = await fetch("/user/status/change-password", {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
@@ -188,7 +188,7 @@ document.getElementById("profileForm").addEventListener("submit", async (e) => {
     allowOutsideClick: false,
   });
 
-  const res = await fetch("/user/update-profile", {
+  const res = await fetch("/user/status/update-profile", {
     method: "POST",
     body: formData,
   });

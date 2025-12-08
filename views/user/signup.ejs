@@ -202,6 +202,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 </script>
+<script>
+const params = new URLSearchParams(window.location.search);
 
+if (params.get("error") === "blocked") {
+  Swal.fire({
+    icon: "error",
+    title: "Account Blocked",
+    text: "Your account has been blocked. Please contact support.",
+    confirmButtonColor: "#d33"
+  });
+}
+</script>
 </body>
 </html>

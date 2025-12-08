@@ -21,10 +21,8 @@ exports.getLandingPageData = async () => {
       .sort({ auctionStartsAt: 1 })
       .limit(6);
 
-    const featuredProperties = await Property.find({
-      isFeatured: true,
-      featuredUntil: { $gte: now },
-    }).limit(6);
+const featuredProperties = await Property.find({ deletedAt: null,
+    verificationStatus: "approved"}).limit(6);
 
     return {
       liveAuctions,

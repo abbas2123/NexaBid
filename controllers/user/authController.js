@@ -259,7 +259,7 @@ exports.getDashboard = async (req, res) => {
     });
   } catch (error) {
     console.error("Dashboard Error:", error);
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).render("error",{layout:"layouts/user/userLayout",message:'server Error'});
   }
 };
 

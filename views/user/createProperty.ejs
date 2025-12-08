@@ -6,7 +6,7 @@
       <%= property ? "Update Property" : "List a New Property" %>
     </h1>
 
-    <a href="/user/propertyStatus"
+    <a href="/properties"
        class="text-sm px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
       Back
     </a>
@@ -316,7 +316,7 @@ form.addEventListener("submit", async (e) => {
   }
 
   Swal.fire({ icon: "success", title: isEditMode ? "Updated!" : "Submitted!" })
-    .then(() => window.location.href = "/user/propertyStatus");
+    .then(() => window.location.href = "/user/status/propertyStatus");
 });
 
 
@@ -387,7 +387,7 @@ function initMap() {
     });
 
     try {
-      const res = await fetch(`/user/property/delete-media/${propertyId}/${mediaId}`, {
+      const res = await fetch(`/user/status/property/delete-media/${propertyId}/${mediaId}`, {
         method: "DELETE",
       });
 
@@ -449,7 +449,7 @@ function initMap() {
     });
 
     try {
-      const res = await fetch(`/user/property/delete-doc/${propertyId}/${docId}`, {
+      const res = await fetch(`/user/status/property/delete-doc/${propertyId}/${docId}`, {
         method: "DELETE",
       });
 

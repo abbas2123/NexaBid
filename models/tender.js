@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const tenderSchema = new mongoose.Schema(
   {
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     title: {
       type: String,
       required: true,
@@ -77,10 +78,17 @@ const tenderSchema = new mongoose.Schema(
       default: null,
     },
 
-    files: {
-      type: Array,
-      default: [],
+    files: [
+  {
+    fileId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "File",
+      required: true,
     },
+    fileName: String,
+    size: Number,
+  }
+],
 
     version: {
       type: Number,
@@ -89,7 +97,7 @@ const tenderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["draft", "published", "closed", "awarded", "cancelled"],
+      enum: ["draft","rejected", "published", "closed", "awarded", "cancelled"],
       default: "draft",
     },
 
@@ -103,7 +111,9 @@ const tenderSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    adminComment: { type: String, default: null },
   },
+    
   { timestamps: true },
 );
 

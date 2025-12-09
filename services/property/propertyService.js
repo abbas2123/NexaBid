@@ -8,7 +8,8 @@ exports.getProperties = async (page = 1, filters = {}) => {
 
   const query = {
     status: "published",
-    verificationStatus: "approved"
+    verificationStatus: "approved",
+    deletedAt:null
   };
 
   // TYPE FILTER
@@ -58,11 +59,24 @@ exports.getProperties = async (page = 1, filters = {}) => {
     },
   };
 };
-exports.getPropertyDetails = async (id) => {
-  return await Property.findOne({
-    _id: id,
-    verificationStatus: "approved",
-  }).lean();
+exports.getPropertyDetails = async (propertyId, user) => {
+  const property = await Property.findById(propertyId)
+    .populate("soldTo", "name email phone")
+    .populate("currentHighestBidder", "name email")
+    .lean();
+
+  if (!property) return null;
+
+  // If property is NOT approved
+  if (property.verificationStatus !== "approved") {
+
+    // allow ONLY owner OR admin
+    if (property.sellerId.toString() !== user._id.toString() && user.role !== "admin") {
+      return null;
+    }
+  }
+
+  return property;
 };
 
 
@@ -153,7 +167,8 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     error.statusCode = statusCode.NOT_FOUND;
     throw error;
   }
-
+console.log('wefwe',body.auctionStartsAt);
+console.log('wefwe',body.auctionEndsAt)
   // update base fields
   existingProperty.title = body.title;
   existingProperty.description = body.description;

@@ -200,6 +200,27 @@
 </aside>
   </div>
 
+  <% if (property.status === "owned" && property.soldTo && property.currentHighestBid) { %>
+    <div class="mt-6 p-4 bg-green-100 border rounded-lg">
+      <p class="font-bold text-lg text-green-800">Auction Winner</p>
+
+      <p class="text-gray-700 mt-1">
+        Winner: <%= property.soldTo.name || property.soldTo.email || property.soldTo._id %>
+      </p>
+
+      <p class="text-gray-700 mt-1">
+        Final Price:
+        ₹<%= Number(property.currentHighestBid || 0).toLocaleString("en-IN") %>
+      </p>
+
+      <p class="text-xs text-gray-500 mt-1">
+        Sold At:
+        <%= property.soldAt ? property.soldAt.toLocaleString("en-IN") : "N/A" %>
+      </p>
+    </div>
+  <% } %>
+
+
 </div>
 
 

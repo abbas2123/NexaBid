@@ -20,28 +20,10 @@ const authTender = require("./routes/user/tender");
 const http = require("http");
 const { Server } = require("socket.io");
 const rateLimit = require("express-rate-limit");
+const cron = require("node-cron");
+const auctionUpdates = require("./cron/auctionUpdate");
 
-
-
-const limiter = rateLimit({
-  windowMs: 60 * 1000, 
-  max: 50,
-  standardHeaders: true,
-  legacyHeaders: false,
-
-  handler: (req, res) => {
-    return res.status(429).render("error", {
-      layout: "layouts/user/userLayout",
-      message: "⚠️ Too many requests. Please wait 1 minute and try again.",
-    });
-  },
-});
-
-app.use(limiter);
-
-
-
-
+cron.schedule("*/1 * * * *", auctionUpdates);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -59,7 +41,6 @@ io.on("connection", (socket) => {
     console.log(`User joined room: ${userId}`);
   });
 });
-
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -121,6 +102,22 @@ app.use((req, res, next) => {
   res.locals.user = req.user || null;
   next();
 });
+
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  handler: (req, res) => {
+    return res.status(429).render("error", {
+      layout: "layouts/user/userLayout",
+      message: "⚠️ Too many requests. Please wait 1 minute and try again.",
+    });
+  },
+});
+
+app.use(limiter);
 
 app.use("/", landingRoute);
 app.use("/auth", authRoute);

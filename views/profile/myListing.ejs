@@ -1,0 +1,306 @@
+<h1 class="text-4xl font-bold text-gray-900 dark:text-white">My Listings</h1>
+    <p class="mt-2 text-gray-600 dark:text-gray-300 text-sm">
+      You’re viewing listings as <span class="font-semibold">Owner</span>.
+    </p>
+
+    <!-- TABS -->
+    <div class="mt-8 border-b border-gray-200 dark:border-gray-700">
+      <nav aria-label="Tabs" class="-mb-px flex space-x-8">
+        <a href="#properties"
+           class="whitespace-nowrap pb-4 px-1 border-b-2 font-semibold text-gray-900 dark:text-white border-gray-900 dark:border-white">
+          My Properties
+        </a>
+        <a href="#tenders"
+           class="whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-gray-500 dark:text-gray-400 border-transparent hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600">
+          My Tenders
+        </a>
+      </nav>
+    </div>
+
+
+<section id="properties" class="mt-12">
+
+  <!-- Section Header -->
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">My Properties</h2>
+
+    <div class="flex space-x-2">
+      <button class="prop-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-gray-200 dark:bg-gray-700"
+              data-filter="all">
+        All
+      </button>
+      <button class="prop-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-background-light dark:bg-background-dark border border-gray-300 dark:border-gray-600"
+              data-filter="active">
+        Active
+      </button>
+      <button class="prop-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-background-light dark:bg-background-dark border border-gray-300 dark:border-gray-600"
+              data-filter="inactive">
+        Inactive
+      </button>
+    </div>
+  </div>
+
+  <% if (!properties || properties.length === 0) { %>
+
+    <p class="text-gray-500 dark:text-gray-400 text-lg mt-6">
+      No properties found. Create one!
+    </p>
+
+  <% } else { %>
+
+  <!-- LIVE AUCTION SECTION -->
+  <% const liveAuctions = properties.filter(p => {
+       const now = new Date();
+       const start = p.auctionStartsAt ? new Date(p.auctionStartsAt) : null;
+       const end   = p.auctionEndsAt ? new Date(p.auctionEndsAt) : null;
+       return p.isAuction && start && end && now >= start && now <= end && p.status=='published';
+  }); %>
+
+  <% if (liveAuctions.length > 0) { %>
+  <div class="mt-6 mb-12">
+
+    <h3 class="text-xl font-bold text-red-600 flex items-center gap-2">
+      🔥 Live Auctions Right Now
+    </h3>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+
+      <% liveAuctions.forEach(p => { %>
+
+        <div class="rounded-xl border border-red-300 bg-red-50 p-4 shadow-md hover:shadow-lg transition">
+
+          <div class="flex justify-between items-center">
+            <h4 class="text-lg font-bold text-gray-900"><%= p.title %></h4>
+            <span class="text-sm font-medium text-gray-800">
+              ₹<%= Number(p.basePrice).toLocaleString('en-IN') %>
+            </span>
+          </div>
+
+          <p class="text-red-600 font-semibold text-sm mt-2">
+            🔴 Auction Live!
+          </p>
+
+          <p class="text-xs text-gray-700 font-medium">
+            Ends: <%= new Date(p.auctionEndsAt).toLocaleString('en-IN') %>
+          </p>
+
+          <a href="/auction/live/<%= p._id %>"
+             class="block w-full mt-3 text-center bg-red-600 text-white font-semibold py-2 rounded-md hover:bg-red-700 shadow">
+            View Live Auction 🚀
+          </a>
+
+        </div>
+
+      <% }) %>
+
+    </div>
+
+  </div>
+  <% } %>
+
+  <!-- NORMAL LISTINGS -->
+  <div class="space-y-6">
+
+    <% properties.forEach(p => { 
+        const isActive = p.verificationStatus === "approved"; 
+        const now = new Date();
+        const start = p.auctionStartsAt ? new Date(p.auctionStartsAt) : null;
+        const end   = p.auctionEndsAt ? new Date(p.auctionEndsAt) : null;
+        const upcoming = p.isAuction && start && now < start;
+        const ended    = p.isAuction && end && now > end;
+    %>
+
+    <a href="/user/status/property/view/<%= p._id %>"
+       class="prop-card flex items-center justify-between group p-4 rounded-xl border shadow-sm hover:shadow-md bg-white transition"
+       data-status="<%= isActive ? 'active' : 'inactive' %>"
+    >
+
+      <div class="flex-1 space-y-2">
+
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold
+          <%= isActive ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600' %>">
+          <span class="w-2 h-2 rounded-full <%= isActive ? 'bg-green-600' : 'bg-gray-500' %>"></span>
+          <%= isActive ? 'Active' : 'Inactive' %>
+        </span>
+
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white">
+          <%= p.title %>
+        </h3>
+
+        <p class="text-primary font-semibold text-md">
+          <% if (p.isAuction) { %>
+          Auction Base Price: ₹<%= Number(p.basePrice).toLocaleString("en-IN") %>
+          <% } else { %>
+          Price: ₹<%= Number(p.buyNowPrice).toLocaleString("en-IN") %>
+          <% } %>
+        </p>
+
+        <% if (p.isAuction && !liveAuctions.includes(p)) { %>
+
+          <div class="text-xs pt-1 font-semibold
+           <%= upcoming ? 'text-blue-600' : (ended ? 'text-red-500' : 'text-gray-600') %>">
+           
+           <% if (upcoming) { %>
+            🕒 Auction Starts: <%= start.toLocaleString('en-IN') %>
+           <% } else if (ended) { %>
+            ❌ Auction Ended
+           <% } else { %>
+            Auction Scheduled
+           <% } %>
+
+          </div>
+
+        <% } %>
+
+      </div>
+
+      <img
+        src="<%= p.media?.length ? p.media[0].url : '/public/images/no-image.png' %>"
+        class="w-52 h-36 object-cover rounded-lg shadow ml-6"
+      />
+
+    </a>
+
+    <% }) %>
+
+  </div>
+
+  <% } %>
+
+</section>
+
+    <!-- ====================== -->
+<!-- TENDERS SECTION        -->
+<!-- ====================== -->
+<section id="tenders" class="mt-20">
+
+  <div class="flex items-center justify-between mb-8">
+    <h2 class="text-3xl font-extrabold text-gray-900 dark:text-white">My Tenders</h2>
+
+    <div class="flex space-x-2">
+      <button type="button"
+        class="tender-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white"
+        data-filter="all">
+        All
+      </button>
+      <button type="button"
+        class="tender-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-background-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        data-filter="open">
+        Open
+      </button>
+      <button type="button"
+        class="tender-filter-btn px-5 py-2 text-sm font-semibold rounded-lg bg-white dark:bg-background-dark border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        data-filter="closed">
+        Closed
+      </button>
+    </div>
+  </div>
+
+  <% if (!tenders || tenders.length === 0) { %>
+
+    <p class="text-gray-500 dark:text-gray-400 mt-10 text-lg">
+      You haven't created any tenders yet.
+    </p>
+
+  <% } else { %>
+
+  <div class="space-y-8">
+
+    <% tenders.forEach(t => {
+        const now = new Date();
+        const bidEnd = t.bidEndAt ? new Date(t.bidEndAt) : null;
+
+        const isOpen =
+          (t.status === "published" || t.status === "submitted" || t.status === "open") &&
+          bidEnd &&
+          bidEnd > now;
+
+        let label = isOpen ? "Open" : "Closed";
+
+        let badgeClass = isOpen
+          ? "bg-green-100 text-green-700"
+          : "bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-gray-200";
+
+        if (t.status === "draft") {
+          label = "Draft";
+          badgeClass = "bg-yellow-100 text-yellow-700";
+        }
+
+        if (t.status === "rejected") {
+          label = "Rejected";
+          badgeClass = "bg-red-100 text-red-700";
+        }
+    %>
+
+    <a href="/tenders/<%= t._id %>"
+      class="tender-card flex items-center justify-between gap-6 p-5 rounded-xl bg-white dark:bg-gray-900 shadow hover:shadow-md border transition"
+      data-status="<%= isOpen ? 'open' : 'closed' %>"
+    >
+
+      <div class="flex-1 space-y-2">
+
+        <!-- STATUS BADGE -->
+        <span class="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-full <%= badgeClass %>">
+          <span class="w-2 h-2 rounded-full <%= isOpen ? 'bg-green-600' : 'bg-gray-500' %>"></span>
+          <%= label %>
+        </span>
+
+        <!-- TITLE -->
+        <h3 class="text-xl font-bold text-gray-900 dark:text-white leading-tight">
+          <%= t.title %>
+        </h3>
+
+        <!-- DESCRIPTION -->
+        <p class="text-sm text-gray-600 dark:text-gray-300">
+          Department: <%= t.dept || "N/A" %>
+          <% if (t.category) { %> · Category: <%= t.category %> <% } %>
+        </p>
+
+        <!-- DATE INFO -->
+        <p class="text-sm text-gray-600 dark:text-gray-300 font-medium">
+          <% if (t.status === "draft") { %>
+            Not submitted yet
+          <% } else if (isOpen) { %>
+            Last date to bid: <%= bidEnd.toLocaleString('en-IN') %>
+          <% } else { %>
+            Closed on: <%= bidEnd ? bidEnd.toLocaleString('en-IN') : "N/A" %>
+          <% } %>
+        </p>
+
+        <% if (t.status === "rejected" && t.adminComment) { %>
+          <p class="text-xs text-red-600 mt-1">
+            <strong>Admin Message:</strong> <%= t.adminComment %>
+          </p>
+        <% } %>
+
+      </div>
+    </a>
+
+    <% }) %>
+
+  </div>
+
+  <% } %>
+
+</section>
+<script>
+  const propButtons = document.querySelectorAll(".prop-filter-btn");
+  const propCards = document.querySelectorAll(".prop-card");
+
+  propButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+
+      const filter = btn.dataset.filter;
+
+      propButtons.forEach(b => b.classList.remove("bg-gray-200","dark:bg-gray-700"));
+      btn.classList.add("bg-gray-200","dark:bg-gray-700");
+
+      propCards.forEach(card => {
+        card.style.display =
+          filter === "all" || card.dataset.status === filter
+            ? "flex"
+            : "none";
+      });
+    });
+  });
+</script>

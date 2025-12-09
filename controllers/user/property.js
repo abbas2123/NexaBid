@@ -36,8 +36,9 @@ exports.getPropertyPage = async (req, res) => {
 exports.getPropertyDetails = async (req, res) => {
   try {
     const id = req.params.id;
+    const user = req.user;
 
-    const property = await propertyService.getPropertyDetails(id);
+    const property = await propertyService.getPropertyDetails(id,user);
 
      if (!property) {
       return res.status(404).render("error", { message: "Property not found", layout:'layouts/user/userLayout'});
@@ -45,7 +46,7 @@ exports.getPropertyDetails = async (req, res) => {
 
     res.render("user/propertyDetailsPage", {
       layout: "layouts/user/userLayout",
-      user: req.user,
+      user,
       property
     });
 

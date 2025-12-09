@@ -38,7 +38,7 @@ const propertySchema = new mongoose.Schema(
 
     status: {
   type: String,
-  enum: ["draft", "published", "archived"],
+  enum: ["draft", "published", "owned" ,"closed"],
   default: "draft"
 },
     verificationStatus: {
@@ -76,7 +76,7 @@ size: String,
     isFeatured: { type: Boolean, default: false },
     featuredUntil: Date,
 
-    soldTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    soldTo: { type: mongoose.Schema.Types.ObjectId, ref: "User",default:null },
     soldAt: Date,
 
     deletedAt: Date,

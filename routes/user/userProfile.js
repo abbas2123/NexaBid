@@ -20,4 +20,10 @@ router.get(
   authMiddleware.protectRoute,
   authController.getMyProfile
 );
+
+router.get('/my-listings',authMiddleware.protectRoute,authController.getMyListingPage);
+
+router.get('/about-us',authMiddleware.protectRoute,authController.getAboutUs);
+
+router.get('/contact',authMiddleware.protectRoute,authController.getContact);
 module.exports = router;

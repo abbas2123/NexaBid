@@ -87,13 +87,13 @@ exports.removeVendorService = async (id,req) => {
         role: "user",
         isVendor: false,
       },
-      { new: true },
+      { new: true ,runValidators: true},
     )
     .populate("userId");
 
   if (!vendor) throw new Error("Vendor not found");
 
-  await User.findByIdAndUpdate(vendor.userId._id, { role: "user" });
+  await User.findByIdAndUpdate(vendor.userId._id, { role: "user" ,isVendor:false});
 
   await notificationService.sendNotification(
   vendor.userId._id,

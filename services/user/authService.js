@@ -211,7 +211,7 @@ exports.getDashboard = async () => {
 })
 .limit(6)
 .lean();
-  const tender = await Tender.find().limit(6);
+  const tender = await Tender.find({status:"published"}).limit(6);
   return { property, tender };
 };
 

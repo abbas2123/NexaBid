@@ -114,18 +114,34 @@
 
  <!-- VIEW DOCUMENTS -->
       <% if (vendorApp && vendorApp.documents && vendorApp.documents.length > 0) { %>
-          <p class="font-semibold mt-4">Uploaded Documents:</p>
+  <p class="font-semibold mt-4">Uploaded Documents:</p>
 
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
-          <% vendorApp.documents.forEach(doc => { %>
-              <a href="/uploads/vendor-docs/<%= doc.fileId.fileName %>"
-                 target="_blank"
-                 class="bg-gray-100 p-2 text-center rounded block hover:bg-gray-200">
-                <%= doc.type %>
-              </a>
-            <% }) %>
-          </div>
-        <% } %>
+  <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-2">
+
+    <% vendorApp.documents.forEach(doc => { %>
+
+      <% if (doc.fileId) { %>
+        <a 
+          href="<%= doc.fileId.fileUrl 
+                  ? doc.fileId.fileUrl 
+                  : '/uploads/vendor-docs/' + doc.fileId.fileName %>"
+          target="_blank"
+          class="bg-gray-100 p-2 text-center rounded block hover:bg-gray-200"
+        >
+          <%= doc.type %>
+        </a>
+
+      <% } else { %>
+        <!-- If fileId is null or deleted -->
+        <div class="bg-red-100 text-red-700 p-2 rounded text-center">
+          Missing File
+        </div>
+      <% } %>
+
+    <% }) %>
+
+  </div>
+<% } %>
     </div>
 
 

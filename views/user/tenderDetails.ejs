@@ -159,34 +159,53 @@
 
 
   <!-- ACTION BUTTONS -->
-  <div class="flex flex-col sm:flex-row gap-4 mt-8">
+  <!-- ACTION BUTTONS -->
+<div class="flex flex-col sm:flex-row gap-4 mt-8">
 
-    <% if (isVendor) { %>
-      <button
-        class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow">
-        Participate in Tender
-      </button>
+  <% if (isOwner) { %>
 
-      <button
-        class="px-6 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 shadow">
-        Contact Department
-      </button>
+    <!-- OWNER = cannot participate -->
+    <button disabled
+      class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
+      You Cannot Participate (Owner)
+    </button>
 
-    <% } else { %>
+    <button
+      class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow"
+      onclick="window.location.href='/user/status/tender-status'">
+      View My Tender Status
+    </button>
 
-      <button disabled
-        class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
-        Participate in Tender
-      </button>
+  <% } else if (canParticipate) { %>
 
-      <button disabled
-        class="px-6 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg cursor-not-allowed opacity-60">
-        Contact Department
-      </button>
+    <!-- VERIFIED VENDOR = can participate -->
+    <a
+      href="/vendor/tender/<%= tender._id %>/bid"
+      class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow inline-block">
+      Participate in Tender
+    </a>
 
-    <% } %>
+    <button
+      class="px-6 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 shadow">
+      Contact Department
+    </button>
 
-  </div>
+  <% } else { %>
+
+    <!-- NOT VENDOR = disabled -->
+    <button disabled
+      class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
+      Participate in Tender
+    </button>
+
+    <button disabled
+      class="px-6 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg cursor-not-allowed opacity-60">
+      Contact Department
+    </button>
+
+  <% } %>
+
+</div>
 
 </div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

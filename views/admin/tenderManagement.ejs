@@ -65,19 +65,33 @@
               </td>
 
               <!-- Status -->
-              <td>
-                <% if (t.status === "draft") { %>
-                  <span class="px-3 py-1 bg-yellow-200 text-yellow-700 rounded">Draft</span>
-                <% } else if (t.status === "submitted") { %>
-                  <span class="px-3 py-1 bg-blue-200 text-blue-700 rounded">Submitted</span>
-                <% } else if (t.status === "published") { %>
-                  <span class="px-3 py-1 bg-green-200 text-green-700 rounded">Published</span>
-                <% } else if (t.status === "closed") { %>
-                  <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded">Closed</span>
-                <% } else { %>
-                  <span class="px-3 py-1 bg-red-200 text-red-700 rounded">Rejected</span>
-                <% } %>
-              </td>
+             <td>
+  <% if (t.status === "draft") { %>
+    <span class="px-3 py-1 bg-yellow-200 text-yellow-800 rounded">Draft</span>
+
+  <% } else if (t.status === "submitted") { %>
+    <span class="px-3 py-1 bg-blue-200 text-blue-800 rounded">Submitted</span>
+
+  <% } else if (t.status === "published") { %>
+    <span class="px-3 py-1 bg-green-200 text-green-800 rounded">Published</span>
+
+  <% } else if (t.status === "awarded") { %>
+    <span class="px-3 py-1 bg-purple-200 text-purple-800 rounded">
+      Awarded
+    </span>
+
+  <% } else if (t.status === "closed") { %>
+    <span class="px-3 py-1 bg-gray-300 text-gray-700 rounded">Closed</span>
+
+  <% } else if (t.status === "rejected") { %>
+    <span class="px-3 py-1 bg-red-200 text-red-700 rounded">Rejected</span>
+
+  <% } else { %>
+    <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded">
+      Unknown
+    </span>
+  <% } %>
+</td>
 
               <!-- Actions -->
               <td>

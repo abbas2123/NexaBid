@@ -1,0 +1,123 @@
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- TITLE -->
+  <div class="mb-8">
+    <h1 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">
+      Issue Work Order
+    </h1>
+    <p class="text-gray-500 dark:text-gray-400 mt-1">
+      Final authorization to commence the project
+    </p>
+  </div>
+
+  <!-- FORM -->
+  <form
+    action="/publisher/tender/<%= tender._id %>/workorder"
+    method="POST"
+    enctype="multipart/form-data"
+    class="grid grid-cols-1 lg:grid-cols-3 gap-6"
+  >
+
+    <!-- LEFT SECTION -->
+    <div class="lg:col-span-2 flex flex-col gap-6">
+
+      <!-- TENDER DETAILS -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-6">
+        <h2 class="text-xl font-bold mb-4">Tender Details</h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-gray-500">Tender ID</p>
+            <p class="font-semibold break-all"><%= tender._id %></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500">Department</p>
+            <p class="font-semibold"><%= tender.dept || "—" %></p>
+          </div>
+
+          <div class="sm:col-span-2">
+            <p class="text-gray-500">Contract Reference</p>
+            <p class="font-semibold"><%= contractRef %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- WORK SCOPE -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-6">
+        <h2 class="text-xl font-bold mb-4">Work Scope</h2>
+
+        <textarea
+          name="description"
+          required
+          rows="6"
+          placeholder="Describe the scope of work to be performed..."
+          class="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm focus:ring-primary focus:border-primary"
+        ></textarea>
+      </div>
+
+      <!-- WORK ORDER FILE -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-6">
+        <h2 class="text-xl font-bold mb-4">Upload Work Order (PDF)</h2>
+
+        <input
+          type="file"
+          name="workOrderFile"
+          accept=".pdf"
+          required
+          class="block w-full text-sm
+                 file:mr-4 file:py-2 file:px-4
+                 file:rounded-lg file:border-0
+                 file:bg-primary file:text-white
+                 hover:file:bg-blue-700"
+        />
+
+        <p class="text-xs text-gray-500 mt-2">
+          Signed Work Order PDF (Max 10MB)
+        </p>
+      </div>
+
+    </div>
+
+    <!-- RIGHT SECTION -->
+    <div class="flex flex-col gap-6">
+
+      <!-- VENDOR DETAILS -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-6">
+        <h2 class="text-xl font-bold mb-4">Vendor Details</h2>
+
+        <div class="text-sm space-y-3">
+          <div>
+            <p class="text-gray-500">Vendor Name</p>
+            <p class="font-semibold"><%= vendor.name %></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500">Email</p>
+            <p class="font-semibold"><%= vendor.email %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-800 p-6 flex flex-col gap-4">
+        <button
+          type="submit"
+          class="w-full py-2 rounded-lg bg-primary text-white font-bold hover:bg-blue-700"
+        >
+          Issue Work Order
+        </button>
+
+        <a
+          href="/publisher/tender/<%= tender._id %>/post-award"
+          class="w-full text-center py-2 rounded-lg border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+        >
+          Cancel
+        </a>
+      </div>
+
+    </div>
+
+  </form>
+
+</div>

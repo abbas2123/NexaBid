@@ -1,11 +1,10 @@
-
 console.log("🔥 userProfile ROUTES LOADED");
 const express = require("express");
 const router = express.Router();
 
 const authController = require("../../controllers/user/userProfile");
 const authMiddleware = require("../../middlewares/authMiddleware");
-
+const uploads = require("../../middlewares/agreementupload");
 
 router.get("/profile", authMiddleware.protectRoute, authController.userProfile);
 router.get(
@@ -21,9 +20,40 @@ router.get(
   authController.getMyProfile
 );
 
-router.get('/my-listings',authMiddleware.protectRoute,authController.getMyListingPage);
+router.get(
+  "/my-listings",
+  authMiddleware.protectRoute,
+  authController.getMyListingPage
+);
 
-router.get('/about-us',authMiddleware.protectRoute,authController.getAboutUs);
+router.get("/about-us", authMiddleware.protectRoute, authController.getAboutUs);
 
-router.get('/contact',authMiddleware.protectRoute,authController.getContact);
+router.get("/contact", authMiddleware.protectRoute, authController.getContact);
+router.get(
+  "/my-participation",
+  authMiddleware.protectRoute,
+  authController.getMyParticipation
+);
+router.get(
+  "/my-participation/tender/:id",
+  authMiddleware.protectRoute,
+  authController.viewTenderPostAward
+);
+router.post(
+  "/vendor/po/:id/respond",
+  authMiddleware.protectRoute,
+  authController.vendorRespondPO
+);
+
+router.get(
+  "/:tenderId/upload",
+  authMiddleware.protectRoute,
+  authController.getUploadPage
+);
+router.post(
+  "/:tenderId/upload",
+  authMiddleware.protectRoute,
+  uploads.single("signedAgreement"),
+  authController.uploadSignedAgreement
+);
 module.exports = router;

@@ -28,14 +28,26 @@ exports.getTenderDetailsPage = async (req, res) => {
     const { tender, isVendor, canViewFull } =
       await tenderService.getTenderDetailsForUser(tenderId, user);
 
+          const isOwner =
+      user &&
+      tender.createdBy &&
+      tender.createdBy._id.toString() === user._id.toString();
+
+// If owner → force isVendor = false
+const canParticipate = isVendor && !isOwner;
+
+
     return res.render("user/tenderDetails", {
       layout: "layouts/user/userLayout",
       title: tender.title,
       tender,
       user,
-      isVendor,
+        isVendor,
+          canParticipate,
       canViewFull,
-      userId: req.user._id, 
+      userId: req.user._id,
+      isOwner,          
+    
     });
 
   } catch (err) {

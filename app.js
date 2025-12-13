@@ -133,9 +133,11 @@ app.use('/admin/property-management',require('./routes/admin/propertyRoute'));
 app.use('/user/status',require('./routes/user/status'));
 app.use('/user/status',require('./routes/user/myProfile'));
 app.use('/admin/tender-management',require('./routes/admin/tenderRoute'));
-
-
-
+app.use("/vendor/tender", require("./routes/vendor/tenderBId"));
+app.use("/vendor/payment", require("./routes/vendor/paymentRoute"));
+app.use('/user/status/my-listing',require('./routes/user/mylisting'));
+app.use('/publisher',require('./routes/vendor/postAwardRoute'));
+app.use('/admin/contract-management',require('./routes/admin/contractManagemet'));
 
 
 app.use((req, res) => {

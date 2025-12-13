@@ -1,0 +1,51 @@
+<h2 class="text-xl font-bold mb-3">Purchase Order</h2>
+
+<p><strong>PO Number:</strong> <%= po.poNumber %></p>
+<p><strong>Amount:</strong> ₹<%= po.amount.toLocaleString("en-IN") %></p>
+
+<a href="<%= po.pdfFile.fileUrl %>" class="text-blue-600 underline" target="_blank">Download PO</a>
+
+<hr class="my-4">
+
+<!-- IF vendor has NOT responded -->
+<% if (po.status === "generated") { %>
+  <form method="POST" action="/user/vendor/po/<%= po._id %>/respond" class="space-y-3">
+
+    <!-- Accept -->
+    <button name="action" value="accept"
+      class="bg-green-600 text-white px-4 py-2 rounded-md">
+      Accept PO
+    </button>
+
+    <!-- Reject -->
+   
+
+    <button name="action" value="reject"
+      class="bg-red-600 text-white px-4 py-2 rounded-md">
+      Reject PO
+    </button>
+     <textarea name="reason"
+      placeholder="Reason for rejection (optional)"
+      class="w-full mt-3 p-3 border rounded-md"></textarea>
+  </form>
+<% } %>
+
+<!-- IF vendor accepted -->
+<% if (po.status === "vendor_accepted") { %>
+  <p class="text-green-600 font-semibold">✔ You have accepted this PO.</p>
+<% } %>
+
+<!-- IF vendor rejected -->
+<% if (po.status === "vendor_rejected") { %>
+  <p class="text-red-600 font-semibold">✖ You rejected this PO.</p>
+  <p><strong>Reason:</strong> <%= po.rejectionReason %></p>
+<% } %>
+<script>
+    if (new URLSearchParams(location.search).get("response") === "accept") {
+  Swal.fire("PO Accepted!", "You accepted the purchase order.", "success");
+}
+
+if (new URLSearchParams(location.search).get("response") === "reject") {
+  Swal.fire("PO Rejected", "You rejected the purchase order.", "info");
+}
+</script>

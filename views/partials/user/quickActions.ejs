@@ -5,7 +5,7 @@
 <div class="space-y-4">
 
   <!-- Create Property -->
-  <button
+  <button onclick="window.location.href='/Properties/Create'"
     class="w-full bg-primary text-white font-semibold py-3 rounded-lg shadow-md hover:opacity-90 transition-opacity">
     Create Properties...
   </button>
@@ -31,7 +31,7 @@
   <% } else if (user&&user?.role==="vendor") { %>
 
     <button
-      disabled
+      onclick="window.location.href='/tenders/create'"
       class="w-full bg-primary text-white font-semibold py-3 rounded-lg shadow-md hover:opacity-90 transition-opacity">
       Create Tender 
     </button>

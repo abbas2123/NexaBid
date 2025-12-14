@@ -19,7 +19,11 @@ const authProperty = require('./routes/user/property');
 const authTender = require("./routes/user/tender");
 const http = require("http");
 const { Server } = require("socket.io");
+const rateLimit = require("express-rate-limit");
+const cron = require("node-cron");
+const auctionUpdates = require("./cron/auctionUpdate");
 
+cron.schedule("*/1 * * * *", auctionUpdates);
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -37,7 +41,6 @@ io.on("connection", (socket) => {
     console.log(`User joined room: ${userId}`);
   });
 });
-
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -100,6 +103,22 @@ app.use((req, res, next) => {
   next();
 });
 
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 50,
+  standardHeaders: true,
+  legacyHeaders: false,
+
+  handler: (req, res) => {
+    return res.status(429).render("error", {
+      layout: "layouts/user/userLayout",
+      message: "⚠️ Too many requests. Please wait 1 minute and try again.",
+    });
+  },
+});
+
+app.use(limiter);
+
 app.use("/", landingRoute);
 app.use("/auth", authRoute);
 app.use("/vendor", authVender);
@@ -110,9 +129,30 @@ app.use("/properties", authProperty);
 app.use("/tenders", authTender);
 app.use("/search", require("./routes/user/search"));
 app.use("/notifications", require("./routes/user/notification"));
+app.use('/admin/property-management',require('./routes/admin/propertyRoute'));
+app.use('/user/status',require('./routes/user/status'));
+app.use('/user/status',require('./routes/user/myProfile'));
+app.use('/admin/tender-management',require('./routes/admin/tenderRoute'));
+app.use("/vendor/tender", require("./routes/vendor/tenderBId"));
+app.use("/vendor/payment", require("./routes/vendor/paymentRoute"));
+app.use('/user/status/my-listing',require('./routes/user/mylisting'));
+app.use('/publisher',require('./routes/vendor/postAwardRoute'));
+app.use('/admin/contract-management',require('./routes/admin/contractManagemet'));
 
+
+app.use((req, res) => {
+  console.log("wevdvd",req.user)
+  res.status(404).render("error", {
+    layout: 'layouts/user/userLayout',
+    message: "The page you are looking for does not exist.",
+  
+  });
+});
 app.use(errorHandler);
 
-server.listen(process.env.PORT || 3000, () => {
-  console.log(`Server running on http://localhost:${process.env.PORT}`);
+const PORT = process.env.PORT || 3000;
+
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on`);
+  console.log(`➡ Local:   http://localhost:${PORT}`);
 });

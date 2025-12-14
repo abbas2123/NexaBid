@@ -162,7 +162,7 @@ exports.getPendingTasks = async () => {
 };
 
 exports.getAllUsers = async () => {
-  return await User.find().sort({ createdAt: -1 });
+  return await User.find({role:{$ne:"admin"}}).sort({ createdAt: -1 });
 };
 
 exports.blockUser = async (userId, req) => {

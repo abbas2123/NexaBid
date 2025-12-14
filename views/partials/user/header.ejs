@@ -17,7 +17,7 @@
     <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/">Home</a>
     <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/tenders">Tenders</a>
     <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/properties">Properties</a>
-    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/contact">Contact Us</a>
+    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/user/contact">Contact Us</a>
   </nav>
 
 </div>
@@ -194,5 +194,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const list = document.getElementById("notificationsList");
+  const emptyMsg = document.getElementById("noNotifications");
+  const badge = document.getElementById("notificationBadge");
+
+  async function loadNotifications() {
+    try {
+      const res = await fetch("/notifications");
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const items = data.notifications;
+
+      if (items.length === 0) {
+        emptyMsg.classList.remove("hidden");
+        badge.classList.add("hidden");
+        return;
+      }
+
+      emptyMsg.classList.add("hidden");
+      badge.classList.remove("hidden");
+      badge.textContent = items.length;
+
+      list.innerHTML = items
+        .map(n => `
+          <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+            <a href="${n.link || '#'}" class="font-medium">${n.message}</a>
+            <p class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</p>
+          </div>
+        `)
+        .join("");
+    } catch (err) {
+      console.error("Notification load failed", err);
+    }
+  }
+
+  loadNotifications(); // load once
 });
 </script>

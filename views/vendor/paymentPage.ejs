@@ -1,0 +1,22 @@
+<div class="max-w-xl mx-auto bg-white rounded-lg p-6 shadow mt-10">
+
+  <h2 class="text-2xl font-bold">Complete Tender Payment</h2>
+
+  <h3 class="text-lg mt-4">Tender: <%= tender.title %></h3>
+
+  <div class="mt-4 border rounded p-3 bg-gray-50">
+    <p>Participation Fee: <strong>₹ <%= participationFee %></strong></p>
+    <p>EMD Fee: <strong>₹ <%= emdFee %></strong></p>
+    <hr class="my-3">
+    <p class="text-xl font-bold text-green-700">Total Payable: ₹ <%= totalAmount %></p>
+  </div>
+
+  <form action="/vendor/payment/confirm" method="POST" class="mt-6">
+    <input type="hidden" name="paymentId" value="<%= paymentId %>">
+
+    <button class="w-full bg-primary text-white px-5 py-3 rounded-lg font-bold hover:bg-primary/90">
+      Confirm Payment
+    </button>
+  </form>
+
+</div>

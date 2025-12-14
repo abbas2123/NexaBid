@@ -1,0 +1,168 @@
+<div class="max-w-6xl mx-auto px-4 py-10">
+<style>
+    .admin-message {
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.5;
+}
+</style>
+  <h1 class="text-3xl font-bold text-gray-900 mb-6">My Tender Submissions</h1>
+
+  <a href="/user/status"
+     class="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-lg bg-gray-100 border hover:bg-gray-200">
+     <span class="material-symbols-outlined">arrow_back</span>
+     Back
+  </a>
+
+  <% if (!tenders || tenders.length === 0) { %>
+
+    <p class="text-gray-600 mt-10 text-lg">
+      You have not created any tenders yet.
+    </p>
+
+  <% } else { %>
+
+  <div class="bg-white shadow-md rounded-lg divide-y">
+
+    <% tenders.forEach(t => { %>
+
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5">
+
+        <!-- LEFT CONTENT -->
+        <div class="space-y-1">
+
+          <p class="text-xl font-semibold text-gray-900"><%= t.title %></p>
+
+          <p class="text-primary font-semibold text-lg">
+            Department: <%= t.dept %>
+          </p>
+
+          <!-- Status Badge -->
+          <% if (t.status === "published") { %>
+            <span class="px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+              Published
+            </span>
+          <% } else if (t.status === "submitted") { %>
+            <span class="px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
+              Pending Approval
+            </span>
+          <% } else if (t.status === "draft") { %>
+            <span class="px-3 py-1 rounded-full bg-gray-200 text-gray-700 text-xs font-semibold">
+              Draft
+            </span>
+          <% } else if (t.status === "closed") { %>
+            <span class="px-3 py-1 rounded-full bg-gray-300 text-gray-800 text-xs font-semibold">
+              Closed
+            </span>
+          <% } else if (t.status === "rejected") { %>
+            <span class="px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+              Rejected
+            </span>
+          <% } %>
+
+     <% if (t.adminComment && t.adminComment.trim() !== "") { %>
+      <p class="text-sm text-red-600 mt-2 admin-message">
+  <b>Admin Message:</b><br> 
+  <%= t.adminComment %>
+</p>
+    <% } %>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="flex flex-col sm:flex-row gap-3">
+
+          <!-- VIEW DETAILS -->
+          <a href="/tenders/<%= t._id %>"
+            class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-800 font-semibold text-sm">
+            View Details
+          </a>
+
+          <!-- EDIT: only draft & rejected -->
+          <% if (t.status === "draft" || t.status === "rejected") { %>
+            <a href="/user/status/tenders/resubmit/<%= t._id %>"
+              class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold text-sm">
+              Edit Tender
+            </a>
+          <% } %>
+
+          <!-- RE-SUBMIT button only when rejected -->
+          <% if (t.status === "rejected") { %>
+             <a href="/user/status/tenders/resubmit/<%= t._id %>"
+     class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm">
+    Re-submit
+  </a>
+          <% } %>
+
+          <!-- DELETE -->
+         <% if (t.status === "draft" || t.status === "rejected") { %>
+  <button onclick="deleteTender('<%= t._id %>')"
+    class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm">
+    Delete
+  </button>
+<% } %>
+
+        </div>
+
+      </div>
+
+    <% }) %>
+
+  </div>
+
+  <% } %>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+async function deleteTender(tenderId) {
+  const confirm = await Swal.fire({
+    title: "Are you sure?",
+    text: "This tender will be deleted permanently.",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Yes, Delete"
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    const res = await fetch(`/user/status/tenders/delete/${tenderId}`, {
+      method: "DELETE",
+      headers: { "Accept": "application/json" }
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      return Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: data.message || "Could not delete tender"
+      });
+    }
+
+    Swal.fire({
+      icon: "success",
+      title: "Deleted!",
+      text: data.message || "Tender deleted successfully",
+      timer: 1200,
+      showConfirmButton: false
+    });
+
+    setTimeout(() => window.location.reload(), 1200);
+
+  } catch (error) {
+    console.error(error);
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: "Server error occurred"
+    });
+  }
+}
+</script>

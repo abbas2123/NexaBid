@@ -1,0 +1,238 @@
+<main class="flex flex-1 justify-center py-10 px-4 sm:px-6 lg:px-8">
+  <div class="layout-content-container flex flex-col w-full max-w-4xl flex-1">
+
+    <div class="flex flex-wrap justify-between gap-3 p-4">
+      <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight">
+        Submit Bid for Tender: <%= tender.title %>
+      </h1>
+    </div>
+
+    <div class="mt-8 space-y-12">
+
+      <!-- Tender Title -->
+      <div class="bg-white p-6 rounded-xl border">
+        <label class="flex flex-col w-full">
+          <p class="text-base font-medium pb-2">Tender Title</p>
+          <input readonly value="<%= tender.title %>"
+            class="form-input w-full rounded-lg bg-gray-100 h-14 p-[15px]" />
+        </label>
+      </div>
+
+      <!-- Payment Status -->
+      <div class="bg-white p-6 rounded-xl border">
+        <h3 class="text-lg font-bold mb-6">Payment Status</h3>
+
+        <div class="flex items-center justify-between p-4 rounded-lg bg-gray-50">
+          <p class="font-medium">Participation Fee & EMD</p>
+
+          <% if (paymentStatus === "paid") { %>
+            <span class="inline-flex items-center gap-2 bg-green-200 px-3 py-1 text-sm font-semibold rounded-full">
+              <span class="material-symbols-outlined text-base">check_circle</span> Paid
+            </span>
+          <% } else { %>
+            <span class="inline-flex items-center gap-2 bg-orange-200 px-3 py-1 text-sm font-semibold rounded-full">
+              <span class="material-symbols-outlined text-base">error</span> Pending
+            </span>
+            <a href="/vendor/payment/initiate/<%= tender._id %>"
+               class="underline text-primary font-bold ml-3">Pay Now</a>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Previously Uploaded Docs -->
+      <% if (bid && (bid.proposal?.files?.length > 0 || bid.techForms?.files?.length > 0)) { %>
+        <div class="bg-white p-6 rounded-xl border mb-8">
+          <h3 class="text-xl font-bold mb-4">Previously Uploaded Documents</h3>
+
+          <% if (bid.proposal.files.length > 0) { %>
+            <p class="font-semibold mb-2">📄 Proposal Documents:</p>
+            <ul class="mb-4">
+              <% bid.proposal.files.forEach(doc => { %>
+                <li>
+                  <a href="<%= doc.fileUrl %>" target="_blank" class="text-primary underline">
+                    <%= doc.originalName || doc.fileName %>
+                  </a>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+
+          <% if (bid.techForms.files.length > 0) { %>
+            <p class="font-semibold mb-2">🛠 Technical Documents:</p>
+            <ul>
+              <% bid.techForms.files.forEach(doc => { %>
+                <li>
+                  <a href="<%= doc.fileUrl %>" target="_blank" class="text-primary underline">
+                    <%= doc.originalName || doc.fileName %>
+                  </a>
+                </li>
+              <% }) %>
+            </ul>
+          <% } %>
+        </div>
+      <% } %>
+
+      
+
+      <!-- Upload Form -->
+      <form id="bidUploadForm"
+        action="/vendor/tender/upload/all/<%= tender._id %>"
+        method="POST"
+        enctype="multipart/form-data"
+        class="grid grid-cols-1 md:grid-cols-2 gap-6"
+        >
+
+        <!-- Proposal Upload -->
+        <div>
+          <h3 class="text-lg font-bold">Proposal Documents</h3>
+
+          <% if (bid && bid.proposal.files.length > 0) { %>
+            <p class="text-green-600 text-sm font-semibold mt-2">✔ Already Uploaded</p>
+          <% } else { %>
+            <label for="proposalFiles"
+              class="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl">
+              <span class="material-symbols-outlined text-5xl text-gray-500">cloud_upload</span>
+              <p class="text-sm mt-2">Click to upload</p>
+            </label>
+            <input type="file" id="proposalFiles" name="proposalFiles" multiple hidden>
+            <div id="proposalPreview" class="text-sm text-primary font-semibold mt-2"></div>
+          <% } %>
+        </div>
+
+        <!-- Technical Upload -->
+        <div>
+          <h3 class="text-lg font-bold">Technical Documents</h3>
+
+          <% if (bid && bid.techForms.files.length > 0) { %>
+            <p class="text-green-600 text-sm font-semibold mt-2">✔ Already Uploaded</p>
+          <% } else { %>
+            <label for="techFiles"
+              class="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-xl">
+              <span class="material-symbols-outlined text-5xl text-gray-500">cloud_upload</span>
+              <p class="text-sm mt-2">Click to upload</p>
+            </label>
+            <input type="file" id="techFiles" name="techFiles" multiple hidden>
+            <div id="techPreview" class="text-sm text-primary font-semibold mt-2"></div>
+          <% } %>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="col-span-1 md:col-span-2 flex justify-end mt-4">
+          <button type="submit"
+            class="bg-primary text-white px-10 py-3 rounded-lg font-bold">
+            Submit
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</main>
+
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+/* ==========================
+   File Previews
+========================== */
+document.getElementById("proposalFiles")?.addEventListener("change", (e) => {
+  proposalPreview.innerHTML =
+    [...e.target.files].map(f => `📄 ${f.name}`).join("<br>");
+});
+
+document.getElementById("techFiles")?.addEventListener("change", (e) => {
+  techPreview.innerHTML =
+    [...e.target.files].map(f => `📄 ${f.name}`).join("<br>");
+});
+
+/* ==========================
+   Submit Validation
+========================== */
+document.getElementById("bidUploadForm").addEventListener("submit", (e) => {
+  const alreadyProposal = <%= bid && bid.proposal.files.length > 0 ? "true" : "false" %>;
+  const alreadyTech = <%= bid && bid.techForms.files.length > 0 ? "true" : "false" %>;
+
+  const proposalCount = proposalFiles?.files.length || 0;
+  const techCount = techFiles?.files.length || 0;
+
+  if (!alreadyProposal && proposalCount === 0) {
+    e.preventDefault();
+    return Swal.fire({
+      icon: "warning",
+      title: "Proposal Missing",
+      text: "Please upload Proposal documents."
+    });
+  }
+
+  if (!alreadyTech && techCount === 0) {
+    e.preventDefault();
+    return Swal.fire({
+      icon: "warning",
+      title: "Technical Files Missing",
+      text: "Please upload Technical documents."
+    });
+  }
+});
+
+/* ==========================
+   Success Alert
+========================== */
+if (new URLSearchParams(location.search).get("uploaded") === "true") {
+  Swal.fire({
+    icon: "success",
+    title: "Documents Uploaded Successfully 🎉",
+    text: "Your documents have been submitted!"
+  }).then(() => {
+    history.replaceState(null, "", location.pathname);
+  });
+}
+const params = new URLSearchParams(window.location.search);
+
+if (params.get("notApproved") === "true") {
+  Swal.fire({
+    icon: "info",
+    title: "Awaiting Approval",
+    text: "Your technical documents are under review. The financial submission will open once approved.",
+  }).then(() => {
+    history.replaceState(null, "", location.pathname);
+  });
+}
+if(new URLSearchParams(location.search).get("rejected") === "true"){
+    Swal.fire({
+        icon: "info",
+        title:'rejected',
+        text:'Your request is rejected'
+    }).then(() => {
+    history.replaceState(null, "", location.pathname);
+  });
+};
+if (new URLSearchParams(location.search).get("paymentRequired") === "true") {
+  Swal.fire({
+    icon: "warning",
+    title: "Payment Required",
+    text: "You must complete Participation Fee & EMD before uploading documents.",
+  }).then(() => {
+    history.replaceState(null, "", location.pathname);
+  });
+}
+</script>
+<script>
+document.getElementById("bidUploadForm").addEventListener("submit", (e) => {
+
+  const paymentStatus = "<%= paymentStatus %>";
+
+  // ⛔ PREVENT SUBMISSION IF PAYMENT NOT DONE
+  if (paymentStatus !== "paid") {
+    e.preventDefault();
+    return Swal.fire({
+      icon: "warning",
+      title: "Payment Required",
+      text: "Please complete Participation Fee & EMD before submitting documents."
+    });
+  }
+
+  // (your existing validation below)
+});
+</script>

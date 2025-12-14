@@ -17,15 +17,17 @@
            class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition">
 
           <!-- Property Image -->
-          <img
-            alt="<%= p.title %>"
-            class="w-full h-48 object-cover"
-            src="<%= 
-                  p.image ||
-                  (p.media && p.media.length > 0 ? p.media[0] : null) ||
-                  'https://via.placeholder.com/400x250'
-               %>"
-          />
+        <img
+src="<%=
+  p.media && p.media.length > 0
+    ? p.media[0].url.startsWith('/')
+      ? p.media[0].url
+      : '/' + p.media[0].url
+    : 'https://via.placeholder.com/400x250'
+%>"
+  alt="<%= p.title %>"
+  class="w-full h-48 object-cover rounded-md"
+/>
 
           <!-- Content -->
           <div class="p-5">
@@ -38,8 +40,15 @@
             </p>
 
             <p class="text-primary font-semibold mt-2">
-              ₹ <%= p.basePrice ? p.basePrice.toLocaleString() : 'N/A' %>
-            </p>
+  ₹ 
+  <% if (p.isAuction) { %>
+     <%= p.basePrice ? p.basePrice.toLocaleString() : 'N/A' %> 
+     <span class="text-sm text-gray-500">(Auction)</span>
+  <% } else { %>
+     <%= p.buyNowPrice ? p.buyNowPrice.toLocaleString() : 'N/A' %>
+     <span class="text-sm text-gray-500">(Buy Now)</span>
+  <% } %>
+</p>
           </div>
 
         </a>

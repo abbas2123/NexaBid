@@ -14,6 +14,16 @@ const userSchema = new mongoose.Schema(
     twoFASecret: { type: String, default: null },
 
     isVendor: { type: Boolean, default: false },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
+    googleId: {
+      type: String,
+      default: null,
+    },
   },
   { timestamps: true },
 );

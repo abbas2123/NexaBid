@@ -1,17 +1,30 @@
+const { readonly } = require("zod");
 const propertyService = require("../../services/property/propertyService.js");
+const statusCode = require('../../utils/statusCode');
+
 
 exports.getPropertyPage = async (req, res) => {
   try {
+
     const page = parseInt(req.query.page) || 1;
 
+    // Extract filters from query params
+    const filters = {
+      type: req.query.type || "",
+      district: req.query.district || "",
+      minPrice: req.query.minPrice || "",
+      maxPrice: req.query.maxPrice || "",
+    };
+
     const { properties, pagination } =
-      await propertyService.getProperties(page);
+      await propertyService.getProperties(page, filters);
 
     res.render("user/property", {
       layout: "layouts/user/userLayout",
       user: req.user,
       properties,
       pagination,
+      applied: filters,   // Send applied filters to EJS
     });
 
   } catch (error) {
@@ -23,21 +36,135 @@ exports.getPropertyPage = async (req, res) => {
 exports.getPropertyDetails = async (req, res) => {
   try {
     const id = req.params.id;
+    const user = req.user;
 
-    const property = await propertyService.getPropertyDetails(id);
+    const property = await propertyService.getPropertyDetails(id,user);
 
      if (!property) {
-      return res.status(404).render("error", { message: "Property not found" });
+      return res.status(404).render("error", { message: "Property not found", layout:'layouts/user/userLayout'});
     }
 
     res.render("user/propertyDetailsPage", {
       layout: "layouts/user/userLayout",
-      user: req.user,
+      user,
       property
     });
 
   } catch (err) {
     console.error('server err',err)
     res.status(500).send("Server Error");
+  }
+};
+
+exports.getCreatePropertyPage = (req, res) => {
+  return res.render("user/createProperty", {
+    layout: "layouts/user/userLayout",
+    title: "List a Property",
+    user: req.user,
+    property:null,
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY, 
+  });
+};
+
+exports.postCreateProperty = async (req, res) => {
+  console.log('reached');
+  try {
+    const {
+      title,
+      description,
+      type,
+      address,
+      locationState,
+      locationDistrict,
+      geoLat,
+      geoLng,
+      basePrice,
+      buyNowPrice,
+      isAuction,
+      auctionStartsAt,
+      auctionEndsAt,
+      auctionStep,
+      auctionReservePrice,
+      auctionAutoExtendMins,
+      auctionLastBidWindowMins,
+      bhk,
+      size,
+    } = req.body;
+
+    const mediaFiles = req.files?.media || [];
+    const docFiles = req.files?.docs || [];
+
+    const isAuctionBool = isAuction === "on" || isAuction === "true";
+
+    const payload = {
+      sellerId: req.user._id,
+      title,
+      description,
+      type,
+      address,
+      locationState,
+      locationDistrict,
+      geoLat: geoLat ? Number(geoLat) : undefined,
+      geoLng: geoLng ? Number(geoLng) : undefined,
+      basePrice: basePrice ? Number(basePrice) : undefined,
+      buyNowPrice: buyNowPrice ? Number(buyNowPrice) : undefined,
+      isAuction: isAuctionBool,
+      auctionStartsAt: auctionStartsAt ? new Date(auctionStartsAt) : undefined,
+      auctionEndsAt: auctionEndsAt ? new Date(auctionEndsAt) : undefined,
+      auctionStep: auctionStep ? Number(auctionStep) : undefined,
+      auctionReservePrice: auctionReservePrice
+        ? Number(auctionReservePrice)
+        : undefined,
+      auctionAutoExtendMins: auctionAutoExtendMins
+        ? Number(auctionAutoExtendMins)
+        : undefined,
+      auctionLastBidWindowMins: auctionLastBidWindowMins
+        ? Number(auctionLastBidWindowMins)
+        : undefined,
+      bhk,
+      size,
+    };
+
+    const property = await propertyService.createProperty({
+      data: payload,
+      mediaFiles,
+      docFiles,
+    });
+
+    return res.status(statusCode.CREATED).json({
+      success: true,
+      message:
+        "Property submitted successfully. It will be visible after admin approval.",
+      propertyId: property._id.toString(),
+      redirectUrl: "/properties/" + property._id.toString(),
+    });
+  } catch (err) {
+    console.error("Create Property Error:", err);
+    return res
+      .status(err.statusCode)
+      .json({ success: false, message: err.message || "Something went wrong" });
+  }
+};
+
+exports.updatePropertyController = async (req, res) => {
+  try {
+    const updatedProperty = await propertyService.updatePropertyService(
+      req.params.id,
+      req.user._id,
+      req.body,
+      req.files
+    );
+
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: "Property updated successfully",
+      propertyId: updatedProperty._id
+    });
+
+  } catch (err) {
+    return res.status(err.statusCode || statusCode.INTERNAL_ERROR).json({
+      success: false,
+      message: err.message
+    });
   }
 };

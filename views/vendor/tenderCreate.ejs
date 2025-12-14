@@ -1,0 +1,251 @@
+<div class="max-w-5xl mx-auto bg-white shadow-md rounded-lg p-6 mt-8">
+<a href="/tenders"
+   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all text-sm font-semibold shadow-sm">
+  <span class="material-symbols-outlined text-white text-base">arrow_back</span>
+  Back
+</a>
+  <% const isEdit = tender && tender._id; %>
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">
+    <%= isEdit ? "Re-submit Tender" : "Create Tender" %>
+  </h1>
+   
+
+  <form id="tenderForm"
+        enctype="multipart/form-data"
+        data-mode="<%= isEdit ? 'edit' : 'create' %>"
+        data-id="<%= isEdit ? tender._id : '' %>">
+
+    <!-- TITLE -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Tender Title</label>
+      <input type="text" name="title" required
+        value="<%= tender ? tender.title : '' %>"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+    </div>
+
+    <!-- DEPARTMENT -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Department</label>
+      <input type="text" name="dept" required
+        value="<%= tender ? tender.dept : '' %>"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Category</label>
+      <input type="text" name="category" required
+        value="<%= tender ? tender.category : '' %>"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Description</label>
+      <textarea name="description" rows="4"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm"><%= tender ? tender.description || '' : '' %></textarea>
+    </div>
+
+    <!-- ELIGIBILITY CATEGORY -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Eligible Categories (comma separated)</label>
+      <input type="text" name="eligibilityCategories"
+        placeholder="Civil, Mechanical, Electrical..."
+        value="<%= tender && tender.eligibility && tender.eligibility.categories 
+                  ? tender.eligibility.categories.join(', ') 
+                  : '' %>"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+    </div>
+
+    <!-- ELIGIBILITY GRADE -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Minimum Grade</label>
+      <input type="text" name="eligibilityGrade"
+        placeholder="A,B,C..."
+        value="<%= tender && tender.eligibility ? (tender.eligibility.minGrade || '') : '' %>"
+        class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+    </div>
+
+    <!-- TYPE -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium">Tender Type</label>
+      <select name="type" class="mt-1 block w-full border rounded-lg p-2 text-sm">
+        <option value="open"
+          <%= tender && tender.type === 'open' ? 'selected' : '' %>>Open</option>
+        <option value="restricted"
+          <%= tender && tender.type === 'restricted' ? 'selected' : '' %>>Restricted</option>
+      </select>
+    </div>
+
+    <!-- FINANCIAL DETAILS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium">EMD Amount</label>
+        <input type="number" name="emdAmount"
+          value="<%= tender && tender.emdAmount != null ? tender.emdAmount : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Document Fee</label>
+        <input type="number" name="docFee"
+          value="<%= tender && tender.docFee != null ? tender.docFee : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+    </div>
+
+    <!-- DATES -->
+    <h2 class="font-semibold mb-3">Important Dates</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+
+      <div>
+        <label class="block text-sm font-medium">Publish Date</label>
+        <input type="date" name="publishAt"
+          value="<%= tender && tender.publishAt ? new Date(tender.publishAt).toISOString().slice(0,10) : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Bid Start Date</label>
+        <input type="date" name="bidStartAt"
+          value="<%= tender && tender.bidStartAt ? new Date(tender.bidStartAt).toISOString().slice(0,10) : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-red-700 font-bold">Bid End Date *</label>
+        <input type="date" name="bidEndAt" required
+          value="<%= tender && tender.bidEndAt ? new Date(tender.bidEndAt).toISOString().slice(0,10) : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Technical Bid Open At</label>
+        <input type="date" name="techOpenAt"
+          value="<%= tender && tender.techOpenAt ? new Date(tender.techOpenAt).toISOString().slice(0,10) : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium">Financial Bid Open At</label>
+        <input type="date" name="finOpenAt"
+          value="<%= tender && tender.finOpenAt ? new Date(tender.finOpenAt).toISOString().slice(0,10) : '' %>"
+          class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+      </div>
+
+    </div>
+
+    <!-- EXISTING FILES (ONLY IN EDIT MODE) -->
+    <% if (isEdit && files && files.length) { %>
+      <div class="mb-4">
+        <label class="block text-sm font-semibold mb-2">Existing Documents</label>
+        <ul class="list-disc pl-5 text-sm text-gray-700 space-y-1">
+          <% files.forEach(f => { %>
+            <li>
+              <a href="<%= f.fileUrl %>" target="_blank" class="text-blue-600 underline">
+                <%= f.fileName %>
+              </a>
+              <span class="text-xs text-gray-500">(<%= (f.size/1024).toFixed(1) %> KB)</span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    <% } %>
+
+    <!-- NEW FILES -->
+    <div class="mb-6">
+      <label class="block text-sm font-medium">
+        <%= isEdit ? "Upload Additional Documents (optional)" : "Upload Documents" %>
+      </label>
+      <input type="file" name="docs" multiple
+        class="mt-2 block w-full border rounded-lg p-2 text-sm" />
+      <small class="text-gray-500">PDF, DOC, JPG, PNG etc. allowed.</small>
+    </div>
+
+    <!-- BUTTON -->
+    <div class="text-right">
+      <button
+        type="submit"
+        class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2 rounded-lg">
+        <%= isEdit ? "Re-submit Tender" : "Create Tender" %>
+      </button>
+    </div>
+
+  </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+document.getElementById("tenderForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const form = this;
+  const mode = form.dataset.mode;     // "create" or "edit"
+  const tenderId = form.dataset.id;   // id for edit mode
+
+  const formData = new FormData(form);
+
+  // ✅ Correct URL + METHOD
+  const url = mode === "edit"
+    ? `/tenders/resubmit/${tenderId}`
+    : "/tenders/create";
+
+  const method = mode === "edit" ? "PATCH" : "POST";
+
+  try {
+    const res = await fetch(url, {
+      method,
+      body: formData
+    });
+
+    // (Optional but very useful for debugging)
+    const raw = await res.text();
+    console.log("RAW RESPONSE:", raw);
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (err) {
+      console.error("JSON parse error:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Server Error",
+        text: "Invalid server response. Check console logs."
+      });
+      return;
+    }
+
+    if (!data.success) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: data.message || "Something went wrong"
+      });
+      return;
+    }
+
+    const finalTenderId = data.tenderId || tenderId;
+
+    Swal.fire({
+      icon: "success",
+      title: mode === "edit" ? "Tender Re-submitted!" : "Tender Created!",
+      text: data.message,
+      confirmButtonText: "View Tender"
+    }).then(() => {
+      window.location.href = `/tenders/${finalTenderId}`;
+    });
+
+  } catch (err) {
+    console.error("Network/JS error:", err);
+    Swal.fire({
+      icon: "error",
+      title: "Unexpected Error",
+      text: "Try again later"
+    });
+  }
+});
+</script>

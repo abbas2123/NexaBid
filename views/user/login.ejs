@@ -249,6 +249,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-
+<script>
+const params = new URLSearchParams(window.location.search);
+const error = params.get("error")
+if ( error=== "blocked") {
+  Swal.fire({
+    icon: "error",
+    title: "Account Blocked",
+    text: "Your account has been blocked. Please contact support.",
+    confirmButtonColor: "#d33"
+  });
+}
+if (error === "google") {
+    Swal.fire({
+      icon: "error",
+      title: "Google Login Blocked",
+      text: "This email is registered using password. Please login with email & password.",
+    });
+  }
+</script>
 </body>
 </html>

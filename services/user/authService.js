@@ -205,8 +205,13 @@ exports.resetPasswordService = async ({ userId, password }) => {
 
 // ---------------- DASHBOARD DATA ----------------
 exports.getDashboard = async () => {
-  const property = await Property.find().limit(6);
-  const tender = await Tender.find().limit(6);
+  const property = await Property.find({
+  status: "published",
+  verificationStatus: "approved"
+})
+.limit(6)
+.lean();
+  const tender = await Tender.find({status:"published"}).limit(6);
   return { property, tender };
 };
 

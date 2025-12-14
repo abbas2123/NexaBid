@@ -1,4 +1,3 @@
-
 const vendorApplication = require("../../models/vendorApplication");
 const Property = require("../../models/property");
 const Tender = require("../../models/tender");
@@ -6,37 +5,33 @@ const TenderBid = require("../../models/tenderBid");
 const PurchaseOrder = require("../../models/purchaseOrder");
 const Agreement = require("../../models/agreement");
 const WorkOrder = require("../../models/workOrder");
-const PropertyBid = require('../../models/propertyBid');
+const PropertyBid = require("../../models/propertyBid");
 const File = require("../../models/File");
 
-
-
-
 exports.userStatus = async (userId) => {
- 
   const vendorApp = await vendorApplication
     .findOne({ userId })
     .populate("documents.fileId")
     .populate("ocrResultId");
 
-const query = { sellerId: userId, deletedAt: null };
+  const query = { sellerId: userId, deletedAt: null };
   const userProperties = await Property.find(query)
     .sort({ createdAt: -1 })
     .lean();
-
 
   let propertyStatus = "No Properties Submitted";
 
   if (userProperties.length > 0) {
     const latest = userProperties[0];
 
-    propertyStatus = latest.verificationStatus === "submitted"
-      ? "Pending Review"
-      : latest.verificationStatus === "approved"
-      ? "Approved"
-      : latest.verificationStatus === "rejected"
-      ? "Rejected"
-      : "Unknown";
+    propertyStatus =
+      latest.verificationStatus === "submitted"
+        ? "Pending Review"
+        : latest.verificationStatus === "approved"
+          ? "Approved"
+          : latest.verificationStatus === "rejected"
+            ? "Rejected"
+            : "Unknown";
   }
 
   const tenderQuery = { createdBy: userId }; // CHANGE IF USING different field
@@ -74,25 +69,23 @@ const query = { sellerId: userId, deletedAt: null };
     }
   }
 
-  
   return {
     vendorApp,
     propertyStatus,
     tenderStatus,
     latestTender,
     userProperties,
-    userTenders
+    userTenders,
   };
 };
 
 exports.getMyParticipationData = async (userId) => {
-
   const propertyBids = await PropertyBid.find({ bidderId: userId })
     .populate("propertyId")
     .lean();
 
   const properties = propertyBids
-    .map(bid => {
+    .map((bid) => {
       if (!bid.propertyId) return null;
 
       return {
@@ -100,7 +93,11 @@ exports.getMyParticipationData = async (userId) => {
         title: bid.propertyId.title,
         myBid: bid.amount,
         currentStatus: bid.status,
-        winStatus: bid.isWinner ? "Winner" : bid.isWinner === false ? "Lost" : "Pending",
+        winStatus: bid.isWinner
+          ? "Winner"
+          : bid.isWinner === false
+            ? "Lost"
+            : "Pending",
         projectStatus: bid.projectStatus || "—",
         closingDate: bid.propertyId.endDate
           ? new Date(bid.propertyId.endDate).toLocaleDateString("en-IN")
@@ -114,7 +111,7 @@ exports.getMyParticipationData = async (userId) => {
     .lean();
 
   const tenders = tenderBids
-    .map(bid => {
+    .map((bid) => {
       if (!bid.tenderId) return null;
 
       return {
@@ -127,9 +124,11 @@ exports.getMyParticipationData = async (userId) => {
             : bid.finReviewStatus === "rejected"
               ? "Closed"
               : "Under Review",
-        winStatus:
-          bid.isWinner ? "Winner"
-          : bid.finReviewStatus === "rejected" ? "Lost" : "Pending",
+        winStatus: bid.isWinner
+          ? "Winner"
+          : bid.finReviewStatus === "rejected"
+            ? "Lost"
+            : "Pending",
       };
     })
     .filter(Boolean);
@@ -138,13 +137,12 @@ exports.getMyParticipationData = async (userId) => {
 };
 
 exports.getVendorPostAwardData = async (tenderId, userId) => {
-  
+  console.log("dvdvdv", userId);
   const tender = await Tender.findById(tenderId);
   if (!tender) {
     throw new Error("TENDER_NOT_FOUND");
   }
 
-  
   const bid = await TenderBid.findOne({
     tenderId,
     vendorId: userId,
@@ -154,7 +152,6 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     throw new Error("NOT_PARTICIPATED");
   }
 
- 
   if (!bid.isWinner) {
     return {
       loseView: true,
@@ -163,18 +160,26 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     };
   }
 
-  
-  const po = await PurchaseOrder.findOne({ tenderId }).populate("pdfFile");
+  const po = await PurchaseOrder.findOne({ tenderId })
+    .sort({ createdAt: -1 })
+    .populate("pdfFile");
+
+  console.log("rvevec", po);
+  const poCount = await PurchaseOrder.countDocuments({ tenderId });
+  const isRegenerated = poCount > 1;
 
   const agreement = await Agreement.findOne({ tenderId })
     .populate("publisherAgreement")
     .populate("uploadedByVendor");
 
-  const workOrder = await WorkOrder.findOne({ tenderId }).populate("file");
+  const workOrder = await WorkOrder.findOne({ tenderId }).populate("pdfFile");
 
-  
   const redirectToAgreementUpload =
-    po && po.status === "vendor_accepted";
+    po &&
+    po.status === "vendor_accepted" &&
+    agreement &&
+    agreement.publisherAgreement &&
+    !agreement.uploadedByVendor;
 
   return {
     loseView: false,
@@ -184,9 +189,9 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     po,
     agreement,
     workOrder,
+    isRegenerated,
   };
 };
-
 
 exports.respondToPO = async ({ poId, action, reason }) => {
   const po = await PurchaseOrder.findById(poId).populate("tenderId");
@@ -221,23 +226,32 @@ exports.respondToPO = async ({ poId, action, reason }) => {
   throw new Error("INVALID_ACTION");
 };
 
+exports.getAgreementUploadData = async (tenderId, userId) => {
 
-exports.getAgreementUploadData = async (tenderId) => {
+  const po = await PurchaseOrder.findOne({ tenderId }).sort({ createdAt: -1 });
+
+  console.log("veenfw", userId);
+
+  if (!po) throw new Error("PO_NOT_CREATED");
+
+  if (po.vendorId.toString() !== userId.toString())
+    throw new Error("NOT_WINNER");
+  
+  if (po.status !== "vendor_accepted") throw new Error("PO_NOT_ACCEPTED");
+
   const agreement = await Agreement.findOne({ tenderId }).populate(
     "publisherAgreement"
   );
 
+  if (!agreement || !agreement.publisherAgreement)
+    throw new Error("PUBLISHER_AGREEMENT_NOT_FOUND");
+
   return {
-    publisherAgreement: agreement?.publisherAgreement || null,
+    publisherAgreement: agreement.publisherAgreement,
   };
 };
 
-
-exports.uploadVendorAgreement = async ({
-  tenderId,
-  vendorId,
-  file,
-}) => {
+exports.uploadVendorAgreement = async ({ tenderId, vendorId, file }) => {
   if (!file) {
     throw new Error("NO_FILE");
   }

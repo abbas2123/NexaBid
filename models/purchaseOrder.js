@@ -43,7 +43,6 @@ const purchaseOrderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "File",
     },
-
     status: {
       type: String,
       enum: ["generated", "sent", "vendor_accepted", "vendor_rejected"],

@@ -12,14 +12,34 @@ const PDF_DIR = path.join(__dirname, "../../uploads/poPDF");
 
 if (!fs.existsSync(PDF_DIR)) fs.mkdirSync(PDF_DIR, { recursive: true });
 console.log("ndjknv",PDF_DIR)
+
+
+
+
 exports.createPO = async ({ tenderId, publisher, form, attachment, io }) => {
   const tender = await Tender.findById(tenderId);
   if (!tender) throw new Error("TENDER_NOT_FOUND");
+const oldPO = await PO.findOne({
+    tenderId,
+    status: "vendor_rejected"
+  });
+
+  if (oldPO && oldPO.status === "vendor_accepted") {
+    throw new Error("PO_ALREADY_ACCEPTED");
+  }
+
+if (oldPO && oldPO.status === "vendor_rejected") {
+    await PO.updateOne(
+      { _id: oldPO._id },
+      { $set: { status: "sent" } } 
+    );
+  }
 
   const winnerBid = await TenderBid.findOne({
     tenderId,
     isWinner: true,
   }).populate("vendorId");
+
   if (!winnerBid) throw new Error("WINNER_NOT_FOUND");
 
   const vendor = winnerBid.vendorId;
@@ -59,13 +79,20 @@ exports.createPO = async ({ tenderId, publisher, form, attachment, io }) => {
   const po = await PO.create({
     tenderId,
     vendorId: vendor._id,
+    generatedBy: publisher._id,
+
     poNumber,
     amount: form.amount,
     startDate: form.startDate,
     endDate: form.endDate,
     terms: form.terms,
-    generatedBy: publisher._id,
-    pdfFile: pdfFileDoc._id
+    
+    pdfFile: pdfFileDoc._id,
+
+    status: "generated",
+    rejectionReason: null,
+    vendorRemarks: null,
+    vendorResponseDate: null,
   });
 
   if (io) {

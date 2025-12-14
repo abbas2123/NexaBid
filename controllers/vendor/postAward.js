@@ -3,7 +3,7 @@ const statusCode = require("../../utils/statusCode");
 const poService = require("../../services/vendor/poService");
 const Tender = require("../../models/tender");
 const TenderBid = require("../../models/tenderBid");
-
+const po = require('../../models/purchaseOrder');
 
 
 exports.getPublisherPostAwardPage = async (req, res) => {
@@ -36,11 +36,24 @@ exports.showCreatePOPage = async (req, res) => {
     const userId = req.user._id;
     const tender = await Tender.findById(tenderId);
 
+    const oldPO = await po.findOne({
+    tenderId,
+    status: "vendor_rejected"
+  });
+
+  if (oldPO) {
+    if (oldPO.status === "vendor_accepted")
+      throw new Error("PO_ALREADY_ACCEPTED");
+
+    if (oldPO.status !== "vendor_rejected")
+      throw new Error("PO_ALREADY_EXISTS");
+  }
+
     if (!user) return res.status(statusCode.NOT_FOUND).send("user not found");
     if (tender.createdBy.toString() !== userId.toString())
       return res.status(statusCode.FORBIDDEN).send("access denined");
     if (!tender)
-      return rs.status(statusCode.NOT_FOUND).send("tender not found");
+      return res.status(statusCode.NOT_FOUND).send("tender not found");
 
     const winnerBid = await TenderBid.findOne({
       tenderId,

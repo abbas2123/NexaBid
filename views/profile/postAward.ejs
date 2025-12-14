@@ -66,17 +66,35 @@
                                class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">
                                 Generate PO
                             </a>
-                        <% } else { %>
-                            <span class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 
-                                         text-xs font-semibold text-green-600 dark:text-green-300">
-                                Generated
-                            </span>
+                        <% } else if (po.status === "vendor_rejected") { %>
 
-                            <a target="_blank" href="/publisher/tender/<%= tender._id %>/po/view"
-                               class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">
-                                View PO
-                            </a>
-                        <% } %>
+      <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 
+                   text-xs font-semibold text-red-700 dark:text-red-300">
+        Rejected by Vendor
+      </span>
+
+      <a href="/publisher/tender/<%= tender._id %>/po/generate"
+         class="px-4 py-2 bg-red-600 hover:bg-red-700 
+                text-white rounded-lg text-sm font-bold">
+        Re-Generate PO
+      </a>
+
+    <!-- GENERATED / ACCEPTED -->
+    <% } else { %>
+
+      <span class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 
+                   text-xs font-semibold text-green-600 dark:text-green-300">
+        <%= po.status === "vendor_accepted" ? "Accepted" : "Generated" %>
+      </span>
+
+      <a target="_blank"
+         href="/publisher/tender/<%= tender._id %>/po/view"
+         class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">
+        View PO
+      </a>
+
+    <% } %>
+
                     </div>
                 </div>
 
@@ -99,10 +117,22 @@
                                 Accepted
                             </span>
                         <% } else { %>
-                            <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 
-                                         text-xs font-semibold text-red-700 dark:text-red-300">
-                                Rejected
-                            </span>
+                             <span class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 
+               text-xs font-semibold text-red-700 dark:text-red-300">
+    Rejected
+  </span>
+
+  <!-- VENDOR MESSAGE BOX -->
+  <div class="mt-3 p-4 rounded-lg border border-red-200 dark:border-red-800 
+              bg-red-50 dark:bg-red-900/20">
+    <p class="text-sm font-semibold text-red-700 dark:text-red-300 mb-1">
+      Vendor Message
+    </p>
+
+    <p class="text-sm text-red-800 dark:text-red-200">
+      <%= po.rejectionReason || "No message provided by the vendor." %>
+    </p>
+  </div>
                         <% } %>
                     </div>
                 </div>

@@ -5,8 +5,6 @@ const User = require("../../models/user");
 const Property = require("../../models/property");
 const Tender = require("../../models/tender");
 
-
-
 exports.userProfile = async (req, res) => {
   try {
     if (!req.user) {
@@ -172,28 +170,28 @@ exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-
+    console.log("tenderId", tenderId);
     const result = await myProfileService.getVendorPostAwardData(
       tenderId,
       userId
     );
+    console.log(result.po);
 
-    
     if (result.loseView) {
       return res.render("profile/tenderLoseView", {
         layout: "layouts/user/userLayout",
         tender: result.tender,
         bid: result.bid,
         user: req.user,
+        po: result.po,
+        error: req.query.error,
       });
     }
 
-    
-    if (result.redirectToAgreementUpload) {
-      return res.redirect(`/user/${tenderId}/upload`);
+    if (result.redirectToAgreementUpload && !req.query.fromUpload) {
+      return res.redirect(`/user/${tenderId}/upload?fromPostAward=true`);
     }
 
-   
     return res.render("profile/vendorPostAward", {
       layout: "layouts/user/userLayout",
       tender: result.tender,
@@ -202,18 +200,27 @@ exports.viewTenderPostAward = async (req, res) => {
       agreement: result.agreement,
       workOrder: result.workOrder,
       user: req.user,
+      isRegenerated: result.isRegenerated,
     });
-
   } catch (err) {
     console.error("Post Award Error:", err.message);
 
-    if (err.message === "TENDER_NOT_FOUND")
-      return res.status(404).send("Tender not found");
+    if (req.query.error) {
+      return res.render("profile/vendorPostAward", {
+        layout: "layouts/user/userLayout",
+        tender: null,
+        bid: null,
+        po: null,
+        agreement: null,
+        workOrder: null,
+        user: req.user,
+        error: req.query.error,
+      });
+    }
 
-    if (err.message === "NOT_PARTICIPATED")
-      return res.status(403).send("You did not participate");
-
-    return res.status(500).send("Server Error");
+    return res.redirect(
+      `/user/my-participation/tender/${req.params.id}?error=server_error`
+    );
   }
 };
 
@@ -238,13 +245,12 @@ exports.vendorRespondPO = async (req, res) => {
   }
 };
 
-
 exports.getUploadPage = async (req, res) => {
   try {
     const tenderId = req.params.tenderId;
 
     const { publisherAgreement } =
-      await myProfileService.getAgreementUploadData(tenderId);
+      await myProfileService.getAgreementUploadData(tenderId, req.user._id);
 
     return res.render("profile/agreementUpload", {
       layout: "layouts/user/userLayout",
@@ -253,11 +259,29 @@ exports.getUploadPage = async (req, res) => {
       publisherAgreement,
     });
   } catch (err) {
-    console.error(err);
-    return res.status(500).send("Server error");
+    console.error("Agreement page error:", err.message);
+
+    const redirectBase = `/user/my-participation/tender/${req.params.id}`;
+
+    if (err.message === "PUBLISHER_AGREEMENT_NOT_FOUND") {
+      return res.redirect(`${redirectBase}?error=publisher_agreement_missing`);
+    }
+
+    if (err.message === "PO_NOT_ACCEPTED") {
+      return res.redirect(`${redirectBase}?error=po_not_accepted`);
+    }
+
+    if (err.message === "NOT_WINNER") {
+      return res.redirect(`${redirectBase}?error=not_winner`);
+    }
+
+    if (err.message === "PO_NOT_CREATED") {
+      return res.redirect(`${redirectBase}?error=po_not_created`);
+    }
+
+    return res.redirect(`${redirectBase}?error=server_error`);
   }
 };
-
 
 exports.uploadSignedAgreement = async (req, res) => {
   try {
@@ -273,9 +297,9 @@ exports.uploadSignedAgreement = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === "NO_FILE")
+    if (err.message === "NO_FILE") {
       return res.status(400).send("No file uploaded");
-
+    }
     return res.status(500).send("Error uploading agreement");
   }
 };

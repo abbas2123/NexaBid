@@ -14,8 +14,7 @@ router.get(
   authMiddleware.protectRoute,
   paymentController.loadEscrowPage
 );
-
-// Verify Razorpay payment
+router.post('/create-order',authMiddleware.protectRoute,paymentController.createOrder);
 router.post(
   '/confirm',
   authMiddleware.protectRoute,
@@ -33,11 +32,7 @@ router.get(
   authMiddleware.protectRoute,
   paymentController.paymentFailurePage
 );
+router.post('/apply-coupon',authMiddleware.protectRoute,paymentController.applyCoupon);
 
-router.get(
-  '/processing/:paymentId',
-  authMiddleware.protectRoute,
-  paymentController.paymentProcessingPage
-);
-
+router.post('/remove-coupon',authMiddleware.protectRoute,paymentController.removeCoupon );
 module.exports = router;

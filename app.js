@@ -132,6 +132,7 @@ app.use('/publisher',require('./routes/vendor/postAwardRoute'));
 app.use('/admin/contract-management',require('./routes/admin/contractManagemet'));
 app.use('/payments',require('./routes/paymentRoute/payment'));
 app.use('/auctions',require('./routes/auction/liveAuction'));
+app.use('/admin/coupon-management',require('./routes/admin/couponManagement'))
 app.use((req, res) => {
   console.log("wevdvd",req.user)
   res.status(404).render("error", {

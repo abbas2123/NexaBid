@@ -1,0 +1,77 @@
+<h1 class="text-2xl font-bold mb-4">
+  Live Auction (Admin) property : <%= property.title %>
+</h1>
+
+<p class="text-sm text-gray-500 mb-4">
+  Seller: <%= property.sellerId?.name %>
+</p>
+
+<p class="text-xl font-bold text-green-600 mb-4">
+  Current Highest Bid:
+  ₹ <%= currentHighestBid.toLocaleString("en-IN") %>
+</p>
+
+<% if (auctionStatus === "live") { %>
+  <p id="countdown" class="text-lg font-bold text-red-600"></p>
+<% } %>
+
+<table class="w-full text-sm mt-6 border">
+  <thead>
+    <tr class="bg-gray-100">
+      <th class="p-2">Bidder</th>
+      <th class="p-2">Amount</th>
+      <th class="p-2">Time</th>
+    </tr>
+  </thead>
+  <tbody id="bidFeed">
+    <% bids.forEach(bid => { %>
+      <tr>
+        <td class="p-2"><%= bid.bidderId?.name || "User" %></td>
+        <td class="p-2 font-bold">
+          ₹ <%= bid.amount.toLocaleString("en-IN") %>
+        </td>
+        <td class="p-2">
+          <%= new Date(bid.createdAt).toLocaleTimeString() %>
+        </td>
+      </tr>
+    <% }) %>
+  </tbody>
+</table>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  socket.emit("join_auction", {
+    propertyId: "<%= propertyId %>",
+    userId: "admin"
+  });
+
+  socket.on("new_bid", data => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="p-2">${data.bidderId}</td>
+      <td class="p-2 font-bold">₹ ${data.amount.toLocaleString("en-IN")}</td>
+      <td class="p-2">${new Date(data.time).toLocaleTimeString()}</td>
+    `;
+    document.getElementById("bidFeed").prepend(row);
+  });
+</script>
+
+<% if (auctionStatus === "live") { %>
+<script>
+  const end = new Date("<%= auctionEndsAt %>").getTime();
+  const el = document.getElementById("countdown");
+
+  setInterval(() => {
+    const diff = end - Date.now();
+    if (diff <= 0) {
+      el.innerText = "Auction Ended";
+      return;
+    }
+    const m = Math.floor(diff / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    el.innerText = `Ends in ${m}m ${s}s`;
+  }, 1000);
+</script>
+<% } %>

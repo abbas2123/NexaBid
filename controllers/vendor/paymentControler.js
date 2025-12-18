@@ -21,12 +21,11 @@ const existingPayment = await Payment.findOne({
     });
 
     if (existingPayment) {
-      // Already paid → redirect directly
       return res.redirect(`/vendor/tender/${tenderId}/bid`);
     }
-    // Store fees inside tender model OR define manually
-    const participationFee = tender.participationFee ?? 500; // Example
-    const emdFee = tender.emdFee ?? 5000; // Example
+  3
+    const participationFee = tender.participationFee ?? 500; 
+    const emdFee = tender.emdFee ?? 5000; 
 
     const totalAmount = participationFee + emdFee;
 

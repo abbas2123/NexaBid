@@ -1,35 +1,33 @@
-const { readonly } = require("zod");
-const propertyService = require("../../services/property/propertyService.js");
+const propertyService = require('../../services/property/propertyService.js');
 const statusCode = require('../../utils/statusCode');
-
 
 exports.getPropertyPage = async (req, res) => {
   try {
-
     const page = parseInt(req.query.page) || 1;
 
     // Extract filters from query params
     const filters = {
-      type: req.query.type || "",
-      district: req.query.district || "",
-      minPrice: req.query.minPrice || "",
-      maxPrice: req.query.maxPrice || "",
+      type: req.query.type || '',
+      district: req.query.district || '',
+      minPrice: req.query.minPrice || '',
+      maxPrice: req.query.maxPrice || '',
     };
 
-    const { properties, pagination } =
-      await propertyService.getProperties(page, filters);
+    const { properties, pagination } = await propertyService.getProperties(
+      page,
+      filters
+    );
 
-    res.render("user/property", {
-      layout: "layouts/user/userLayout",
+    res.render('user/property', {
+      layout: 'layouts/user/userLayout',
       user: req.user,
       properties,
       pagination,
-      applied: filters,   // Send applied filters to EJS
+      applied: filters, // Send applied filters to EJS
     });
-
   } catch (error) {
-    console.error("Property page error:", error);
-    res.status(500).send("Server Error");
+    console.error('Property page error:', error);
+    res.status(500).send('Server Error');
   }
 };
 
@@ -38,31 +36,38 @@ exports.getPropertyDetails = async (req, res) => {
     const id = req.params.id;
     const user = req.user;
 
-    const property = await propertyService.getPropertyDetails(id,user);
+    const { property, userHasPaidForProperty, isOwner } =
+      await propertyService.getPropertyDetails(id, user);
 
-     if (!property) {
-      return res.status(404).render("error", { message: "Property not found", layout:'layouts/user/userLayout'});
+    if (!property) {
+      return res
+        .status(404)
+        .render('error', {
+          message: 'Property not found',
+          layout: 'layouts/user/userLayout',
+        });
     }
 
-    res.render("user/propertyDetailsPage", {
-      layout: "layouts/user/userLayout",
+    res.render('user/propertyDetailsPage', {
+      layout: 'layouts/user/userLayout',
       user,
-      property
+      property,
+      userHasPaidForProperty: userHasPaidForProperty || false,
+      isOwner: isOwner || false,
     });
-
   } catch (err) {
-    console.error('server err',err)
-    res.status(500).send("Server Error");
+    console.error('server err', err);
+    res.status(500).send('Server Error');
   }
 };
 
 exports.getCreatePropertyPage = (req, res) => {
-  return res.render("user/createProperty", {
-    layout: "layouts/user/userLayout",
-    title: "List a Property",
+  return res.render('user/createProperty', {
+    layout: 'layouts/user/userLayout',
+    title: 'List a Property',
     user: req.user,
-    property:null,
-    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY, 
+    property: null,
+    googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
 };
 
@@ -94,7 +99,7 @@ exports.postCreateProperty = async (req, res) => {
     const mediaFiles = req.files?.media || [];
     const docFiles = req.files?.docs || [];
 
-    const isAuctionBool = isAuction === "on" || isAuction === "true";
+    const isAuctionBool = isAuction === 'on' || isAuction === 'true';
 
     const payload = {
       sellerId: req.user._id,
@@ -134,15 +139,15 @@ exports.postCreateProperty = async (req, res) => {
     return res.status(statusCode.CREATED).json({
       success: true,
       message:
-        "Property submitted successfully. It will be visible after admin approval.",
+        'Property submitted successfully. It will be visible after admin approval.',
       propertyId: property._id.toString(),
-      redirectUrl: "/properties/" + property._id.toString(),
+      redirectUrl: '/properties/' + property._id.toString(),
     });
   } catch (err) {
-    console.error("Create Property Error:", err);
+    console.error('Create Property Error:', err);
     return res
       .status(err.statusCode)
-      .json({ success: false, message: err.message || "Something went wrong" });
+      .json({ success: false, message: err.message || 'Something went wrong' });
   }
 };
 
@@ -157,14 +162,13 @@ exports.updatePropertyController = async (req, res) => {
 
     return res.status(statusCode.OK).json({
       success: true,
-      message: "Property updated successfully",
-      propertyId: updatedProperty._id
+      message: 'Property updated successfully',
+      propertyId: updatedProperty._id,
     });
-
   } catch (err) {
     return res.status(err.statusCode || statusCode.INTERNAL_ERROR).json({
       success: false,
-      message: err.message
+      message: err.message,
     });
   }
 };

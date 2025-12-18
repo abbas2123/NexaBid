@@ -23,7 +23,7 @@ const rateLimit = require("express-rate-limit");
 const cron = require("node-cron");
 const auctionUpdates = require("./cron/auctionUpdate");
 
-cron.schedule("*/1 * * * *", auctionUpdates);
+cron.schedule("*/1 * * * *", async()=> await auctionUpdates(io));
 const server = http.createServer(app);
 
 const io = new Server(server, {
@@ -32,15 +32,7 @@ const io = new Server(server, {
   },
 });
 app.set("io", io);
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.on("join", (userId) => {
-    socket.join(userId);
-    console.log(`User joined room: ${userId}`);
-  });
-});
+require('./scoket/auctionSocket')(io)
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
@@ -138,8 +130,9 @@ app.use("/vendor/payment", require("./routes/vendor/paymentRoute"));
 app.use('/user/status/my-listing',require('./routes/user/mylisting'));
 app.use('/publisher',require('./routes/vendor/postAwardRoute'));
 app.use('/admin/contract-management',require('./routes/admin/contractManagemet'));
-
-
+app.use('/payments',require('./routes/paymentRoute/payment'));
+app.use('/auctions',require('./routes/auction/liveAuction'));
+app.use('/admin/coupon-management',require('./routes/admin/couponManagement'))
 app.use((req, res) => {
   console.log("wevdvd",req.user)
   res.status(404).render("error", {

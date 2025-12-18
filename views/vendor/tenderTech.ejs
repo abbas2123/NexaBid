@@ -33,7 +33,7 @@
             <span class="inline-flex items-center gap-2 bg-orange-200 px-3 py-1 text-sm font-semibold rounded-full">
               <span class="material-symbols-outlined text-base">error</span> Pending
             </span>
-            <a href="/vendor/payment/initiate/<%= tender._id %>"
+            <a href="/payments/initiate?type=tender&id=<%= tender._id %>"
                class="underline text-primary font-bold ml-3">Pay Now</a>
           <% } %>
         </div>

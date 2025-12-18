@@ -184,16 +184,33 @@
   <% } else { %>
     <!-- Normal live listing actions -->
     <% if (property.isAuction) { %>
-      <button class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700">
-        Place Bid
-      </button>
-    <% } else if (property.buyNowPrice) { %>
-      <button class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
-        Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
-      </button>
-    <% } %>
-  <% } %>
+  <% if (userHasPaidForProperty) { %>
+    <a href="/user/auctions/participation/<%= property._id %>"
+   class="w-full inline-flex items-center justify-center
+          bg-[#28a745] text-white font-semibold
+          px-6 py-3 rounded-full
+          text-sm md:text-base
+          tracking-wide
+          hover:bg-green-700 transition">
+  View My Participation
+</a>
 
+  <% } else if (isOwner) { %>
+    <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+      Owner cannot bid
+    </button>
+  <% } else { %>
+    <button class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700"
+            id="placeBidBtn">
+      Place Bid
+    </button>
+  <% } %>
+<% } else if (property.buyNowPrice) { %>
+  <button class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
+    Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
+  </button>
+<% } %>
+<%}%>
   <button class="w-full border py-3 rounded-lg hover:bg-gray-100">
     Contact Seller
   </button>
@@ -241,4 +258,11 @@
       slides.style.transform = `translateX(-${index * 100}%)`;
     });
   }
+</script>
+
+<script>
+document.getElementById("placeBidBtn")?.addEventListener("click", () => {
+  window.location.href =
+    `/payments/initiate?type=property&id=<%= property._id %>`;
+});
 </script>

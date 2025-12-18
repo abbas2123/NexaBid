@@ -1,0 +1,18 @@
+<script src="https://unpkg.com/lottie-web@5.10.0/build/player/lottie.min.js"></script>
+
+<div class="text-center mt-20">
+  <div id="lottie-fail" class="w-72 mx-auto"></div>
+  <h1 class="text-2xl font-bold text-red-500 mt-4">
+    Auction Ended — You Didn’t Win
+  </h1>
+</div>
+
+<script>
+  lottie.loadAnimation({
+    container: document.getElementById('lottie-fail'),
+    renderer: 'svg',
+    loop: true,
+    autoplay: true,
+    path: '/lottie/fail.json'
+  });
+</script>

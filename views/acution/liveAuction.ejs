@@ -1,0 +1,278 @@
+<body class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans antialiased min-h-screen">
+
+<!-- ================= AUCTION STATUS HEADER ================= -->
+<div class="max-w-7xl mx-auto px-4 py-6 text-center">
+  <h1 class="text-3xl font-bold mb-2">Live Property Auction</h1>
+  <p id="auctionStatusText" class="text-lg font-medium text-primary"></p>
+</div>
+
+<!-- ================= COUNTDOWN ================= -->
+<div id="countdownWrapper" class="max-w-2xl mx-auto grid grid-cols-4 gap-4 text-center mb-10">
+  <div class="bg-blue-50 dark:bg-slate-800 rounded-lg py-4">
+    <span id="days" class="block text-3xl font-bold">00</span>
+    <span class="text-sm">Days</span>
+  </div>
+  <div class="bg-blue-50 dark:bg-slate-800 rounded-lg py-4">
+    <span id="hours" class="block text-3xl font-bold">00</span>
+    <span class="text-sm">Hours</span>
+  </div>
+  <div class="bg-blue-50 dark:bg-slate-800 rounded-lg py-4">
+    <span id="minutes" class="block text-3xl font-bold">00</span>
+    <span class="text-sm">Minutes</span>
+  </div>
+  <div class="bg-blue-50 dark:bg-slate-800 rounded-lg py-4">
+    <span id="seconds" class="block text-3xl font-bold">00</span>
+    <span class="text-sm">Seconds</span>
+  </div>
+</div>
+
+<!-- ================= LIVE BID SECTION ================= -->
+<div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-10">
+
+  <!-- LEFT -->
+  <div class="lg:col-span-7 space-y-6">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border mb-4">
+  <div class="flex justify-between items-center">
+    <span>Base Price</span>
+    <span class="text-xl font-bold text-gray-700">
+      ₹ <%= basePrice.toLocaleString("en-IN") %>
+    </span>
+  </div>
+</div>
+    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border">
+      <div class="flex justify-between items-center border-b pb-4 mb-4">
+        <span>Current Highest Bid</span>
+        <span id="currentBid" class="text-2xl font-bold text-primary">
+          ₹ <%= currentHighestBid || 0 %>
+        </span>
+      </div>
+      <p class="text-sm text-gray-500">
+        Next minimum bid:
+        ₹ <%= (currentHighestBid || 0) + auctionStep %>
+      </p>
+    </div>
+
+    <!-- BID FORM -->
+    <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border">
+      <input
+        id="bidAmount"
+        type="number"
+        class="w-full mb-4 px-4 py-3 rounded border text-lg"
+        placeholder="Enter your bid"
+        disabled
+      />
+
+      <div class="flex gap-4">
+        <button
+          id="autoBidBtn"
+          class="flex-1 px-4 py-3 rounded bg-gray-200 cursor-not-allowed"
+          disabled
+        >
+          Auto Bid
+        </button>
+
+        <button
+          id="placeBidBtn"
+          class="flex-1 px-4 py-3 rounded bg-primary text-white font-bold cursor-not-allowed"
+          disabled
+        >
+          Place Bid
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="lg:col-span-5">
+    <h2 class="text-xl font-bold mb-4">Live Bid Feed</h2>
+    <div id="bidFeed" class="space-y-3 max-h-[400px] overflow-y-auto"></div>
+  </div>
+
+</div>
+
+<!-- ================= SCRIPT ================= -->
+ <script>
+document.getElementById("autoBidBtn").addEventListener("click", () => {
+  window.location.href = `/auctions/auto-bid/<%= propertyId %>`;
+});
+</script>
+<script>
+  const auctionStartsAt = new Date("<%= auctionStartsAt %>").getTime();
+  let auctionEndsAt   = new Date("<%= auctionEndsAt %>").getTime();
+
+  const statusText = document.getElementById("auctionStatusText");
+  const bidInput   = document.getElementById("bidAmount");
+  const placeBtn   = document.getElementById("placeBidBtn");
+  const autoBtn    = document.getElementById("autoBidBtn");
+
+  function updateCountdown() {
+    const now = new Date().getTime();
+    let diff;
+    let label = "";
+
+    if (now < auctionStartsAt) {
+      diff = auctionStartsAt - now;
+      label = "Auction not started";
+      disableBidding();
+    } 
+    else if (now >= auctionStartsAt && now < auctionEndsAt) {
+      diff = auctionEndsAt - now;
+      label = "Auction is LIVE 🔴";
+      enableBidding();
+    } 
+    else {
+      statusText.innerText = "Auction ended";
+      disableBidding();
+      return;
+    }
+
+    statusText.innerText = label;
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    document.getElementById("days").innerText = days;
+    document.getElementById("hours").innerText = hours;
+    document.getElementById("minutes").innerText = minutes;
+    document.getElementById("seconds").innerText = seconds;
+  }
+
+  function enableBidding() {
+    bidInput.disabled = false;
+    placeBtn.disabled = false;
+    autoBtn.disabled = false;
+    placeBtn.classList.remove("cursor-not-allowed");
+    autoBtn.classList.remove("cursor-not-allowed");
+  }
+
+  function disableBidding() {
+    bidInput.disabled = true;
+    placeBtn.disabled = true;
+    autoBtn.disabled = true;
+    placeBtn.classList.add("cursor-not-allowed");
+    autoBtn.classList.add("cursor-not-allowed");
+  }
+
+  setInterval(updateCountdown, 1000);
+  updateCountdown();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  let currentHighestBid = <%= currentHighestBid || 0 %>;
+  const basePrice = <%= basePrice %>;
+  const auctionStep = <%= auctionStep %>;
+
+  document.getElementById("placeBidBtn").addEventListener("click", () => {
+    const bidValue = Number(document.getElementById("bidAmount").value);
+
+    let minAllowed;
+    let maxAllowed = null;
+
+    if (currentHighestBid === 0) {
+      minAllowed = basePrice + 1;
+    } else {
+      minAllowed = currentHighestBid + 1;
+      maxAllowed = currentHighestBid + auctionStep;
+    }
+
+    if (
+      bidValue < minAllowed ||
+      (maxAllowed && bidValue > maxAllowed)
+    ) {
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Bid",
+        text: maxAllowed
+          ? `Bid must be between ₹${minAllowed} and ₹${maxAllowed}`
+          : `Bid must be greater than ₹${basePrice}`,
+      });
+      return;
+    }
+
+    socket.emit("place_bid", {
+      propertyId: "<%= propertyId %>",
+      amount: bidValue,
+    });
+  });
+</script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  const socket = io();
+
+  socket.emit("join_auction", {
+    propertyId: "<%= propertyId %>",
+    userId: "<%= user._id %>"
+  });
+
+  socket.on("new_bid", (data) => {
+    currentHighestBid = data.amount;
+    document.getElementById("currentBid").innerText =
+      "₹ " + data.amount.toLocaleString("en-IN");
+
+    const feed = document.getElementById("bidFeed");
+    const div = document.createElement("div");
+    div.className = "p-3 rounded bg-blue-50 border-l-4 border-primary";
+    div.innerHTML = `<strong>New Bid:</strong> ₹${data.amount.toLocaleString("en-IN")}`;
+    feed.prepend(div);
+  });
+
+    socket.on("auction_ended", async () => {
+    const res = await fetch(`/auctions/result/<%= propertyId %>`);
+    const data = await res.json();
+
+    if (data.result === "won") {
+      window.location.href = `/auctions/success/<%= propertyId %>`;
+    } else {
+      window.location.href = `/auctions/failed/<%= propertyId %>`;
+    }
+  });
+</script>
+<script>
+  socket.on("bid_error", (data) => {
+    Swal.fire({
+      icon: "error",
+      title: "Bid Too Low",
+      text: data.message ,
+      confirmButtonColor: "#1d72d6"
+    });
+  });
+</script>
+<script>
+  socket.on("auction_extended", (data) => {
+    Swal.fire({
+      icon: "info",
+      title: "Auction Extended ⏰",
+      text: `Auction extended by ${data.extendedBy} minutes`,
+      timer: 2500,
+      showConfirmButton: false
+    });
+
+    // Update countdown end time
+    auctionEndsAt = new Date(data.newEndTime).getTime();
+  });
+</script>
+<script>
+socket.on("newNotification", (data) => {
+  Swal.fire({
+    icon: "success",
+    title: "🎉 You won the auction!",
+    text: `Winning bid: ₹${data.amount.toLocaleString("en-IN")}`,
+  }).then(() => {
+    window.location.href = `/auctions/success/${data.propertyId}`;
+  });
+});
+
+socket.on("newNotification", (data) => {
+  Swal.fire({
+    icon: "info",
+    title: "Auction Ended",
+    text: "You did not win this auction.",
+  }).then(() => {
+    window.location.href = `/auctions/failed/${data.propertyId}`;
+  });
+});
+</script>
+</body>

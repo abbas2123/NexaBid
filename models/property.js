@@ -4,7 +4,7 @@ const propertySchema = new mongoose.Schema(
   {
     sellerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
 
@@ -12,7 +12,7 @@ const propertySchema = new mongoose.Schema(
     description: String,
     type: {
       type: String,
-      enum: ["land", "apartment", "house", "commercial"],
+      enum: ['land', 'apartment', 'house', 'commercial'],
     },
 
     address: String,
@@ -34,54 +34,58 @@ const propertySchema = new mongoose.Schema(
     auctionLastBidWindowMins: { type: Number, default: 10 },
 
     currentHighestBid: { type: Number, default: 0 },
-    currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
     status: {
-  type: String,
-  enum: ["draft", "published", "owned" ,"closed"],
-  default: "draft"
-},
+      type: String,
+      enum: ['draft', 'published', 'owned', 'closed'],
+      default: 'draft',
+    },
     verificationStatus: {
       type: String,
-      default: "submitted",
-      enum: [ "submitted", "approved", "rejected"],
+      default: 'submitted',
+      enum: ['submitted', 'approved', 'rejected'],
     },
     rejectionMessage: { type: String, default: null },
     verificationRequestedAt: Date,
     verificationReviewedAt: Date,
     verificationReviewerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
     },
 
-   media: [
-  {
-    url: { type: String, required: true },
-    type: { type: String, default: "image" }, // image/pdf/video
-    uploadedAt: { type: Date, default: Date.now }
-  }
-],
-   docs: [
-  {
-    url: { type: String, required: true },
-    name: String,
-    type: { type: String, default: "doc" },
-    uploadedAt: { type: Date, default: Date.now }
-  }
-],
-bhk: String,         
-size: String,
+    media: [
+      {
+        url: { type: String, required: true },
+        type: { type: String, default: 'image' }, // image/pdf/video
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    docs: [
+      {
+        url: { type: String, required: true },
+        name: String,
+        type: { type: String, default: 'doc' },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+    bhk: String,
+    size: String,
     views: { type: Number, default: 0 },
     favouritesCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false },
     featuredUntil: Date,
 
-    soldTo: { type: mongoose.Schema.Types.ObjectId, ref: "User",default:null },
+    soldTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     soldAt: Date,
 
     deletedAt: Date,
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("Property", propertySchema);

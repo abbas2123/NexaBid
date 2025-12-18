@@ -35,7 +35,7 @@
                                 <% properties.forEach(p => { %>
                                 <tr 
                                     class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
-                                    onclick="window.location.href='/user/participation/property/<%= p._id %>'"
+                                    onclick="window.location.href='/auctions/live/<%= p._id %>'"
                                 >
                                     <td class="px-6 py-5"><%= p.title %></td>
                                     <td class="px-6 py-5">₹<%= p.myBid.toLocaleString('en-IN') %></td>

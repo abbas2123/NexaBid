@@ -13,7 +13,8 @@ exports.getAllProperties = async () => {
 
 exports.getPropertyDetails = async (id) => {
   return await Property.findById(id)
-    .populate("sellerId", "name email phone")
+    .populate('sellerId', 'name email phone')
+    .populate('soldTo', 'name email')
     .lean();
 };
 

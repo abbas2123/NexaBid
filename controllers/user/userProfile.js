@@ -1,34 +1,35 @@
-const vendorService = require("../../services/vendor/applicationService");
-const myProfileService = require("../../services/profile/profileService");
-const statusCode = require("../../utils/statusCode");
-const User = require("../../models/user");
-const Property = require("../../models/property");
-const Tender = require("../../models/tender");
+const vendorService = require('../../services/vendor/applicationService');
+const myProfileService = require('../../services/profile/profileService');
+const statusCode = require('../../utils/statusCode');
+const User = require('../../models/user');
+const Property = require('../../models/property');
+const Tender = require('../../models/tender');
+const TenderBid = require('../../models/tenderBid');
 
 exports.userProfile = async (req, res) => {
   try {
     if (!req.user) {
-      return res.redirect("/auth/login");
+      return res.redirect('/auth/login');
     }
     const user = req.user;
     const application = await vendorService.getApplicationStatus(user._id);
 
-    res.render("profile/profile", {
-      layout: "layouts/user/userLayout",
-      title: "My profile - NexaBid",
+    res.render('profile/profile', {
+      layout: 'layouts/user/userLayout',
+      title: 'My profile - NexaBid',
       user: user || {},
       application: application || null,
     });
   } catch (error) {
-    console.error("Profile load Error:", error);
-    res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    console.error('Profile load Error:', error);
+    res.status(statusCode.INTERNAL_ERROR).send('Server Error');
   }
 };
 
 exports.getUserStatuspage = async (req, res) => {
   try {
     if (!req.user) {
-      return res.redirect("/auth/login");
+      return res.redirect('/auth/login');
     }
 
     const user = req.user;
@@ -43,9 +44,9 @@ exports.getUserStatuspage = async (req, res) => {
       userTenders,
     } = await myProfileService.userStatus(userId);
 
-    return res.render("profile/status", {
-      layout: "layouts/user/userLayout",
-      title: "Account Status",
+    return res.render('profile/status', {
+      layout: 'layouts/user/userLayout',
+      title: 'Account Status',
       user,
       vendorApp,
       tenderStatus,
@@ -55,18 +56,18 @@ exports.getUserStatuspage = async (req, res) => {
       properties: userProperties || [],
     });
   } catch (error) {
-    console.error("Status Page Error:", error);
-    return res.redirect("/auth/login");
+    console.error('Status Page Error:', error);
+    return res.redirect('/auth/login');
   }
 };
 
 exports.logOut = (req, res) => {
   try {
-    res.clearCookie("token");
-    return res.redirect("/auth/login");
+    res.clearCookie('token');
+    return res.redirect('/auth/login');
   } catch (error) {
-    console.error("logout error:", error);
-    return res.redirect("/");
+    console.error('logout error:', error);
+    return res.redirect('/');
   }
 };
 
@@ -74,28 +75,28 @@ exports.getMyProfile = async (req, res) => {
   try {
     // 1️⃣ Check authentication
     if (!req.user) {
-      console.log("❌ No req.user → Redirecting to login");
-      return res.redirect("/auth/login");
+      console.log('❌ No req.user → Redirecting to login');
+      return res.redirect('/auth/login');
     }
 
     // 2️⃣ Fetch fresh user from DB to avoid stale data
     const freshUser = await User.findById(req.user._id);
 
     if (!freshUser) {
-      console.log("❌ User not found in DB");
-      return res.redirect("/auth/login");
+      console.log('❌ User not found in DB');
+      return res.redirect('/auth/login');
     }
 
     // 3️⃣ Render page with ALWAYS valid user object
-    return res.render("profile/myProfile.ejs", {
-      layout: "layouts/user/userLayout",
-      title: "My Profile",
+    return res.render('profile/myProfile.ejs', {
+      layout: 'layouts/user/userLayout',
+      title: 'My Profile',
       user: freshUser,
       application: null,
     });
   } catch (err) {
-    console.error("❌ Profile load error:", err);
-    return res.redirect("/auth/dashboard");
+    console.error('❌ Profile load error:', err);
+    return res.redirect('/auth/dashboard');
   }
 };
 
@@ -103,7 +104,7 @@ exports.getMyListingPage = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    console.log("Logged-in User:", userId);
+    console.log('Logged-in User:', userId);
 
     const properties = await Property.find({
       sellerId: userId,
@@ -112,37 +113,37 @@ exports.getMyListingPage = async (req, res) => {
       .sort({ createdAt: -1 })
       .lean();
 
-    console.log("Fetched Properties:", properties);
+    console.log('Fetched Properties:', properties);
     const tenders = await Tender.find({ createdBy: userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    res.render("profile/myListing", {
-      layout: "layouts/user/userLayout",
+    res.render('profile/myListing', {
+      layout: 'layouts/user/userLayout',
       user: req.user,
       properties,
       tenders,
     });
   } catch (err) {
-    console.log("GLOBAL ERROR HANDLER:", err);
+    console.log('GLOBAL ERROR HANDLER:', err);
 
-    return res.status(500).render("error", {
-      layout: "layouts/user/userLayout",
-      message: "Unable to load listings",
+    return res.status(500).render('error', {
+      layout: 'layouts/user/userLayout',
+      message: 'Unable to load listings',
     });
   }
 };
 
 exports.getAboutUs = (req, res) => {
-  res.render("profile/aboutUs", {
-    layout: "layouts/user/userLayout",
+  res.render('profile/aboutUs', {
+    layout: 'layouts/user/userLayout',
     user: req.user,
   });
 };
 
 exports.getContact = (req, res) => {
-  res.render("user/contact", {
-    layout: "layouts/user/userLayout",
+  res.render('user/contact', {
+    layout: 'layouts/user/userLayout',
     user: req.user,
   });
 };
@@ -154,15 +155,15 @@ exports.getMyParticipation = async (req, res) => {
     const { properties, tenders } =
       await myProfileService.getMyParticipationData(userId);
 
-    return res.render("profile/myParticipation", {
-      layout: "layouts/user/userLayout",
+    return res.render('profile/myParticipation', {
+      layout: 'layouts/user/userLayout',
       user: req.user,
       properties,
       tenders,
     });
   } catch (err) {
-    console.error("Participation Page Error:", err);
-    return res.status(500).send("Server Error");
+    console.error('Participation Page Error:', err);
+    return res.status(500).send('Server Error');
   }
 };
 
@@ -170,7 +171,41 @@ exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-    console.log("tenderId", tenderId);
+    console.log('tenderId', tenderId);
+
+    const bid = await TenderBid.findOne({ tenderId, vendorId: userId });
+
+    if (!bid) {
+      return res.redirect(`/vendor/tender/${tenderId}/bid`);
+    }
+
+    const hasTechFiles = bid.techForms?.files && bid.techForms.files.length > 0;
+    const hasFinFiles = bid.finForms?.files && bid.finForms.files.length > 0;
+
+    const techStatus = bid.techReviewStatus; 
+    const finStatus = bid.finReviewStatus; 
+
+    
+    if (!hasTechFiles) {
+      return res.redirect(`/vendor/tender/${tenderId}/bid`);
+    }
+
+    
+    if (hasTechFiles && techStatus !== 'accepted') {
+      return res.redirect(`/vendor/tender/${tenderId}/bid`);
+    }
+
+    
+    
+    if (techStatus === 'accepted' && !hasFinFiles) {
+      return res.redirect(`/vendor/tender/${tenderId}/financal`);
+    }
+
+    
+    if (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted') {
+      return res.redirect(`/vendor/tender/${tenderId}/finacal`);
+    }
+
     const result = await myProfileService.getVendorPostAwardData(
       tenderId,
       userId
@@ -178,8 +213,8 @@ exports.viewTenderPostAward = async (req, res) => {
     console.log(result.po);
 
     if (result.loseView) {
-      return res.render("profile/tenderLoseView", {
-        layout: "layouts/user/userLayout",
+      return res.render('profile/tenderLoseView', {
+        layout: 'layouts/user/userLayout',
         tender: result.tender,
         bid: result.bid,
         user: req.user,
@@ -192,8 +227,8 @@ exports.viewTenderPostAward = async (req, res) => {
       return res.redirect(`/user/${tenderId}/upload?fromPostAward=true`);
     }
 
-    return res.render("profile/vendorPostAward", {
-      layout: "layouts/user/userLayout",
+    return res.render('profile/vendorPostAward', {
+      layout: 'layouts/user/userLayout',
       tender: result.tender,
       bid: result.bid,
       po: result.po,
@@ -203,11 +238,11 @@ exports.viewTenderPostAward = async (req, res) => {
       isRegenerated: result.isRegenerated,
     });
   } catch (err) {
-    console.error("Post Award Error:", err.message);
-
+    console.error('Post Award Error:', err.message);
+    console.log('error.message', err.message);
     if (req.query.error) {
-      return res.render("profile/vendorPostAward", {
-        layout: "layouts/user/userLayout",
+      return res.render('profile/vendorPostAward', {
+        layout: 'layouts/user/userLayout',
         tender: null,
         bid: null,
         po: null,
@@ -238,10 +273,10 @@ exports.vendorRespondPO = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === "PO_NOT_FOUND")
-      return res.status(404).send("PO not found");
+    if (err.message === 'PO_NOT_FOUND')
+      return res.status(404).send('PO not found');
 
-    return res.status(500).send("Server error");
+    return res.status(500).send('Server error');
   }
 };
 
@@ -252,30 +287,30 @@ exports.getUploadPage = async (req, res) => {
     const { publisherAgreement } =
       await myProfileService.getAgreementUploadData(tenderId, req.user._id);
 
-    return res.render("profile/agreementUpload", {
-      layout: "layouts/user/userLayout",
+    return res.render('profile/agreementUpload', {
+      layout: 'layouts/user/userLayout',
       tenderId,
       user: req.user,
       publisherAgreement,
     });
   } catch (err) {
-    console.error("Agreement page error:", err.message);
+    console.error('Agreement page error:', err.message);
 
     const redirectBase = `/user/my-participation/tender/${req.params.id}`;
 
-    if (err.message === "PUBLISHER_AGREEMENT_NOT_FOUND") {
+    if (err.message === 'PUBLISHER_AGREEMENT_NOT_FOUND') {
       return res.redirect(`${redirectBase}?error=publisher_agreement_missing`);
     }
 
-    if (err.message === "PO_NOT_ACCEPTED") {
+    if (err.message === 'PO_NOT_ACCEPTED') {
       return res.redirect(`${redirectBase}?error=po_not_accepted`);
     }
 
-    if (err.message === "NOT_WINNER") {
+    if (err.message === 'NOT_WINNER') {
       return res.redirect(`${redirectBase}?error=not_winner`);
     }
 
-    if (err.message === "PO_NOT_CREATED") {
+    if (err.message === 'PO_NOT_CREATED') {
       return res.redirect(`${redirectBase}?error=po_not_created`);
     }
 
@@ -297,9 +332,9 @@ exports.uploadSignedAgreement = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === "NO_FILE") {
-      return res.status(400).send("No file uploaded");
+    if (err.message === 'NO_FILE') {
+      return res.status(400).send('No file uploaded');
     }
-    return res.status(500).send("Error uploading agreement");
+    return res.status(500).send('Error uploading agreement');
   }
 };

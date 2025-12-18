@@ -1,0 +1,196 @@
+<body class="bg-gray-50 min-h-screen font-[Inter]">
+
+<div class="max-w-4xl mx-auto p-6">
+
+  <!-- TITLE -->
+  <h1 class="text-3xl font-bold mb-6">Escrow Payment</h1>
+
+  <!-- PRODUCT DETAILS -->
+  <div class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="font-semibold mb-3">
+      <%= productType === "property" ? "Property Details" : "Tender Details" %>
+    </h2>
+
+    <p>
+      <strong>Title:</strong> <%= product.title %>
+    </p>
+
+    <% if (productType === "tender") { %>
+      <p class="mt-1">
+        <strong>Tender No:</strong> <%= product.referenceNo %>
+      </p>
+    <% } %>
+
+    <% if (product.winningBid) { %>
+      <p class="mt-1">
+        <strong>Winning Bid:</strong>
+        ₹ <%= product.winningBid.toLocaleString("en-IN") %>
+      </p>
+    <% } %>
+  </div>
+
+  <!-- PAYMENT BREAKDOWN -->
+  <div class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="font-semibold mb-3">Payment Breakdown</h2>
+
+    <div class="space-y-2">
+      <% breakdown.forEach(item => { %>
+        <div class="flex justify-between">
+          <span><%= item.label %></span>
+          <span>₹ <%= item.amount.toLocaleString("en-IN") %></span>
+        </div>
+      <% }) %>
+
+      <hr>
+
+      <div class="flex justify-between text-lg font-bold text-primary">
+        <span>Total</span>
+        <span>₹ <%= totalAmount.toLocaleString("en-IN") %></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT METHOD -->
+  <div class="bg-white p-6 rounded-lg shadow mb-6">
+    <h2 class="font-semibold mb-4">Payment Method</h2>
+
+    <div class="space-y-3">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="payment_method" value="wallet">
+        Wallet (Balance: ₹ <%= walletBalance.toLocaleString("en-IN") %>)
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="payment_method" value="card">
+        Credit / Debit Card
+      </label>
+
+      <label class="flex items-center gap-2">
+        <input type="radio" name="payment_method" value="upi">
+        UPI
+      </label>
+    </div>
+  </div>
+
+  <!-- PAYMENT FORM -->
+  <form method="POST" action="/payments/confirm"
+        class="bg-white p-6 rounded-lg shadow">
+
+    <!-- 🔐 Security -->
+    <input type="hidden" name="intentId" value="<%= intentId %>">
+
+    <!-- WALLET -->
+    <div id="wallet-form" class="hidden">
+      <p class="text-green-600 font-semibold">
+        Wallet payment selected
+      </p>
+      <p id="wallet-error" class="hidden text-red-600 mt-2">
+        Insufficient wallet balance
+      </p>
+    </div>
+
+    <!-- UPI -->
+
+    <button id="payBtn"
+      class="mt-6 w-full bg-primary text-white py-3 rounded font-semibold">
+      Confirm Payment
+    </button>
+
+  </form>
+
+</div>
+
+<!-- <script>
+  const radios = document.querySelectorAll("input[name='payment_method']");
+  const forms = {
+    wallet: document.getElementById("wallet-form"),
+    card: document.getElementById("card-form"),
+    upi: document.getElementById("upi-form")
+  };
+
+  const walletBalance = <%= walletBalance %>;
+  const totalAmount = <%= totalAmount %>;
+
+  const payBtn = document.getElementById("payBtn");
+  const walletError = document.getElementById("wallet-error");
+
+  function hideAll() {
+    Object.values(forms).forEach(f => f && f.classList.add("hidden"));
+  }
+
+  radios.forEach(radio => {
+    radio.addEventListener("change", () => {
+      hideAll();
+      if (forms[radio.value]) {
+        forms[radio.value].classList.remove("hidden");
+      }
+
+      if (radio.value === "wallet") {
+        if (walletBalance < totalAmount) {
+          walletError.classList.remove("hidden");
+          payBtn.disabled = true;
+          payBtn.classList.add("opacity-50");
+        } else {
+          walletError.classList.add("hidden");
+          payBtn.disabled = false;
+          payBtn.classList.remove("opacity-50");
+        }
+      } else {
+        payBtn.disabled = false;
+        payBtn.classList.remove("opacity-50");
+      }
+    });
+  });
+</script> -->
+
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+document.getElementById("payBtn").addEventListener("click", function (e) {
+  e.preventDefault();
+
+  const options = {
+    key: "<%= razorpayKey %>",
+    amount: <%= payment.amount * 100 %>,
+    currency: "INR",
+    name: "NexaBid",
+    description: "Escrow Payment",
+    order_id: "<%= payment.gatewayPaymentId %>",
+
+    prefill: {
+      name: "<%= user?.name || '' %>",
+      email: "<%= user?.email || '' %>",
+      contact: "<%= user?.phone || '9999999999' %>"
+    },
+
+    handler: function (response) {
+      fetch("/payments/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentId: "<%= payment._id %>",
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_signature: response.razorpay_signature
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.redirect) {
+          window.location.href = data.redirect;
+        } else {
+          window.location.href = "/payments/failure/<%= payment._id %>";
+        }
+      })
+      .catch(() => {
+        window.location.href = "/payments/failure/<%= payment._id %>";
+      });
+    },
+
+    theme: { color: "#2563eb" }
+  };
+
+  const rzp = new Razorpay(options);
+  rzp.open();
+});
+</script>

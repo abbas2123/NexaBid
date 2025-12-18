@@ -1,15 +1,15 @@
-const Property = require("../../models/property");
+const Property = require('../../models/property');
 const statusCode = require('../../utils/statusCode');
-
+const Payment = require('../../models/payment');
 
 
 exports.getProperties = async (page = 1, filters = {}) => {
   const limit = 8;
 
   const query = {
-    status: "published",
-    verificationStatus: "approved",
-    deletedAt:null
+    status: 'published',
+    verificationStatus: 'approved',
+    deletedAt: null,
   };
 
   // TYPE FILTER
@@ -19,7 +19,7 @@ exports.getProperties = async (page = 1, filters = {}) => {
 
   // DISTRICT FILTER
   if (filters.district) {
-    query.locationDistrict = { $regex: filters.district, $options: "i" };
+    query.locationDistrict = { $regex: filters.district, $options: 'i' };
   }
 
   // PRICE FILTER
@@ -29,14 +29,14 @@ exports.getProperties = async (page = 1, filters = {}) => {
         buyNowPrice: {
           ...(filters.minPrice ? { $gte: filters.minPrice } : {}),
           ...(filters.maxPrice ? { $lte: filters.maxPrice } : {}),
-        }
+        },
       },
       {
         basePrice: {
           ...(filters.minPrice ? { $gte: filters.minPrice } : {}),
           ...(filters.maxPrice ? { $lte: filters.maxPrice } : {}),
-        }
-      }
+        },
+      },
     ];
   }
 
@@ -61,27 +61,42 @@ exports.getProperties = async (page = 1, filters = {}) => {
 };
 exports.getPropertyDetails = async (propertyId, user) => {
   const property = await Property.findById(propertyId)
-    .populate("soldTo", "name email phone")
-    .populate("currentHighestBidder", "name email")
+    .populate('soldTo', 'name email phone')
+    .populate('currentHighestBidder', 'name email')
+    .populate('sellerId', 'name email')
     .lean();
 
-  if (!property) return null;
+  if (!property)
+    return { property: null, userHasPaidForProperty: false, isOwner: false };
 
-  // If property is NOT approved
-  if (property.verificationStatus !== "approved") {
+  // ✅ Calculate isOwner FIRST
+  const isOwner = property.sellerId?._id?.toString() === user._id.toString();
 
-    // allow ONLY owner OR admin
-    if (property.sellerId.toString() !== user._id.toString() && user.role !== "admin") {
-      return null;
+  // Verification check (owner bypasses)
+  if (property.verificationStatus !== 'approved') {
+    if (!isOwner && user.role !== 'admin') {
+      return { property: null, userHasPaidForProperty: false, isOwner: false };
     }
   }
 
-  return property;
+  const userHasPaidForProperty = await Payment.findOne({
+    userId: user._id,
+    contextId: propertyId,
+    status: 'success',
+  });
+
+  console.log('userhaspaid', userHasPaidForProperty);
+  console.log('isOwner', !!isOwner); // ✅ Now shows true
+
+  return {
+    property,
+    userHasPaidForProperty: !!userHasPaidForProperty,
+    isOwner, // ✅ true for owner
+  };
 };
 
-
-const normalize = (value = "") =>
-  value.toLowerCase().trim().replace(/\s+/g, " ");
+const normalize = (value = '') =>
+  value.toLowerCase().trim().replace(/\s+/g, ' ');
 
 exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   // Normalize strings
@@ -100,19 +115,19 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   });
 
   if (existing) {
-    const err = new Error("A similar property already exists in the system.");
+    const err = new Error('A similar property already exists in the system.');
     err.statusCode = statusCode.CONFLICT;
     throw err;
   }
 
   const media = mediaFiles.map((file) => ({
-    url: "/uploads/property-media/" + file.filename,
+    url: '/uploads/property-media/' + file.filename,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
 
   const docs = docFiles.map((file) => ({
-    url: "/uploads/property-docs/" + file.filename,
+    url: '/uploads/property-docs/' + file.filename,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
@@ -147,8 +162,8 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
     media,
     docs,
 
-    status: "draft",
-    verificationStatus: "submitted",
+    status: 'draft',
+    verificationStatus: 'submitted',
     verificationRequestedAt: new Date(),
   });
 
@@ -163,12 +178,12 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   });
 
   if (!existingProperty) {
-    const error = new Error("Property not found");
+    const error = new Error('Property not found');
     error.statusCode = statusCode.NOT_FOUND;
     throw error;
   }
-console.log('wefwe',body.auctionStartsAt);
-console.log('wefwe',body.auctionEndsAt)
+  console.log('wefwe', body.auctionStartsAt);
+  console.log('wefwe', body.auctionEndsAt);
   // update base fields
   existingProperty.title = body.title;
   existingProperty.description = body.description;
@@ -181,7 +196,7 @@ console.log('wefwe',body.auctionEndsAt)
   existingProperty.geoLat = body.geoLat;
   existingProperty.geoLng = body.geoLng;
 
-  existingProperty.isAuction = body.isAuction === "true";
+  existingProperty.isAuction = body.isAuction === 'true';
 
   if (existingProperty.isAuction) {
     existingProperty.basePrice = body.basePrice;
@@ -205,9 +220,9 @@ console.log('wefwe',body.auctionEndsAt)
 
   // media update
   if (files?.media?.length > 0) {
-    const newMedia = files.media.map(file => ({
+    const newMedia = files.media.map((file) => ({
       url: `/uploads/property-media/${file.filename}`,
-      fileName: file.filename
+      fileName: file.filename,
     }));
 
     existingProperty.media.push(...newMedia);
@@ -215,16 +230,16 @@ console.log('wefwe',body.auctionEndsAt)
 
   // document update
   if (files?.docs?.length > 0) {
-    const newDocs = files.docs.map(file => ({
+    const newDocs = files.docs.map((file) => ({
       url: `/uploads/property-docs/${file.filename}`,
-      fileName: file.filename
+      fileName: file.filename,
     }));
 
     existingProperty.docs.push(...newDocs);
   }
 
   // status changes
-  existingProperty.verificationStatus = "submitted";
+  existingProperty.verificationStatus = 'submitted';
   existingProperty.rejectionMessage = null;
 
   await existingProperty.save();
@@ -232,12 +247,11 @@ console.log('wefwe',body.auctionEndsAt)
   return existingProperty;
 };
 
-
 exports.getPropertyForEdit = async (propertyId) => {
   const property = await Property.findById(propertyId).lean();
 
   if (!property) {
-    const err = new Error("Property not found");
+    const err = new Error('Property not found');
     err.statusCode = 404;
     throw err;
   }
@@ -249,22 +263,6 @@ exports.getPropertyForEdit = async (propertyId) => {
   };
 };
 
-exports.getSinglePropertyOwnedByUser = async (propertyId, userId) => {
-  const property = await Property.findOne({
-    _id: propertyId,
-    sellerId: userId,
-    deletedAt: null, 
-  }).lean();
-
-  if (!property) {
-    const err = new Error("Property not found");
-    err.statusCode = 404;
-    throw err;
-  }
-
-  return property;
-};
-
 exports.deleteUserProperty = async (propertyId, userId) => {
   const deletedProperty = await Property.findOneAndUpdate(
     { _id: propertyId, sellerId: userId },
@@ -273,7 +271,7 @@ exports.deleteUserProperty = async (propertyId, userId) => {
   );
 
   if (!deletedProperty) {
-    const err = new Error("Property not found");
+    const err = new Error('Property not found');
     err.statusCode = 404;
     throw err;
   }
@@ -282,10 +280,13 @@ exports.deleteUserProperty = async (propertyId, userId) => {
 };
 
 exports.deleteUserPropertyDoc = async (propertyId, docId, userId) => {
-  const property = await Property.findOne({ _id: propertyId, sellerId: userId });
+  const property = await Property.findOne({
+    _id: propertyId,
+    sellerId: userId,
+  });
 
   if (!property) {
-    const err = new Error("Property not found");
+    const err = new Error('Property not found');
     err.statusCode = 404;
     throw err;
   }
@@ -293,7 +294,7 @@ exports.deleteUserPropertyDoc = async (propertyId, docId, userId) => {
   const docObj = property.docs.id(docId);
 
   if (!docObj) {
-    const err = new Error("Document not found");
+    const err = new Error('Document not found');
     err.statusCode = 404;
     throw err;
   }
@@ -305,10 +306,13 @@ exports.deleteUserPropertyDoc = async (propertyId, docId, userId) => {
 };
 
 exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
-  const property = await Property.findOne({ _id: propertyId, sellerId: userId });
+  const property = await Property.findOne({
+    _id: propertyId,
+    sellerId: userId,
+  });
 
   if (!property) {
-    const err = new Error("Property not found");
+    const err = new Error('Property not found');
     err.statusCode = 404;
     throw err;
   }
@@ -316,7 +320,7 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
   const mediaObj = property.media.id(mediaId);
 
   if (!mediaObj) {
-    const err = new Error("Media file not found");
+    const err = new Error('Media file not found');
     err.statusCode = 404;
     throw err;
   }

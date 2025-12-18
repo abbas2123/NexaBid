@@ -28,16 +28,7 @@ module.exports = {
       userId: user._id,
       type: "participation_fee",
       status: "success",
-      "metadata.tenderId": tenderId,
     });
-
-    const emdPayment = await Payment.findOne({
-      userId: user._id,
-      type: "emd",
-      status: "success",
-      "metadata.tenderId": tenderId,
-    });
-
     return {
       tender,
       bid,

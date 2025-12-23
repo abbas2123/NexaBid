@@ -1,0 +1,328 @@
+const Property = require('../../models/property');
+const Payment = require('../../models/payment');
+const Tender = require('../../models/tender');
+const Coupon = require('../../models/coupen');
+const CouponRedemption = require('../../models/coupenRedemption');
+const TenderParticipants = require('../../models/tenderParticipants');
+const PropertyParticipant = require('../../models/propertyParticipant');
+const PropertyBid = require('../../models/propertyBid');
+const Wallet = require('../../models/wallet');
+const WalletTransaction = require('../../models/walletTransaction');
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
+
+const razorpay = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+const _handlePostPaymentActions = async (payment, userId) => {
+  if (payment.contextType === 'property') {
+    const property = await Property.findById(payment.contextId);
+    await PropertyBid.findOneAndUpdate(
+      { propertyId: payment.contextId, bidderId: userId },
+      {
+        propertyId: payment.contextId,
+        bidderId: userId,
+        amount: property.basePrice || 0,
+        escrowPaymentId: payment._id,
+        bidStatus: 'active',
+      },
+      { upsert: true, new: true }
+    );
+    console.log('✅ Bid created/updated with escrowPaymentId');
+  }
+
+  // 2. Coupon redemption
+  if (payment.metadata?.coupon) {
+    const alreadyRedeemed = await CouponRedemption.findOne({
+      couponId: payment.metadata.coupon.id,
+      userId,
+      orderReference: payment._id,
+    });
+
+    if (!alreadyRedeemed) {
+      await CouponRedemption.create({
+        couponId: payment.metadata.coupon.id,
+        userId,
+        orderReference: payment._id,
+        amountSaved: payment.metadata.discount,
+      });
+    }
+  }
+
+  if (payment.contextType === 'property') {
+    await PropertyParticipant.create({
+      userId,
+      propertyId: payment.contextId,
+      participationPaymentId: payment._id,
+      status: 'active',
+    });
+    console.log('✅ Property participant created');
+  } else if (payment.contextType === 'tender') {
+    await TenderParticipants.create({
+      userId,
+      tenderId: payment.contextId,
+      participationPaymentId: payment._id,
+      status: 'active',
+    });
+    console.log('✅ Tender participant created');
+  }
+};;
+
+exports.initiatePayment = async (userId, type, id) => {
+  let amount = 0;
+
+  if (type === 'property') {
+    const property = await Property.findById(id);
+    if (!property) throw new Error('Property not found');
+    amount = 5000;
+  } else if (type === 'tender') {
+    const tender = await Tender.findById(id);
+    if (!tender) throw new Error('Tender not found');
+    amount = 5000 + tender.emdAmount;
+  } else {
+    throw new Error('Invalid context type');
+  }
+
+  return await Payment.create({
+    userId,
+    contextType: type,
+    contextId: id,
+    type: 'participation_fee',
+    amount,
+    gateway: 'razorpay',
+    status: 'pending',
+  });
+};
+
+exports.createRazorpayOrder = async (paymentId, amount) => {
+  const payment = await Payment.findById(paymentId);
+  if (!payment || payment.status !== 'pending') {
+    throw new Error('Invalid payment or payment not pending');
+  }
+
+  const razorOrder = await razorpay.orders.create({
+    amount: Math.round(amount * 100),
+    currency: 'INR',
+    receipt: `rcpt_${Date.now()}`,
+  });
+
+  payment.amount = amount;
+  payment.gatewayPaymentId = razorOrder.id;
+  await payment.save();
+
+  return {
+    amount: razorOrder.amount,
+    orderId: razorOrder.id,
+  };
+};
+
+exports.getEscrowPageDetails = async (paymentId, userId) => {
+  const payment = await Payment.findById(paymentId);
+  if (!payment || payment.status !== 'pending') {
+    throw new Error('Invalid payment');
+  }
+
+  // Get or create wallet
+  let userWallet = await Wallet.findOne({ userId });
+  if (!userWallet) {
+    userWallet = await Wallet.create({ userId, balance: 0 });
+  }
+
+  let product;
+  let breakdown = [];
+
+  if (payment.contextType === 'property') {
+    product = await Property.findById(payment.contextId);
+    breakdown.push({ label: 'Participation Fee', amount: payment.amount });
+  } else {
+    product = await Tender.findById(payment.contextId);
+    breakdown.push(
+      { label: 'Participation Fee', amount: 5000 },
+      { label: 'EMD', amount: product.emdAmount }
+    );
+  }
+
+  const now = new Date();
+  const coupons = await Coupon.find({
+    $or: [{ applicableTo: 'all' }, { applicableTo: payment.contextType + 's' }],
+    $and: [
+      { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
+      { $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }] },
+    ],
+  }).lean();
+
+  return {
+    payment,
+    product,
+    breakdown,
+    walletBalance: userWallet.balance || 0,
+    coupons,
+  };
+};
+
+exports.processWalletPayment = async (userId, paymentId, amount) => {
+  const payment = await Payment.findById(paymentId);
+  if (!payment || payment.status !== 'pending') {
+    throw new Error('Invalid payment');
+  }
+
+  let userWallet = await Wallet.findOne({ userId });
+  if (!userWallet) {
+    userWallet = await Wallet.create({ userId, balance: 0 });
+  }
+
+  if (userWallet.balance < amount) {
+    throw new Error(
+      `Insufficient balance. Available: ₹${userWallet.balance}, Required: ₹${amount}`
+    );
+  }
+
+  // Deduct from wallet
+  userWallet.balance -= amount;
+  userWallet.updatedAt = new Date();
+  await userWallet.save();
+
+  // Create transaction record
+  await WalletTransaction.create({
+    walletId: userWallet._id,
+    userId,
+    type: 'debit',
+    source: 'payment',
+    amount,
+    balanceAfter: userWallet.balance,
+    metadata: {
+      paymentId: payment._id,
+      contextType: payment.contextType,
+      contextId: payment.contextId,
+      reason: 'Participation fee payment',
+    },
+  });
+
+  // Update payment
+  payment.status = 'success';
+  payment.gateway = 'wallet';
+  payment.gatewayTransactionId = `WALLET_${Date.now()}`;
+  await payment.save();
+
+  // Execute shared post-payment logic
+  await _handlePostPaymentActions(payment, userId);
+
+  return {
+    paymentId: payment._id,
+    newBalance: userWallet.balance,
+  };
+};
+
+exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
+    razorpayData;
+
+  const payment = await Payment.findById(paymentId);
+  if (!payment) throw new Error('Payment not found');
+
+  const generatedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .digest('hex');
+
+  if (generatedSignature !== razorpay_signature) {
+    payment.status = 'failed';
+    await payment.save();
+    throw new Error('Signature verification failed');
+  }
+
+  payment.status = 'success';
+  payment.gatewayTransactionId = razorpay_payment_id;
+  await payment.save();
+
+  // Execute shared post-payment logic
+  await _handlePostPaymentActions(payment, payment.userId);
+
+  return payment;
+};
+
+exports.getPaymentById = async (paymentId) => {
+  return await Payment.findById(paymentId);
+};
+
+exports.applyCoupon = async (userId, intentId, couponCode) => {
+  const payment = await Payment.findById(intentId);
+  if (!payment || payment.status !== 'pending')
+    throw new Error('Invalid payment');
+  if (payment.metadata?.coupon)
+    throw new Error('Please remove existing coupon first');
+
+  const coupon = await Coupon.findOne({
+    code: couponCode.toUpperCase(),
+  }).lean();
+  if (!coupon) throw new Error('Invalid coupon');
+
+  const now = new Date();
+  if (
+    (coupon.startsAt && now < coupon.startsAt) ||
+    (coupon.expiresAt && now > coupon.expiresAt)
+  ) {
+    throw new Error('Coupon expired');
+  }
+
+  if (coupon.minPurchaseAmount && payment.amount < coupon.minPurchaseAmount) {
+    throw new Error('Minimum purchase not met');
+  }
+
+  const alreadyUsed = await CouponRedemption.findOne({
+    couponId: coupon._id,
+    userId,
+  });
+  if (alreadyUsed) throw new Error('Coupon already used');
+
+  const originalAmount = payment.amount;
+  let discount = 0;
+
+  if (coupon.type === 'flat') {
+    discount = coupon.value;
+  } else if (coupon.type === 'percent') {
+    discount = (payment.amount * coupon.value) / 100;
+    if (coupon.maxDiscount) {
+      discount = Math.min(discount, coupon.maxDiscount);
+    }
+  }
+
+  discount = Math.min(discount, payment.amount);
+  const finalAmount = payment.amount - discount;
+
+  payment.metadata = {
+    coupon: {
+      id: coupon._id,
+      code: coupon.code,
+      type: coupon.type,
+      value: coupon.value,
+    },
+    discount,
+    originalAmount,
+    finalAmount,
+  };
+
+  payment.amount = finalAmount;
+  await payment.save();
+
+  return { discount, newAmount: payment.amount };
+};
+
+exports.removeCoupon = async (intentId) => {
+  const payment = await Payment.findById(intentId);
+  if (!payment) throw new Error('Payment not found');
+  if (payment.status !== 'pending')
+    throw new Error('Cannot modify completed payment');
+  if (!payment.metadata?.coupon) throw new Error('No coupon applied');
+
+  const originalAmount = payment.metadata.originalAmount;
+  const removedCouponCode = payment.metadata.coupon.code;
+
+  payment.amount = originalAmount;
+  payment.metadata = null;
+  await payment.save();
+
+  return { amount: payment.amount, removedCouponCode };
+};

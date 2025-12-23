@@ -1,7 +1,6 @@
 const vendorService = require("../../services/vendor/applicationService");
 const statusCode = require("../../utils/statusCode");
 const OCRResult = require("../../models/OCR_Result");
-const { application } = require("express");
 const vendorApplication = require("../../models/vendorApplication");
 
 exports.getVendorApplicationPage = async (req, res) => {

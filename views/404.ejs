@@ -1,0 +1,173 @@
+<div class="error-page-root">
+  <div class="error-page">
+    <div class="error-container">
+      <!-- Background decorative circles -->
+      <div class="bg-circle circle-1"></div>
+      <div class="bg-circle circle-2"></div>
+      <div class="bg-circle circle-3"></div>
+
+      <!-- Main content -->
+      <div class="error-content">
+        <h1 class="error-code">
+          <span>4</span>
+          <span>0</span>
+          <span>4</span>
+        </h1>
+        <h2 class="error-message">Oops! Page Not Found</h2>
+        <p class="error-description">
+          The page you're looking for doesn't exist or has been moved. 
+          Let's get you back on track!
+        </p>
+        <a href="/" class="home-button">Back to Home</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* IMPORTANT: was `body`, now `.error-page-root` so it does not break layout */
+  .error-page-root {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    width: 100%;
+    min-height: calc(100vh - 80px); /* 80px ≈ header height; adjust if needed */
+  }
+
+  .error-page {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .error-container {
+    text-align: center;
+    max-width: 600px;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  .error-code {
+    font-size: clamp(5rem, 15vw, 10rem);
+    font-weight: 900;
+    color: #fff;
+    margin-bottom: 1rem;
+    text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .error-code span {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .error-code span:nth-child(1) { animation-delay: 0s; }
+  .error-code span:nth-child(2) { animation-delay: 0.2s; }
+  .error-code span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+
+  .error-message {
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    margin-bottom: 1rem;
+    font-weight: 600;
+    animation: fadeIn 1s ease-out;
+  }
+
+  .error-description {
+    font-size: clamp(1rem, 2.5vw, 1.2rem);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+    opacity: 0.9;
+    animation: fadeIn 1.5s ease-out;
+  }
+
+  .home-button {
+    display: inline-block;
+    padding: 15px 40px;
+    background-color: #fff;
+    color: #667eea;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 2s ease-out;
+  }
+
+  .home-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    background-color: #f0f0f0;
+  }
+
+  .home-button:active {
+    transform: translateY(0);
+  }
+
+  .bg-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    z-index: -1;
+  }
+
+  .circle-1 {
+    width: 300px;
+    height: 300px;
+    top: -100px;
+    left: -100px;
+    animation: pulse 8s infinite alternate;
+  }
+
+  .circle-2 {
+    width: 200px;
+    height: 200px;
+    bottom: -50px;
+    right: -50px;
+    animation: pulse 6s infinite alternate-reverse;
+  }
+
+  .circle-3 {
+    width: 150px;
+    height: 150px;
+    top: 50%;
+    right: 20%;
+    animation: pulse 7s infinite;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 0.3; }
+    100% { transform: scale(1.2); opacity: 0.1; }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 768px) {
+    .error-container { padding: 1.5rem; }
+    .error-code { gap: 0.3rem; }
+    .home-button { padding: 12px 30px; font-size: 0.9rem; }
+    .circle-1, .circle-2 { display: none; }
+    .circle-3 { width: 100px; height: 100px; }
+  }
+
+  @media (max-width: 480px) {
+    .error-container { padding: 1rem; }
+    .bg-circle { display: none; }
+  }
+</style>

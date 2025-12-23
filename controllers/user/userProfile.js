@@ -73,13 +73,13 @@ exports.logOut = (req, res) => {
 
 exports.getMyProfile = async (req, res) => {
   try {
-    // 1️⃣ Check authentication
+  
     if (!req.user) {
       console.log('❌ No req.user → Redirecting to login');
       return res.redirect('/auth/login');
     }
 
-    // 2️⃣ Fetch fresh user from DB to avoid stale data
+    
     const freshUser = await User.findById(req.user._id);
 
     if (!freshUser) {
@@ -87,7 +87,7 @@ exports.getMyProfile = async (req, res) => {
       return res.redirect('/auth/login');
     }
 
-    // 3️⃣ Render page with ALWAYS valid user object
+   
     return res.render('profile/myProfile.ejs', {
       layout: 'layouts/user/userLayout',
       title: 'My Profile',
@@ -166,7 +166,6 @@ exports.getMyParticipation = async (req, res) => {
     return res.status(500).send('Server Error');
   }
 };
-
 exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
@@ -182,28 +181,23 @@ exports.viewTenderPostAward = async (req, res) => {
     const hasTechFiles = bid.techForms?.files && bid.techForms.files.length > 0;
     const hasFinFiles = bid.finForms?.files && bid.finForms.files.length > 0;
 
-    const techStatus = bid.techReviewStatus; 
-    const finStatus = bid.finReviewStatus; 
+    const techStatus = bid.techReviewStatus;
+    const finStatus = bid.finReviewStatus;
 
-    
     if (!hasTechFiles) {
       return res.redirect(`/vendor/tender/${tenderId}/bid`);
     }
 
-    
     if (hasTechFiles && techStatus !== 'accepted') {
       return res.redirect(`/vendor/tender/${tenderId}/bid`);
     }
 
-    
-    
     if (techStatus === 'accepted' && !hasFinFiles) {
-      return res.redirect(`/vendor/tender/${tenderId}/financal`);
+      return res.redirect(`/vendor/tender/${tenderId}/financial`);
     }
 
-    
     if (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted') {
-      return res.redirect(`/vendor/tender/${tenderId}/finacal`);
+      return res.redirect(`/vendor/tender/${tenderId}/financial`);
     }
 
     const result = await myProfileService.getVendorPostAwardData(
@@ -338,3 +332,5 @@ exports.uploadSignedAgreement = async (req, res) => {
     return res.status(500).send('Error uploading agreement');
   }
 };
+
+

@@ -45,14 +45,18 @@ const paymentSchema = new mongoose.Schema(
       default: 'pending',
     },
 
-    refundAmount: { type: Number, default: null },
+    refundAmount: { type: Number, default: 0 },
 
     refundReason: {
       type: String,
       enum: ['failed_bid', 'withdrawal', 'manual', null],
       default: null,
     },
-
+    refundStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed'],
+      default: 'pending',
+    },
     metadata: {
       type: Object,
       default: {},

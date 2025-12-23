@@ -1,7 +1,7 @@
 module.exports = (err, req, res, next) => {
   console.error("🔥 GLOBAL ERROR HANDLER:", err);
 
-  // 1️⃣ Handle Multer errors properly
+ 
   if (err instanceof require("multer").MulterError) {
     return res.status(400).json({
       success: false,

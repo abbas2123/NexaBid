@@ -6,9 +6,7 @@ const Payment = require("../../models/payment");
 const File = require("../../models/File");
 
 module.exports = {
-  // ---------------------------------------------
-  // FETCH TECH BID PAGE DATA
-  // ---------------------------------------------
+
   async getTechBidData(tenderId, user) {
     if (!user || user.role !== "vendor" || !user.isVendor) {
       throw new Error("NOT_VENDOR");
@@ -26,9 +24,11 @@ module.exports = {
 
     const participationPayment = await Payment.findOne({
       userId: user._id,
+      contextId:tenderId,
       type: "participation_fee",
       status: "success",
     });
+    console.log('participationPayment:',participationPayment);
     return {
       tender,
       bid,
@@ -37,10 +37,6 @@ module.exports = {
       },
     };
   },
-
-  // ---------------------------------------------
-  // UPLOAD TECHNICAL PHASE DOCUMENTS
-  // ---------------------------------------------
   async uploadTechnical(tenderId, userId, files) {
     let bid = await TenderBid.findOne({ tenderId, vendorId: userId });
 

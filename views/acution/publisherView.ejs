@@ -45,19 +45,19 @@
 <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
   <div class="bg-primary text-white p-6 rounded-xl">
     <p class="text-sm">Current Highest Bid</p>
-    <p class="text-3xl font-black">
+    <p id="currentHighestBid" class="text-3xl font-black">
       ₹ <%= currentHighestBid.toLocaleString('en-IN') %>
     </p>
   </div>
 
   <div class="bg-white p-6 rounded-xl border">
     <p class="text-sm text-gray-500">Total Bids</p>
-    <p class="text-3xl font-bold"><%= bids.length %></p>
+    <p id="totalBids" class="text-3xl font-bold"><%= bids.length %></p>
   </div>
 
   <div class="bg-white p-6 rounded-xl border">
     <p class="text-sm text-gray-500">Highest Bidder</p>
-    <p class="font-bold">
+    <p id="highestBidderName" class="font-bold">
       <%= highestBidder ? highestBidder.name : '—' %>
     </p>
   </div>
@@ -70,26 +70,36 @@
 <div class="lg:col-span-2 bg-white rounded-xl border overflow-hidden">
   <div class="p-4 border-b font-bold">Live Bid Feed</div>
 
-  <table class="w-full text-sm">
-    <thead class="bg-gray-100">
-      <tr>
-        <th class="p-3 text-left">Bidder</th>
-        <th class="p-3 text-left">Amount</th>
-        <th class="p-3 text-left">Time</th>
-      </tr>
-    </thead>
-    <tbody id="bidFeed">
-      <% bids.forEach(bid => { %>
-        <tr class="border-b">
-          <td class="p-3"><%= bid.bidderId?.name || 'User' %></td>
-          <td class="p-3 font-bold">₹ <%= bid.amount.toLocaleString('en-IN') %></td>
-          <td class="p-3 text-gray-500">
-            <%= new Date(bid.createdAt).toLocaleTimeString() %>
-          </td>
+  <div class="max-h-[500px] overflow-y-auto">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-100 sticky top-0">
+        <tr>
+          <th class="p-3 text-left">Bidder</th>
+          <th class="p-3 text-left">Amount</th>
+          <th class="p-3 text-left">Time</th>
+          <th class="p-3 text-left">Type</th>
         </tr>
-      <% }) %>
-    </tbody>
-  </table>
+      </thead>
+      <tbody id="bidFeed">
+        <% bids.forEach(bid => { %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="p-3"><%= bid.bidderId?.name || 'User' %></td>
+            <td class="p-3 font-bold">₹ <%= bid.amount.toLocaleString('en-IN') %></td>
+            <td class="p-3 text-gray-500">
+              <%= new Date(bid.createdAt).toLocaleTimeString() %>
+            </td>
+            <td class="p-3">
+              <% if (bid.isAutoBid) { %>
+                <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Auto</span>
+              <% } else { %>
+                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Manual</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
 </div>
 
 <!-- RIGHT PANEL -->
@@ -114,34 +124,77 @@
   <div class="bg-white p-6 rounded-xl border">
     <h3 class="font-bold mb-4">System Alerts</h3>
     <ul class="text-sm space-y-2">
-      <% if (currentHighestBid >= property.auctionReservePrice) { %>
+      <% if (property.auctionReservePrice && currentHighestBid >= property.auctionReservePrice) { %>
         <li class="text-green-600">✔ Reserve price met</li>
-      <% } else { %>
+      <% } else if (property.auctionReservePrice) { %>
         <li class="text-yellow-600">⚠ Reserve price not met</li>
       <% } %>
-      <li class="text-gray-500">Live updates enabled</li>
+      <li class="text-gray-500" id="connectionStatus">🔴 Connecting...</li>
     </ul>
+  </div>
+
+  <!-- AUCTION STATS -->
+  <div class="bg-white p-6 rounded-xl border">
+    <h3 class="font-bold mb-4">Auction Details</h3>
+    <div class="text-sm space-y-2">
+      <div class="flex justify-between">
+        <span class="text-gray-500">Base Price:</span>
+        <span class="font-bold">₹ <%= property.basePrice.toLocaleString('en-IN') %></span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Bid Step:</span>
+        <span class="font-bold">₹ <%= property.auctionStep.toLocaleString('en-IN') %></span>
+      </div>
+      <% if (property.auctionReservePrice) { %>
+      <div class="flex justify-between">
+        <span class="text-gray-500">Reserve Price:</span>
+        <span class="font-bold">₹ <%= property.auctionReservePrice.toLocaleString('en-IN') %></span>
+      </div>
+      <% } %>
+    </div>
   </div>
 
 </div>
 </div>
 
-<!-- SOCKET -->
+<!-- Notification Container -->
+<div id="notificationContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+<!-- SOCKET SCRIPT -->
 <script src="/socket.io/socket.io.js"></script>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
-    const socket = io();
+  const socket = io("http://localhost:3000", {
+  withCredentials: true
+});
+    const propertyId = "<%= property._id %>";
+    const userId = "<%= user._id %>";
 
+    // Connection status
     socket.on("connect", () => {
       console.log("✅ Publisher socket connected");
+      
+      const statusEl = document.getElementById("connectionStatus");
+      if (statusEl) {
+        statusEl.innerHTML = '🟢 Connected';
+        statusEl.className = 'text-green-600';
+      }
 
-      socket.emit("join_auction", {
-        propertyId: "<%= property._id %>",
-        userId: "<%= user._id %>"
-      });
+      socket.emit("join_auction", { propertyId, userId });
+      socket.emit("join", userId);
     });
 
+    socket.on("disconnect", () => {
+      console.log("❌ Socket disconnected");
+      const statusEl = document.getElementById("connectionStatus");
+      if (statusEl) {
+        statusEl.innerHTML = '🔴 Disconnected';
+        statusEl.className = 'text-red-600';
+      }
+    });
+
+    // New bid received
     socket.on("new_bid", (data) => {
       console.log("🔥 New bid received", data);
 
@@ -149,38 +202,133 @@
       if (!tbody) return;
 
       const tr = document.createElement("tr");
-      tr.className = "border-b";
+      tr.className = "border-b hover:bg-gray-50 animate-fadeIn";
 
       tr.innerHTML = `
-        <td class="p-3">${data.bidderId}</td>
-        <td class="p-3 font-bold">₹ ${data.amount.toLocaleString("en-IN")}</td>
+       <td class="p-3">${data.bidderName || 'User'}</td>
+        <td class="p-3 font-bold text-green-600">₹ ${data.amount.toLocaleString("en-IN")}</td>
         <td class="p-3 text-gray-500">
           ${new Date(data.time).toLocaleTimeString()}
+        </td>
+        <td class="p-3">
+          ${data.isAutoBid 
+            ? '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Auto</span>' 
+            : '<span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Manual</span>'
+          }
         </td>
       `;
 
       tbody.prepend(tr);
 
       // Update highest bid card
-      const highestBidEl = document.querySelector(".bg-primary .text-3xl");
+      const highestBidEl = document.getElementById("currentHighestBid");
       if (highestBidEl) {
-        highestBidEl.innerText = "₹ " + data.amount.toLocaleString("en-IN");
+        highestBidEl.innerHTML = "₹ " + data.amount.toLocaleString("en-IN");
+        highestBidEl.classList.add('animate-pulse');
+        setTimeout(() => highestBidEl.classList.remove('animate-pulse'), 1000);
       }
+
+      // Update total bids count
+      const totalBidsEl = document.getElementById("totalBids");
+      if (totalBidsEl) {
+        const currentCount = parseInt(totalBidsEl.textContent);
+        totalBidsEl.textContent = currentCount + 1;
+      }
+
+      // Show notification
+      showNotification('New Bid!', `₹${data.amount.toLocaleString("en-IN")}`, 'info');
     });
+
+    // ✅ Auction extended event
+    socket.on("auction_extended", (data) => {
+      console.log("⏰ Auction extended:", data);
+
+      const newEndTime = new Date(data.newEndTime);
+
+      // Update global variable
+      if (window.updateCountdown) {
+        window.auctionEndsAt = newEndTime;
+        updateCountdown();
+      }
+
+      // Show notification
+      showNotification(
+        'Auction Extended!',
+        `Added ${data.extendedBy} minutes to the auction`,
+        'warning'
+      );
+    });
+
+    // Auction ended event
+    socket.on("auction_ended", (data) => {
+      console.log("🏁 Auction ended:", data);
+
+      showNotification('Auction Ended!', 'Processing results...', 'success');
+
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    });
+
+    // Notification function
+    function showNotification(title, message, type) {
+      const colors = {
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500',
+        success: 'bg-green-500',
+        error: 'bg-red-500'
+      };
+
+      const notification = document.createElement('div');
+      notification.className = `${colors[type]} text-white px-6 py-4 rounded-lg shadow-lg animate-slideIn`;
+      notification.innerHTML = `
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div>
+            <p class="font-bold">${title}</p>
+            <p class="text-sm">${message}</p>
+          </div>
+        </div>
+      `;
+
+      const container = document.getElementById('notificationContainer');
+      container.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 5000);
+    }
   });
 </script>
+
 <!-- COUNTDOWN SCRIPT -->
 <% if (auctionStatus === 'live') { %>
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const countdownEl = document.getElementById("countdown");
-    const endTime = new Date("<%= auctionEndsAt %>").getTime();
+  // ✅ Global variables for countdown
+  let countdownInterval;
+  window.auctionEndsAt = new Date("<%= auctionEndsAt %>");
 
-    setInterval(() => {
-      const diff = endTime - Date.now();
+  function updateCountdown() {
+    // Clear existing interval
+    if (countdownInterval) {
+      clearInterval(countdownInterval);
+    }
+
+    const countdownEl = document.getElementById("countdown");
+    
+    if (!countdownEl) return;
+
+    countdownInterval = setInterval(() => {
+      const now = Date.now();
+      const endTime = window.auctionEndsAt.getTime();
+      const diff = endTime - now;
 
       if (diff <= 0) {
-        countdownEl.innerText = "00 : 00 : 00";
+        clearInterval(countdownInterval);
+        countdownEl.innerHTML = '<span class="text-red-600">00 : 00 : 00</span>';
+        countdownEl.classList.add('animate-pulse');
         return;
       }
 
@@ -188,13 +336,74 @@
       const m = Math.floor(diff / 6e4) % 60;
       const s = Math.floor(diff / 1e3) % 60;
 
-      countdownEl.innerText =
-        String(h).padStart(2, '0') + " : " +
-        String(m).padStart(2, '0') + " : " +
-        String(s).padStart(2, '0');
+      // Last minute warning
+      const className = diff < 60000 ? 'text-red-600 animate-pulse' : 'text-primary';
+
+      countdownEl.innerHTML = `
+        <span class="${className}">
+          ${String(h).padStart(2, '0')} : ${String(m).padStart(2, '0')} : ${String(s).padStart(2, '0')}
+        </span>
+      `;
     }, 1000);
+  }
+
+  // Start countdown on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    updateCountdown();
   });
 </script>
 <% } %>
+
+<!-- ANIMATION STYLES -->
+<style>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  .animate-slideIn {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  /* Smooth scrolling for bid feed */
+  #bidFeed {
+    scroll-behavior: smooth;
+  }
+
+  /* Pulse animation for updates */
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-pulse {
+    animation: pulse 1s ease-in-out;
+  }
+</style>
 
 </body>

@@ -1,4 +1,3 @@
-
 const Coupon = require('../../models/coupen');
 const CouponRedemption = require('../../models/coupenRedemption');
 
@@ -13,7 +12,7 @@ exports.couponManagementPage = async (req, res) => {
       currentPage: 'coupons',
     });
   } catch (err) {
-    console.error('coupon Management Error:',err);
+    console.error('coupon Management Error:', err);
     res.status(500).send('server Error');
   }
 };
@@ -35,11 +34,10 @@ exports.createCoupon = async (req, res) => {
       description,
     } = req.body;
 
-    // 🔴 Basic validation
     if (!code || !type || !value) {
       return res.status(400).json({
         success: false,
-        message: "Coupon code, type and value are required",
+        message: 'Coupon code, type and value are required',
       });
     }
 
@@ -47,15 +45,14 @@ exports.createCoupon = async (req, res) => {
     if (exists) {
       return res.status(409).json({
         success: false,
-        message: "Coupon code already exists",
+        message: 'Coupon code already exists',
       });
     }
 
-    // 🔐 Date validation
     if (startsAt && expiresAt && new Date(startsAt) > new Date(expiresAt)) {
       return res.status(400).json({
         success: false,
-        message: "Start date cannot be after expiry date",
+        message: 'Start date cannot be after expiry date',
       });
     }
 
@@ -70,27 +67,25 @@ exports.createCoupon = async (req, res) => {
       expiresAt: expiresAt || null,
       usageLimit: usageLimit || null,
       perUserLimit: perUserLimit || null,
-      applicableTo: applicableTo || "all",
+      applicableTo: applicableTo || 'all',
       createdBy: req.admin._id,
+      isActive: true,
     });
 
     return res.json({
       success: true,
-      message: "Coupon created successfully",
+      message: 'Coupon created successfully',
       coupon,
     });
   } catch (err) {
-    console.error("Create Coupon Error:", err);
+    console.error('Create Coupon Error:', err);
     res.status(500).json({
       success: false,
-      message: "Server error",
+      message: 'Server error',
     });
   }
 };
 
-/* =====================================================
-   PATCH: Toggle Coupon Status (Enable / Disable)
-   ===================================================== */
 exports.toggleCouponStatus = async (req, res) => {
   try {
     const coupon = await Coupon.findById(req.params.id);
@@ -106,27 +101,21 @@ exports.toggleCouponStatus = async (req, res) => {
       isActive: coupon.isActive,
     });
   } catch (err) {
-    console.error("Toggle Coupon Error:", err);
+    console.error('Toggle Coupon Error:', err);
     res.status(500).json({ success: false });
   }
 };
 
-/* =====================================================
-   DELETE: Coupon
-   ===================================================== */
 exports.deleteCoupon = async (req, res) => {
   try {
     await Coupon.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    console.error("Delete Coupon Error:", err);
+    console.error('Delete Coupon Error:', err);
     res.status(500).json({ success: false });
   }
 };
 
-/* =====================================================
-   POST: Apply Coupon (Payment Flow)
-   ===================================================== */
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode, intentId } = req.body;
@@ -137,19 +126,17 @@ exports.applyCoupon = async (req, res) => {
     });
 
     if (!coupon) {
-      return res.json({ success: false, message: "Invalid coupon" });
+      return res.json({ success: false, message: 'Invalid coupon' });
     }
 
-    // ⏰ Date check
     const now = new Date();
     if (
       (coupon.startsAt && now < coupon.startsAt) ||
       (coupon.expiresAt && now > coupon.expiresAt)
     ) {
-      return res.json({ success: false, message: "Coupon expired" });
+      return res.json({ success: false, message: 'Coupon expired' });
     }
 
-    // 👤 Per-user limit
     if (coupon.perUserLimit) {
       const used = await CouponRedemption.countDocuments({
         couponId: coupon._id,
@@ -158,12 +145,11 @@ exports.applyCoupon = async (req, res) => {
       if (used >= coupon.perUserLimit) {
         return res.json({
           success: false,
-          message: "Coupon usage limit reached",
+          message: 'Coupon usage limit reached',
         });
       }
     }
 
-    // 🌍 Global usage limit
     if (coupon.usageLimit) {
       const totalUsed = await CouponRedemption.countDocuments({
         couponId: coupon._id,
@@ -171,25 +157,23 @@ exports.applyCoupon = async (req, res) => {
       if (totalUsed >= coupon.usageLimit) {
         return res.json({
           success: false,
-          message: "Coupon fully redeemed",
+          message: 'Coupon fully redeemed',
         });
       }
     }
 
-    // ⚠️ Amount calculation (mock example)
     let discount = 0;
-    const orderAmount = 5000; // ⚠️ replace with payment.amount
+    const orderAmount = 5000;
 
-    if (coupon.type === "flat") {
+    if (coupon.type === 'flat') {
       discount = coupon.value;
-    } else if (coupon.type === "percent") {
+    } else if (coupon.type === 'percent') {
       discount = Math.floor((orderAmount * coupon.value) / 100);
       if (coupon.maxDiscount) {
         discount = Math.min(discount, coupon.maxDiscount);
       }
     }
 
-    // Save redemption (after payment success ideally)
     await CouponRedemption.create({
       couponId: coupon._id,
       userId,
@@ -200,11 +184,10 @@ exports.applyCoupon = async (req, res) => {
     return res.json({
       success: true,
       discount,
-      message: "Coupon applied successfully",
+      message: 'Coupon applied successfully',
     });
   } catch (err) {
-    console.error("Apply Coupon Error:", err);
+    console.error('Apply Coupon Error:', err);
     res.status(500).json({ success: false });
   }
-}
-
+};

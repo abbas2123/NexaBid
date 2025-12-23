@@ -1,22 +1,30 @@
-const tenderService = require("../../services/tender/tender");
+const tenderService = require('../../services/tender/tender');
+const statusCode = require('../../utils/statusCode');
+const {
+  VIEWS,
+  LAYOUTS,
+  SUCCESS_MESSAGES,
+  ERROR_MESSAGES,
+} = require('../../utils/constants');
+
 exports.getTenderListingPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
 
-    const { tenders, pagination } =
-      await tenderService.getAllTenders(page);
+    const { tenders, pagination } = await tenderService.getAllTenders(page);
 
-    res.render("user/tender", {
-      layout: "layouts/user/userLayout",
+    res.render(VIEWS.TENDER_LISTING, {
+      layout: LAYOUTS.USER_LAYOUT,
       tenders,
       pagination,
       user: req.user,
-      isVendor: req.user?.isVendor || false
+      isVendor: req.user?.isVendor || false,
     });
-
   } catch (err) {
-    console.error("Tender list error:", err);
-    res.status(500).send("Server Error");
+    console.error('Tender list error:', err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -28,43 +36,40 @@ exports.getTenderDetailsPage = async (req, res) => {
     const { tender, isVendor, canViewFull } =
       await tenderService.getTenderDetailsForUser(tenderId, user);
 
-          const isOwner =
+    const isOwner =
       user &&
       tender.createdBy &&
       tender.createdBy._id.toString() === user._id.toString();
 
-// If owner → force isVendor = false
-const canParticipate = isVendor && !isOwner;
+    // If owner → force isVendor = false
+    const canParticipate = isVendor && !isOwner;
 
-
-    return res.render("user/tenderDetails", {
-      layout: "layouts/user/userLayout",
+    return res.render(VIEWS.TENDER_DETAILS, {
+      layout: LAYOUTS.USER_LAYOUT,
       title: tender.title,
       tender,
       user,
-        isVendor,
-          canParticipate,
+      isVendor,
+      canParticipate,
       canViewFull,
       userId: req.user._id,
-      isOwner,          
-    
+      isOwner,
     });
-
   } catch (err) {
-    console.error("Tender Details Error:", err);
+    console.error('Tender Details Error:', err);
 
     // Special handling for draft / restricted
-    if (err.code === "TENDER_DRAFT" || err.statusCode === 403) {
-      return res.status(statusCode.FORBIDDEN).render("error", {
-        layout: "layouts/user/userLayout",
-        message: "This tender is not yet published or visible to you.",
+    if (err.code === 'TENDER_DRAFT' || err.statusCode === 403) {
+      return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: ERROR_MESSAGES.TENDER_RESTRICTED,
       });
     }
 
-    const httpStatus = err.statusCode || statusCode.INTERNAL_ERROR;
-    return res.status(httpStatus).render("error", {
-      layout: "layouts/user/userLayout",
-      message: err.message || "Something went wrong",
+    const httpStatus = err.statusCode || statusCode.INTERNAL_SERVER_ERROR;
+    return res.status(httpStatus).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: err.message || ERROR_MESSAGES.GENERIC_ERROR,
     });
   }
 };
@@ -83,16 +88,15 @@ exports.resubmitTender = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "Tender re-submitted successfully 🎉",
-      tenderId: updatedTender._id
+      message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,
+      tenderId: updatedTender._id,
     });
-
   } catch (err) {
-    console.log("Resubmission failed:", err);
+    console.log('Resubmission failed:', err);
 
-    return res.status(err.statusCode || 500).json({
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err.message || "Server error"
+      message: err.message || ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };

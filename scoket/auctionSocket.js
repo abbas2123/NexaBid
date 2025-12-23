@@ -1,121 +1,121 @@
-// sockets/auction.socket.js
 const Property = require('../models/property');
 const PropertyBid = require('../models/propertyBid');
+const Payment = require('../models/payment');
+const mongoose = require('mongoose');
 
-const Last_MINUTE_WINDOW = 2 * 60 * 1000;
+const LAST_MINUTE_WINDOW = 2 * 60 * 1000;
 const EXTENSION_TIME = 2 * 60 * 1000;
 
 
-module.exports = (io) => {
-  io.on('connection', (socket) => {
+const lastBidMap = new Map();
 
-     socket.on("join", (userId) => {
-  socket.join(userId);
-    console.log(`User joined room: ${userId}`);
+module.exports = (io, socket) => {
+  socket.on('join', () => {
+    socket.join(socket.user._id.toString());
   });
 
-    socket.on('join_auction', ({ propertyId, userId }) => {
-      socket.userId = userId;
-      socket.join(`auction_${propertyId}`);
-    });
+  // join auction room
+  socket.on('join_auction', ({ propertyId }) => {
+    if (!mongoose.Types.ObjectId.isValid(propertyId)) return;
+    socket.join(`auction_${propertyId}`);
+  });
 
-    socket.on('place_bid', async ({ propertyId, amount }) => {
-      const property = await Property.findById(propertyId);
-
-      if (!property || !property.isAuction) return;
-
-      const now = new Date();
-
-    
-      if (now > property.auctionEndsAt) {
-        socket.emit('bid_error', { message: 'Auction ended' });
-        return;
+  socket.on('place_bid', async ({ propertyId, amount }) => {
+    try {
+      if (!mongoose.Types.ObjectId.isValid(propertyId)) {
+        return socket.emit('bid_error', { message: 'Invalid auction' });
       }
 
      
-      if (property.sellerId.toString() === socket.userId) return;
+      const now = Date.now();
+      const last = lastBidMap.get(socket.id) || 0;
+      if (now - last < 500) return;
+      lastBidMap.set(socket.id, now);
 
+      const property = await Property.findById(propertyId);
+      if (!property || !property.isAuction) return;
+
+      if (new Date() > property.auctionEndsAt) {
+        return socket.emit('bid_error', { message: 'Auction ended' });
+      }
+
+      const userId = socket.user._id.toString();
+
+      // Seller cannot bid
+      if (property.sellerId.toString() === userId) return;
+
+      // Participation fee check
+      const payment = await Payment.findOne({
+        userId,
+        contextId: propertyId,
+        contextType: 'property',
+        type: 'participation_fee',
+        status: 'success',
+      });
+
+      if (!payment) {
+        return socket.emit('bid_error', {
+          message: 'Pay participation fee first',
+        });
+      }
+
+      // Bid validation
       const current = property.currentHighestBid || 0;
       const min = current === 0 ? property.basePrice + 1 : current + 1;
       const max = current === 0 ? null : current + property.auctionStep;
 
       if (amount < min || (max && amount > max)) {
-        socket.emit('bid_error', {
+        return socket.emit('bid_error', {
           message: `Bid must be between ₹${min} and ₹${max}`,
         });
-        return;
       }
 
-      await PropertyBid.create({
-        propertyId,
-        bidderId: socket.userId,
-        amount,
-      });
+      // Save bid
+      await PropertyBid.findOneAndUpdate(
+        { propertyId, bidderId: userId },
+        {
+          propertyId,
+          bidderId: userId,
+          amount,
+          escrowPaymentId: payment._id,
+          isAutoBid: false,
+          bidStatus: 'active',
+        },
+        { upsert: true }
+      );
 
       property.currentHighestBid = amount;
-      property.currentHighestBidder = socket.userId;
+      property.currentHighestBidder = userId;
 
-      const timeLeft = property.auctionEndsAt - now;
-
+      // Extend auction if needed
+      const timeLeft = property.auctionEndsAt - Date.now();
       let extended = false;
 
-      if(timeLeft<=Last_MINUTE_WINDOW){
+      if (timeLeft <= LAST_MINUTE_WINDOW) {
         property.auctionEndsAt = new Date(
-          property.auctionEndsAt.getTime()+EXTENSION_TIME
+          property.auctionEndsAt.getTime() + EXTENSION_TIME
         );
         extended = true;
       }
+
       await property.save();
 
       io.to(`auction_${propertyId}`).emit('new_bid', {
         amount,
-        bidderId: socket.userId,
+        bidderId: userId,
+        bidderName: socket.user.name,
         time: new Date(),
-        currentHighestBid:amount,
       });
 
-      if(extended){
-        io.to(`auction_${propertyId}`).emit('auction_extended',{
-          newEndTime:property.auctionEndsAt,
-          extendedBy: EXTENSION_TIME/60000
+      if (extended) {
+        io.to(`auction_${propertyId}`).emit('auction_extended', {
+          newEndTime: property.auctionEndsAt,
+          extendedBy: EXTENSION_TIME / 60000,
         });
       }
-
-      const autoBidders = await PropertyBid.find({
-        propertyId,
-        isAutoBid:true,
-        autoBidMax:{$gt:amount},
-        bidderId:{$ne:socket.userId},
-      }).sort({autoBidMax:-1});
-
-      if(autoBidders.length>0){
-        const next = autoBidders[0];
-        const nextBid = Math.min(
-          next.autoBidMax,
-          amount+property.auctionStep
-        );
-          await PropertyBid.create({
-            propertyId,
-            bidderId: next.bidderId,
-            amount: nextBid,
-            isAutoBid: true,
-            autoBidMax: next.autoBidMax,
-          });
-
-          // Update property
-          property.currentHighestBid = nextBid;
-          property.currentHighestBidder = next.bidderId;
-          await property.save();
-
-          // Emit new bid
-          io.to(`auction_${propertyId}`).emit('new_bid', {
-            amount: nextBid,
-            bidderId: next.bidderId,
-            isAutoBid: true,
-            time: new Date(),
-          });
-      }
-
-    });
+    } catch (err) {
+      console.error('❌ Socket bid error:', err);
+      socket.emit('bid_error', { message: 'Bid failed' });
+    }
   });
 };

@@ -40,7 +40,11 @@
                             <div class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700">
                                 <p class="text-sm text-[#617589] dark:text-gray-400">Quoted Amount</p>
                                 <p class="text-sm font-medium text-[#111418] dark:text-gray-200">
-                                    ₹<%= winner.amount.toLocaleString("en-IN") %>
+                                   <% if (winner.amount) { %>
+    ₹<%= winner.amount.toLocaleString("en-IN") %>
+<% } else { %>
+    No amount
+<% } %>
                                 </p>
                             </div>
 

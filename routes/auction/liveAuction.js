@@ -3,7 +3,7 @@ const router = express.Router();
 const auctionController = require('../../controllers/auction/PropertyAuction');
 const auctionResult = require('../../controllers/auction/result');
 const userAuth = require('../../middlewares/authMiddleware');
-const Property = require('../../models/property');
+const { LAYOUTS } = require('../../utils/constants');
 
 router.get(
   '/live/:propertyId',
@@ -20,43 +20,11 @@ router.get(
   userAuth.protectRoute,
   auctionController.getAuctionResult
 );
-router.get('/success/:propertyId', userAuth.protectRoute, async (req, res) => {
-  try {
-    const propertyId = req.params.propertyId;
-    const userId = req.user._id;
-
-    
-    const property = await Property.findById(propertyId)
-      .populate('soldTo', 'name email')
-      .lean();
-
-    if (!property) {
-      return res.redirect('/properties');
-    }
-
-    
-    if (
-      property.soldTo &&
-      property.soldTo._id.toString() !== userId.toString()
-    ) {
-      return res.redirect('/properties'); 
-    }
-
-    res.render('acution/success', {
-      layout: 'layouts/user/userLayout',
-      property,
-      propertyId,
-      user: req.user,
-    });
-  } catch (err) {
-    console.error('Auction success page error:', err);
-    res.status(500).send('Server error');
-  }
-});
+router.get('/success/:propertyId', userAuth.protectRoute, auctionController.success);
 
 router.get('/failed/:propertyId', userAuth.protectRoute, (req, res) => {
   res.render('acution/failed', {
-    layout: 'layouts/user/userLayout',
+    layout: LAYOUTS.USER_LAYOUT,
     propertyId: req.params.propertyId,
     user: req.user,
   });

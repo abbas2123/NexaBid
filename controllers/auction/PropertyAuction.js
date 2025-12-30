@@ -6,6 +6,7 @@ const {
   VIEWS,
   LAYOUTS,
   REDIRECTS,
+  ROUTES,
 } = require('../../utils/constants');
 
 exports.liveAuctionPage = async (req, res) => {
@@ -13,7 +14,7 @@ exports.liveAuctionPage = async (req, res) => {
     const data = await AuctionService.getAuctionPageData(req.params.propertyId);
 
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
-      return res.redirect(`/auctions/won/${req.params.propertyId}`);
+      return res.redirect(`${ROUTES.AUCTION_WON}/${req.params.propertyId}`);
     }
     res.render(VIEWS.LIVE_AUCTION, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -43,7 +44,7 @@ exports.publisherLiveAuctionPage = async (req, res) => {
     );
 
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
-      return res.redirect(`/auctions/auction-result/${req.params.propertyId}`);
+      return res.redirect(`${ROUTES.AUCTION_RESULT}/${req.params.propertyId}`);
     }
     res.render(VIEWS.PUBLISHER_VIEW, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -91,15 +92,15 @@ exports.enableAutoBid = async (req, res) => {
       maxBid: req.body.maxBid,
     });
 
-    res.redirect(`/auctions/live/${req.params.propertyId}`);
+    res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
   } catch (err) {
     if (err.message === ERROR_MESSAGES.PAYMENT_REQUIRED) {
       return res.redirect(
-        `/payments/initiate?type=property&id=${req.params.propertyId}`
+        `${ROUTES.PAYMENT_INITIATE}?type=property&id=${req.params.propertyId}`
       );
     }
     if (err.message === ERROR_MESSAGES.BID_TOO_LOW) {
-      return res.redirect(`/auction/live/${req.params.propertyId}`);
+      return res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
     }
 
     console.error(err);
@@ -126,5 +127,40 @@ exports.getAutoBidPage = async (req, res) => {
     });
   } catch (err) {
     return res.redirect(REDIRECTS.PROPERTIES);
+  }
+};
+
+
+exports.success = async (req, res) => {
+  try {
+    const propertyId = req.params.propertyId;
+    const userId = req.user._id;
+
+    
+    const property = await Property.findById(propertyId)
+      .populate('soldTo', 'name email')
+      .lean();
+
+    if (!property) {
+      return res.redirect('/properties');
+    }
+
+    
+    if (
+      property.soldTo &&
+      property.soldTo._id.toString() !== userId.toString()
+    ) {
+      return res.redirect('/properties'); 
+    }
+
+    res.render('acution/success', {
+      layout: LAYOUTS.USER_LAYOUT,
+      property,
+      propertyId,
+      user: req.user,
+    });
+  } catch (err) {
+    console.error('Auction success page error:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send('Server error');
   }
 };

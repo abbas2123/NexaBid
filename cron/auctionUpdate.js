@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Property = require('../models/property');
 const PropertyBid = require('../models/propertyBid');
 const Payment = require('../models/payment');
@@ -5,170 +6,135 @@ const Wallet = require('../models/wallet');
 const WalletTransaction = require('../models/walletTransaction');
 const Notification = require('../models/notification');
 
+const REFUND_PERCENT = 0.6;
+
 module.exports = async (io) => {
   const now = new Date();
 
   const auctions = await Property.find({
     isAuction: true,
     auctionEndsAt: { $lt: now },
-    status: { $nin: ['owned', 'closed'] },
+    status: { $nin: ['owned', 'closed', 'processing_refund'] },
   });
 
   console.log(`🔍 Found ${auctions.length} auctions to process`);
 
   for (const property of auctions) {
-    console.log(`\n Processing auction: ${property.title}`);
+    // LOCK AUCTION
+    const locked = await Property.findOneAndUpdate(
+      {
+        _id: property._id,
+        status: { $nin: ['owned', 'closed', 'processing_refund'] },
+      },
+      { status: 'processing_refund' },
+      { new: true }
+    );
+    if (!locked) continue;
 
-    
+    console.log(`🔒 Locked auction ${property._id}`);
+
+    // NO BIDS
     if (!property.currentHighestBidder) {
-      property.status = 'closed';
-      await property.save();
-      console.log(' No bids - auction closed');
+      locked.status = 'closed';
+      await locked.save();
       continue;
     }
 
-    //WINNER
-    property.status = 'owned';
-    property.soldTo = property.currentHighestBidder;
-    property.soldAt = now;
-    await property.save();
+    // DECLARE WINNER
+    locked.status = 'owned';
+    locked.soldTo = property.currentHighestBidder;
+    locked.soldAt = now;
+    await locked.save();
 
-    await PropertyBid.findOneAndUpdate(
-      {
-        propertyId: property._id,
-        bidderId: property.currentHighestBidder,
-      },
-      {
-        bidStatus: 'won',
-        isWinningBid: true,
-      }
+    await PropertyBid.updateOne(
+      { propertyId: property._id, bidderId: property.currentHighestBidder },
+      { bidStatus: 'won', isWinningBid: true }
     );
 
     await Notification.create({
       userId: property.currentHighestBidder,
-      message: `🎉 You won the auction for "${property.title}"`,
+      message: `🎉 You won "${property.title}"`,
     });
 
-    io.to(property.currentHighestBidder.toString()).emit('newNotification', {
-      propertyId: property._id,
-    });
+    io.to(property.currentHighestBidder.toString()).emit('newNotification');
 
-    console.log('✅ Winner declared:', property.currentHighestBidder);
-
-
-    const losingBids = await PropertyBid.find({
+    // PROCESS LOSERS
+    const losers = await PropertyBid.find({
       propertyId: property._id,
       bidderId: { $ne: property.currentHighestBidder },
       bidStatus: 'active',
     });
 
-    console.log(`💔 Found ${losingBids.length} losing bids to process`);
+    for (const bid of losers) {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+      try {
+        const payment = await Payment.findById(bid.escrowPaymentId).session(
+          session
+        );
+        if (!payment || payment.refundStatus === 'completed') {
+          await session.abortTransaction();
+          continue;
+        }
 
-    for (const bid of losingBids) {
-      console.log(`\n💸 Processing refund for bid:`, bid._id);
+        const refundAmount = Math.round(payment.amount * REFUND_PERCENT);
 
-      bid.bidStatus = 'outbid';
-      bid.isWinningBid = false;
-      await bid.save();
+        // ATOMIC WALLET CREDIT
+        const wallet = await Wallet.findOneAndUpdate(
+          { userId: bid.bidderId },
+          { $inc: { balance: refundAmount } },
+          { new: true, upsert: true, session }
+        );
 
-      await Notification.create({
-        userId: bid.bidderId,
-        message: `Auction ended for "${property.title}". 60% refunded to wallet.`,
-      });
+        // IDENTITY SAFE WALLET TXN
+        const exists = await WalletTransaction.exists({
+          'metadata.paymentId': payment._id,
+        }).session(session);
 
-      io.to(bid.bidderId.toString()).emit('newNotification', {
-        propertyId: property._id,
-      });
+        if (!exists) {
+          await WalletTransaction.create(
+            [
+              {
+                walletId: wallet._id,
+                userId: bid.bidderId,
+                type: 'credit',
+                source: 'refund',
+                amount: refundAmount,
+                balanceAfter: wallet.balance,
+                metadata: {
+                  paymentId: payment._id,
+                  propertyId: property._id,
+                  reason: 'Auction lost – refund',
+                },
+              },
+            ],
+            { session }
+          );
+        }
 
-      
-      if (!bid.escrowPaymentId) {
-        console.log('⚠️ No escrow payment ID for bid:', bid._id);
-        continue;
-      }
+        payment.refundAmount = refundAmount;
+        payment.refundStatus = 'completed';
+        payment.status = 'refunded';
+        payment.refundReason = 'failed_bid';
+        await payment.save({ session });
 
-      const payment = await Payment.findById(bid.escrowPaymentId);
+        bid.bidStatus = 'outbid';
+        await bid.save({ session });
 
-      
-      if (!payment) {
-        console.log('⚠️ Payment not found:', bid.escrowPaymentId);
-        continue;
-      }
+        await session.commitTransaction();
 
-      if (payment.status !== 'success') {
-        console.log('⚠️ Payment status is not success:', payment.status);
-        continue;
-      }
-
-      if (payment.refundStatus === 'completed') {
-        console.log('⚠️ Refund already completed for payment:', payment._id);
-        continue;
-      }
-
-      
-      const baseAmount = payment.metadata?.originalAmount || payment.amount;
-      const refundAmount = Math.round(baseAmount * 0.6);
-
-      console.log(' Refund calculation:', {
-        baseAmount,
-        refundAmount,
-        bidderId: bid.bidderId,
-      });
-
-      
-      let wallet = await Wallet.findOne({ userId: bid.bidderId });
-
-      if (!wallet) {
-        console.log(' Creating new wallet for user:', bid.bidderId);
-        wallet = await Wallet.create({
-          userId: bid.bidderId,
-          balance: 0,
+        io.to(bid.bidderId.toString()).emit('newNotification', {
+          message: `💸 Refund ₹${refundAmount} credited`,
         });
-        console.log('✅ Wallet created:', wallet._id);
+      } catch (e) {
+        await session.abortTransaction();
+        console.error('Refund failed:', e);
+      } finally {
+        session.endSession();
       }
-
-      console.log(' Current wallet balance:', wallet.balance);
-
-      
-      wallet.balance += refundAmount;
-      wallet.updatedAt = now;
-      await wallet.save();
-
-      console.log('✅ New wallet balance:', wallet.balance);
-
-    
-     
-      await WalletTransaction.create({
-        walletId: wallet._id,
-        userId: bid.bidderId,
-        type: 'credit',
-        source: 'refund',
-        amount: refundAmount,
-        balanceAfter: wallet.balance,
-        metadata: {
-          propertyId: property._id,
-          paymentId: payment._id,
-          reason: 'Auction lost – 60% refund',
-        },
-      });
-
-      console.log('✅ Wallet transaction created');
-
-      //Update payment refund state
-      payment.refundAmount = refundAmount;
-      payment.refundStatus = 'completed';
-      payment.refundReason = 'failed_bid';
-      payment.status = 'refunded';
-      await payment.save();
-
-      console.log('✅ Payment updated to refunded status');
     }
 
-    io.to(`auction_${property._id}`).emit('auction_ended', {
-      propertyId: property._id,
-    });
-
-    console.log('✅ Auction completed:', property.title);
+    io.to(`auction_${property._id}`).emit('auction_ended');
+    console.log(`✅ Auction ${property._id} fully settled`);
   }
-
-  console.log('\n✅ Auction lifecycle + wallet refunds processed successfully');
 };

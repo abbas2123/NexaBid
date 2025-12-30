@@ -21,7 +21,7 @@ const vendorTenderRoutes = require('./routes/vendor/tenderBId');
 const vendorPostAwardRoutes = require('./routes/vendor/postAwardRoute');
 const paymentRoutes = require('./routes/paymentRoute/payment');
 const auctionRoutes = require('./routes/auction/liveAuction');
-
+const chatRoute = require('./routes/chat/routerChat');
 
 module.exports = function registerRoutes(app) {
   app.use('/', landingRoute);
@@ -46,4 +46,5 @@ module.exports = function registerRoutes(app) {
   app.use('/publisher', vendorPostAwardRoutes);
   app.use('/payments', paymentRoutes);
   app.use('/auctions', auctionRoutes);
+  app.use('/chat',chatRoute);
 };

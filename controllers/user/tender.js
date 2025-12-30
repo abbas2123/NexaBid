@@ -5,11 +5,13 @@ const {
   LAYOUTS,
   SUCCESS_MESSAGES,
   ERROR_MESSAGES,
+  ERROR_CODES,
+  DEFAULTS,
 } = require('../../utils/constants');
 
 exports.getTenderListingPage = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    const page = parseInt(req.query.page) || DEFAULTS.PAGE;
 
     const { tenders, pagination } = await tenderService.getAllTenders(page);
 
@@ -59,7 +61,10 @@ exports.getTenderDetailsPage = async (req, res) => {
     console.error('Tender Details Error:', err);
 
     // Special handling for draft / restricted
-    if (err.code === 'TENDER_DRAFT' || err.statusCode === 403) {
+    if (
+      err.code === ERROR_CODES.TENDER_DRAFT ||
+      err.statusCode === statusCode.FORBIDDEN
+    ) {
       return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
         message: ERROR_MESSAGES.TENDER_RESTRICTED,
@@ -79,13 +84,13 @@ exports.resubmitTender = async (req, res) => {
     const tenderId = req.params.id;
     const body = req.body;
     const uploadedFiles = req.files || [];
-
+     console.log("req.files:",req.files);
     const updatedTender = await tenderService.resubmitTenderService(
       tenderId,
       body,
       uploadedFiles
     );
-
+  // 
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,

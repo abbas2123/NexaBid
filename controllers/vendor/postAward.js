@@ -1,5 +1,6 @@
 const postAwardService = require("../../services/vendor/postAward");
 const statusCode = require("../../utils/statusCode");
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require("../../utils/constants");
 const poService = require("../../services/vendor/poService");
 const Tender = require("../../models/tender");
 const TenderBid = require("../../models/tenderBid");
@@ -19,7 +20,7 @@ exports.getPublisherPostAwardPage = async (req, res) => {
     if (result.redirectToEvaluation) return res.redirect(result.url);
 
     return res.render("profile/postAward", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       ...result,
       user: req.user,
     });
@@ -65,7 +66,7 @@ exports.showCreatePOPage = async (req, res) => {
     const vendor = winnerBid.vendorId;
     const amount = winnerBid.quotes.amount;
     return res.render("profile/createPo", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       tender,
       user,
       showSuccessModal: false,
@@ -100,7 +101,7 @@ exports.createPO = async (req, res) => {
     const vendor = winnerBid.vendorId;
 
     return res.render("profile/createPO", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       tender: po.tender,
       user: req.user,
       showSuccessModal: true,
@@ -122,7 +123,7 @@ exports.viewPO = async (req, res) => {
     const { po, tender } = await poService.getPOData(tenderId);
 
     return res.render("profile/viewPO", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       po,
       tender,
       vendor: po.vendorId,
@@ -130,7 +131,7 @@ exports.viewPO = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).send(err.message || "Server Error");
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(err.message || "Server Error");
   }
 };
 
@@ -138,7 +139,7 @@ exports.getUploadPage = async (req, res) => {
   const tenderId = req.params.id;
 
   return res.render("profile/draftAgreement", {
-    layout: "layouts/user/userLayout",
+    layout: LAYOUTS.USER_LAYOUT,
     tenderId,
   });
 };
@@ -161,12 +162,12 @@ exports.uploadAgreement = async (req, res) => {
     console.error(err.message);
 
     if (err.message === "NO_FILE")
-      return res.status(400).send("No file uploaded");
+      return res.status(statusCode.BAD_REQUEST).send("No file uploaded");
 
     if (err.message === "WINNER_NOT_FOUND")
-      return res.status(400).send("Winner not found");
+      return res.status(statusCode.BAD_REQUEST).send("Winner not found");
 
-    return res.status(500).send("Upload failed");
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send("Upload failed");
   }
 };
 
@@ -184,9 +185,9 @@ exports.view = async (req, res) => {
     console.error(err.message);
 
     if (err.message === "FILE_NOT_FOUND")
-      return res.status(404).send("File not found");
+      return res.status(statusCode.NOT_FOUND).send("File not found");
 
-    return res.status(500).send("Unable to open file");
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send("Unable to open file");
   }
 };
 
@@ -202,7 +203,7 @@ exports.approveAgreement = async (req, res) => {
     );
   } catch (err) {
     console.error(err.message);
-    return res.status(500).send("Approval failed");
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send("Approval failed");
   }
 };
 
@@ -219,7 +220,7 @@ exports.rejectAgreement = async (req, res) => {
     );
   } catch (err) {
     console.error(err.message);
-    return res.status(500).send("Reject failed");
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send("Reject failed");
   }
 };
 
@@ -235,14 +236,14 @@ exports.issuePage = async (req, res) => {
     );
 
     res.render("profile/workOrder", {
-        layout:'layouts/user/userLayout',
+        layout: LAYOUTS.USER_LAYOUT,
         tender:data.tender,
         vendor:data.vendor,
         contractRef: data.contractRef 
     });
   } catch (err) {
     console.log("Issue page error:", err);
-    res.status(404).render("error",{layout:'layouts/user/userLayout',message:err.message});
+    res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR,{layout:LAYOUTS.USER_LAYOUT,message:err.message});
   }
 };
 
@@ -261,7 +262,7 @@ exports.issueWorkOrder = async (req, res) => {
     res.redirect(`/publisher/tender/${tenderId}/post-award`);
   } catch (err) {
     console.error("Issue work order error:", err.message);
-    res.status(400).send(err.message);
+    res.status(statusCode.BAD_REQUEST).send(err.message);
   }
 };
 
@@ -280,7 +281,7 @@ exports.view = async (req, res) => {
     res.sendFile(filePath);
   } catch (err) {
     console.error("View work order error:", err.message);
-    res.status(404).send("Work order not found");
+    res.status(statusCode.NOT_FOUND).send("Work order not found");
   }
 };
 

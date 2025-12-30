@@ -1,7 +1,13 @@
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid');
 const Payment = require('../../models/payment');
-
+const {
+  AUCTION_STATUS,
+  ERROR_MESSAGES,
+  PAYMENT_STATUS,
+  PAYMENT_TYPES,
+  BID_STATUS,
+} = require('../../utils/constants');
 
 class AuctionService {
   static async getAuctionPageData(propertyId) {
@@ -9,16 +15,16 @@ class AuctionService {
       .populate('currentHighestBidder', 'name email')
       .lean();
     if (!property || !property.isAuction) {
-      throw new Error('INVALID_AUCTION');
+      throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
 
     const now = new Date();
     const auctionStatus =
       now < property.auctionStartsAt
-        ? 'not_satarted' 
+        ? AUCTION_STATUS.NOT_STARTED
         : now > property.auctionEndsAt
-          ? 'ended'
-          : 'live';
+          ? AUCTION_STATUS.ENDED
+          : AUCTION_STATUS.LIVE;
 
     return {
       property,
@@ -37,18 +43,18 @@ class AuctionService {
       .lean();
 
     if (!property || !property.isAuction) {
-      throw new Error('INVALID_AUCTION');
+      throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     if (property.sellerId.toString() !== sellerId.toString()) {
-      throw new Error('UNAUTHORIZED');
+      throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
     }
 
     const now = new Date();
-    let auctionStatus = 'not_started';
+    let auctionStatus = AUCTION_STATUS.NOT_STARTED;
     if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
-      auctionStatus = 'live';
+      auctionStatus = AUCTION_STATUS.LIVE;
     } else if (now > property.auctionEndsAt) {
-      auctionStatus = 'ended';
+      auctionStatus = AUCTION_STATUS.ENDED;
     }
 
     const bids = await PropertyBid.find({ propertyId })
@@ -74,7 +80,7 @@ class AuctionService {
     );
 
     if (!property) {
-      throw new Error('NOT_FOUND');
+      throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
     }
 
     if (
@@ -90,22 +96,22 @@ class AuctionService {
     const property = await Property.findByIdAndUpdate(propertyId);
 
     if (!property || !property.isAuction) {
-      throw new Error('INVALID_AUCTION');
+      throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
 
     if (Number(maxBid) <= property.currentHighestBid) {
-      throw new Error('BID_TOO_LOW');
+      throw new Error(ERROR_MESSAGES.BID_TOO_LOW);
     }
 
     const participationPayment = await Payment.findOne({
       userId,
       contextId: propertyId,
-      contextType: 'partication_fee',
-      statis: 'success',
+      contextType: PAYMENT_TYPES.PARTICIPATION_FEE,
+      status: PAYMENT_STATUS.SUCCESS,
     });
 
     if (!participationPayment) {
-      throw new Error('PAYMENT_REQUIRED');
+      throw new Error(ERROR_MESSAGES.PAYMENT_REQUIRED);
     }
 
     await PropertyBid.findOneAndUpdate(
@@ -116,7 +122,7 @@ class AuctionService {
         isAutoBid: true,
         autoBidMax: maxBid,
         amount: property.currentHighestBid || property.basePrice,
-        bidStatus: 'active',
+        bidStatus: BID_STATUS.ACTIVE,
         escrowPaymentId: participationPayment._id,
       },
       { upsert: true, new: true }
@@ -124,17 +130,17 @@ class AuctionService {
     return true;
   }
 
-  static async getAutoBidPageData(propertyId,userId){
+  static async getAutoBidPageData(propertyId, userId) {
     const property = await Property.findById(propertyId).lean();
 
-    if(!property || !property.isAuction){
-      throw new Error('INVALID_AUCTION');
+    if (!property || !property.isAuction) {
+      throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
 
     const existingAutoBid = await PropertyBid.findOne({
       propertyId,
       bidderId: userId,
-      isAutoBid:true,
+      isAutoBid: true,
     }).lean();
 
     return {

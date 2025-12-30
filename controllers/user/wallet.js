@@ -2,7 +2,8 @@ const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
-
+const statusCode = require('../../utils/statusCode');
+const { LAYOUTS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getWalletPage = async (req, res) => {
   try {
@@ -32,14 +33,14 @@ exports.getWalletPage = async (req, res) => {
     console.log(`📊 Found ${transactions.length} recent transactions`);
 
     res.render('profile/wallat', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       walletBalance: wallet.balance,
       transactions,
       user: req.user,
     });
   } catch (error) {
     console.error('❌ Wallet page error:', error);
-    res.status(500).send('Server error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -115,7 +116,7 @@ exports.getAllTransactions = async (req, res) => {
     const allSources = await WalletTransaction.distinct('source', { userId });
 
     res.render('profile/allTransactions', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       walletBalance: wallet.balance,
       transactions,
       currentPage: page,
@@ -133,7 +134,7 @@ exports.getAllTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Transactions page error:', error);
-    res.status(500).send('Server error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -181,13 +182,13 @@ exports.getAddFundsPage = async (req, res) => {
     }
 
     res.render('profile/addFunds', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       walletBalance: wallet.balance,
       user: req.user,
     });
   } catch (error) {
     console.error('❌ Add funds page error:', error);
-    res.status(500).send('Server error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 

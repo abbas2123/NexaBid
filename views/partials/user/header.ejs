@@ -6,7 +6,7 @@
 
   <!-- Updated Logo -->
   <a href="/" class="flex items-center gap-2">
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
+    <link rel="icon" type="image/x-icon" href="image/x-icon;base64," />
     <span class="text-[#111518] text-lg sm:text-xl font-bold leading-tight">
       NexaBid
     </span>
@@ -41,9 +41,18 @@
                </div>
         </div>
 <script src="/js/search.js"></script>
-        <!-- Chat Icon -->
-        <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-          <span class="material-icons text-gray-600 dark:text-gray-400">chat_bubble_outline</span>
+
+        <!-- Chat Icon with Unread Badge -->
+        <button onclick="openChatInbox()"
+          class="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+          <span class="material-icons text-gray-600 dark:text-gray-400">
+            chat_bubble_outline
+          </span>
+          
+          <!-- Unread Message Count Badge -->
+          <span id="chatBadge"
+              class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full hidden">
+          </span>
         </button>
 
         <!-- Notifications Icon -->
@@ -137,6 +146,7 @@
   </div>
 </header>
 
+<!-- Mobile Menu Toggle Script -->
 <script>
   document.getElementById("menu-btn")?.addEventListener("click", () => {
     const menu = document.getElementById("mobile-menu");
@@ -144,6 +154,7 @@
   });
 </script>
 
+<!-- Notification Modal Scripts -->
 <script>
   const btn = document.getElementById("notificationBtn");
   const modal = document.getElementById("notificationModal");
@@ -164,6 +175,8 @@
     }
   });
 </script>
+
+<!-- Clear All Notifications Script -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -196,6 +209,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
+
+<!-- Load Notifications Script -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const list = document.getElementById("notificationsList");
@@ -237,3 +252,81 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNotifications(); // load once
 });
 </script>
+
+<!-- Load Unread Message Count Script -->
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const chatBadge = document.getElementById("chatBadge");
+
+  async function loadUnreadMessageCount() {
+    try {
+      const res = await fetch("/chat/unread-count");
+      const data = await res.json();
+
+      if (!data.success) return;
+
+      const count = data.count;
+
+      if (count === 0) {
+        chatBadge.classList.add("hidden");
+        return;
+      }
+
+      chatBadge.classList.remove("hidden");
+      chatBadge.textContent = count > 99 ? '99+' : count;
+    } catch (err) {
+      console.error("Unread message count load failed", err);
+    }
+  }
+
+  loadUnreadMessageCount(); // Load on page load
+  
+  // Optional: Refresh every 30 seconds
+  setInterval(loadUnreadMessageCount, 30000);
+  
+  // Make function globally accessible for updates
+  window.loadUnreadMessageCount = loadUnreadMessageCount;
+});
+</script>
+
+<!-- Chat Navigation Function -->
+<script>
+function openChatInbox() {
+  window.location.href = "/chat";
+}
+</script>
+
+<!-- Socket.io Real-Time Chat Badge Updates -->
+<% if (user) { %>
+<script>
+  // Wait for socket to be initialized
+  if (typeof io !== 'undefined') {
+    const socket = io();
+    const currentUserId = '<%= user._id %>';
+    
+    // Join user's personal room
+    socket.emit('joinUser', currentUserId);
+    
+    // Listen for new inbox messages (when you receive a message)
+    socket.on('inbox_message', (data) => {
+      // Update chat badge when new message arrives
+      if (typeof window.loadUnreadMessageCount === 'function') {
+        window.loadUnreadMessageCount();
+      }
+    });
+    
+    // Listen for messages_seen event (when thread is read)
+    socket.on('messages_seen', (data) => {
+      // Update badge when messages are marked as read
+      if (data.seenBy === currentUserId) {
+        // User read their own messages, no change needed
+      } else {
+        // Someone else read messages in a thread, refresh badge
+        if (typeof window.loadUnreadMessageCount === 'function') {
+          window.loadUnreadMessageCount();
+        }
+      }
+    });
+  }
+</script>
+<% } %>

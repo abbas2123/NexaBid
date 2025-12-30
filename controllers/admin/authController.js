@@ -1,19 +1,29 @@
-const adminAuthService = require("../../services/admin/authService");
-const statusCode = require("../../utils/statusCode");
+const adminAuthService = require('../../services/admin/authService');
+const statusCode = require('../../utils/statusCode');
+const {
+  VIEWS,
+  REDIRECTS,
+  SUCCESS_MESSAGES,
+  LAYOUTS,
+  ERROR_MESSAGES,
+} = require('../../utils/constants');
 
 exports.getAdminLogin = (req, res) => {
   if (req.cookies.adminToken) {
-    return res.redirect("/admin/dashboard");
+    return res.redirect(REDIRECTS.ADMIN_DASHBOARD);
   }
 
   res.setHeader(
-    "Cache-Control",
-    "no-store, no-cache, must-revalidate, max-age=0",
+    'Cache-Control',
+    'no-store, no-cache, must-revalidate, max-age=0'
   );
-  res.setHeader("Pragma", "no-cache");
-  res.setHeader("Expires", "0");
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
 
-  res.render("admin/login", { layout: false, title: "Admin login - nexaBid" });
+  res.render(VIEWS.ADMIN_LOGIN, {
+    layout: false,
+    title: 'Admin login - nexaBid',
+  });
 };
 
 exports.postAdminLogin = async (req, res) => {
@@ -22,16 +32,16 @@ exports.postAdminLogin = async (req, res) => {
 
     const result = await adminAuthService.adminLogin(email, password);
 
-    res.cookie("adminToken", result.token, {
+    res.cookie('adminToken', result.token, {
       httpOnly: true,
       secure: false,
-      sameSite: "lax",
-      path: "/",
+      sameSite: 'lax',
+      path: '/',
     });
     return res.json({
       success: true,
-      message: "Admin logged in successfully",
-      redirectUrl: "/admin/dashboard",
+      message: SUCCESS_MESSAGES.ADMIN_LOGIN_SUCCESS,
+      redirectUrl: REDIRECTS.ADMIN_DASHBOARD,
     });
   } catch (err) {
     return res.json({
@@ -42,14 +52,14 @@ exports.postAdminLogin = async (req, res) => {
 };
 
 exports.adminLogout = (req, res) => {
-  res.clearCookie("adminToken", {
+  res.clearCookie('adminToken', {
     httpOnly: true,
     secure: false,
-    sameSite: "lax",
+    sameSite: 'lax',
   });
 
-  res.setHeader("Cache-Control", "no-store");
-  return res.redirect("/admin/login");
+  res.setHeader('Cache-Control', 'no-store');
+  return res.redirect(REDIRECTS.ADMIN_LOGIN);
 };
 
 exports.getAdminDashboard = async (req, res) => {
@@ -57,19 +67,21 @@ exports.getAdminDashboard = async (req, res) => {
     const stats = await adminAuthService.getDashboardStats();
     const activities = await adminAuthService.getRecentActivities();
     const tasks = await adminAuthService.getPendingTasks();
-    console.log("📊 Dashboard Stats:", stats);
-    console.log("📊 Dashboard Stats:", tasks);
-    return res.render("admin/dahboard", {
-      layout: "layouts/admin/adminLayout.ejs",
-      title: "Admin Dashboard - NexaBid",
+    console.log('📊 Dashboard Stats:', stats);
+    console.log('📊 Dashboard Stats:', tasks);
+    return res.render(VIEWS.ADMIN_DASHBOARD, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      title: 'Admin Dashboard - NexaBid',
       stats,
       activities,
       tasks,
-      currentPage: "dashboard",
+      currentPage: 'dashboard',
     });
   } catch (err) {
-    console.error("Admin dashboard Error:", err);
-    return res.status(statusCode.INTERNAL_ERROR).send("server Error");
+    console.error('Admin dashboard Error:', err);
+    return res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -77,15 +89,17 @@ exports.getUserManagement = async (req, res) => {
   try {
     const users = await adminAuthService.getAllUsers();
 
-    return res.render("admin/userManagement", {
-      layout: "layouts/admin/adminLayout",
-      title: "User Management",
+    return res.render(VIEWS.ADMIN_USER_MANAGEMENT, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      title: 'User Management',
       users,
-      currentPage: "user-management",
+      currentPage: 'user-management',
     });
   } catch (err) {
-    console.error("User Management Error:", err);
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    console.error('User Management Error:', err);
+    return res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -95,7 +109,7 @@ exports.blockUser = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "User Blocked Successfully",
+      message: SUCCESS_MESSAGES.USER_BLOCKED,
     });
   } catch (err) {
     return res.json({ success: false, message: err.message });
@@ -108,7 +122,7 @@ exports.unblockUser = async (req, res) => {
 
     return res.json({
       success: true,
-      message: "User unblocked successfully",
+      message: SUCCESS_MESSAGES.USER_UNBLOCKED,
     });
   } catch (err) {
     return res.json({ success: false, message: err.message });

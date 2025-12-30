@@ -1,7 +1,7 @@
 const Property = require('../../models/property');
 const statusCode = require('../../utils/statusCode');
 const Payment = require('../../models/payment');
-
+const { parseLocalDatetime, formatIST } = require('../../utils/datetime');
 
 exports.getProperties = async (page = 1, filters = {}) => {
   const limit = 8;
@@ -170,8 +170,10 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   return property;
 };
 
+
+
+
 exports.updatePropertyService = async (propertyId, userId, body, files) => {
-  // find property owned by logged user
   const existingProperty = await Property.findOne({
     _id: propertyId,
     sellerId: userId,
@@ -182,9 +184,8 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     error.statusCode = statusCode.NOT_FOUND;
     throw error;
   }
-  console.log('wefwe', body.auctionStartsAt);
-  console.log('wefwe', body.auctionEndsAt);
-  // update base fields
+
+  // Update base fields
   existingProperty.title = body.title;
   existingProperty.description = body.description;
   existingProperty.type = body.type;
@@ -200,13 +201,26 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
 
   if (existingProperty.isAuction) {
     existingProperty.basePrice = body.basePrice;
-    existingProperty.auctionStartsAt = body.auctionStartsAt;
-    existingProperty.auctionEndsAt = body.auctionEndsAt;
+    existingProperty.auctionStartsAt = parseLocalDatetime(body.auctionStartsAt);
+    existingProperty.auctionEndsAt = parseLocalDatetime(body.auctionEndsAt);
     existingProperty.auctionStep = body.auctionStep;
     existingProperty.auctionReservePrice = body.auctionReservePrice;
     existingProperty.auctionAutoExtendMins = body.auctionAutoExtendMins;
     existingProperty.auctionLastBidWindowMins = body.auctionLastBidWindowMins;
     existingProperty.buyNowPrice = null;
+
+    // Validate
+    if (!existingProperty.auctionStartsAt || !existingProperty.auctionEndsAt) {
+      const error = new Error('Auction start/end required');
+      error.statusCode = statusCode.BAD_REQUEST;
+      throw error;
+    }
+
+    if (existingProperty.auctionEndsAt <= existingProperty.auctionStartsAt) {
+      const error = new Error('Auction end must be after start');
+      error.statusCode = statusCode.BAD_REQUEST;
+      throw error;
+    }
   } else {
     existingProperty.buyNowPrice = body.buyNowPrice;
     existingProperty.basePrice = null;
@@ -218,34 +232,47 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     existingProperty.auctionLastBidWindowMins = null;
   }
 
+  // Logs: show BOTH ISO (UTC) and IST (what you expect)
+  console.log('INPUT start:', body.auctionStartsAt);
+  console.log('INPUT end  :', body.auctionEndsAt);
+
+  console.log(
+    'STORED start ISO:',
+    existingProperty.auctionStartsAt?.toISOString()
+  );
+  console.log(
+    'STORED end   ISO:',
+    existingProperty.auctionEndsAt?.toISOString()
+  );
+
+  console.log('STORED start IST:', formatIST(existingProperty.auctionStartsAt));
+  console.log('STORED end   IST:', formatIST(existingProperty.auctionEndsAt));
+
   // media update
   if (files?.media?.length > 0) {
     const newMedia = files.media.map((file) => ({
       url: `/uploads/property-media/${file.filename}`,
       fileName: file.filename,
     }));
-
     existingProperty.media.push(...newMedia);
   }
 
-  // document update
+  // docs update
   if (files?.docs?.length > 0) {
     const newDocs = files.docs.map((file) => ({
       url: `/uploads/property-docs/${file.filename}`,
       fileName: file.filename,
     }));
-
     existingProperty.docs.push(...newDocs);
   }
 
-  // status changes
   existingProperty.verificationStatus = 'submitted';
   existingProperty.rejectionMessage = null;
 
   await existingProperty.save();
-
   return existingProperty;
 };
+
 
 exports.getPropertyForEdit = async (propertyId) => {
   const property = await Property.findById(propertyId).lean();

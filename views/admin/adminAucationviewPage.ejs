@@ -1,5 +1,5 @@
 <h1 class="text-2xl font-bold mb-4">
-  Live Auction (Admin) property : <%= property.title %>
+  Live Auction (Admin) - Property: <%= property.title %>
 </h1>
 
 <p class="text-sm text-gray-500 mb-4">
@@ -8,11 +8,15 @@
 
 <p class="text-xl font-bold text-green-600 mb-4">
   Current Highest Bid:
-  ₹ <%= currentHighestBid.toLocaleString("en-IN") %>
+  ₹<span id="currentBid"><%= currentHighestBid.toLocaleString("en-IN") %></span>
 </p>
 
 <% if (auctionStatus === "live") { %>
   <p id="countdown" class="text-lg font-bold text-red-600"></p>
+<% } else if (auctionStatus === "ended") { %>
+  <p class="text-lg font-bold text-gray-600">Auction Ended</p>
+<% } else if (auctionStatus === "upcoming") { %>
+  <p class="text-lg font-bold text-blue-600">Auction Not Started Yet</p>
 <% } %>
 
 <table class="w-full text-sm mt-6 border">
@@ -40,41 +44,89 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  const socket = io("http://localhost:3000", {
-  auth: {
-    token: localStorage.getItem("token")
-  }
-});
-  socket.emit("join_auction", {
-    propertyId: "<%= propertyId %>",
-    userId: "admin"
+  const propertyId = "<%= propertyId %>";
+
+  const socket = io({
+    transports: ["websocket"],
+    withCredentials: true
   });
 
-  socket.on("new_bid", data => {
+  socket.on("connect", () => {
+    console.log("🟢 Admin connected");
+
+    socket.emit("join_auction", { propertyId }, (res) => {
+      console.log("🟣 Joined:", res);
+    });
+  });
+
+  socket.on("new_bid", (data) => {
+    console.log("📩 new bid", data);
+
+    document.getElementById("currentBid").textContent =
+      Number(data.amount).toLocaleString("en-IN");
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td class="p-2">${data.bidderId}</td>
-      <td class="p-2 font-bold">₹ ${data.amount.toLocaleString("en-IN")}</td>
+      <td class="p-2">${data.bidderName}</td>
+      <td class="p-2 font-bold">₹ ${Number(data.amount).toLocaleString("en-IN")}</td>
       <td class="p-2">${new Date(data.time).toLocaleTimeString()}</td>
     `;
     document.getElementById("bidFeed").prepend(row);
   });
+
+  socket.on("auction_extended", (d) => {
+    window.auctionEndTime = new Date(d.newEndTime).getTime();
+  });
 </script>
+
 
 <% if (auctionStatus === "live") { %>
 <script>
-  const end = new Date("<%= auctionEndsAt %>").getTime();
+  // Store end time globally so it can be updated by auction_extended event
+  window.auctionEndTime = new Date("<%= auctionEndsAt %>").getTime();
   const el = document.getElementById("countdown");
 
-  setInterval(() => {
-    const diff = end - Date.now();
+  const updateCountdown = () => {
+    const diff = window.auctionEndTime - Date.now();
+    
     if (diff <= 0) {
       el.innerText = "Auction Ended";
+      el.classList.remove("text-red-600");
+      el.classList.add("text-gray-600");
+      clearInterval(countdownInterval);
       return;
     }
-    const m = Math.floor(diff / 60000);
-    const s = Math.floor((diff % 60000) / 1000);
-    el.innerText = `Ends in ${m}m ${s}s`;
-  }, 1000);
+    
+    const hours = Math.floor(diff / 3600000);
+    const minutes = Math.floor((diff % 3600000) / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+    
+    if (hours > 0) {
+      el.innerText = `Ends in ${hours}h ${minutes}m ${seconds}s`;
+    } else {
+      el.innerText = `Ends in ${minutes}m ${seconds}s`;
+    }
+    
+    // Change color when less than 2 minutes remaining (last minute window)
+    if (diff <= 120000) {
+      el.classList.add("animate-pulse");
+    }
+  };
+
+  // Update immediately
+  updateCountdown();
+  
+  // Then update every second
+  const countdownInterval = setInterval(updateCountdown, 1000);
 </script>
 <% } %>
+
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .animate-pulse {
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+</style>

@@ -4,6 +4,7 @@ const router = express.Router();
 
 const authController = require("../../controllers/user/userProfile");
 const authMiddleware = require("../../middlewares/authMiddleware");
+const TransactionControler = require('../../controllers/user/transaction');
 const uploads = require("../../middlewares/agreementupload");
 
 router.get("/profile", authMiddleware.protectRoute, authController.userProfile);
@@ -55,5 +56,10 @@ router.post(
   authMiddleware.protectRoute,
   uploads.single("signedAgreement"),
   authController.uploadSignedAgreement
+);
+router.get(
+  '/transactions',
+  authMiddleware.protectRoute,
+  TransactionControler.getTransaction
 );
 module.exports = router;

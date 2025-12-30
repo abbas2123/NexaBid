@@ -10,6 +10,15 @@ const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const {
+  PAYMENT_STATUS,
+  CONTEXT_TYPES,
+  PAYMENT_TYPES,
+  GATEWAYS,
+  COUPON_TYPES,
+  BID_STATUS,
+  ERROR_MESSAGES,
+} = require('../../utils/constants');
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -17,7 +26,7 @@ const razorpay = new Razorpay({
 });
 
 const _handlePostPaymentActions = async (payment, userId) => {
-  if (payment.contextType === 'property') {
+  if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(payment.contextId);
     await PropertyBid.findOneAndUpdate(
       { propertyId: payment.contextId, bidderId: userId },
@@ -26,7 +35,7 @@ const _handlePostPaymentActions = async (payment, userId) => {
         bidderId: userId,
         amount: property.basePrice || 0,
         escrowPaymentId: payment._id,
-        bidStatus: 'active',
+        bidStatus: BID_STATUS.ACTIVE,
       },
       { upsert: true, new: true }
     );
@@ -51,55 +60,55 @@ const _handlePostPaymentActions = async (payment, userId) => {
     }
   }
 
-  if (payment.contextType === 'property') {
+  if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     await PropertyParticipant.create({
       userId,
       propertyId: payment.contextId,
       participationPaymentId: payment._id,
-      status: 'active',
+      status: BID_STATUS.ACTIVE,
     });
     console.log('✅ Property participant created');
-  } else if (payment.contextType === 'tender') {
+  } else if (payment.contextType === CONTEXT_TYPES.TENDER) {
     await TenderParticipants.create({
       userId,
       tenderId: payment.contextId,
       participationPaymentId: payment._id,
-      status: 'active',
+      status: BID_STATUS.ACTIVE,
     });
     console.log('✅ Tender participant created');
   }
-};;
+};
 
 exports.initiatePayment = async (userId, type, id) => {
   let amount = 0;
 
-  if (type === 'property') {
+  if (type === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(id);
-    if (!property) throw new Error('Property not found');
+    if (!property) throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
     amount = 5000;
-  } else if (type === 'tender') {
+  } else if (type === CONTEXT_TYPES.TENDER) {
     const tender = await Tender.findById(id);
-    if (!tender) throw new Error('Tender not found');
+    if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
     amount = 5000 + tender.emdAmount;
   } else {
-    throw new Error('Invalid context type');
+    throw new Error(ERROR_MESSAGES.INVALID_CONTEXT_TYPE);
   }
 
   return await Payment.create({
     userId,
     contextType: type,
     contextId: id,
-    type: 'participation_fee',
+    type: PAYMENT_TYPES.PARTICIPATION_FEE,
     amount,
-    gateway: 'razorpay',
-    status: 'pending',
+    gateway: GATEWAYS.RAZORPAY,
+    status: PAYMENT_STATUS.PENDING,
   });
 };
 
 exports.createRazorpayOrder = async (paymentId, amount) => {
   const payment = await Payment.findById(paymentId);
-  if (!payment || payment.status !== 'pending') {
-    throw new Error('Invalid payment or payment not pending');
+  if (!payment || payment.status !== PAYMENT_STATUS.PENDING) {
+    throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
 
   const razorOrder = await razorpay.orders.create({
@@ -120,8 +129,8 @@ exports.createRazorpayOrder = async (paymentId, amount) => {
 
 exports.getEscrowPageDetails = async (paymentId, userId) => {
   const payment = await Payment.findById(paymentId);
-  if (!payment || payment.status !== 'pending') {
-    throw new Error('Invalid payment');
+  if (!payment || payment.status !== PAYMENT_STATUS.PENDING) {
+    throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
 
   // Get or create wallet
@@ -133,7 +142,7 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
   let product;
   let breakdown = [];
 
-  if (payment.contextType === 'property') {
+  if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     product = await Property.findById(payment.contextId);
     breakdown.push({ label: 'Participation Fee', amount: payment.amount });
   } else {
@@ -164,8 +173,8 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
 
 exports.processWalletPayment = async (userId, paymentId, amount) => {
   const payment = await Payment.findById(paymentId);
-  if (!payment || payment.status !== 'pending') {
-    throw new Error('Invalid payment');
+  if (!payment || payment.status !== PAYMENT_STATUS.PENDING) {
+    throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
 
   let userWallet = await Wallet.findOne({ userId });
@@ -201,8 +210,8 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
   });
 
   // Update payment
-  payment.status = 'success';
-  payment.gateway = 'wallet';
+  payment.status = PAYMENT_STATUS.SUCCESS;
+  payment.gateway = GATEWAYS.WALLET;
   payment.gatewayTransactionId = `WALLET_${Date.now()}`;
   await payment.save();
 
@@ -220,7 +229,7 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
     razorpayData;
 
   const payment = await Payment.findById(paymentId);
-  if (!payment) throw new Error('Payment not found');
+  if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
 
   const generatedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -228,12 +237,12 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
     .digest('hex');
 
   if (generatedSignature !== razorpay_signature) {
-    payment.status = 'failed';
+    payment.status = PAYMENT_STATUS.FAILED;
     await payment.save();
-    throw new Error('Signature verification failed');
+    throw new Error(ERROR_MESSAGES.SIGNATURE_FAILED);
   }
 
-  payment.status = 'success';
+  payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gatewayTransactionId = razorpay_payment_id;
   await payment.save();
 
@@ -249,40 +258,40 @@ exports.getPaymentById = async (paymentId) => {
 
 exports.applyCoupon = async (userId, intentId, couponCode) => {
   const payment = await Payment.findById(intentId);
-  if (!payment || payment.status !== 'pending')
-    throw new Error('Invalid payment');
+  if (!payment || payment.status !== PAYMENT_STATUS.PENDING)
+    throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   if (payment.metadata?.coupon)
-    throw new Error('Please remove existing coupon first');
+    throw new Error(ERROR_MESSAGES.REMOVE_COUPON_FIRST);
 
   const coupon = await Coupon.findOne({
     code: couponCode.toUpperCase(),
   }).lean();
-  if (!coupon) throw new Error('Invalid coupon');
+  if (!coupon) throw new Error(ERROR_MESSAGES.INVALID_COUPON);
 
   const now = new Date();
   if (
     (coupon.startsAt && now < coupon.startsAt) ||
     (coupon.expiresAt && now > coupon.expiresAt)
   ) {
-    throw new Error('Coupon expired');
+    throw new Error(ERROR_MESSAGES.COUPON_EXPIRED);
   }
 
   if (coupon.minPurchaseAmount && payment.amount < coupon.minPurchaseAmount) {
-    throw new Error('Minimum purchase not met');
+    throw new Error(ERROR_MESSAGES.MIN_PURCHASE_NOT_MET);
   }
 
   const alreadyUsed = await CouponRedemption.findOne({
     couponId: coupon._id,
     userId,
   });
-  if (alreadyUsed) throw new Error('Coupon already used');
+  if (alreadyUsed) throw new Error(ERROR_MESSAGES.COUPON_ALREADY_USED);
 
   const originalAmount = payment.amount;
   let discount = 0;
 
-  if (coupon.type === 'flat') {
+  if (coupon.type === COUPON_TYPES.FLAT) {
     discount = coupon.value;
-  } else if (coupon.type === 'percent') {
+  } else if (coupon.type === COUPON_TYPES.PERCENT) {
     discount = (payment.amount * coupon.value) / 100;
     if (coupon.maxDiscount) {
       discount = Math.min(discount, coupon.maxDiscount);
@@ -312,10 +321,11 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
 
 exports.removeCoupon = async (intentId) => {
   const payment = await Payment.findById(intentId);
-  if (!payment) throw new Error('Payment not found');
-  if (payment.status !== 'pending')
-    throw new Error('Cannot modify completed payment');
-  if (!payment.metadata?.coupon) throw new Error('No coupon applied');
+  if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
+  if (payment.status !== PAYMENT_STATUS.PENDING)
+    throw new Error(ERROR_MESSAGES.CANNOT_MODIFY_COMPLETED);
+  if (!payment.metadata?.coupon)
+    throw new Error(ERROR_MESSAGES.NO_COUPON_APPLIED);
 
   const originalAmount = payment.metadata.originalAmount;
   const removedCouponCode = payment.metadata.coupon.code;

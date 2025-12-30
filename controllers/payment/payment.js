@@ -7,6 +7,7 @@ const {
   VIEWS,
   LAYOUTS,
   REDIRECTS,
+  ROUTES,
 } = require('../../utils/constants');
 
 exports.initiatePayment = async (req, res) => {
@@ -20,7 +21,7 @@ exports.initiatePayment = async (req, res) => {
     if (!type || !id) return res.redirect(REDIRECTS.DASHBOARD);
 
     const payment = await paymentService.initiatePayment(userId, type, id);
-    res.redirect(`/payments/escrow/${payment._id}`);
+    res.redirect(`${ROUTES.PAYMENT_ESCROW}/${payment._id}`);
   } catch (err) {
     console.error(err);
     if (err.message === ERROR_MESSAGES.PROPERTY_NOT_FOUND)
@@ -45,12 +46,10 @@ exports.createOrder = async (req, res) => {
     });
   } catch (err) {
     console.error('Create order error:', err);
-    return res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .json({
-        success: false,
-        message: err.message || ERROR_MESSAGES.SERVER_ERROR,
-      });
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: err.message || ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
 
@@ -101,14 +100,14 @@ exports.processWalletPayment = async (req, res) => {
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
-      redirect: `/payments/success/${result.paymentId}`,
+      redirect: `${ROUTES.PAYMENT_SUCCESS}/${result.paymentId}`,
       newBalance: result.newBalance,
     });
   } catch (err) {
     console.error('❌ Wallet payment error:', err);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Payment failed: ' + err.message,
+      message: ERROR_MESSAGES.PAYMENT_FAILED + err.message,
     });
   }
 };
@@ -123,12 +122,12 @@ exports.verifyPayment = async (req, res) => {
 
     return res.status(statusCode.OK).json({
       success: true,
-      redirect: `/payments/success/${payment._id}`,
+      redirect: `${ROUTES.PAYMENT_SUCCESS}/${payment._id}`,
     });
   } catch (err) {
     console.error(err);
     const redirectUrl = req.body.paymentId
-      ? `/payments/failure/${req.body.paymentId}`
+      ? `${ROUTES.PAYMENT_FAILURE}/${req.body.paymentId}`
       : REDIRECTS.PAYMENT_FAILURE;
 
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
@@ -225,7 +224,7 @@ exports.removeCoupon = async (req, res) => {
         : statusCode.INTERNAL_SERVER_ERROR;
     return res.status(status).json({
       success: false,
-      message: 'Failed to remove coupon: ' + err.message,
+      message: ERROR_MESSAGES.COUPON_REMOVE_FAILED + err.message,
     });
   }
 };

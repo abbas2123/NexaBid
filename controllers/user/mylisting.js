@@ -1,6 +1,7 @@
 // controllers/tenderEvaluation.controller.js
 const statusCode = require("../../utils/statusCode");
 const service = require("../../services/tender/tenderEvaluationService");
+const { LAYOUTS, ERROR_MESSAGES } = require("../../utils/constants");
 
 exports.getTenderEvaluationPage = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ exports.getTenderEvaluationPage = async (req, res) => {
       return res.redirect(`/publisher/tender/${tenderId}/post-award`);
     }
     return res.render("profile/tenderEvaluation", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       tender,
       bids,
       user: req.user,
@@ -26,9 +27,9 @@ exports.getTenderEvaluationPage = async (req, res) => {
       return res.status(statusCode.FORBIDDEN).send("Unauthorized");
 
     if (err.message === "TENDER_NOT_FOUND")
-      return res.status(statusCode.NOT_FOUND).send("Tender not found");
+      return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.TENDER_NOT_FOUND);
 
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -41,7 +42,7 @@ exports.acceptTechnicalEvaluation = async (req, res) => {
     );
   } catch (err) {
     console.log(err);
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -54,7 +55,7 @@ exports.rejectTechnicalEvaluation = async (req, res) => {
     );
   } catch (err) {
     console.log(err);
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -70,6 +71,6 @@ exports.selectWinner = async (req, res) => {
     );
   } catch (err) {
     console.log(err);
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

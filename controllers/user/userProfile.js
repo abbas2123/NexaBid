@@ -1,6 +1,7 @@
 const vendorService = require('../../services/vendor/applicationService');
 const myProfileService = require('../../services/profile/profileService');
 const statusCode = require('../../utils/statusCode');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 const User = require('../../models/user');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
@@ -15,7 +16,7 @@ exports.userProfile = async (req, res) => {
     const application = await vendorService.getApplicationStatus(user._id);
 
     res.render('profile/profile', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       title: 'My profile - NexaBid',
       user: user || {},
       application: application || null,
@@ -45,7 +46,7 @@ exports.getUserStatuspage = async (req, res) => {
     } = await myProfileService.userStatus(userId);
 
     return res.render('profile/status', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       title: 'Account Status',
       user,
       vendorApp,
@@ -89,7 +90,7 @@ exports.getMyProfile = async (req, res) => {
 
    
     return res.render('profile/myProfile.ejs', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       title: 'My Profile',
       user: freshUser,
       application: null,
@@ -119,7 +120,7 @@ exports.getMyListingPage = async (req, res) => {
       .lean();
 
     res.render('profile/myListing', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       tenders,
@@ -127,8 +128,8 @@ exports.getMyListingPage = async (req, res) => {
   } catch (err) {
     console.log('GLOBAL ERROR HANDLER:', err);
 
-    return res.status(500).render('error', {
-      layout: 'layouts/user/userLayout',
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: 'Unable to load listings',
     });
   }
@@ -136,14 +137,14 @@ exports.getMyListingPage = async (req, res) => {
 
 exports.getAboutUs = (req, res) => {
   res.render('profile/aboutUs', {
-    layout: 'layouts/user/userLayout',
+    layout: LAYOUTS.USER_LAYOUT,
     user: req.user,
   });
 };
 
 exports.getContact = (req, res) => {
   res.render('user/contact', {
-    layout: 'layouts/user/userLayout',
+    layout: LAYOUTS.USER_LAYOUT,
     user: req.user,
   });
 };
@@ -156,14 +157,14 @@ exports.getMyParticipation = async (req, res) => {
       await myProfileService.getMyParticipationData(userId);
 
     return res.render('profile/myParticipation', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       tenders,
     });
   } catch (err) {
     console.error('Participation Page Error:', err);
-    return res.status(500).send('Server Error');
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 exports.viewTenderPostAward = async (req, res) => {
@@ -208,7 +209,7 @@ exports.viewTenderPostAward = async (req, res) => {
 
     if (result.loseView) {
       return res.render('profile/tenderLoseView', {
-        layout: 'layouts/user/userLayout',
+        layout: LAYOUTS.USER_LAYOUT,
         tender: result.tender,
         bid: result.bid,
         user: req.user,
@@ -222,7 +223,7 @@ exports.viewTenderPostAward = async (req, res) => {
     }
 
     return res.render('profile/vendorPostAward', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       tender: result.tender,
       bid: result.bid,
       po: result.po,
@@ -236,7 +237,7 @@ exports.viewTenderPostAward = async (req, res) => {
     console.log('error.message', err.message);
     if (req.query.error) {
       return res.render('profile/vendorPostAward', {
-        layout: 'layouts/user/userLayout',
+        layout: LAYOUTS.USER_LAYOUT,
         tender: null,
         bid: null,
         po: null,
@@ -268,9 +269,9 @@ exports.vendorRespondPO = async (req, res) => {
     console.error(err.message);
 
     if (err.message === 'PO_NOT_FOUND')
-      return res.status(404).send('PO not found');
+      return res.status(statusCode.NOT_FOUND).send('PO not found');
 
-    return res.status(500).send('Server error');
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send('Server error');
   }
 };
 
@@ -282,7 +283,7 @@ exports.getUploadPage = async (req, res) => {
       await myProfileService.getAgreementUploadData(tenderId, req.user._id);
 
     return res.render('profile/agreementUpload', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       tenderId,
       user: req.user,
       publisherAgreement,
@@ -327,9 +328,9 @@ exports.uploadSignedAgreement = async (req, res) => {
     console.error(err.message);
 
     if (err.message === 'NO_FILE') {
-      return res.status(400).send('No file uploaded');
+      return res.status(statusCode.BAD_REQUEST).send('No file uploaded');
     }
-    return res.status(500).send('Error uploading agreement');
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send('Error uploading agreement');
   }
 };
 

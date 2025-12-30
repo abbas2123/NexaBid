@@ -1,4 +1,6 @@
 const rateLimit = require('express-rate-limit');
+const statusCode = require('../utils/statusCode');
+const { LAYOUTS, VIEWS } = require('../utils/constants');
 
 module.exports = rateLimit({
   windowMs: 60 * 1000,
@@ -6,8 +8,8 @@ module.exports = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    return res.status(429).render('error', {
-      layout: 'layouts/user/userLayout',
+    return res.status(statusCode.TOO_MANY_REQUESTS || 429).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: '⚠️ Too many requests. Please wait 1 minute.',
       user: req.user,
     });

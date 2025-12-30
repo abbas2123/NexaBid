@@ -148,73 +148,86 @@
       </section>
       <% } %>
 
+      <!-- LOCATION SECTION -->
+      <% if (property.geoLat && property.geoLng) { %>
+      <section>
+        <h2 class="text-2xl font-bold mb-3 text-gray-800">Location</h2>
+
+        <p class="text-gray-600 mt-1 mb-2">
+          Exact pin location shown below:
+        </p>
+
+        <iframe
+          width="100%"
+          height="350"
+          frameborder="0"
+          style="border-radius: 10px; border:0;"
+          src="https://www.google.com/maps?q=<%= property.geoLat %>,<%= property.geoLng %>&hl=es;z=15&output=embed">
+        </iframe>
+      </section>
+      <% } %>
+
     </div>
-<!-- LOCATION SECTION -->
-<% if (property.geoLat && property.geoLng) { %>
-<section>
-  <h2 class="text-2xl font-bold mb-3 text-gray-800">Location</h2>
 
-  <p class="text-gray-600 mt-1 mb-2">
-    Exact pin location shown below:
-  </p>
-
-  <iframe
-    width="100%"
-    height="350"
-    frameborder="0"
-    style="border-radius: 10px; border:0;"
-    src="https://www.google.com/maps?q=<%= property.geoLat %>,<%= property.geoLng %>&hl=es;z=15&output=embed">
-  </iframe>
-</section>
-<% } %>
     <!-- RIGHT SIDE -->
     <aside class="space-y-3 sticky top-24 h-fit">
 
-  <% if (property.verificationStatus !== "approved") { %>
-    <!-- Show only info / edit, no bid/buy -->
-    <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
-      Listing not yet approved
-    </button>
+      <% if (property.verificationStatus !== "approved") { %>
+        <!-- Show only info / edit, no bid/buy -->
+        <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+          Listing not yet approved
+        </button>
 
-    <a href="/user/status/propertyStatus/edit/<%= property._id %>"
-       class="w-full inline-block bg-primary text-white font-bold py-3 rounded-lg text-center hover:bg-blue-700">
-      Edit Property
-    </a>
+        <a href="/user/status/propertyStatus/edit/<%= property._id %>"
+           class="w-full inline-block bg-primary text-white font-bold py-3 rounded-lg text-center hover:bg-blue-700">
+          Edit Property
+        </a>
 
-  <% } else { %>
-    <!-- Normal live listing actions -->
-    <% if (property.isAuction) { %>
-  <% if (userHasPaidForProperty) { %>
-    <a href="/user/my-participation"
-   class="w-full inline-flex items-center justify-center
-          bg-[#28a745] text-white font-semibold
-          px-6 py-3 rounded-full
-          text-sm md:text-base
-          tracking-wide
-          hover:bg-green-700 transition">
-  View My Participation
-</a>
+      <% } else { %>
+        <!-- Normal live listing actions -->
+        <% if (property.isAuction) { %>
+          <% if (userHasPaidForProperty) { %>
+            <a href="/user/my-participation"
+               class="w-full inline-flex items-center justify-center
+                      bg-[#28a745] text-white font-semibold
+                      px-6 py-3 rounded-full
+                      text-sm md:text-base
+                      tracking-wide
+                      hover:bg-green-700 transition">
+              View My Participation
+            </a>
 
-  <% } else if (isOwner) { %>
-    <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
-      Owner cannot bid
-    </button>
-  <% } else { %>
-    <button class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700"
-            id="placeBidBtn">
-      Place Bid
-    </button>
-  <% } %>
-<% } else if (property.buyNowPrice) { %>
-  <button class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
-    Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
-  </button>
-<% } %>
-<%}%>
-  <button class="w-full border py-3 rounded-lg hover:bg-gray-100">
-    Contact Seller
-  </button>
-</aside>
+          <% } else if (isOwner) { %>
+            <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+              Owner cannot bid
+            </button>
+          <% } else { %>
+            <button class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700"
+                    id="placeBidBtn">
+              Place Bid
+            </button>
+          <% } %>
+        <% } else if (property.buyNowPrice) { %>
+          <button class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
+            Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
+          </button>
+        <% } %>
+      <% } %>
+
+      <!-- CONTACT SELLER BUTTON -->
+      <% if (!isOwner) { %>
+        <a href="/chat/start/<%= property.sellerId._id || property.sellerId %>/property/<%= property._id %>"
+           class="w-full inline-flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition font-medium">
+          <span class="material-symbols-outlined">chat</span>
+          Contact Seller
+        </a>
+      <% } else { %>
+        <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+          You are the seller
+        </button>
+      <% } %>
+
+    </aside>
   </div>
 
   <% if (property.status === "owned" && property.soldTo && property.currentHighestBid) { %>
@@ -236,7 +249,6 @@
       </p>
     </div>
   <% } %>
-
 
 </div>
 

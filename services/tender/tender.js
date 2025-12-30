@@ -136,13 +136,22 @@ exports.resubmitTenderService = async (
   // If user attached new files
   if (uploadedFiles && uploadedFiles.length > 0) {
     for (let file of uploadedFiles) {
-      await FileModel.create({
+     const saved = await FileModel.create({
         fileName: file.originalname,
         fileUrl: file.path,
         size: file.size,
+         relatedType: "tender",
         relatedId: tender._id,
       });
+      tender.files.push({
+        fileId: saved._id, // must be object
+        fileName: saved.fileName,
+        size: saved.size,
+      });
+      console.log('file', tender.files);
     }
+    
+   
   }
 
   await tender.save();

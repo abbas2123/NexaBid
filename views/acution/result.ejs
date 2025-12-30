@@ -139,10 +139,10 @@
               ₹ <%= winningBid.amount.toLocaleString('en-IN') %>
             </p>
 
-            <a href="/chat/<%= winner._id %>"
-               class="mt-4 block text-center bg-primary text-white font-bold py-3 rounded-lg">
-              Start Chat with Buyer
-            </a>
+           <a href="/chat/start/<%= winner._id %>/property/<%= property._id %>"
+   class="mt-4 block text-center bg-primary text-white font-bold py-3 rounded-lg">
+  Start Chat with Buyer
+</a>
 
             <p class="text-xs text-center text-gray-500 mt-2">
               Discuss payment & handover directly

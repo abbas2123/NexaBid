@@ -1,6 +1,7 @@
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid.js');
 const User = require('../../models/user.js');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getAuctionResultForPublisher = async (propertyId, publisherId) => {
   const property = await Property.findById(propertyId)
@@ -8,15 +9,15 @@ exports.getAuctionResultForPublisher = async (propertyId, publisherId) => {
     .lean();
   console.log('property.media', property.media);
   if (!property) {
-    throw new Error('property not found');
+    throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
   }
 
   if (property.sellerId._id.toString() !== publisherId.toString()) {
-    throw new Error('Unauthorized access');
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
   }
 
   if (property.isAuction && new Date() < property.auctionEndsAt) {
-    throw new Error('Auction not ended yet');
+    throw new Error(ERROR_MESSAGES.AUCTION_NOT_ENDED);
   }
 
   const winningBid = await PropertyBid.findOne({ propertyId })
@@ -40,14 +41,14 @@ exports.getBuyerAuctionResult = async (propertyId, buyerId) => {
     .lean();
 
   if (!property) {
-    throw new Error('PROPERTY_NOT_FOUND');
+    throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
   }
   if (!property.isAuction) {
-    throw new Error('NOT_AN_AUCTION');
+    throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
   }
 
   if (new Date() < property.auctionEndsAt) {
-    throw new Error('AUCTION_NOT_ENDED');
+    throw new Error(ERROR_MESSAGES.AUCTION_NOT_ENDED);
   }
 
   const winningBid = await PropertyBid.findOne({ propertyId })
@@ -56,11 +57,11 @@ exports.getBuyerAuctionResult = async (propertyId, buyerId) => {
     .lean();
 
   if (!winningBid) {
-    throw new Error('NOW_BIDS_FOUND');
+    throw new Error(ERROR_MESSAGES.NO_BIDS_FOUND);
   }
 
   if (winningBid.bidderId._id.toString() !== buyerId.toString()) {
-    throw new Error('NOT_WINNER');
+    throw new Error(ERROR_MESSAGES.NOT_WINNER);
   }
 
   const totalBids = await PropertyBid.countDocuments({ propertyId });

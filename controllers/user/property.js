@@ -1,5 +1,6 @@
 const propertyService = require('../../services/property/propertyService.js');
 const statusCode = require('../../utils/statusCode');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS } = require('../../utils/constants');
 
 exports.getPropertyPage = async (req, res) => {
   try {
@@ -19,7 +20,7 @@ exports.getPropertyPage = async (req, res) => {
     );
 
     res.render('user/property', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       pagination,
@@ -27,7 +28,7 @@ exports.getPropertyPage = async (req, res) => {
     });
   } catch (error) {
     console.error('Property page error:', error);
-    res.status(500).send('Server Error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -41,15 +42,15 @@ exports.getPropertyDetails = async (req, res) => {
 
     if (!property) {
       return res
-        .status(404)
-        .render('error', {
-          message: 'Property not found',
-          layout: 'layouts/user/userLayout',
+        .status(statusCode.NOT_FOUND)
+        .render(VIEWS.ERROR, {
+          message: ERROR_MESSAGES.PROPERTY_NOT_FOUND,
+          layout: LAYOUTS.USER_LAYOUT,
         });
     }
 
     res.render('user/propertyDetailsPage', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       user,
       property,
       userHasPaidForProperty: userHasPaidForProperty || false,
@@ -57,13 +58,13 @@ exports.getPropertyDetails = async (req, res) => {
     });
   } catch (err) {
     console.error('server err', err);
-    res.status(500).send('Server Error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
 exports.getCreatePropertyPage = (req, res) => {
   return res.render('user/createProperty', {
-    layout: 'layouts/user/userLayout',
+    layout: LAYOUTS.USER_LAYOUT,
     title: 'List a Property',
     user: req.user,
     property: null,

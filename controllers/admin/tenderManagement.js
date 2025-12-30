@@ -1,24 +1,34 @@
 // controllers/admin/tenderManagement.js
-const Tender = require("../../models/tender");
-const File = require("../../models/File");
-const notificationService= require('../../services/notificationService');
+const Tender = require('../../models/tender');
+const File = require('../../models/File');
+const statusCode = require('../../utils/statusCode');
+const notificationService = require('../../services/notificationService');
+const {
+  VIEWS,
+  LAYOUTS,
+  ERROR_MESSAGES,
+  TENDER_STATUS,
+  SUCCESS_MESSAGES,
+  NOTIFICATION_MESSAGES,
+} = require('../../utils/constants');
+
 exports.getAdminTenderPage = async (req, res) => {
   try {
     const tenders = await Tender.find()
-      .populate("createdBy", "name email")
+      .populate('createdBy', 'name email')
       .sort({ createdAt: -1 })
       .lean();
 
-    return res.render("admin/tenderManagement", {
-      layout: "layouts/admin/adminLayout",
+    return res.render(VIEWS.ADMIN_TENDER_MANAGEMENT, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
       tenders,
-      currentPage: "tenders",
+      currentPage: 'tenders',
     });
   } catch (err) {
-    console.error("Admin Tender Management error:", err);
-    return res.status(500).render("error", {
-      layout: "layouts/admin/adminLayout",
-      message: "Failed to load tenders",
+    console.error('Admin Tender Management error:', err);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.LOAD_TENDERS_FAILED,
     });
   }
 };
@@ -28,18 +38,18 @@ exports.getTenderDetails = async (req, res) => {
     const { id } = req.params;
 
     const tender = await Tender.findById(id)
-      .populate("createdBy", "name email")
+      .populate('createdBy', 'name email')
       .lean();
 
     if (!tender) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: "Tender not found",
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
       });
     }
 
     const files = await File.find({
-      relatedType: "tender",
+      relatedType: 'tender',
       relatedId: id,
     }).lean();
 
@@ -56,10 +66,10 @@ exports.getTenderDetails = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Tender fetch error", error);
-    return res.status(500).json({
+    console.error('Tender fetch error', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Server error fetching tender",
+      message: ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };
@@ -69,75 +79,75 @@ exports.updateTenderStatus = async (req, res) => {
     const { id } = req.params;
     const { status, comment } = req.body;
 
-    console.log(" UpdateTenderStatus ->", { id, status, comment });
+    console.log(' UpdateTenderStatus ->', { id, status, comment });
 
-    const allowedStatuses = ["draft", "submitted", "published", "rejected", "closed"];
+    const allowedStatuses = Object.values(TENDER_STATUS);
 
     if (!allowedStatuses.includes(status)) {
-      console.log(" Invalid status:", status);
-      return res.status(400).json({
+      console.log(' Invalid status:', status);
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: `Invalid status value: ${status}`,
+        message: `${ERROR_MESSAGES.INVALID_STATUS}: ${status}`,
       });
     }
 
     const tender = await Tender.findById(id);
 
     if (!tender) {
-      console.log(" Tender not found for id:", id);
-      return res.status(404).json({
+      console.log(' Tender not found for id:', id);
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: "Tender not found",
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
       });
     }
 
     tender.status = status;
-   if (comment && comment.trim() !== "") {
-      tender.adminComment = comment.trim();  // VERY IMPORTANT!
+    if (comment && comment.trim() !== '') {
+      tender.adminComment = comment.trim(); // VERY IMPORTANT!
     }
 
     await tender.save();
 
-    console.log("Tender status updated:", tender._id, tender.status);
-const io = req.app.get("io");
+    console.log('Tender status updated:', tender._id, tender.status);
+    const io = req.app.get('io');
 
-if (status === "published") {
-  await notificationService.sendNotification(
-    tender.createdBy,  // CORRECT USER
-    "Your tender has been approved & published 🎉",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
+    if (status === TENDER_STATUS.PUBLISHED) {
+      await notificationService.sendNotification(
+        tender.createdBy, // CORRECT USER
+        NOTIFICATION_MESSAGES.TENDER_PUBLISHED,
+        `/tenders/${tender._id}`,
+        io
+      );
+    }
 
-// REJECTED EVENT
-if (status === "rejected") {
-  await notificationService.sendNotification(
-    tender.createdBy,
-    "Your tender has been rejected ❌",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
+    // REJECTED EVENT
+    if (status === TENDER_STATUS.REJECTED) {
+      await notificationService.sendNotification(
+        tender.createdBy,
+        NOTIFICATION_MESSAGES.TENDER_REJECTED,
+        `/tenders/${tender._id}`,
+        io
+      );
+    }
 
-// CLOSED EVENT
-if (status === "closed") {
-  await notificationService.sendNotification(
-    tender.createdBy,
-    "Your tender has been closed 🚫",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
+    // CLOSED EVENT
+    if (status === TENDER_STATUS.CLOSED) {
+      await notificationService.sendNotification(
+        tender.createdBy,
+        NOTIFICATION_MESSAGES.TENDER_CLOSED,
+        `/tenders/${tender._id}`,
+        io
+      );
+    }
     return res.json({
       success: true,
-      message: `Tender status updated to ${status}`,
+      message: `${SUCCESS_MESSAGES.STATUS_UPDATED} to ${status}`,
     });
   } catch (error) {
-    console.error("Tender status update error:", error);
-    return res.status(500).json({
+    console.error('Tender status update error:', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: error.message || "Server error updating status",
+      message: error.message || ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };

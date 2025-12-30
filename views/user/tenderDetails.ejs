@@ -137,7 +137,7 @@
           <div class="flex items-center justify-between p-4 bg-gray-50 border rounded-lg mb-3">
 
             <div>
-              <p class="font-medium"><%= doc.originalName %></p>
+              <p class="font-medium"><%= doc.fileName %></p>
               <p class="text-sm text-gray-500"><%= (doc.size/1024).toFixed(1) %> KB</p>
             </div>
 
@@ -159,55 +159,57 @@
 
 
   <!-- ACTION BUTTONS -->
-  <!-- ACTION BUTTONS -->
-<div class="flex flex-col sm:flex-row gap-4 mt-8">
+  <div class="flex flex-col sm:flex-row gap-4 mt-8">
 
-  <% if (isOwner) { %>
+    <% if (isOwner) { %>
 
-    <!-- OWNER = cannot participate -->
-    <button disabled
-      class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
-      You Cannot Participate (Owner)
-    </button>
+      <!-- OWNER = cannot participate -->
+      <button disabled
+        class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
+        You Cannot Participate (Owner)
+      </button>
 
-    <button
-      class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow"
-      onclick="window.location.href='/user/status/tender-status'">
-      View My Tender Status
-    </button>
+      <button
+        class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow"
+        onclick="window.location.href='/user/status/tender-status'">
+        View My Tender Status
+      </button>
 
-  <% } else if (canParticipate) { %>
+    <% } else if (canParticipate) { %>
 
-    <!-- VERIFIED VENDOR = can participate -->
-    <a
-      href="/vendor/tender/<%= tender._id %>/bid"
-      class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow inline-block">
-      Participate in Tender
-    </a>
+      <!-- VERIFIED VENDOR = can participate -->
+      <a
+        href="/vendor/tender/<%= tender._id %>/bid"
+        class="px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow inline-block">
+        Participate in Tender
+      </a>
 
-    <button
-      class="px-6 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 shadow">
-      Contact Department
-    </button>
+      <a
+        href="/chat/start/<%= tender.issuerId || tender.createdBy?._id || tender.createdBy %>/tender/<%= tender._id %>"
+        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-gray-100 text-gray-900 font-medium rounded-lg hover:bg-gray-200 shadow">
+        <span class="material-symbols-outlined">chat</span>
+        Contact Department
+      </a>
 
-  <% } else { %>
+    <% } else { %>
 
-    <!-- NOT VENDOR = disabled -->
-    <button disabled
-      class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
-      Participate in Tender
-    </button>
+      <!-- NOT VENDOR = disabled -->
+      <button disabled
+        class="px-6 py-3 bg-gray-300 text-gray-600 font-medium rounded-lg cursor-not-allowed opacity-60">
+        Participate in Tender
+      </button>
 
-    <button disabled
-      class="px-6 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg cursor-not-allowed opacity-60">
-      Contact Department
-    </button>
+      <button disabled
+        class="px-6 py-3 bg-gray-200 text-gray-500 font-medium rounded-lg cursor-not-allowed opacity-60">
+        Contact Department
+      </button>
 
-  <% } %>
+    <% } %>
+
+  </div>
 
 </div>
 
-</div>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 let tenderId = "<%= tender._id %>";
@@ -240,6 +242,6 @@ async function checkTenderStatus() {
   }
 }
 
-// check status every 2 seconds
+// check status every 7 seconds
 setInterval(checkTenderStatus, 7000);
 </script>

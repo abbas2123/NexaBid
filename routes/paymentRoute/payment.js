@@ -35,4 +35,10 @@ router.get(
 router.post('/apply-coupon',authMiddleware.protectRoute,paymentController.applyCoupon);
 
 router.post('/remove-coupon',authMiddleware.protectRoute,paymentController.removeCoupon );
+router.post(
+  '/wallet-pay',
+  authMiddleware.protectRoute,
+  paymentController.processWalletPayment
+);
+
 module.exports = router;

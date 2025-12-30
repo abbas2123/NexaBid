@@ -156,16 +156,20 @@
     <div>
       <label class="font-medium">Auction Starts At</label>
       <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
-        value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
-        class="border rounded-lg p-2 w-full">
+  value="<%= property?.auctionStartsAt
+  ? new Date(property.auctionStartsAt).toISOString().slice(0,16)
+  : '' %>"
+  class="border rounded-lg p-2 w-full">
     </div>
   </div>
 
   <div class="auctionFields">
     <label class="font-medium">Auction Ends At</label>
     <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
-        value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
-        class="border rounded-lg p-2 w-full">
+  value="<%= property?.auctionEndsAt
+  ? new Date(property.auctionEndsAt).toISOString().slice(0,16)
+  : '' %>"
+  class="border rounded-lg p-2 w-full">
   </div>
 
 </section>

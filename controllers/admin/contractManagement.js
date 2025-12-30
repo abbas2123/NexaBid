@@ -1,27 +1,29 @@
 const contractService = require('../../services/admin/contractManagement');
 const File = require('../../models/File');
-const path = require('path')
+const path = require('path');
+const statusCode = require('../../utils/statusCode');
+const { VIEWS, LAYOUTS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.contractManagementPage = async (req, res) => {
-  const tab = req.query.tab || "tender";
+  const tab = req.query.tab || 'tender';
 
   const { summary, contracts } =
     await contractService.getContractManagementData(null, tab, true);
 
-  res.render("admin/contractManagement", {
-    layout: "layouts/admin/adminLayout",
+  res.render(VIEWS.ADMIN_CONTRACT_MANAGEMENT, {
+    layout: LAYOUTS.ADMIN_LAYOUT,
     user: req.admin,
     activeTab: tab,
     summary,
     contracts,
-    currentPage: "contract-management"
+    currentPage: 'contract-management',
   });
 };
 
 exports.getContractDetails = async (req, res) => {
-    console.log("🟡 HIT getContractDetails");
-  console.log("🟡 tenderId:", req.params.tenderId);
-  console.log("🟡 admin:", req.admin?._id);
+  console.log('🟡 HIT getContractDetails');
+  console.log('🟡 tenderId:', req.params.tenderId);
+  console.log('🟡 admin:', req.admin?._id);
   try {
     const tenderId = req.params.tenderId;
 
@@ -32,9 +34,9 @@ exports.getContractDetails = async (req, res) => {
 
     return res.json(data);
   } catch (err) {
-    console.error("Contract detail error:", err.message);
-    return res.status(404).json({
-      message: "Contract not found"
+    console.error('Contract detail error:', err.message);
+    return res.status(statusCode.NOT_FOUND).json({
+      message: ERROR_MESSAGES.CONTRACT_NOT_FOUND,
     });
   }
 };
@@ -42,19 +44,22 @@ exports.getContractDetails = async (req, res) => {
 exports.view = async (req, res) => {
   const { id } = req.params;
 
-  if (!id || id === "undefined") {
-    return res.status(400).send("Invalid file id");
+  if (!id || id === 'undefined') {
+    return res
+      .status(statusCode.BAD_REQUEST)
+      .send(ERROR_MESSAGES.INVALID_FILE_ID);
   }
 
   const file = await File.findById(id);
-  if (!file) return res.status(404).send("File not found");
+  if (!file)
+    return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.FILE_NOT_FOUND);
 
   const absolutePath = path.join(
     process.cwd(),
-    file.fileUrl.replace("/uploads", "uploads")
+    file.fileUrl.replace('/uploads', 'uploads')
   );
 
-  res.setHeader("Content-Type", "application/pdf");
-  res.setHeader("Content-Disposition", "inline");
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', 'inline');
   res.sendFile(absolutePath);
 };

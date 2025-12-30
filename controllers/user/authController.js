@@ -1,12 +1,19 @@
-const authService = require("../../services/user/authService");
-const statusCode = require("../../utils/statusCode");
-const User = require("../../models/user");
-const jwt = require("jsonwebtoken");
+const authService = require('../../services/user/authService');
+const statusCode = require('../../utils/statusCode');
+const {
+  LAYOUTS,
+  VIEWS,
+  ERROR_MESSAGES,
+  REDIRECTS,
+  SUCCESS_MESSAGES,
+} = require('../../utils/constants');
+const User = require('../../models/user');
+const jwt = require('jsonwebtoken');
 
 exports.getSignupPage = (req, res) => {
-  res.render("user/signup", {
+  res.render(VIEWS.USER_SIGNUP, {
     layout: false,
-    title: "Signup - NexaBid",
+    title: 'Signup - NexaBid',
   });
 };
 
@@ -25,9 +32,9 @@ exports.registerUser = async (req, res) => {
       ...response,
     });
   } catch (err) {
-    return res.status(err.statusCode || statusCode.INTERNAL_ERROR).json({
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || 'Something went wrong',
     });
   }
 };
@@ -37,16 +44,16 @@ exports.getVerifyOtpPage = async (req, res) => {
     const { userId } = req.query;
 
     if (!userId) {
-      return res.redirect("/auth/signup");
+      return res.redirect(REDIRECTS.SIGNUP);
     }
-    return res.render("user/otp", {
+    return res.render(VIEWS.USER_OTP, {
       layout: false,
-      title: "Verify OTP - NexaBid",
+      title: 'Verify OTP - NexaBid',
       userId,
-      mode: "signup",
+      mode: 'signup',
     });
   } catch (error) {
-    res.redirect("/auth/signup");
+    res.redirect(REDIRECTS.SIGNUP);
   }
 };
 
@@ -60,18 +67,18 @@ exports.verifyOtp = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+      { expiresIn: '7d' }
     );
 
-    res.cookie("token", token, {
+    res.cookie('token', token, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res
       .status(statusCode.OK)
-      .json({ success: true, ...response, redirect: "/auth/dashboard" });
+      .json({ success: true, ...response, redirect: REDIRECTS.AUTH_DASHBOARD });
   } catch (error) {
     res.status(error.statusCode || 500).json({
       success: false,
@@ -81,7 +88,7 @@ exports.verifyOtp = async (req, res) => {
 };
 
 exports.getLoginPage = (req, res) => {
-  res.render("user/login", { layout: false, title: "Login - NexaBid" });
+  res.render(VIEWS.USER_LOGIN, { layout: false, title: 'Login - NexaBid' });
 };
 
 exports.loginUser = async (req, res) => {
@@ -90,10 +97,10 @@ exports.loginUser = async (req, res) => {
 
     const response = await authService.LoginUser({ email, password });
 
-    res.cookie("token", response.token, {
+    res.cookie('token', response.token, {
       httpOnly: true,
       secure: false,
-      sameSite: "strict",
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -103,23 +110,23 @@ exports.loginUser = async (req, res) => {
       user: response.user,
     });
   } catch (err) {
-    return res.status(err.statusCode || statusCode.INTERNAL_ERROR).json({
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err.message || "Somthing went wrong",
+      message: err.message || 'Somthing went wrong',
     });
   }
 };
 
 exports.getForgotPasswordPage = (req, res) => {
-  res.render("user/forgotPassword", {
+  res.render(VIEWS.USER_FORGOT_PASSWORD, {
     layout: false,
-    title: "Forgot Password - NexaBid",
+    title: 'Forgot Password - NexaBid',
   });
 };
 
 exports.postForgotPasswordPage = async (req, res) => {
   try {
-    console.log("postreqhit");
+    console.log('postreqhit');
     const { email } = req.body;
     console.log(email);
     const response = await authService.forgotPasswordService(email);
@@ -129,7 +136,7 @@ exports.postForgotPasswordPage = async (req, res) => {
       ...response,
     });
   } catch (err) {
-    res.status(statusCode.INTERNAL_ERROR).json({
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message,
     });
@@ -138,29 +145,29 @@ exports.postForgotPasswordPage = async (req, res) => {
 
 exports.getForgotOtpPage = async (req, res) => {
   try {
-    console.log("haiiiiiiiiiii");
+    console.log('haiiiiiiiiiii');
     const userId = req.query.userId;
-    const mode = req.query.mode || "signup";
+    const mode = req.query.mode || 'signup';
     console.log(userId);
-    if (!userId || userId.trim() === "") {
-      return res.redirect("/auth/forgot-password");
+    if (!userId || userId.trim() === '') {
+      return res.redirect(REDIRECTS.FORGOT_PASSWORD);
     }
-    return res.render("user/otp", {
+    return res.render(VIEWS.USER_OTP, {
       layout: false,
-      title: "Verify OTP - NexaBid",
+      title: 'Verify OTP - NexaBid',
       userId: req.query.userId,
-      mode: "forgot",
+      mode: 'forgot',
     });
   } catch (err) {
-    console.log("Error loading forgot OTP page:", err);
-    res.redirect("/auth/forgot-password");
+    console.log('Error loading forgot OTP page:', err);
+    res.redirect(REDIRECTS.FORGOT_PASSWORD);
   }
 };
 
 exports.postForgotOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
-    console.log("req.body.....:", req.body);
+    console.log('req.body.....:', req.body);
     const result = await authService.verifyForgotOtService({ userId, otp });
 
     res.status(statusCode.OK).json({
@@ -169,42 +176,40 @@ exports.postForgotOtp = async (req, res) => {
       redirectUrl: `/auth/reset-password?userId=${userId}&mode=forgot`,
     });
   } catch (err) {
-    res.status(statusCode.INTERNAL_ERROR).json({
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message,
     });
   }
 };
 
-
 exports.resedOtp = async (req, res) => {
   try {
     const { userId } = req.body;
 
     if (!userId) {
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: "User ID is required",
+        message: ERROR_MESSAGES.USER_ID_REQUIRED || 'User ID is required',
       });
     }
 
     // 👇 Immediately return response
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
-      message: "OTP is being resent",
+      message: SUCCESS_MESSAGES.OTP_RESENT,
     });
 
     // 👇 Continue async work AFTER response
     setTimeout(async () => {
       await authService.resendOtpByUserId(userId);
-      console.log("OTP resend operation completed");
+      console.log('OTP resend operation completed');
     }, 0);
-
   } catch (err) {
-    console.error("Resend OTP error:", err);
-    return res.status(500).json({
+    console.error('Resend OTP error:', err);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: err?.message || "Something went wrong",
+      message: err?.message || 'Something went wrong',
     });
   }
 };
@@ -213,22 +218,22 @@ exports.getResetPasswordPage = async (req, res) => {
   try {
     const { userId } = req.query;
     if (!userId) {
-      res.redirect("/auth/forgot-password");
+      res.redirect(REDIRECTS.FORGOT_PASSWORD);
     }
-    res.render("user/resetPassword", {
+    res.render(VIEWS.USER_RESET_PASSWORD, {
       layout: false,
-      title: "Set New Password",
+      title: 'Set New Password',
       userId: req.query.userId,
     });
   } catch (error) {
-    res.redirect("/auth/forgot-password");
+    res.redirect(REDIRECTS.FORGOT_PASSWORD);
   }
 };
 
 exports.postRestPasswordPage = async (req, res) => {
   try {
     const { userId, password } = req.body;
-    console.log("RESET BODY:", req.body);
+    console.log('RESET BODY:', req.body);
     const response = await authService.resetPasswordService({
       userId,
       password,
@@ -238,7 +243,7 @@ exports.postRestPasswordPage = async (req, res) => {
       ...response,
     });
   } catch (error) {
-    res.status(statusCode.INTERNAL_ERROR).json({
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: error.message,
     });
@@ -247,19 +252,24 @@ exports.postRestPasswordPage = async (req, res) => {
 
 exports.getDashboard = async (req, res) => {
   try {
-    console.log("Dashboard Route Hit!");
+    console.log('Dashboard Route Hit!');
 
-    const { property: properties, tender: tenders } =await authService.getDashboard();
-    return res.status(statusCode.OK).render("user/dashboard", {
-      layout: "layouts/user/userLayout",
-      title: "Dashboard",
+    const { property: properties, tender: tenders } =
+      await authService.getDashboard();
+    return res.status(statusCode.OK).render(VIEWS.USER_DASHBOARD, {
+      layout: LAYOUTS.USER_LAYOUT,
+      title: 'Dashboard',
       user: req.user,
       properties,
       tenders,
     });
   } catch (error) {
-    console.error("Dashboard Error:", error);
-    return res.status(statusCode.INTERNAL_ERROR).render("error",{layout:"layouts/user/userLayout",message:'server Error'});
+    console.error('Dashboard Error:', error);
+    return res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: ERROR_MESSAGES.SERVER_ERROR,
+      });
   }
 };
-

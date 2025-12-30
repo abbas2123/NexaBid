@@ -1,18 +1,22 @@
-const landingService = require("../../services/landingService");
+const landingService = require('../../services/landingService');
+const statusCode = require('../../utils/statusCode');
+const { VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.loadLandingPage = async (req, res) => {
   try {
     const data = await landingService.getLandingPageData();
 
-    res.render("landingPage", {
+    res.render(VIEWS.LANDING_PAGE, {
       layout: false,
-      pageTitle: "NexaBid - Buy & Sell Properties",
+      pageTitle: 'NexaBid - Buy & Sell Properties',
       liveProperties: data.liveAuctions,
       upcomingProperties: data.upcomingAuctions,
       featuredProperties: data.featuredProperties,
     });
   } catch (error) {
-    console.error("Landing Error:", error);
-    res.status(500).send("Server Error");
+    console.error('Landing Error:', error);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

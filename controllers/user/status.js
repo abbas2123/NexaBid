@@ -5,6 +5,8 @@ const tenderService = require('../../services/tender/tender');
 const File = require('../../models/File');
 const path = require('path');
 const fs = require('fs');
+const statusCode = require('../../utils/statusCode');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.propertyStatus = async (req, res) => {
   try {
@@ -22,13 +24,13 @@ exports.propertyStatus = async (req, res) => {
       .lean();
 
     return res.render('profile/propertyStatus', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       properties,
       user,
     });
   } catch (error) {
     console.log('Property status error', err);
-    res.render('/views/error.ejs', { layout: 'layouts/user/userLayout' });
+    res.render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -40,7 +42,7 @@ exports.getEditPropertyPage = async (req, res) => {
       await propertyService.getPropertyForEdit(propertyId);
 
     return res.render('user/createProperty', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       title: 'Edit Property',
       property,
       media,
@@ -51,8 +53,8 @@ exports.getEditPropertyPage = async (req, res) => {
   } catch (err) {
     console.error('Edit property page error:', err);
 
-    return res.status(err.statusCode || 500).render('error', {
-      layout: 'layouts/user/userLayout',
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: err.message || 'Something went wrong',
     });
   }
@@ -69,7 +71,7 @@ exports.deleteProperty = async (req, res) => {
   } catch (err) {
     console.error('❌ Delete Property Error:', err);
 
-    return res.status(err.statusCode || 500).json({
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message || 'Server error',
     });
@@ -94,7 +96,7 @@ exports.deleteSingleDoc = async (req, res) => {
     });
   } catch (err) {
     console.error('Delete doc error:', err);
-    return res.status(err.statusCode || 500).json({
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message || 'Server error',
     });
@@ -132,15 +134,15 @@ exports.getTenderStatusPage = async (req, res) => {
       .lean();
 
     return res.render('profile/tenderStatus', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       tenders,
       user: req.user,
       title: 'My Tender Status',
     });
   } catch (error) {
     console.log('Tender Status Error', error);
-    return res.render('error', {
-      layout: 'layouts/user/userLayout',
+    return res.render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: 'Unable to load tender status',
     });
   }
@@ -154,7 +156,7 @@ exports.getResubmitTenderPage = async (req, res) => {
       await tenderService.getTenderForResubmit(tenderId);
 
     return res.render('vendor/tenderCreate', {
-      layout: 'layouts/user/userLayout',
+      layout: LAYOUTS.USER_LAYOUT,
       title: 'Re-Submit Tender',
       tender,
       files,
@@ -163,8 +165,8 @@ exports.getResubmitTenderPage = async (req, res) => {
   } catch (err) {
     console.error('Resubmit tender page error:', err);
 
-    return res.status(err.statusCode || 500).render('error', {
-      layout: 'layouts/user/userLayout',
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: err.message || 'Something went wrong',
     });
   }
@@ -180,7 +182,7 @@ exports.deleteTender = async (req, res) => {
     });
 
     if (!tender) {
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: 'Tender not found or unauthorized',
       });
@@ -214,7 +216,7 @@ exports.deleteTender = async (req, res) => {
     });
   } catch (error) {
     console.log('Tender deletion error:', error);
-    return res.status(500).json({
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: 'Server error deleting tender',
     });

@@ -101,7 +101,11 @@
 </div>
 
 <script>
-  const socket = io();
+  const socket = io("http://localhost:3000", {
+  auth: {
+    token: localStorage.getItem("token") // or cookie value
+  }
+});
 
   document.getElementById("autoBidForm").addEventListener("submit", (e) => {
     e.preventDefault();

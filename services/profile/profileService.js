@@ -82,7 +82,6 @@ exports.userStatus = async (userId) => {
 };
 
 exports.getMyParticipationData = async (userId) => {
-  // 1️⃣ Get all participations
   const participations = await PropertyParticipant.find({ userId })
     .populate('propertyId')
     .lean();
@@ -91,7 +90,6 @@ exports.getMyParticipationData = async (userId) => {
     return { properties: [], tenders: [] };
   }
 
-  // 2️⃣ Get user’s highest bid per property
   const bids = await PropertyBid.find({ bidderId: userId })
     .sort({ amount: -1 })
     .lean();
@@ -103,15 +101,33 @@ exports.getMyParticipationData = async (userId) => {
     }
   }
 
-  // 3️⃣ Build UI response
+  // 3️⃣ Build properties response
   const properties = participations
     .filter((p) => p.propertyId)
     .map((p) => {
       const property = p.propertyId;
       const myBid = highestBidMap.get(property._id.toString()) || 0;
 
+      const now = new Date();
+      const auctionEndDate = property.auctionEndsAt
+        ? new Date(property.auctionEndsAt)
+        : null;
+      const auctionStartDate = property.auctionStartsAt
+        ? new Date(property.auctionStartsAt)
+        : null;
+
+      // Fix: Define isEnded and isLive for PROPERTIES, not tenders
       const isEnded =
-        property.status === 'owned' || property.status === 'closed';
+        property.status === 'owned' ||
+        property.status === 'closed' ||
+        (auctionEndDate && now > auctionEndDate);
+
+      const isLive =
+        property.status === 'active' &&
+        auctionStartDate &&
+        auctionEndDate &&
+        now >= auctionStartDate &&
+        now <= auctionEndDate;
 
       const isWinner =
         property.soldTo && property.soldTo.toString() === userId.toString();
@@ -119,31 +135,84 @@ exports.getMyParticipationData = async (userId) => {
       return {
         _id: property._id,
         title: property.title,
-
+        type: 'property', // Add type for clarity
         myBid,
-
-        currentStatus: isEnded ? 'Ended' : 'Live',
-
+        currentStatus: isEnded ? 'Ended' : isLive ? 'Live' : 'Not Started',
         winStatus: isEnded ? (isWinner ? 'Winner' : 'Lost') : 'Pending',
-
         statusColor: isEnded
           ? 'bg-gray-200 text-gray-700'
-          : 'bg-blue-100 text-blue-700',
-
+          : isLive
+            ? 'bg-blue-100 text-blue-700'
+            : 'bg-yellow-100 text-yellow-700',
         winColor: isWinner
           ? 'bg-green-100 text-green-700'
           : 'bg-red-100 text-red-700',
-
         projectStatus: isWinner ? 'Assigned' : '—',
-
         closingDate: property.auctionEndsAt
           ? new Date(property.auctionEndsAt).toLocaleDateString('en-IN')
           : '—',
       };
     });
 
-  return { properties, tenders: [] };
+  // 4️⃣ Build tenders response
+  const tenderParticipations = await TenderParticipants.find({ userId })
+    .populate('tenderId')
+    .lean();
+
+  const tenders = tenderParticipations
+    .filter((t) => t.tenderId)
+    .map((t) => {
+      const tender = t.tenderId;
+      const now = new Date();
+
+      const bidEndDate = tender.bidEndAt ? new Date(tender.bidEndAt) : null;
+      const bidStartDate = tender.bidStartAt
+        ? new Date(tender.bidStartAt)
+        : null;
+
+     
+      const isEnded =
+        tender.status === 'closed' ||
+        tender.status === 'ended' ||
+        tender.status==="awarded" ||
+        (bidEndDate && now > bidEndDate);
+
+      const isLive =
+        tender.status === 'active' &&
+        bidStartDate &&
+        bidEndDate &&
+        now >= bidStartDate &&
+        now <= bidEndDate;
+
+      const isWinner =
+        tender.awardedTo && tender.awardedTo.toString() === userId.toString();
+console.log('iswiner',isWinner)
+console.log('isended', isEnded);
+      return {
+        _id: tender._id,
+        title: tender.title,
+        type: 'tender',
+        myOffer: 0, 
+        currentStatus: isEnded ? 'Ended' : isLive ? 'Live' : 'Not Started',
+        winStatus: isEnded ? (isWinner ? 'Winner' : 'Lost') : 'Pending',
+        statusColor: isEnded
+          ? 'bg-gray-200 text-gray-700'
+          : isLive
+            ? 'bg-blue-100 text-blue-700'
+            : 'bg-yellow-100 text-yellow-700',
+        winColor: isWinner
+          ? 'bg-green-100 text-green-700'
+          : 'bg-red-100 text-red-700',
+        projectStatus: isWinner ? 'Assigned' : '—',
+        closingDate: tender.bidEndAt
+          ? new Date(tender.bidEndAt).toLocaleDateString('en-IN')
+          : '—',
+      };
+    });
+
+  return { properties, tenders };
 };
+
 
 exports.getVendorPostAwardData = async (tenderId, userId) => {
   console.log('dvdvdv', userId);

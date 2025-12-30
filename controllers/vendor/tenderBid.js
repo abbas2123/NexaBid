@@ -1,5 +1,6 @@
 const statusCode = require("../../utils/statusCode");
 const tenderBidService = require("../../services/tender/tenderBid");
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require("../../utils/constants");
 
 exports.getTenderTechBidForm = async (req, res) => {
   try {
@@ -14,7 +15,7 @@ exports.getTenderTechBidForm = async (req, res) => {
     }
 
     return res.render("vendor/tenderTech", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       title: "Tender - TechForm Submission",
       user: req.user,
       vendor: req.user,
@@ -30,7 +31,7 @@ exports.getTenderTechBidForm = async (req, res) => {
     if (err.message === "NOT_VENDOR")
       return res.status(statusCode.FORBIDDEN).send("Not a vendor");
 
-    return res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    return res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -87,7 +88,7 @@ exports.getTenderFin = async (req, res) => {
     );
 
     return res.render("vendor/tenderFin", {
-      layout: "layouts/user/userLayout",
+      layout: LAYOUTS.USER_LAYOUT,
       tender,
       tenderId,
       bid,
@@ -108,8 +109,8 @@ exports.getTenderFin = async (req, res) => {
     if (err.message === "TECH_NOT_APPROVED")
       return res.redirect(`/vendor/tender/${tenderId}/bid?notApproved=true`);
 
-    return res.status(statusCode.INTERNAL_ERROR).render("error", {
-      layout: "layouts/user/userLayout",
+    return res.status(statusCode.INTERNAL_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
       message: err.message,
     });
   }

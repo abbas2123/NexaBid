@@ -1,25 +1,32 @@
-
-const propertyService = require('../../services/admin/propertyService')
+const propertyService = require('../../services/admin/propertyService');
 const statusCode = require('../../utils/statusCode');
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid');
+const {
+  VIEWS,
+  LAYOUTS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  AUCTION_STATUS,
+  REDIRECTS,
+} = require('../../utils/constants');
 
 exports.getAllProperties = async (req, res) => {
   try {
     const properties = await propertyService.getAllProperties();
 
-    res.render("admin/propertyManagement", {
-      layout: "layouts/admin/adminLayout",
+    res.render(VIEWS.ADMIN_PROPERTY_MANAGEMENT, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
       properties,
-      currentPage: "property-management"
+      currentPage: 'property-management',
     });
-
   } catch (err) {
-    console.error("Error loading properties:", err);
-    res.status(statusCode.INTERNAL_ERROR).send("Server Error");
+    console.error('Error loading properties:', err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
-
 
 //
 // GET DETAILS
@@ -29,18 +36,19 @@ exports.getPropertyDetails = async (req, res) => {
     const property = await propertyService.getPropertyDetails(req.params.id);
 
     if (!property) {
-      return res.status(statusCode.NOT_FOUND).json({ success: false, message: "Property not found" });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
 
     res.json({ success: true, property });
-
   } catch (err) {
-    console.error("DETAIL FETCH ERROR:", err);
-    res.status(statusCode.INTERNAL_ERROR).json({ success: false, message: "Server Error" });
+    console.error('DETAIL FETCH ERROR:', err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
-
 
 //
 // APPROVE PROPERTY
@@ -51,22 +59,23 @@ exports.approveProperty = async (req, res) => {
       req.params.id,
       req.admin.id,
       req.body.approveMessage,
-     req.app.get("io")
+      req.app.get('io')
     );
 
     if (!serviceResponse) {
-      return res.status(statusCode.NOT_FOUND).json({ success: false, message: "Invalid property ID" });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
 
-    res.json({ success: true, message: "Property approved & published" });
-
+    res.json({ success: true, message: SUCCESS_MESSAGES.PROPERTY_APPROVED });
   } catch (err) {
-    console.error("APPROVE ERROR:", err);
-    res.status(statusCode.INTERNAL_ERROR).json({ success: false, message: "Server Error" });
+    console.error('APPROVE ERROR:', err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
-
 
 //
 // REJECT PROPERTY
@@ -77,18 +86,21 @@ exports.rejectProperty = async (req, res) => {
       req.params.id,
       req.admin.id,
       req.body.rejectionMessage,
-      req.app.get("io")
+      req.app.get('io')
     );
 
     if (!serviceResponse) {
-      return res.status(statusCode.NOT_FOUND).json({ success: false, message: "Invalid property ID" });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
 
-    res.json({ success: true, message: "Property rejected" });
-
+    res.json({ success: true, message: SUCCESS_MESSAGES.PROPERTY_REJECTED });
   } catch (err) {
-    console.error("REJECT ERROR:", err);
-    res.status(statusCode.INTERNAL_ERROR).json({ success: false, message: "Server Error" });
+    console.error('REJECT ERROR:', err);
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
 
@@ -96,7 +108,9 @@ exports.adminLiveAuctionPage = async (req, res) => {
   try {
     const propertyId = req.params.propertyId;
     if (!propertyId) {
-      return res.status(400).send('Property ID missing');
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .send(ERROR_MESSAGES.PROPERTY_ID_MISSING);
     }
 
     const property = await Property.findById(propertyId)
@@ -105,7 +119,7 @@ exports.adminLiveAuctionPage = async (req, res) => {
       .lean();
 
     if (!property || !property.isAuction) {
-      return res.redirect('/admin/property-management');
+      return res.redirect(REDIRECTS.ADMIN_PROPERTY_MANAGEMENT);
     }
 
     const bids = await PropertyBid.find({ propertyId })
@@ -114,20 +128,20 @@ exports.adminLiveAuctionPage = async (req, res) => {
       .lean();
 
     const now = new Date();
-    let auctionStatus = 'not_started';
+    let auctionStatus = AUCTION_STATUS.NOT_STARTED;
 
     if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
-      auctionStatus = 'live';
+      auctionStatus = AUCTION_STATUS.LIVE;
     } else if (now > property.auctionEndsAt) {
-      auctionStatus = 'ended';
+      auctionStatus = AUCTION_STATUS.ENDED;
     }
 
-    res.render('admin/adminAucationviewPage', {
-      layout: 'layouts/admin/adminLayout',
+    res.render(VIEWS.ADMIN_AUCTION_VIEW, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
 
       /** 🔑 IMPORTANT */
       currentPage: 'auction',
-      
+
       property,
       bids,
       auctionStatus,
@@ -139,6 +153,8 @@ exports.adminLiveAuctionPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Admin Live Auction Error:', err);
-    res.status(500).send('Server Error');
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

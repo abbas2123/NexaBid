@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const vendorApplicationSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     businessName: { type: String },
@@ -14,37 +14,37 @@ const vendorApplicationSchema = new mongoose.Schema(
       {
         fileId: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "File",
+          ref: 'File',
           required: true,
         },
-        type: { type: String, default: "unknown" },
+        type: { type: String, default: 'unknown' },
         uploadedAt: { type: Date, default: Date.now },
       },
     ],
     ocrResultId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "OCRResult",
+      ref: 'OCRResult',
       default: null,
     },
     fraudFlags: { type: Array, default: [] },
     status: {
       type: String,
-      enum: ["pending", "submitted", "approved", "rejected"],
-      default: "pending",
+      enum: ['pending', 'submitted', 'approved', 'rejected'],
+      default: 'pending',
     },
     adminNote: { type: String, default: null },
     submittedAt: { type: Date, default: Date.now },
     reviewedAt: { type: Date, default: null },
     reviewerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       default: null,
     },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 vendorApplicationSchema.index({ userId: 1 });
 vendorApplicationSchema.index({ status: 1 });
 
-module.exports = mongoose.model("VendorApplication", vendorApplicationSchema);
+module.exports = mongoose.model('VendorApplication', vendorApplicationSchema);

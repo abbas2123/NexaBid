@@ -1,9 +1,10 @@
+const mongoose = require('mongoose');
 const Property = require('../models/property');
 const PropertyBid = require('../models/propertyBid');
 const Payment = require('../models/payment');
-const mongoose = require('mongoose');
 const ChatService = require('../services/chat/chatService');
 const ChatThread = require('../models/chatThread');
+const { ERROR_MESSAGES } = require('../utils/constants');
 
 const LAST_MINUTE_WINDOW = 2 * 60 * 1000;
 const EXTENSION_TIME = 2 * 60 * 1000;
@@ -11,22 +12,17 @@ const EXTENSION_TIME = 2 * 60 * 1000;
 const lastBidMap = new Map();
 
 module.exports = (io, socket) => {
-  
   const isAuthenticated = !!socket.user;
   const userId = socket.user?._id?.toString();
 
-  console.log(
-    `🔌 Socket connected: ${socket.user?.name || 'Guest'} (${socket.id})`
-  );
+  console.log(`🔌 Socket connected: ${socket.user?.name || 'Guest'} (${socket.id})`);
 
-  
   socket.on('join', () => {
     if (!isAuthenticated) return;
     socket.join(userId);
     console.log(`✅ User ${userId} joined personal room`);
   });
 
-  
   socket.on('join_auction', ({ propertyId }, cb) => {
     if (!mongoose.Types.ObjectId.isValid(propertyId)) return;
 
@@ -35,21 +31,18 @@ module.exports = (io, socket) => {
 
     console.log(`🏠 ${socket.user.name} joined ${room}`);
 
-    
     cb?.({ success: true, room });
 
-   
     socket.emit('auction_joined', { room });
   });
   socket.on('place_bid', async ({ propertyId, amount }) => {
     try {
-     
       if (!isAuthenticated) {
-        return socket.emit('bid_error', { message: 'Authentication required' });
+        return socket.emit('bid_error', { message: ERROR_MESSAGES.UNAUTHORIZED });
       }
 
       if (!mongoose.Types.ObjectId.isValid(propertyId)) {
-        return socket.emit('bid_error', { message: 'Invalid auction' });
+        return socket.emit('bid_error', { message: ERROR_MESSAGES.INVALID_AUCTION });
       }
 
       const now = Date.now();
@@ -60,17 +53,17 @@ module.exports = (io, socket) => {
       const property = await Property.findById(propertyId);
       if (!property || !property.isAuction) {
         return socket.emit('bid_error', {
-          message: 'Invalid auction property',
+          message: ERROR_MESSAGES.INVALID_AUCTION,
         });
       }
 
       if (new Date() > property.auctionEndsAt) {
-        return socket.emit('bid_error', { message: 'Auction ended' });
+        return socket.emit('bid_error', { message: ERROR_MESSAGES.AUCTION_NOT_ENDED });
       }
 
       // Seller cannot bid
       if (property.sellerId.toString() === userId) {
-        return socket.emit('bid_error', { message: 'Seller cannot bid' });
+        return socket.emit('bid_error', { message: ERROR_MESSAGES.UNAUTHORIZED });
       }
 
       // Participation fee check
@@ -84,7 +77,7 @@ module.exports = (io, socket) => {
 
       if (!payment) {
         return socket.emit('bid_error', {
-          message: 'Pay participation fee first',
+          message: ERROR_MESSAGES.PAYMENT_REQUIRED,
         });
       }
 
@@ -121,9 +114,7 @@ module.exports = (io, socket) => {
       let extended = false;
 
       if (timeLeft <= LAST_MINUTE_WINDOW) {
-        property.auctionEndsAt = new Date(
-          property.auctionEndsAt.getTime() + EXTENSION_TIME
-        );
+        property.auctionEndsAt = new Date(property.auctionEndsAt.getTime() + EXTENSION_TIME);
         extended = true;
       }
 
@@ -137,9 +128,7 @@ module.exports = (io, socket) => {
         time: new Date(),
       });
 
-      console.log(
-        `✅ Bid placed: ₹${amount} by ${socket.user.name} on property ${propertyId}`
-      );
+      console.log(`✅ Bid placed: ₹${amount} by ${socket.user.name} on property ${propertyId}`);
 
       // Broadcast auction extension if applicable
       if (extended) {
@@ -147,17 +136,15 @@ module.exports = (io, socket) => {
           newEndTime: property.auctionEndsAt,
           extendedBy: EXTENSION_TIME / 60000,
         });
-        console.log(
-          `⏰ Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`
-        );
+        console.log(`⏰ Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`);
       }
     } catch (err) {
       console.error('❌ Socket bid error:', err);
-      socket.emit('bid_error', { message: 'Bid failed' });
+      socket.emit('bid_error', { message: ERROR_MESSAGES.SERVER_ERROR });
     }
   });
 
-  //  CHAT SOCKET HANDLERS 
+  //  CHAT SOCKET HANDLERS
 
   socket.on('joinUser', (userIdParam) => {
     if (!isAuthenticated) return;
@@ -167,7 +154,6 @@ module.exports = (io, socket) => {
     console.log(`✅ User ${roomUserId} joined their personal room for chat`);
   });
 
-  
   socket.on('join_chat', async (threadId) => {
     try {
       if (!isAuthenticated) return;
@@ -176,9 +162,7 @@ module.exports = (io, socket) => {
       socket.join(threadId.toString());
       console.log(`💬 User ${userId} joined chat thread ${threadId}`);
 
-     
       const lastMsg = await ChatService.markThreadRead(threadId, userId);
-
       io.to(threadId.toString()).emit('messages_seen', {
         threadId: threadId.toString(),
         seenBy: userId,
@@ -205,9 +189,7 @@ module.exports = (io, socket) => {
 
       // Get thread info to find receiver
       const thread = await ChatThread.findById(data.threadId).lean();
-      const receiverId = thread.participants
-        .map(String)
-        .find((id) => id !== userId);
+      const receiverId = thread.participants.map(String).find((id) => id !== userId);
 
       // Prepare message object
       const msg = {
@@ -245,7 +227,7 @@ module.exports = (io, socket) => {
       console.log(`✅ Message sent successfully in thread ${data.threadId}`);
     } catch (err) {
       console.error('❌ send_message error:', err);
-      socket.emit('message_error', { message: 'Failed to send message' });
+      socket.emit('message_error', { message: ERROR_MESSAGES.SERVER_ERROR });
     }
   });
 
@@ -294,9 +276,7 @@ module.exports = (io, socket) => {
 
   // Handle disconnect
   socket.on('disconnect', () => {
-    console.log(
-      `❌ Socket disconnected: ${socket.user?.name || 'Guest'} (${socket.id})`
-    );
+    console.log(`❌ Socket disconnected: ${socket.user?.name || 'Guest'} (${socket.id})`);
 
     // Clean up bid rate limiting
     lastBidMap.delete(socket.id);

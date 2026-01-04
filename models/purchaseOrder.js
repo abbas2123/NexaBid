@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const purchaseOrderSchema = new mongoose.Schema(
   {
     tenderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Tender",
+      ref: 'Tender',
       required: true,
     },
 
     vendorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
 
     generatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // publisher
+      ref: 'User', // publisher
       required: true,
     },
 
@@ -36,24 +36,24 @@ const purchaseOrderSchema = new mongoose.Schema(
 
     terms: {
       type: String, // or use File model if you upload PDF
-      default: "",
+      default: '',
     },
 
     pdfFile: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "File",
+      ref: 'File',
     },
     status: {
       type: String,
-      enum: ["generated", "sent", "vendor_accepted", "vendor_rejected"],
-      default: "generated",
+      enum: ['generated', 'sent', 'vendor_accepted', 'vendor_rejected'],
+      default: 'generated',
     },
 
     vendorRemarks: { type: String },
     vendorResponseDate: Date,
-  rejectionReason: String
+    rejectionReason: String,
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("PurchaseOrder", purchaseOrderSchema);
+module.exports = mongoose.model('PurchaseOrder', purchaseOrderSchema);

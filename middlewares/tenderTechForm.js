@@ -1,25 +1,25 @@
 // middlewares/tenderUpload.js
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 // Root uploads folder
-const ROOT_UPLOAD = path.join(__dirname, "..", "uploads");
+const ROOT_UPLOAD = path.join(__dirname, '..', 'uploads');
 console.log('jncwjwjc');
-console.log('dfffvfev',ROOT_UPLOAD)
+console.log('dfffvfev', ROOT_UPLOAD);
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    let subFolder = "";
+    let subFolder = '';
 
     // choose sub-folder based on fieldname
-    if (file.fieldname === "proposalFiles") {
-      subFolder = "tender-proposalDocs";
-      console.log(subFolder)
-    } else if (file.fieldname === "techFiles") {
-      subFolder = "tender-techDocs";
-      console.log(subFolder)
+    if (file.fieldname === 'proposalFiles') {
+      subFolder = 'tender-proposalDocs';
+      console.log(subFolder);
+    } else if (file.fieldname === 'techFiles') {
+      subFolder = 'tender-techDocs';
+      console.log(subFolder);
     } else {
-      subFolder = "tender-other";
+      subFolder = 'tender-other';
     }
 
     const uploadPath = path.join(ROOT_UPLOAD, subFolder);
@@ -31,7 +31,7 @@ const storage = multer.diskStorage({
   },
 
   filename(req, file, cb) {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     const ext = path.extname(file.originalname);
     cb(null, unique + ext);
   },

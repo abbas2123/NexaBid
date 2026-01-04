@@ -1,8 +1,8 @@
-const router = require("express").Router();
-const Notification = require("../../models/notification");
-const authMiddleware = require('../../middlewares/authMiddleware')
+const router = require('express').Router();
+const Notification = require('../../models/notification');
+const authMiddleware = require('../../middlewares/authMiddleware');
 // Get notifications for logged in user
-router.get("/", authMiddleware.protectRoute,async (req, res) => {
+router.get('/', authMiddleware.protectRoute, async (req, res) => {
   if (!req.user) return res.json([]);
 
   const notifications = await Notification.find({ userId: req.user._id })
@@ -12,7 +12,7 @@ router.get("/", authMiddleware.protectRoute,async (req, res) => {
   return res.json(notifications);
 });
 
-router.post("/mark-read", authMiddleware.protectRoute, async (req, res) => {
+router.post('/mark-read', authMiddleware.protectRoute, async (req, res) => {
   await Notification.deleteMany({ userId: req.user._id });
   res.json({ success: true });
 });

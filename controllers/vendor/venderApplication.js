@@ -21,7 +21,7 @@ exports.getVendorApplicationPage = async (req, res) => {
       console.log('❌ No user — redirecting to login');
       return res.redirect(REDIRECTS.LOGIN);
     }
-    const user = req.user;
+    const { user } = req;
 
     console.log('user.......', user.role);
     if (user.role === ROLES.VENDOR) {
@@ -47,29 +47,25 @@ exports.getVendorApplicationPage = async (req, res) => {
     });
   } catch (err) {
     console.error('error loading vender page:', err);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
 exports.submitVendorApplication = async (req, res) => {
+  console.log('sumit');
   let existingApp = null;
   let updatedApp = null;
-  let result = { extracted: null, fraud: null };
 
   try {
-    const actionType = req.body.actionType;
+    const { actionType } = req.body;
     const isConfirmed = req.body.isConfirmed === 'true';
     const userId = req.user._id;
 
     existingApp = await vendorService.getApplicationStatus(userId);
-
+console.log('existingApp',existingApp);
     // Security check
     if (existingApp && existingApp.userId.toString() !== userId.toString()) {
-      return res
-        .status(statusCode.FORBIDDEN)
-        .send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
+      return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
     }
 
     // ---- 1) OCR SCAN FLOW ----
@@ -81,7 +77,7 @@ exports.submitVendorApplication = async (req, res) => {
         });
       }
       try {
-        result = await vendorService.submitApplicationService(
+         await vendorService.submitApplicationService(
           req.user,
           req.files,
           ACTION_TYPES.SCAN
@@ -100,7 +96,14 @@ exports.submitVendorApplication = async (req, res) => {
 
     // ---- 2) CONFIRMATION REQUIRED ----
     updatedApp = await vendorService.getApplicationStatus(userId);
+    console.log('updatedApp',updatedApp);
 
+if (!updatedApp) {
+  return res.json({
+    success: false,
+    message: ERROR_MESSAGES.PLEASE_SCAN_DOCUMENTS_FIRST,
+  });
+}
     if (!isConfirmed) {
       return res.json({
         success: false,

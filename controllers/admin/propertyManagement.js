@@ -22,15 +22,11 @@ exports.getAllProperties = async (req, res) => {
     });
   } catch (err) {
     console.error('Error loading properties:', err);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
-//
-// GET DETAILS
-//
+
 exports.getPropertyDetails = async (req, res) => {
   try {
     const property = await propertyService.getPropertyDetails(req.params.id);
@@ -50,9 +46,7 @@ exports.getPropertyDetails = async (req, res) => {
   }
 };
 
-//
-// APPROVE PROPERTY
-//
+
 exports.approveProperty = async (req, res) => {
   try {
     const serviceResponse = await propertyService.approvePropertyService(
@@ -77,9 +71,7 @@ exports.approveProperty = async (req, res) => {
   }
 };
 
-//
-// REJECT PROPERTY
-//
+
 exports.rejectProperty = async (req, res) => {
   try {
     const serviceResponse = await propertyService.rejectPropertyService(
@@ -106,11 +98,9 @@ exports.rejectProperty = async (req, res) => {
 
 exports.adminLiveAuctionPage = async (req, res) => {
   try {
-    const propertyId = req.params.propertyId;
+    const { propertyId } = req.params;
     if (!propertyId) {
-      return res
-        .status(statusCode.BAD_REQUEST)
-        .send(ERROR_MESSAGES.PROPERTY_ID_MISSING);
+      return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.PROPERTY_ID_MISSING);
     }
 
     const property = await Property.findById(propertyId)
@@ -138,10 +128,7 @@ exports.adminLiveAuctionPage = async (req, res) => {
 
     res.render(VIEWS.ADMIN_AUCTION_VIEW, {
       layout: LAYOUTS.ADMIN_LAYOUT,
-
-      /** 🔑 IMPORTANT */
       currentPage: 'auction',
-
       property,
       bids,
       auctionStatus,
@@ -153,8 +140,6 @@ exports.adminLiveAuctionPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Admin Live Auction Error:', err);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

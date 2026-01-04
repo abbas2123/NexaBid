@@ -29,25 +29,19 @@ exports.getTransacation = async (userId, page, filters) => {
   if (filters.type) ledger = ledger.filter((x) => x.type === filters.type);
 
   // Source filter
-  if (filters.source)
-    ledger = ledger.filter((x) => x.source === filters.source);
+  if (filters.source) ledger = ledger.filter((x) => x.source === filters.source);
 
   // Date filter
   if (filters.dateRange) {
     const now = new Date();
     ledger = ledger.filter((tx) => {
       const d = new Date(tx.createdAt);
-      if (filters.dateRange === 'today')
-        return d.toDateString() === now.toDateString();
-      if (filters.dateRange === 'week')
-        return d >= new Date(now - 7 * 86400000);
-      if (filters.dateRange === 'month')
-        return (
-          d.getMonth() === now.getMonth() &&
-          d.getFullYear() === now.getFullYear()
-        );
-      if (filters.dateRange === 'year')
-        return d.getFullYear() === now.getFullYear();
+      if (filters.dateRange === 'today') return d.toDateString() === now.toDateString();
+      if (filters.dateRange === 'week') return d >= new Date(now - 7 * 86400000);
+      if (filters.dateRange === 'month') {
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      }
+      if (filters.dateRange === 'year') return d.getFullYear() === now.getFullYear();
       return true;
     });
   }

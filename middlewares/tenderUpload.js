@@ -1,8 +1,8 @@
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-const ROOT_FOLDER = path.join(__dirname, "..", "uploads/tender-docs");
+const ROOT_FOLDER = path.join(__dirname, '..', 'uploads/tender-docs');
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
     cb(null, ROOT_FOLDER);
   },
   filename(req, file, cb) {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, unique + path.extname(file.originalname));
   },
 });

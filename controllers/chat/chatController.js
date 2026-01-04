@@ -1,5 +1,7 @@
 const ChatService = require('../../services/chat/chatService');
 const ChatThread = require('../../models/chatThread');
+const statusCode = require('../../utils/statusCode');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.openInbox = async (req, res, next) => {
   try {
@@ -22,12 +24,7 @@ exports.startChat = async (req, res, next) => {
   try {
     const { userId, type, relatedId } = req.params;
 
-    const thread = await ChatService.getOrCreateThread(
-      req.user._id,
-      userId,
-      type,
-      relatedId
-    );
+    const thread = await ChatService.getOrCreateThread(req.user._id, userId, type, relatedId);
 
     res.redirect(`/chat/thread/${thread._id}`);
   } catch (err) {
@@ -104,7 +101,7 @@ exports.uploadFile = async (req, res, next) => {
 exports.unreaded = async (req, res) => {
   try {
     const userId = req.user._id.toString();
-console.log('userId',userId)
+    console.log('userId', userId);
     const threads = await ChatThread.find({
       participants: userId,
     });
@@ -118,6 +115,6 @@ console.log('userId',userId)
     res.json({ success: true, count: totalUnread });
   } catch (error) {
     console.error('Error fetching unread count:', error);
-    res.status(500).json({ success: false, error: 'Server error' });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: ERROR_MESSAGES.SERVER_ERROR });
   }
 };

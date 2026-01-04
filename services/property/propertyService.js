@@ -2,6 +2,7 @@ const Property = require('../../models/property');
 const statusCode = require('../../utils/statusCode');
 const Payment = require('../../models/payment');
 const { parseLocalDatetime, formatIST } = require('../../utils/datetime');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getProperties = async (page = 1, filters = {}) => {
   const limit = 8;
@@ -66,8 +67,7 @@ exports.getPropertyDetails = async (propertyId, user) => {
     .populate('sellerId', 'name email')
     .lean();
 
-  if (!property)
-    return { property: null, userHasPaidForProperty: false, isOwner: false };
+  if (!property) return { property: null, userHasPaidForProperty: false, isOwner: false };
 
   // ✅ Calculate isOwner FIRST
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
@@ -95,8 +95,7 @@ exports.getPropertyDetails = async (propertyId, user) => {
   };
 };
 
-const normalize = (value = '') =>
-  value.toLowerCase().trim().replace(/\s+/g, ' ');
+const normalize = (value = '') => value.toLowerCase().trim().replace(/\s+/g, ' ');
 
 exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   // Normalize strings
@@ -115,19 +114,19 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   });
 
   if (existing) {
-    const err = new Error('A similar property already exists in the system.');
+    const err = new Error(ERROR_MESSAGES.PROPERTY_ALREADY_EXISTS);
     err.statusCode = statusCode.CONFLICT;
     throw err;
   }
 
   const media = mediaFiles.map((file) => ({
-    url: '/uploads/property-media/' + file.filename,
+    url: `/uploads/property-media/${file.filename}`,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
 
   const docs = docFiles.map((file) => ({
-    url: '/uploads/property-docs/' + file.filename,
+    url: `/uploads/property-docs/${file.filename}`,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
@@ -170,9 +169,6 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   return property;
 };
 
-
-
-
 exports.updatePropertyService = async (propertyId, userId, body, files) => {
   const existingProperty = await Property.findOne({
     _id: propertyId,
@@ -180,7 +176,7 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   });
 
   if (!existingProperty) {
-    const error = new Error('Property not found');
+    const error = new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
     error.statusCode = statusCode.NOT_FOUND;
     throw error;
   }
@@ -236,14 +232,8 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   console.log('INPUT start:', body.auctionStartsAt);
   console.log('INPUT end  :', body.auctionEndsAt);
 
-  console.log(
-    'STORED start ISO:',
-    existingProperty.auctionStartsAt?.toISOString()
-  );
-  console.log(
-    'STORED end   ISO:',
-    existingProperty.auctionEndsAt?.toISOString()
-  );
+  console.log('STORED start ISO:', existingProperty.auctionStartsAt?.toISOString());
+  console.log('STORED end   ISO:', existingProperty.auctionEndsAt?.toISOString());
 
   console.log('STORED start IST:', formatIST(existingProperty.auctionStartsAt));
   console.log('STORED end   IST:', formatIST(existingProperty.auctionEndsAt));
@@ -273,13 +263,12 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   return existingProperty;
 };
 
-
 exports.getPropertyForEdit = async (propertyId) => {
   const property = await Property.findById(propertyId).lean();
 
   if (!property) {
     const err = new Error('Property not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -299,7 +288,7 @@ exports.deleteUserProperty = async (propertyId, userId) => {
 
   if (!deletedProperty) {
     const err = new Error('Property not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -314,7 +303,7 @@ exports.deleteUserPropertyDoc = async (propertyId, docId, userId) => {
 
   if (!property) {
     const err = new Error('Property not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -322,7 +311,7 @@ exports.deleteUserPropertyDoc = async (propertyId, docId, userId) => {
 
   if (!docObj) {
     const err = new Error('Document not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -340,7 +329,7 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
 
   if (!property) {
     const err = new Error('Property not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -348,7 +337,7 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
 
   if (!mediaObj) {
     const err = new Error('Media file not found');
-    err.statusCode = 404;
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 

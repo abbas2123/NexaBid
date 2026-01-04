@@ -1,5 +1,4 @@
-const { ZodError } = require("zod");
-const statusCode = require("../utils/statusCode");
+const statusCode = require('../utils/statusCode');
 
 module.exports = (schema) => (req, res, next) => {
   const result = schema.safeParse(req.body);
@@ -9,7 +8,7 @@ module.exports = (schema) => (req, res, next) => {
 
     return res.status(statusCode.BAD_REQUEST).json({
       success: false,
-      message: issues[0]?.message || "Validation failed",
+      message: issues[0]?.message || 'Validation failed',
     });
   }
 

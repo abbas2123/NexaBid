@@ -62,7 +62,10 @@
             <td class="text-center"><%= c.totalBids %></td>
             <td><%= c.winner?.name || "—" %></td>
             <td>
-              <%= c.winner ? "₹" + c.winner.amount.toLocaleString("en-IN") : "—" %>
+             <%= (c.winner && typeof c.winner.amount === 'number')
+      ? "₹" + c.winner.amount.toLocaleString("en-IN")
+      : "—"
+%>
             </td>
             <td><%= c.poStatus %></td>
             <td><%= c.agreementStatus %></td>
@@ -94,7 +97,10 @@
         <p class="text-sm">Winner: <b><%= c.winner?.name || "—" %></b></p>
         <p class="text-sm">
           Amount:
-          <b><%= c.winner ? "₹" + c.winner.amount.toLocaleString("en-IN") : "—" %></b>
+          <b><%= (c.winner && typeof c.winner.amount === 'number')
+      ? "₹" + c.winner.amount.toLocaleString("en-IN")
+      : "—"
+%></b>
         </p>
 
         <div class="flex justify-between items-center mt-3">

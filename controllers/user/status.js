@@ -1,12 +1,12 @@
+const path = require('path');
+const fs = require('fs');
 const propertyService = require('../../services/property/propertyService');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
 const tenderService = require('../../services/tender/tender');
 const File = require('../../models/File');
-const path = require('path');
-const fs = require('fs');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.propertyStatus = async (req, res) => {
   try {
@@ -14,7 +14,7 @@ exports.propertyStatus = async (req, res) => {
       return res.redirect('/auth/login');
     }
 
-    const user = req.user;
+    const { user } = req;
 
     const properties = await Property.find({
       sellerId: user._id,
@@ -28,7 +28,7 @@ exports.propertyStatus = async (req, res) => {
       properties,
       user,
     });
-  } catch (error) {
+  } catch (err) {
     console.log('Property status error', err);
     res.render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: ERROR_MESSAGES.SERVER_ERROR });
   }
@@ -38,8 +38,7 @@ exports.getEditPropertyPage = async (req, res) => {
   try {
     const propertyId = req.params.id;
 
-    const { property, media, docs } =
-      await propertyService.getPropertyForEdit(propertyId);
+    const { property, media, docs } = await propertyService.getPropertyForEdit(propertyId);
 
     return res.render('user/createProperty', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -83,15 +82,11 @@ exports.deleteSingleDoc = async (req, res) => {
     const { propertyId, docId } = req.params;
     const userId = req.user._id;
 
-    const deletedDoc = await propertyService.deleteUserPropertyDoc(
-      propertyId,
-      docId,
-      userId
-    );
+    await propertyService.deleteUserPropertyDoc(propertyId, docId, userId);
 
     return res.json({
       success: true,
-      message: 'Document removed successfully',
+      message: SUCCESS_MESSAGES.DOCUMENT_REMOVED,
       docId,
     });
   } catch (err) {
@@ -112,7 +107,7 @@ exports.deleteSingleMedia = async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Image removed successfully',
+      message: SUCCESS_MESSAGES.IMAGE_REMOVED,
       mediaId,
     });
   } catch (err) {
@@ -129,9 +124,7 @@ exports.getTenderStatusPage = async (req, res) => {
   try {
     if (!req.user) return res.redirect('/auth/login');
 
-    const tenders = await Tender.find({ createdBy: req.user._id })
-      .sort({ createdAt: -1 })
-      .lean();
+    const tenders = await Tender.find({ createdBy: req.user._id }).sort({ createdAt: -1 }).lean();
 
     return res.render('profile/tenderStatus', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -143,7 +136,7 @@ exports.getTenderStatusPage = async (req, res) => {
     console.log('Tender Status Error', error);
     return res.render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
-      message: 'Unable to load tender status',
+      message: ERROR_MESSAGES.UNABLE_LOAD_TENDER_STATUS,
     });
   }
 };
@@ -152,8 +145,7 @@ exports.getResubmitTenderPage = async (req, res) => {
   try {
     const tenderId = req.params.id;
 
-    const { tender, files } =
-      await tenderService.getTenderForResubmit(tenderId);
+    const { tender, files } = await tenderService.getTenderForResubmit(tenderId);
 
     return res.render('vendor/tenderCreate', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -184,7 +176,7 @@ exports.deleteTender = async (req, res) => {
     if (!tender) {
       return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: 'Tender not found or unauthorized',
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND_UNAUTHORIZED,
       });
     }
 
@@ -193,17 +185,17 @@ exports.deleteTender = async (req, res) => {
 
     if (fileIds.length > 0) {
       const files = await File.find({ _id: { $in: fileIds } });
-      files.forEach((f) => {
+      for (const f of files) {
         try {
-          const filePath = path.join(
-            process.cwd(),
-            'uploads',
-            'tender-docs',
-            f.fileName
-          );
+          const filePath = path.join(process.cwd(), 'uploads', 'tender-docs', f.fileName);
           if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        } catch {}
-      });
+        } catch (err) {
+          return res.render(VIEWS.ERROR, {
+            layout: LAYOUTS.USER_LAYOUT,
+            message: ERROR_MESSAGES.FILE_NOT_FOUND,
+          });
+        }
+      }
 
       await File.deleteMany({ _id: { $in: fileIds } });
     }
@@ -212,13 +204,13 @@ exports.deleteTender = async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Tender deleted successfully',
+      message: SUCCESS_MESSAGES.TENDER_DELETED,
     });
   } catch (error) {
     console.log('Tender deletion error:', error);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Server error deleting tender',
+      message: ERROR_MESSAGES.SERVER_ERROR_DELETING_TENDER,
     });
   }
 };

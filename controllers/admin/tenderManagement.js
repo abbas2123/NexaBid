@@ -1,4 +1,4 @@
-// controllers/admin/tenderManagement.js
+
 const Tender = require('../../models/tender');
 const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
@@ -37,9 +37,7 @@ exports.getTenderDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const tender = await Tender.findById(id)
-      .populate('createdBy', 'name email')
-      .lean();
+    const tender = await Tender.findById(id).populate('createdBy', 'name email').lean();
 
     if (!tender) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -78,13 +76,9 @@ exports.updateTenderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment } = req.body;
-
-    console.log(' UpdateTenderStatus ->', { id, status, comment });
-
     const allowedStatuses = Object.values(TENDER_STATUS);
 
     if (!allowedStatuses.includes(status)) {
-      console.log(' Invalid status:', status);
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `${ERROR_MESSAGES.INVALID_STATUS}: ${status}`,
@@ -94,7 +88,6 @@ exports.updateTenderStatus = async (req, res) => {
     const tender = await Tender.findById(id);
 
     if (!tender) {
-      console.log(' Tender not found for id:', id);
       return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.TENDER_NOT_FOUND,
@@ -103,24 +96,22 @@ exports.updateTenderStatus = async (req, res) => {
 
     tender.status = status;
     if (comment && comment.trim() !== '') {
-      tender.adminComment = comment.trim(); // VERY IMPORTANT!
+      tender.adminComment = comment.trim(); 
     }
 
     await tender.save();
-
-    console.log('Tender status updated:', tender._id, tender.status);
     const io = req.app.get('io');
 
     if (status === TENDER_STATUS.PUBLISHED) {
       await notificationService.sendNotification(
-        tender.createdBy, // CORRECT USER
+        tender.createdBy, 
         NOTIFICATION_MESSAGES.TENDER_PUBLISHED,
         `/tenders/${tender._id}`,
         io
       );
     }
 
-    // REJECTED EVENT
+  
     if (status === TENDER_STATUS.REJECTED) {
       await notificationService.sendNotification(
         tender.createdBy,
@@ -130,7 +121,7 @@ exports.updateTenderStatus = async (req, res) => {
       );
     }
 
-    // CLOSED EVENT
+   
     if (status === TENDER_STATUS.CLOSED) {
       await notificationService.sendNotification(
         tender.createdBy,

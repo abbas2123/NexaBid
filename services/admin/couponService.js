@@ -1,12 +1,18 @@
 const Coupon = require('../../models/coupen');
 const CouponRedemption = require('../../models/coupenRedemption');
+const { COUPON_TYPES, COUPON_MESSAGES } = require('../../utils/constants');
 
-exports.getAllCoupons = async () => {
-  return Coupon.find().sort({createdAt:-1}).lean();
+async function getCouponManagementData() {
+  await Coupon.updateMany(
+    { expiresAt: { $lt: new Date() }, isActive: true },
+    { $set: { isActive: false } }
+  );
 
-};
+  const coupons = await Coupon.find().sort({ createdAt: -1 }).lean();
+  return { coupons };
+}
 
-exports.createCoupon = async (DataTransfer, adminId)=>{
+async function createCouponService(payload, adminId) {
   const {
     code,
     type,
@@ -19,22 +25,31 @@ exports.createCoupon = async (DataTransfer, adminId)=>{
     perUserLimit,
     applicableTo,
     description,
-  } = data;
+  } = payload;
 
-  if(!code || !type || ! value) {
-    throw new Error('Coupon code, type and value are required');
+  if (!code || !type || !value) {
+    return {
+      ok: false,
+      reason: COUPON_MESSAGES.MISSING_FIELDS,
+    };
   }
 
-  const exists = await Coupon.findOne({ code: code.toUpperCase()});
-  if(exists){
-    throw new Error('Coupon code already exists');
+  const exists = await Coupon.findOne({ code: code.toUpperCase() });
+  if (exists) {
+    return {
+      ok: false,
+      reason: COUPON_MESSAGES.COUPON_EXISTS,
+    };
   }
 
-  if(startsAt && expiresAt && new Date(startsAt)> new Date(expiresAt)){
- throw new Error('Start date cannot be after expiry date');
+  if (startsAt && expiresAt && new Date(startsAt) > new Date(expiresAt)) {
+    return {
+      ok: false,
+      reason: COUPON_MESSAGES.INVALID_DATE_RANGE,
+    };
   }
 
-  return Coupon.create({
+  const coupon = await Coupon.create({
     code: code.toUpperCase(),
     description,
     type,
@@ -49,73 +64,106 @@ exports.createCoupon = async (DataTransfer, adminId)=>{
     createdBy: adminId,
     isActive: true,
   });
+
+  return {
+    ok: true,
+    coupon,
+  };
 }
 
-exports.toggleCouponStatus = async (couponId) => {
+async function toggleCouponStatusService(couponId) {
   const coupon = await Coupon.findById(couponId);
-  if (!coupon) throw new Error('Coupon not found');
+  if (!coupon) {
+    return { ok: false, reason: COUPON_MESSAGES.NOT_FOUND };
+  }
 
   coupon.isActive = !coupon.isActive;
   await coupon.save();
 
-  return coupon.isActive;
-};
-
-exports.deleteCoupon = async (couponId) => {
-  return Coupon.findByIdAndDelete(couponId);
+  return {
+    ok: true,
+    isActive: coupon.isActive,
+  };
 }
 
-exports.applyCoupon = async ({ couponCode, intentId, userId}) => {
+async function deleteCouponService(couponId) {
+  await Coupon.findByIdAndDelete(couponId);
+  return { ok: true };
+}
+
+async function applyCouponService({ couponCode, intentId, userId, orderAmount = 5000 }) {
   const coupon = await Coupon.findOne({
-    conde: couponCode.toUpperCase(),
-    isActive: true,
+    code: couponCode.toUpperCase(),
   });
 
-  if(!coupon) throw new Error('Invalid coupon');
-
-  const now = new Date();
-  if(
-    (coupon.startsAt && now < coupon.startsAt) || 
-    (coupon.expiresAt && now > coupon.expiresAt)
-  ){
-    throw new Error('Coupon expired');
+  if (!coupon) {
+    return {
+      ok: false,
+      reason: COUPON_MESSAGES.INVALID_COUPON,
+    };
   }
 
-  if(coupon.perUserLimit){
+  const now = new Date();
+  if ((coupon.startsAt && now < coupon.startsAt) || (coupon.expiresAt && now > coupon.expiresAt)) {
+    return {
+      ok: false,
+      reason: COUPON_MESSAGES.COUPON_EXPIRED,
+    };
+  }
+
+  if (coupon.perUserLimit) {
     const used = await CouponRedemption.countDocuments({
       couponId: coupon._id,
       userId,
     });
-    if(used >= coupon.perUserLimit) {
-      throw new Error('Coupon usage limit reached');
+    if (used >= coupon.perUserLimit) {
+      return {
+        ok: false,
+        reason: COUPON_MESSAGES.COUPON_LIMIT_REACHED,
+      };
     }
   }
 
-  if(coupon.usageLimit) {
+  if (coupon.usageLimit) {
     const totalUsed = await CouponRedemption.countDocuments({
       couponId: coupon._id,
     });
-    if(totalUsed >= coupon.usageLimit){
-      throw new Error('Coupon fully redeemed');
+    if (totalUsed >= coupon.usageLimit) {
+      return {
+        ok: false,
+        reason: COUPON_MESSAGES.COUPON_FULLY_REDEEMED,
+      };
     }
   }
 
-  const orderAmount = 5000;
-  let discount = 0 ;
+  let discount = 0;
 
-  if(coupon.type === 'flat'){
+  if (coupon.type === COUPON_TYPES.FLAT) {
     discount = coupon.value;
-  }else if (coupon.type === 'percent') {
-    discount = Math.floor((orderAmount * coupon.value)/100);
-    if(coupon.maxDiscount) {
+  } else if (coupon.type === COUPON_TYPES.PERCENT) {
+    discount = Math.floor((orderAmount * coupon.value) / 100);
+    if (coupon.maxDiscount) {
       discount = Math.min(discount, coupon.maxDiscount);
     }
   }
+
   await CouponRedemption.create({
-    couponid: coupon._id,
+    couponId: coupon._id,
     userId,
     orderReference: intentId,
     amountSaved: discount,
   });
-  return discount;
+
+  return {
+    ok: true,
+    discount,
+  };
+}
+
+module.exports = {
+  getCouponManagementData,
+  createCouponService,
+  toggleCouponStatusService,
+  deleteCouponService,
+  applyCouponService,
 };

@@ -1,8 +1,8 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const tenderSchema = new mongoose.Schema(
   {
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     title: {
       type: String,
       required: true,
@@ -39,8 +39,8 @@ const tenderSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["open", "restricted"],
-      default: "open",
+      enum: ['open', 'restricted'],
+      default: 'open',
     },
 
     emdAmount: {
@@ -79,16 +79,16 @@ const tenderSchema = new mongoose.Schema(
     },
 
     files: [
-  {
-    fileId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "File",
-      required: true,
-    },
-    fileName: String,
-    size: Number,
-  }
-],
+      {
+        fileId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'File',
+          required: true,
+        },
+        fileName: String,
+        size: Number,
+      },
+    ],
 
     version: {
       type: Number,
@@ -97,13 +97,13 @@ const tenderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["draft","rejected", "published", "closed", "awarded", "cancelled"],
-      default: "draft",
+      enum: ['draft', 'rejected', 'published', 'closed', 'awarded', 'cancelled'],
+      default: 'draft',
     },
 
     awardedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       default: null,
     },
 
@@ -113,13 +113,13 @@ const tenderSchema = new mongoose.Schema(
     },
     adminComment: { type: String, default: null },
   },
-    
-  { timestamps: true },
+
+  { timestamps: true }
 );
 
 // Indexes
 tenderSchema.index({ status: 1, bidEndAt: -1 });
 tenderSchema.index({ category: 1 });
-tenderSchema.index({ dept: "text", title: "text" });
+tenderSchema.index({ dept: 'text', title: 'text' });
 
-module.exports = mongoose.model("Tender", tenderSchema);
+module.exports = mongoose.model('Tender', tenderSchema);

@@ -65,8 +65,7 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-paymentSchema.pre('save', function (next) {
+paymentSchema.pre('save', function preSave(_next) {
   if (!this.orderNumber) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
     const time = Date.now().toString().slice(-4);

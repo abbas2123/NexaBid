@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const propertySchema = new mongoose.Schema(
   {
@@ -88,4 +88,4 @@ const propertySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Property", propertySchema);
+module.exports = mongoose.model('Property', propertySchema);

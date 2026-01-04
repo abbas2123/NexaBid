@@ -17,10 +17,7 @@ module.exports = async (io) => {
     status: { $nin: ['owned', 'closed', 'processing_refund'] },
   });
 
-  console.log(`🔍 Found ${auctions.length} auctions to process`);
-
   for (const property of auctions) {
-    // LOCK AUCTION
     const locked = await Property.findOneAndUpdate(
       {
         _id: property._id,
@@ -31,16 +28,12 @@ module.exports = async (io) => {
     );
     if (!locked) continue;
 
-    console.log(`🔒 Locked auction ${property._id}`);
-
-    // NO BIDS
     if (!property.currentHighestBidder) {
       locked.status = 'closed';
       await locked.save();
       continue;
     }
 
-    // DECLARE WINNER
     locked.status = 'owned';
     locked.soldTo = property.currentHighestBidder;
     locked.soldAt = now;
@@ -58,7 +51,6 @@ module.exports = async (io) => {
 
     io.to(property.currentHighestBidder.toString()).emit('newNotification');
 
-    // PROCESS LOSERS
     const losers = await PropertyBid.find({
       propertyId: property._id,
       bidderId: { $ne: property.currentHighestBidder },
@@ -69,9 +61,7 @@ module.exports = async (io) => {
       const session = await mongoose.startSession();
       session.startTransaction();
       try {
-        const payment = await Payment.findById(bid.escrowPaymentId).session(
-          session
-        );
+        const payment = await Payment.findById(bid.escrowPaymentId).session(session);
         if (!payment || payment.refundStatus === 'completed') {
           await session.abortTransaction();
           continue;
@@ -79,14 +69,12 @@ module.exports = async (io) => {
 
         const refundAmount = Math.round(payment.amount * REFUND_PERCENT);
 
-        // ATOMIC WALLET CREDIT
         const wallet = await Wallet.findOneAndUpdate(
           { userId: bid.bidderId },
           { $inc: { balance: refundAmount } },
           { new: true, upsert: true, session }
         );
 
-        // IDENTITY SAFE WALLET TXN
         const exists = await WalletTransaction.exists({
           'metadata.paymentId': payment._id,
         }).session(session);
@@ -135,6 +123,5 @@ module.exports = async (io) => {
     }
 
     io.to(`auction_${property._id}`).emit('auction_ended');
-    console.log(`✅ Auction ${property._id} fully settled`);
   }
 };

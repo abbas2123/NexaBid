@@ -1,23 +1,23 @@
 // models/OCRResult.js
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const ocrResultSchema = new mongoose.Schema(
   {
     fileId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "File",
+      ref: 'File',
       required: true,
     },
-    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     extracted: { type: Object }, // PAN, GST, Business Name etc.
     status: {
       type: String,
-      enum: ["pending", "processed", "failed"],
-      default: "processed",
+      enum: ['pending', 'processed', 'failed'],
+      default: 'processed',
     },
     processedAt: { type: Date, default: Date.now },
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
-module.exports = mongoose.model("OCRResult", ocrResultSchema);
+module.exports = mongoose.model('OCRResult', ocrResultSchema);

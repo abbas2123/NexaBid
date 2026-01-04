@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const walletTransactionSchema = new mongoose.Schema({
   walletId: {
     type: mongoose.Schema.Types.ObjectId,

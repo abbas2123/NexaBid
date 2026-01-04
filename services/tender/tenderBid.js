@@ -1,39 +1,39 @@
 // services/vendor/tenderBid.service.js
 
-const Tender = require("../../models/tender");
-const TenderBid = require("../../models/tenderBid");
-const Payment = require("../../models/payment");
-const File = require("../../models/File");
+const Tender = require('../../models/tender');
+const TenderBid = require('../../models/tenderBid');
+const Payment = require('../../models/payment');
+const File = require('../../models/File');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 
 module.exports = {
-
   async getTechBidData(tenderId, user) {
-    if (!user || user.role !== "vendor" || !user.isVendor) {
-      throw new Error("NOT_VENDOR");
+    if (!user || user.role !== 'vendor' || !user.isVendor) {
+      throw new Error(ERROR_MESSAGES.NOT_VENDOR);
     }
 
     const tender = await Tender.findById(tenderId);
-    if (!tender) throw new Error("TENDER_NOT_FOUND");
+    if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
 
     const bid = await TenderBid.findOne({
       tenderId,
       vendorId: user._id,
     })
-      .populate("proposal.files")
-      .populate("techForms.files");
+      .populate('proposal.files')
+      .populate('techForms.files');
 
     const participationPayment = await Payment.findOne({
       userId: user._id,
-      contextId:tenderId,
-      type: "participation_fee",
-      status: "success",
+      contextId: tenderId,
+      type: 'participation_fee',
+      status: 'success',
     });
-    console.log('participationPayment:',participationPayment);
+    console.log('participationPayment:', participationPayment);
     return {
       tender,
       bid,
       payments: {
-        paymentStatus: participationPayment ? "paid" : "pending",
+        paymentStatus: participationPayment ? 'paid' : 'pending',
       },
     };
   },
@@ -45,15 +45,15 @@ module.exports = {
     }
 
     if (bid.finForms.files.length > 0 || bid.techForms.files.length > 0) {
-      throw new Error("ALREADY_UPLOADED");
+      throw new Error(ERROR_MESSAGES.ALREADY_UPLOADED);
     }
 
-    let proposalFiles = [];
-    let techFiles = [];
+    const proposalFiles = [];
+    const techFiles = [];
 
     // Save proposal files
     if (files.proposalFiles) {
-      for (let file of files.proposalFiles) {
+      for (const file of files.proposalFiles) {
         const saved = await File.create({
           fileName: file.filename,
           fileUrl: `/uploads/tender-proposalDocs/${file.filename}`,
@@ -67,7 +67,7 @@ module.exports = {
 
     // Save technical files
     if (files.techFiles) {
-      for (let file of files.techFiles) {
+      for (const file of files.techFiles) {
         const saved = await File.create({
           fileName: file.filename,
           fileUrl: `/uploads/tender-techDocs/${file.filename}`,
@@ -87,19 +87,19 @@ module.exports = {
   // UPLOAD FINANCIAL DOCUMENTS
   // ---------------------------------------------
   async uploadFinancial(tenderId, userId, files, amount) {
-    let bid = await TenderBid.findOne({ tenderId, vendorId: userId });
-    if (!bid) throw new Error("NOT_FOUND");
+    const bid = await TenderBid.findOne({ tenderId, vendorId: userId });
+    if (!bid) throw new Error(ERROR_MESSAGES.NOT_FOUND);
 
-    if (bid.finForms.files.length > 0 || (bid.quotes.files?.length > 0)) {
-      throw new Error("ALREADY_UPLOADED");
+    if (bid.finForms.files.length > 0 || bid.quotes.files?.length > 0) {
+      throw new Error(ERROR_MESSAGES.ALREADY_UPLOADED);
     }
 
-    let finFiles = [];
-    let quoteFiles = [];
+    const finFiles = [];
+    const quoteFiles = [];
 
     // Financial documents
     if (files.finForms) {
-      for (let file of files.finForms) {
+      for (const file of files.finForms) {
         const saved = await File.create({
           fileName: file.filename,
           fileUrl: `/uploads/tender-finDocs/${file.filename}`,
@@ -113,7 +113,7 @@ module.exports = {
 
     // Quotation documents
     if (files.quotationFiles) {
-      for (let file of files.quotationFiles) {
+      for (const file of files.quotationFiles) {
         const saved = await File.create({
           fileName: file.filename,
           fileUrl: `/uploads/tender-quoteDocs/${file.filename}`,
@@ -139,21 +139,20 @@ module.exports = {
   // ---------------------------------------------
   async getFinancialBidData(tenderId, userId) {
     const tender = await Tender.findById(tenderId);
-    if (!tender) throw new Error("TENDER_NOT_FOUND");
+    if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
 
     const bid = await TenderBid.findOne({
       tenderId,
       vendorId: userId,
     })
-      .populate("finForms.files")
-      .populate("quotes.files");
+      .populate('finForms.files')
+      .populate('quotes.files');
 
-    if (!bid) throw new Error("NO_BID");
+    if (!bid) throw new Error(ERROR_MESSAGES.NO_BID);
 
-    if (bid.techReviewStatus === "rejected") throw new Error("TECH_REJECTED");
+    if (bid.techReviewStatus === 'rejected') throw new Error(ERROR_MESSAGES.TECH_REJECTED);
 
-    if (bid.techReviewStatus !== "accepted")
-      throw new Error("TECH_NOT_APPROVED");
+    if (bid.techReviewStatus !== 'accepted') throw new Error(ERROR_MESSAGES.TECH_NOT_APPROVED);
 
     return { tender, bid };
   },

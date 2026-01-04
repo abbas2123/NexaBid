@@ -13,10 +13,7 @@ exports.getAdminLogin = (req, res) => {
     return res.redirect(REDIRECTS.ADMIN_DASHBOARD);
   }
 
-  res.setHeader(
-    'Cache-Control',
-    'no-store, no-cache, must-revalidate, max-age=0'
-  );
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
 
@@ -64,6 +61,7 @@ exports.adminLogout = (req, res) => {
 
 exports.getAdminDashboard = async (req, res) => {
   try {
+    console.log('admin:', req.admin._id);
     const stats = await adminAuthService.getDashboardStats();
     const activities = await adminAuthService.getRecentActivities();
     const tasks = await adminAuthService.getPendingTasks();
@@ -79,9 +77,7 @@ exports.getAdminDashboard = async (req, res) => {
     });
   } catch (err) {
     console.error('Admin dashboard Error:', err);
-    return res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -97,9 +93,7 @@ exports.getUserManagement = async (req, res) => {
     });
   } catch (err) {
     console.error('User Management Error:', err);
-    return res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 

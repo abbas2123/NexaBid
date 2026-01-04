@@ -1,9 +1,9 @@
-const Wallet = require('../../models/wallet');
-const WalletTransaction = require('../../models/walletTransaction');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const Wallet = require('../../models/wallet');
+const WalletTransaction = require('../../models/walletTransaction');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, ERROR_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.getWalletPage = async (req, res) => {
   try {
@@ -11,9 +11,8 @@ exports.getWalletPage = async (req, res) => {
 
     console.log('📄 Loading wallet page for user:', userId);
 
-   
     let wallet = await Wallet.findOne({ userId });
-    
+
     if (!wallet) {
       console.log('⚠️ No wallet found, creating new wallet');
       wallet = await Wallet.create({
@@ -23,7 +22,6 @@ exports.getWalletPage = async (req, res) => {
       console.log('✅ Wallet created:', wallet._id);
     }
 
-    
     const transactions = await WalletTransaction.find({ userId })
       .sort({ createdAt: -1 })
       .limit(10)
@@ -64,9 +62,9 @@ exports.getAllTransactions = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const transactionType = req.query.type; // 'credit' or 'debit'
-    const source = req.query.source; // 'payment', 'refund', etc.
-    const fromDate = req.query.fromDate;
-    const toDate = req.query.toDate;
+    const { source } = req.query; // 'payment', 'refund', etc.
+    const { fromDate } = req.query;
+    const { toDate } = req.query;
 
     // Build query
     const query = { userId };
@@ -84,13 +82,13 @@ exports.getAllTransactions = async (req, res) => {
     // Filter by date range
     if (fromDate || toDate) {
       query.createdAt = {};
-      
+
       if (fromDate) {
         const from = new Date(fromDate);
         from.setHours(0, 0, 0, 0); // Start of day
         query.createdAt.$gte = from;
       }
-      
+
       if (toDate) {
         const to = new Date(toDate);
         to.setHours(23, 59, 59, 999); // End of day
@@ -138,8 +136,6 @@ exports.getAllTransactions = async (req, res) => {
   }
 };
 
-
-
 exports.getWalletBalance = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -162,11 +158,10 @@ exports.getWalletBalance = async (req, res) => {
     console.error('❌ Get balance error:', error);
     return res.json({
       success: false,
-      message: 'Failed to fetch balance',
+      message: ERROR_MESSAGES.FAILED_FETCH_BALANCE,
     });
   }
 };
-
 
 exports.getAddFundsPage = async (req, res) => {
   try {
@@ -192,7 +187,6 @@ exports.getAddFundsPage = async (req, res) => {
   }
 };
 
-
 exports.createAddFundsOrder = async (req, res) => {
   try {
     const { amount } = req.body;
@@ -205,7 +199,7 @@ exports.createAddFundsOrder = async (req, res) => {
       console.log('❌ Invalid amount:', amount);
       return res.json({
         success: false,
-        message: 'Minimum amount is ₹100',
+        message: ERROR_MESSAGES.MINIMUM_AMOUNT_REQUIRED,
       });
     }
 
@@ -217,11 +211,11 @@ exports.createAddFundsOrder = async (req, res) => {
       console.error('❌ Razorpay credentials not found');
       return res.json({
         success: false,
-        message: 'Payment gateway not configured. Please contact support.',
+        message: ERROR_MESSAGES.PAYMENT_GATEWAY_NOT_CONFIGURED,
       });
     }
 
-    console.log('🔑 Razorpay Key ID:', razorpayKeyId.substring(0, 15) + '...');
+    console.log('🔑 Razorpay Key ID:', `${razorpayKeyId.substring(0, 15)}...`);
 
     const razorpay = new Razorpay({
       key_id: razorpayKeyId,
@@ -236,7 +230,7 @@ exports.createAddFundsOrder = async (req, res) => {
     const orderOptions = {
       amount: Math.round(amount * 100),
       currency: 'INR',
-      receipt: receipt, // ✅ Now within 40 char limit
+      receipt, // ✅ Now within 40 char limit
       notes: {
         userId: userId.toString(),
         purpose: 'wallet_topup',
@@ -266,8 +260,7 @@ exports.createAddFundsOrder = async (req, res) => {
       code: error.code,
     });
 
-    const errorMessage =
-      error.description || error.message || 'Failed to create payment order';
+    const errorMessage = error.description || error.message || 'Failed to create payment order';
 
     return res.json({
       success: false,
@@ -276,17 +269,9 @@ exports.createAddFundsOrder = async (req, res) => {
   }
 };
 
-
-
-
 exports.verifyAddFundsPayment = async (req, res) => {
   try {
-    const {
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-      amount,
-    } = req.body;
+    const { razorpay_payment_id, razorpay_order_id, razorpay_signature, amount } = req.body;
     const userId = req.user._id;
 
     console.log('💳 Verifying payment:', {
@@ -297,7 +282,7 @@ exports.verifyAddFundsPayment = async (req, res) => {
     });
 
     // Verify signature
-    const crypto = require('crypto');
+
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -307,7 +292,7 @@ exports.verifyAddFundsPayment = async (req, res) => {
       console.log('❌ Signature verification failed');
       return res.json({
         success: false,
-        message: 'Payment verification failed',
+        message: ERROR_MESSAGES.PAYMENT_VERIFICATION_FAILED,
       });
     }
 
@@ -354,14 +339,14 @@ exports.verifyAddFundsPayment = async (req, res) => {
 
     return res.json({
       success: true,
-      message: 'Payment successful',
+      message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
       newBalance: wallet.balance,
     });
   } catch (error) {
     console.error('❌ Verify payment error:', error);
     return res.json({
       success: false,
-      message: 'Payment verification failed: ' + error.message,
+      message: `Payment verification failed: ${error.message}`,
     });
   }
 };

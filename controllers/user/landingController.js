@@ -15,8 +15,6 @@ exports.loadLandingPage = async (req, res) => {
     });
   } catch (error) {
     console.error('Landing Error:', error);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

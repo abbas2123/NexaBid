@@ -3,11 +3,11 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const session = require('express-session');
-const passport = require('./config/passport');
 const expressLayouts = require('express-ejs-layouts');
 const cookieParser = require('cookie-parser');
 const { Server } = require('socket.io');
 const cron = require('node-cron');
+const passport = require('./config/passport');
 
 const db = require('./config/db');
 const registerRoutes = require('./index');
@@ -85,6 +85,6 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server running`);
+  console.log('🚀 Server running');
   console.log(`➡ Local: http://localhost:${PORT}`);
 });

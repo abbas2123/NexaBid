@@ -1,5 +1,6 @@
 const AuctionService = require('../../services/auction/auctionService');
 const statusCode = require('../../utils/statusCode');
+const Property = require('../../models/property');
 const {
   AUCTION_STATUS,
   ERROR_MESSAGES,
@@ -38,10 +39,7 @@ exports.liveAuctionPage = async (req, res) => {
 
 exports.publisherLiveAuctionPage = async (req, res) => {
   try {
-    const data = await AuctionService.getPublisherAuctionData(
-      req.params.propertyId,
-      req.user._id
-    );
+    const data = await AuctionService.getPublisherAuctionData(req.params.propertyId, req.user._id);
 
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
       return res.redirect(`${ROUTES.AUCTION_RESULT}/${req.params.propertyId}`);
@@ -71,10 +69,7 @@ exports.publisherLiveAuctionPage = async (req, res) => {
 
 exports.getAuctionResult = async (req, res) => {
   try {
-    const result = await AuctionService.getAuctionResult(
-      req.params.propertyId,
-      req.user._id
-    );
+    const result = await AuctionService.getAuctionResult(req.params.propertyId, req.user._id);
 
     res.json({ success: true, result });
   } catch (err) {
@@ -95,9 +90,7 @@ exports.enableAutoBid = async (req, res) => {
     res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
   } catch (err) {
     if (err.message === ERROR_MESSAGES.PAYMENT_REQUIRED) {
-      return res.redirect(
-        `${ROUTES.PAYMENT_INITIATE}?type=property&id=${req.params.propertyId}`
-      );
+      return res.redirect(`${ROUTES.PAYMENT_INITIATE}?type=property&id=${req.params.propertyId}`);
     }
     if (err.message === ERROR_MESSAGES.BID_TOO_LOW) {
       return res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
@@ -114,10 +107,7 @@ exports.enableAutoBid = async (req, res) => {
 
 exports.getAutoBidPage = async (req, res) => {
   try {
-    const data = await AuctionService.getAutoBidPageData(
-      req.params.propertyId,
-      req.user._id
-    );
+    const data = await AuctionService.getAutoBidPageData(req.params.propertyId, req.user._id);
 
     res.render(VIEWS.ENABLE_AUTO_BID, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -130,27 +120,19 @@ exports.getAutoBidPage = async (req, res) => {
   }
 };
 
-
 exports.success = async (req, res) => {
   try {
-    const propertyId = req.params.propertyId;
+    const { propertyId } = req.params;
     const userId = req.user._id;
 
-    
-    const property = await Property.findById(propertyId)
-      .populate('soldTo', 'name email')
-      .lean();
+    const property = await Property.findById(propertyId).populate('soldTo', 'name email').lean();
 
     if (!property) {
       return res.redirect('/properties');
     }
 
-    
-    if (
-      property.soldTo &&
-      property.soldTo._id.toString() !== userId.toString()
-    ) {
-      return res.redirect('/properties'); 
+    if (property.soldTo && property.soldTo._id.toString() !== userId.toString()) {
+      return res.redirect('/properties');
     }
 
     res.render('acution/success', {
@@ -161,6 +143,6 @@ exports.success = async (req, res) => {
     });
   } catch (err) {
     console.error('Auction success page error:', err);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).send('Server error');
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

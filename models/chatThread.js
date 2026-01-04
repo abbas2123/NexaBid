@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
+
 const { Schema } = mongoose;
 
 const ChatThreadSchema = new Schema(
   {
-    participants: [
-      { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    ],
+    participants: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
 
     relatedType: { type: String },
     relatedId: { type: Schema.Types.ObjectId },

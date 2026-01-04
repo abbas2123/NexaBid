@@ -1,3 +1,5 @@
+const Razorpay = require('razorpay');
+const crypto = require('crypto');
 const Property = require('../../models/property');
 const Payment = require('../../models/payment');
 const Tender = require('../../models/tender');
@@ -8,8 +10,6 @@ const PropertyParticipant = require('../../models/propertyParticipant');
 const PropertyBid = require('../../models/propertyBid');
 const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
 const {
   PAYMENT_STATUS,
   CONTEXT_TYPES,
@@ -140,7 +140,7 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
   }
 
   let product;
-  let breakdown = [];
+  const breakdown = [];
 
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     product = await Property.findById(payment.contextId);
@@ -155,7 +155,7 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
 
   const now = new Date();
   const coupons = await Coupon.find({
-    $or: [{ applicableTo: 'all' }, { applicableTo: payment.contextType + 's' }],
+    $or: [{ applicableTo: 'all' }, { applicableTo: `${payment.contextType}s` }],
     $and: [
       { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
       { $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }] },
@@ -225,8 +225,7 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
 };
 
 exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
-  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } =
-    razorpayData;
+  const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = razorpayData;
 
   const payment = await Payment.findById(paymentId);
   if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
@@ -252,16 +251,13 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   return payment;
 };
 
-exports.getPaymentById = async (paymentId) => {
-  return await Payment.findById(paymentId);
-};
+exports.getPaymentById = async (paymentId) => await Payment.findById(paymentId);
 
 exports.applyCoupon = async (userId, intentId, couponCode) => {
   const payment = await Payment.findById(intentId);
   if (!payment || payment.status !== PAYMENT_STATUS.PENDING)
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
-  if (payment.metadata?.coupon)
-    throw new Error(ERROR_MESSAGES.REMOVE_COUPON_FIRST);
+  if (payment.metadata?.coupon) throw new Error(ERROR_MESSAGES.REMOVE_COUPON_FIRST);
 
   const coupon = await Coupon.findOne({
     code: couponCode.toUpperCase(),
@@ -269,10 +265,7 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
   if (!coupon) throw new Error(ERROR_MESSAGES.INVALID_COUPON);
 
   const now = new Date();
-  if (
-    (coupon.startsAt && now < coupon.startsAt) ||
-    (coupon.expiresAt && now > coupon.expiresAt)
-  ) {
+  if ((coupon.startsAt && now < coupon.startsAt) || (coupon.expiresAt && now > coupon.expiresAt)) {
     throw new Error(ERROR_MESSAGES.COUPON_EXPIRED);
   }
 
@@ -324,10 +317,9 @@ exports.removeCoupon = async (intentId) => {
   if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
   if (payment.status !== PAYMENT_STATUS.PENDING)
     throw new Error(ERROR_MESSAGES.CANNOT_MODIFY_COMPLETED);
-  if (!payment.metadata?.coupon)
-    throw new Error(ERROR_MESSAGES.NO_COUPON_APPLIED);
+  if (!payment.metadata?.coupon) throw new Error(ERROR_MESSAGES.NO_COUPON_APPLIED);
 
-  const originalAmount = payment.metadata.originalAmount;
+  const { originalAmount } = payment.metadata;
   const removedCouponCode = payment.metadata.coupon.code;
 
   payment.amount = originalAmount;

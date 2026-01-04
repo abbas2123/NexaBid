@@ -1,4 +1,3 @@
-
 const landingRoute = require('./routes/user/landing');
 const authRoute = require('./routes/user/authRoute');
 const authVendor = require('./routes/vendor/venderRoute');
@@ -46,5 +45,5 @@ module.exports = function registerRoutes(app) {
   app.use('/publisher', vendorPostAwardRoutes);
   app.use('/payments', paymentRoutes);
   app.use('/auctions', auctionRoutes);
-  app.use('/chat',chatRoute);
+  app.use('/chat', chatRoute);
 };

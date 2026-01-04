@@ -14,8 +14,7 @@ passport.use(
       try {
         const email = profile.emails?.[0]?.value;
 
-        if (!email)
-          return done(new Error('Google did not return email'), null);
+        if (!email) return done(new Error('Google did not return email'), null);
 
         // Step 1: Find user by Google Id first
         let user = await User.findOne({ googleId: profile.id });
@@ -32,7 +31,7 @@ passport.use(
           if (!user.googleId) {
             // ❌ Block login via Google
             return done(null, false, {
-              message: "email_exists_password_login_required",
+              message: 'email_exists_password_login_required',
             });
           }
 
@@ -45,19 +44,19 @@ passport.use(
           name: profile.displayName,
           email,
           googleId: profile.id,
-          authProvider: "google",
+          authProvider: 'google',
           profilePic: profile.photos?.[0]?.value || null,
-          role: "user",
-          status: "active",
+          role: 'user',
+          status: 'active',
         });
 
         return done(null, newUser);
       } catch (error) {
-        console.error("Google OAuth Error:", error);
+        console.error('Google OAuth Error:', error);
         return done(error, null);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.serializeUser((user, done) => {

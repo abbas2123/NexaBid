@@ -1,6 +1,6 @@
 const propertyService = require('../../services/property/propertyService.js');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS } = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.getPropertyPage = async (req, res) => {
   try {
@@ -14,10 +14,7 @@ exports.getPropertyPage = async (req, res) => {
       maxPrice: req.query.maxPrice || '',
     };
 
-    const { properties, pagination } = await propertyService.getProperties(
-      page,
-      filters
-    );
+    const { properties, pagination } = await propertyService.getProperties(page, filters);
 
     res.render('user/property', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -34,19 +31,19 @@ exports.getPropertyPage = async (req, res) => {
 
 exports.getPropertyDetails = async (req, res) => {
   try {
-    const id = req.params.id;
-    const user = req.user;
+    const { id } = req.params;
+    const { user } = req;
 
-    const { property, userHasPaidForProperty, isOwner } =
-      await propertyService.getPropertyDetails(id, user);
+    const { property, userHasPaidForProperty, isOwner } = await propertyService.getPropertyDetails(
+      id,
+      user
+    );
 
     if (!property) {
-      return res
-        .status(statusCode.NOT_FOUND)
-        .render(VIEWS.ERROR, {
-          message: ERROR_MESSAGES.PROPERTY_NOT_FOUND,
-          layout: LAYOUTS.USER_LAYOUT,
-        });
+      return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
+        message: ERROR_MESSAGES.PROPERTY_NOT_FOUND,
+        layout: LAYOUTS.USER_LAYOUT,
+      });
     }
 
     res.render('user/propertyDetailsPage', {
@@ -62,15 +59,14 @@ exports.getPropertyDetails = async (req, res) => {
   }
 };
 
-exports.getCreatePropertyPage = (req, res) => {
-  return res.render('user/createProperty', {
+exports.getCreatePropertyPage = (req, res) =>
+  res.render('user/createProperty', {
     layout: LAYOUTS.USER_LAYOUT,
     title: 'List a Property',
     user: req.user,
     property: null,
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
-};
 
 exports.postCreateProperty = async (req, res) => {
   console.log('reached');
@@ -118,12 +114,8 @@ exports.postCreateProperty = async (req, res) => {
       auctionStartsAt: auctionStartsAt ? new Date(auctionStartsAt) : undefined,
       auctionEndsAt: auctionEndsAt ? new Date(auctionEndsAt) : undefined,
       auctionStep: auctionStep ? Number(auctionStep) : undefined,
-      auctionReservePrice: auctionReservePrice
-        ? Number(auctionReservePrice)
-        : undefined,
-      auctionAutoExtendMins: auctionAutoExtendMins
-        ? Number(auctionAutoExtendMins)
-        : undefined,
+      auctionReservePrice: auctionReservePrice ? Number(auctionReservePrice) : undefined,
+      auctionAutoExtendMins: auctionAutoExtendMins ? Number(auctionAutoExtendMins) : undefined,
       auctionLastBidWindowMins: auctionLastBidWindowMins
         ? Number(auctionLastBidWindowMins)
         : undefined,
@@ -139,10 +131,9 @@ exports.postCreateProperty = async (req, res) => {
 
     return res.status(statusCode.CREATED).json({
       success: true,
-      message:
-        'Property submitted successfully. It will be visible after admin approval.',
+      message: SUCCESS_MESSAGES.PROPERTY_SUBMITTED,
       propertyId: property._id.toString(),
-      redirectUrl: '/properties/' + property._id.toString(),
+      redirectUrl: `/properties/${property._id.toString()}`,
     });
   } catch (err) {
     console.error('Create Property Error:', err);
@@ -163,7 +154,7 @@ exports.updatePropertyController = async (req, res) => {
 
     return res.status(statusCode.OK).json({
       success: true,
-      message: 'Property updated successfully',
+      message: SUCCESS_MESSAGES.PROPERTY_UPDATED,
       propertyId: updatedProperty._id,
     });
   } catch (err) {

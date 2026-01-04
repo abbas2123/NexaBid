@@ -39,7 +39,4 @@ const propertyParticipantSchema = new mongoose.Schema(
  */
 propertyParticipantSchema.index({ propertyId: 1, userId: 1 }, { unique: true });
 
-module.exports = mongoose.model(
-  'PropertyParticipant',
-  propertyParticipantSchema
-);
+module.exports = mongoose.model('PropertyParticipant', propertyParticipantSchema);

@@ -39,11 +39,15 @@
 
               <!-- ✅ REAL status based on isActive -->
               <td class="px-4 py-3">
-                <% if (c.isActive === true) { %>
-                  <span class="text-green-600 font-semibold">Enabled</span>
-                <% } else { %>
-                  <span class="text-gray-500 font-semibold">Disabled</span>
-                <% } %>
+               <% const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date(); %>
+
+<% if (isExpired) { %>
+  <span class="text-red-600 font-semibold">Expired</span>
+<% } else if (c.isActive) { %>
+  <span class="text-green-600 font-semibold">Enabled</span>
+<% } else { %>
+  <span class="text-gray-500 font-semibold">Disabled</span>
+<% } %>
               </td>
 
               <td class="px-4 py-3 text-right space-x-3">

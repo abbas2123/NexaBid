@@ -8,6 +8,7 @@ const WorkOrder = require('../../models/workOrder');
 const PropertyBid = require('../../models/propertyBid');
 const File = require('../../models/File');
 const PropertyParticipant = require('../../models/propertyParticipant');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 const TenderParticipants = require('../../models/tenderParticipants');
 
 exports.userStatus = async (userId) => {
@@ -17,9 +18,7 @@ exports.userStatus = async (userId) => {
     .populate('ocrResultId');
 
   const query = { sellerId: userId, deletedAt: null };
-  const userProperties = await Property.find(query)
-    .sort({ createdAt: -1 })
-    .lean();
+  const userProperties = await Property.find(query).sort({ createdAt: -1 }).lean();
 
   let propertyStatus = 'No Properties Submitted';
 
@@ -37,9 +36,7 @@ exports.userStatus = async (userId) => {
   }
 
   const tenderQuery = { createdBy: userId }; // CHANGE IF USING different field
-  const userTenders = await Tender.find(tenderQuery)
-    .sort({ createdAt: -1 })
-    .lean();
+  const userTenders = await Tender.find(tenderQuery).sort({ createdAt: -1 }).lean();
 
   let tenderStatus = 'No Tender Activity';
   let latestTender = null;
@@ -82,17 +79,13 @@ exports.userStatus = async (userId) => {
 };
 
 exports.getMyParticipationData = async (userId) => {
-  const participations = await PropertyParticipant.find({ userId })
-    .populate('propertyId')
-    .lean();
+  const participations = await PropertyParticipant.find({ userId }).populate('propertyId').lean();
 
   if (!participations.length) {
     return { properties: [], tenders: [] };
   }
 
-  const bids = await PropertyBid.find({ bidderId: userId })
-    .sort({ amount: -1 })
-    .lean();
+  const bids = await PropertyBid.find({ bidderId: userId }).sort({ amount: -1 }).lean();
 
   const highestBidMap = new Map();
   for (const bid of bids) {
@@ -109,12 +102,8 @@ exports.getMyParticipationData = async (userId) => {
       const myBid = highestBidMap.get(property._id.toString()) || 0;
 
       const now = new Date();
-      const auctionEndDate = property.auctionEndsAt
-        ? new Date(property.auctionEndsAt)
-        : null;
-      const auctionStartDate = property.auctionStartsAt
-        ? new Date(property.auctionStartsAt)
-        : null;
+      const auctionEndDate = property.auctionEndsAt ? new Date(property.auctionEndsAt) : null;
+      const auctionStartDate = property.auctionStartsAt ? new Date(property.auctionStartsAt) : null;
 
       // Fix: Define isEnded and isLive for PROPERTIES, not tenders
       const isEnded =
@@ -129,8 +118,7 @@ exports.getMyParticipationData = async (userId) => {
         now >= auctionStartDate &&
         now <= auctionEndDate;
 
-      const isWinner =
-        property.soldTo && property.soldTo.toString() === userId.toString();
+      const isWinner = property.soldTo && property.soldTo.toString() === userId.toString();
 
       return {
         _id: property._id,
@@ -144,9 +132,7 @@ exports.getMyParticipationData = async (userId) => {
           : isLive
             ? 'bg-blue-100 text-blue-700'
             : 'bg-yellow-100 text-yellow-700',
-        winColor: isWinner
-          ? 'bg-green-100 text-green-700'
-          : 'bg-red-100 text-red-700',
+        winColor: isWinner ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
         projectStatus: isWinner ? 'Assigned' : '—',
         closingDate: property.auctionEndsAt
           ? new Date(property.auctionEndsAt).toLocaleDateString('en-IN')
@@ -166,15 +152,12 @@ exports.getMyParticipationData = async (userId) => {
       const now = new Date();
 
       const bidEndDate = tender.bidEndAt ? new Date(tender.bidEndAt) : null;
-      const bidStartDate = tender.bidStartAt
-        ? new Date(tender.bidStartAt)
-        : null;
+      const bidStartDate = tender.bidStartAt ? new Date(tender.bidStartAt) : null;
 
-     
       const isEnded =
         tender.status === 'closed' ||
         tender.status === 'ended' ||
-        tender.status==="awarded" ||
+        tender.status === 'awarded' ||
         (bidEndDate && now > bidEndDate);
 
       const isLive =
@@ -184,15 +167,14 @@ exports.getMyParticipationData = async (userId) => {
         now >= bidStartDate &&
         now <= bidEndDate;
 
-      const isWinner =
-        tender.awardedTo && tender.awardedTo.toString() === userId.toString();
-console.log('iswiner',isWinner)
-console.log('isended', isEnded);
+      const isWinner = tender.awardedTo && tender.awardedTo.toString() === userId.toString();
+      console.log('iswiner', isWinner);
+      console.log('isended', isEnded);
       return {
         _id: tender._id,
         title: tender.title,
         type: 'tender',
-        myOffer: 0, 
+        myOffer: 0,
         currentStatus: isEnded ? 'Ended' : isLive ? 'Live' : 'Not Started',
         winStatus: isEnded ? (isWinner ? 'Winner' : 'Lost') : 'Pending',
         statusColor: isEnded
@@ -200,25 +182,20 @@ console.log('isended', isEnded);
           : isLive
             ? 'bg-blue-100 text-blue-700'
             : 'bg-yellow-100 text-yellow-700',
-        winColor: isWinner
-          ? 'bg-green-100 text-green-700'
-          : 'bg-red-100 text-red-700',
+        winColor: isWinner ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
         projectStatus: isWinner ? 'Assigned' : '—',
-        closingDate: tender.bidEndAt
-          ? new Date(tender.bidEndAt).toLocaleDateString('en-IN')
-          : '—',
+        closingDate: tender.bidEndAt ? new Date(tender.bidEndAt).toLocaleDateString('en-IN') : '—',
       };
     });
 
   return { properties, tenders };
 };
 
-
 exports.getVendorPostAwardData = async (tenderId, userId) => {
   console.log('dvdvdv', userId);
   const tender = await Tender.findById(tenderId);
   if (!tender) {
-    throw new Error('TENDER_NOT_FOUND');
+    throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
   }
 
   const bid = await TenderBid.findOne({
@@ -226,7 +203,7 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     vendorId: userId,
   });
   if (!bid) {
-    throw new Error('NOT_PARTICIPATED');
+    throw new Error(ERROR_MESSAGES.NOT_PARTICIPATED);
   }
 
   if (!bid.isWinner) {
@@ -237,9 +214,7 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     };
   }
 
-  const po = await PurchaseOrder.findOne({ tenderId })
-    .sort({ createdAt: -1 })
-    .populate('pdfFile');
+  const po = await PurchaseOrder.findOne({ tenderId }).sort({ createdAt: -1 }).populate('pdfFile');
 
   console.log('rvevec', po);
   const poCount = await PurchaseOrder.countDocuments({ tenderId });
@@ -274,7 +249,7 @@ exports.respondToPO = async ({ poId, action, reason }) => {
   const po = await PurchaseOrder.findById(poId).populate('tenderId');
 
   if (!po) {
-    throw new Error('PO_NOT_FOUND');
+    throw new Error(ERROR_MESSAGES.PO_NOT_FOUND);
   }
 
   const tenderId = po.tenderId._id;
@@ -300,7 +275,7 @@ exports.respondToPO = async ({ poId, action, reason }) => {
     };
   }
 
-  throw new Error('INVALID_ACTION');
+  throw new Error(ERROR_MESSAGES.INVALID_ACTION);
 };
 
 exports.getAgreementUploadData = async (tenderId, userId) => {
@@ -308,19 +283,15 @@ exports.getAgreementUploadData = async (tenderId, userId) => {
 
   console.log('veenfw', userId);
 
-  if (!po) throw new Error('PO_NOT_CREATED');
+  if (!po) throw new Error(ERROR_MESSAGES.PO_NOT_CREATED);
 
-  if (po.vendorId.toString() !== userId.toString())
-    throw new Error('NOT_WINNER');
+  if (po.vendorId.toString() !== userId.toString()) throw new Error(ERROR_MESSAGES.NOT_WINNER);
 
-  if (po.status !== 'vendor_accepted') throw new Error('PO_NOT_ACCEPTED');
+  if (po.status !== 'vendor_accepted') throw new Error(ERROR_MESSAGES.PO_NOT_ACCEPTED);
 
-  const agreement = await Agreement.findOne({ tenderId }).populate(
-    'publisherAgreement'
-  );
+  const agreement = await Agreement.findOne({ tenderId }).populate('publisherAgreement');
 
-  if (!agreement || !agreement.publisherAgreement)
-    throw new Error('PUBLISHER_AGREEMENT_NOT_FOUND');
+  if (!agreement || !agreement.publisherAgreement) throw new Error(ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND);
 
   return {
     publisherAgreement: agreement.publisherAgreement,
@@ -329,7 +300,7 @@ exports.getAgreementUploadData = async (tenderId, userId) => {
 
 exports.uploadVendorAgreement = async ({ tenderId, vendorId, file }) => {
   if (!file) {
-    throw new Error('NO_FILE');
+    throw new Error(ERROR_MESSAGES.NO_FILE);
   }
 
   const fileData = await File.create({

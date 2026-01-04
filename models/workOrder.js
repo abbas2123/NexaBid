@@ -1,22 +1,22 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const workOrderSchema = new mongoose.Schema(
   {
     tenderId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Tender",
+      ref: 'Tender',
       required: true,
     },
 
     vendorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
 
     issuedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User", // publisher
+      ref: 'User', // publisher
       required: true,
     },
 
@@ -33,7 +33,7 @@ const workOrderSchema = new mongoose.Schema(
 
     pdfFile: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "File",
+      ref: 'File',
     },
 
     startDate: Date,
@@ -41,11 +41,11 @@ const workOrderSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["issued", "in_progress", "completed", "closed"],
-      default: "issued",
+      enum: ['issued', 'in_progress', 'completed', 'closed'],
+      default: 'issued',
     },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("WorkOrder", workOrderSchema);
+module.exports = mongoose.model('WorkOrder', workOrderSchema);

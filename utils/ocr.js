@@ -1,6 +1,5 @@
 // utils/ocr.js
-const vision = require("@google-cloud/vision");
-const path = require("path");
+const vision = require('@google-cloud/vision');
 
 const client = new vision.ImageAnnotatorClient({
   keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
@@ -12,11 +11,16 @@ exports.extractTextFromImage = async (filePath) => {
     const detection = result?.textAnnotations;
 
     if (!detection || detection.length === 0) {
-      console.warn("OCR: no text detected for", filePath);
-      return { text: "", businessName: null, panNumber: null, gstNumber: null };
+      console.warn('OCR: no text detected for', filePath);
+      return {
+        text: '',
+        businessName: null,
+        panNumber: null,
+        gstNumber: null,
+      };
     }
 
-    const extractedText = detection[0].description || "";
+    const extractedText = detection[0].description || '';
     const pan = extractPAN(extractedText);
     const gst = extractGST(extractedText);
     const businessName = extractBusinessName(extractedText, pan, gst);
@@ -28,9 +32,14 @@ exports.extractTextFromImage = async (filePath) => {
       gstNumber: gst,
     };
   } catch (err) {
-    console.error("OCR Error for", filePath, (err && err.message) || err);
+    console.error('OCR Error for', filePath, (err && err.message) || err);
 
-    return { text: "", businessName: null, panNumber: null, gstNumber: null };
+    return {
+      text: '',
+      businessName: null,
+      panNumber: null,
+      gstNumber: null,
+    };
   }
 };
 
@@ -47,10 +56,8 @@ function extractGST(text) {
   const match = text.match(gstRegex);
   if (match) return match[1];
 
-  const fallback = text.replace(/\s+/g, "");
-  const fmatch = fallback.match(
-    /[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]/,
-  );
+  const fallback = text.replace(/\s+/g, '');
+  const fmatch = fallback.match(/[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]Z[0-9A-Z]/);
   return fmatch ? fmatch[0] : null;
 }
 
@@ -62,11 +69,11 @@ function extractBusinessName(text, pan, gst) {
     .map((l) => l.trim())
     .filter(Boolean);
 
-  for (let line of lines) {
+  for (const line of lines) {
     if (pan && line.includes(pan)) continue;
     if (gst && line.includes(gst)) continue;
 
-    if (/^[0-9\-\/\s]+$/.test(line)) continue;
+    if (/^[0-9-/\s]+$/.test(line)) continue;
     if (line.length < 3) continue;
 
     if (/^(PAN|GST|GSTIN|INCOME TAX|TAX|FORM|DATE)$/i.test(line)) continue;

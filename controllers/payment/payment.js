@@ -89,11 +89,7 @@ exports.processWalletPayment = async (req, res) => {
 
     console.log('💳 Wallet payment:', { paymentId, amount, userId });
 
-    const result = await paymentService.processWalletPayment(
-      userId,
-      paymentId,
-      amount
-    );
+    const result = await paymentService.processWalletPayment(userId, paymentId, amount);
 
     console.log('✅ Wallet payment successful');
 
@@ -115,10 +111,7 @@ exports.processWalletPayment = async (req, res) => {
 exports.verifyPayment = async (req, res) => {
   try {
     const { paymentId } = req.body;
-    const payment = await paymentService.verifyRazorpayPayment(
-      paymentId,
-      req.body
-    );
+    const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
 
     return res.status(statusCode.OK).json({
       success: true,
@@ -181,11 +174,7 @@ exports.applyCoupon = async (req, res) => {
         .json({ success: false, message: ERROR_MESSAGES.INVALID_REQUEST });
     }
 
-    const result = await paymentService.applyCoupon(
-      userId,
-      intentId,
-      couponCode
-    );
+    const result = await paymentService.applyCoupon(userId, intentId, couponCode);
 
     console.log('✅ Coupon applied:', couponCode);
 

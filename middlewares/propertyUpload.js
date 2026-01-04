@@ -1,16 +1,16 @@
 // middlewares/propertyUpload.js
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
-const ROOT_UPLOAD = path.join(__dirname, "..", "uploads");
+const ROOT_UPLOAD = path.join(__dirname, '..', 'uploads');
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    let subFolder = "property-media";
+    let subFolder = 'property-media';
 
-    if (file.fieldname === "docs") {
-      subFolder = "property-docs";
+    if (file.fieldname === 'docs') {
+      subFolder = 'property-docs';
     }
 
     const uploadPath = path.join(ROOT_UPLOAD, subFolder);
@@ -19,7 +19,7 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename(req, file, cb) {
-    const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, unique + path.extname(file.originalname));
   },
 });

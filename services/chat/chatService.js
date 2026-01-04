@@ -18,30 +18,24 @@ class ChatService {
 
     return thread;
   }
+
   static async getInbox(userId) {
     const threads = await ChatThread.find({ participants: userId })
       .populate('participants', 'name avatar')
       .sort({ lastMessageAt: -1 });
 
     return threads.map((t) => {
-      const other = t.participants.find(
-        (p) => p._id.toString() !== userId.toString()
-      );
+      const other = t.participants.find((p) => p._id.toString() !== userId.toString());
       const unread = t.unreadCounts?.get(userId.toString()) || 0;
       return { ...t.toObject(), other, unread };
     });
   }
 
   static async getThread(threadId, userId) {
-    const t = await ChatThread.findById(threadId).populate(
-      'participants',
-      'name avatar'
-    );
+    const t = await ChatThread.findById(threadId).populate('participants', 'name avatar');
     if (!t) return null;
 
-    const other = t.participants.find(
-      (p) => p._id.toString() !== userId.toString()
-    );
+    const other = t.participants.find((p) => p._id.toString() !== userId.toString());
 
     await ChatService.markThreadRead(threadId, userId);
 
@@ -54,14 +48,7 @@ class ChatService {
       .sort({ createdAt: 1 });
   }
 
-  static async send({
-    threadId,
-    senderId,
-    message,
-    fileUrl,
-    fileName,
-    fileType,
-  }) {
+  static async send({ threadId, senderId, message, fileUrl, fileName, fileType }) {
     const msg = await ChatMessage.create({
       threadId,
       senderId,
@@ -100,9 +87,7 @@ class ChatService {
       { $addToSet: { deliveredTo: uId }, $set: { deliveredAt: new Date() } }
     );
 
-    return ChatMessage.findOne({ threadId: tId })
-      .sort({ createdAt: -1 })
-      .lean();
+    return ChatMessage.findOne({ threadId: tId }).sort({ createdAt: -1 }).lean();
   }
 
   static async markThreadRead(threadId, userId) {
@@ -125,9 +110,7 @@ class ChatService {
       { $addToSet: { readBy: uId }, $set: { readAt: new Date() } }
     );
 
-    return ChatMessage.findOne({ threadId: tId })
-      .sort({ createdAt: -1 })
-      .lean();
+    return ChatMessage.findOne({ threadId: tId }).sort({ createdAt: -1 }).lean();
   }
 }
 

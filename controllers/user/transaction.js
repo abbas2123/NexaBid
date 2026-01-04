@@ -1,7 +1,5 @@
-
 const TransactionService = require('../../services/profile/transaction');
-const statusCode = require('../../utils/statusCode');
-const {LAYOUTS} = require('../../utils/constants');
+const { LAYOUTS } = require('../../utils/constants');
 
 exports.getTransaction = async (req, res) => {
   const page = Number(req.query.page || 1);
@@ -17,7 +15,7 @@ exports.getTransaction = async (req, res) => {
     page,
     filters
   );
-console.log("transactions:",transactions);
+  console.log('transactions:', transactions);
   res.render('profile/transaction', {
     layout: LAYOUTS.USER_LAYOUT,
     transactions,

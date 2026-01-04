@@ -1,14 +1,13 @@
+const path = require('path');
 const contractService = require('../../services/admin/contractManagement');
 const File = require('../../models/File');
-const path = require('path');
 const statusCode = require('../../utils/statusCode');
 const { VIEWS, LAYOUTS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.contractManagementPage = async (req, res) => {
   const tab = req.query.tab || 'tender';
 
-  const { summary, contracts } =
-    await contractService.getContractManagementData(null, tab, true);
+  const { summary, contracts } = await contractService.getContractManagementData(null, tab, true);
 
   res.render(VIEWS.ADMIN_CONTRACT_MANAGEMENT, {
     layout: LAYOUTS.ADMIN_LAYOUT,
@@ -25,12 +24,9 @@ exports.getContractDetails = async (req, res) => {
   console.log('🟡 tenderId:', req.params.tenderId);
   console.log('🟡 admin:', req.admin?._id);
   try {
-    const tenderId = req.params.tenderId;
+    const { tenderId } = req.params;
 
-    const data = await contractService.getContractDetails(
-      req.admin._id,
-      tenderId
-    );
+    const data = await contractService.getContractDetails(req.admin._id, tenderId);
 
     return res.json(data);
   } catch (err) {
@@ -45,19 +41,13 @@ exports.view = async (req, res) => {
   const { id } = req.params;
 
   if (!id || id === 'undefined') {
-    return res
-      .status(statusCode.BAD_REQUEST)
-      .send(ERROR_MESSAGES.INVALID_FILE_ID);
+    return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.INVALID_FILE_ID);
   }
 
   const file = await File.findById(id);
-  if (!file)
-    return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.FILE_NOT_FOUND);
+  if (!file) return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.FILE_NOT_FOUND);
 
-  const absolutePath = path.join(
-    process.cwd(),
-    file.fileUrl.replace('/uploads', 'uploads')
-  );
+  const absolutePath = path.join(process.cwd(), file.fileUrl.replace('/uploads', 'uploads'));
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', 'inline');

@@ -4,9 +4,7 @@ const User = require('../../models/user.js');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getAuctionResultForPublisher = async (propertyId, publisherId) => {
-  const property = await Property.findById(propertyId)
-    .populate('sellerId', 'name email')
-    .lean();
+  const property = await Property.findById(propertyId).populate('sellerId', 'name email').lean();
   console.log('property.media', property.media);
   if (!property) {
     throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);

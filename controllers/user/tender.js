@@ -24,9 +24,7 @@ exports.getTenderListingPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Tender list error:', err);
-    res
-      .status(statusCode.INTERNAL_SERVER_ERROR)
-      .send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -35,13 +33,13 @@ exports.getTenderDetailsPage = async (req, res) => {
     const tenderId = req.params.id;
     const user = req.user || null;
 
-    const { tender, isVendor, canViewFull } =
-      await tenderService.getTenderDetailsForUser(tenderId, user);
+    const { tender, isVendor, canViewFull } = await tenderService.getTenderDetailsForUser(
+      tenderId,
+      user
+    );
 
     const isOwner =
-      user &&
-      tender.createdBy &&
-      tender.createdBy._id.toString() === user._id.toString();
+      user && tender.createdBy && tender.createdBy._id.toString() === user._id.toString();
 
     // If owner → force isVendor = false
     const canParticipate = isVendor && !isOwner;
@@ -61,10 +59,7 @@ exports.getTenderDetailsPage = async (req, res) => {
     console.error('Tender Details Error:', err);
 
     // Special handling for draft / restricted
-    if (
-      err.code === ERROR_CODES.TENDER_DRAFT ||
-      err.statusCode === statusCode.FORBIDDEN
-    ) {
+    if (err.code === ERROR_CODES.TENDER_DRAFT || err.statusCode === statusCode.FORBIDDEN) {
       return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
         message: ERROR_MESSAGES.TENDER_RESTRICTED,
@@ -82,15 +77,11 @@ exports.getTenderDetailsPage = async (req, res) => {
 exports.resubmitTender = async (req, res) => {
   try {
     const tenderId = req.params.id;
-    const body = req.body;
+    const { body } = req;
     const uploadedFiles = req.files || [];
-     console.log("req.files:",req.files);
-    const updatedTender = await tenderService.resubmitTenderService(
-      tenderId,
-      body,
-      uploadedFiles
-    );
-  // 
+    console.log('req.files:', req.files);
+    const updatedTender = await tenderService.resubmitTenderService(tenderId, body, uploadedFiles);
+    //
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,

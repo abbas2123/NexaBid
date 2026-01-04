@@ -1,7 +1,7 @@
 const vendorService = require('../../services/vendor/applicationService');
 const myProfileService = require('../../services/profile/profileService');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 const User = require('../../models/user');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
@@ -12,7 +12,7 @@ exports.userProfile = async (req, res) => {
     if (!req.user) {
       return res.redirect('/auth/login');
     }
-    const user = req.user;
+    const { user } = req;
     const application = await vendorService.getApplicationStatus(user._id);
 
     res.render('profile/profile', {
@@ -23,7 +23,7 @@ exports.userProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('Profile load Error:', error);
-    res.status(statusCode.INTERNAL_ERROR).send('Server Error');
+    res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -33,17 +33,11 @@ exports.getUserStatuspage = async (req, res) => {
       return res.redirect('/auth/login');
     }
 
-    const user = req.user;
+    const { user } = req;
     const userId = user._id;
 
-    const {
-      vendorApp,
-      propertyStatus,
-      tenderStatus,
-      latestTender,
-      userProperties,
-      userTenders,
-    } = await myProfileService.userStatus(userId);
+    const { vendorApp, propertyStatus, tenderStatus, latestTender, userProperties, userTenders } =
+      await myProfileService.userStatus(userId);
 
     return res.render('profile/status', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -74,13 +68,11 @@ exports.logOut = (req, res) => {
 
 exports.getMyProfile = async (req, res) => {
   try {
-  
     if (!req.user) {
       console.log('❌ No req.user → Redirecting to login');
       return res.redirect('/auth/login');
     }
 
-    
     const freshUser = await User.findById(req.user._id);
 
     if (!freshUser) {
@@ -88,7 +80,6 @@ exports.getMyProfile = async (req, res) => {
       return res.redirect('/auth/login');
     }
 
-   
     return res.render('profile/myProfile.ejs', {
       layout: LAYOUTS.USER_LAYOUT,
       title: 'My Profile',
@@ -115,9 +106,7 @@ exports.getMyListingPage = async (req, res) => {
       .lean();
 
     console.log('Fetched Properties:', properties);
-    const tenders = await Tender.find({ createdBy: userId })
-      .sort({ createdAt: -1 })
-      .lean();
+    const tenders = await Tender.find({ createdBy: userId }).sort({ createdAt: -1 }).lean();
 
     res.render('profile/myListing', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -130,7 +119,7 @@ exports.getMyListingPage = async (req, res) => {
 
     return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
-      message: 'Unable to load listings',
+      message: ERROR_MESSAGES.UNABLE_LOAD_LISTINGS,
     });
   }
 };
@@ -153,8 +142,7 @@ exports.getMyParticipation = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const { properties, tenders } =
-      await myProfileService.getMyParticipationData(userId);
+    const { properties, tenders } = await myProfileService.getMyParticipationData(userId);
 
     return res.render('profile/myParticipation', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -201,10 +189,7 @@ exports.viewTenderPostAward = async (req, res) => {
       return res.redirect(`/vendor/tender/${tenderId}/financial`);
     }
 
-    const result = await myProfileService.getVendorPostAwardData(
-      tenderId,
-      userId
-    );
+    const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
     console.log(result.po);
 
     if (result.loseView) {
@@ -248,9 +233,7 @@ exports.viewTenderPostAward = async (req, res) => {
       });
     }
 
-    return res.redirect(
-      `/user/my-participation/tender/${req.params.id}?error=server_error`
-    );
+    return res.redirect(`/user/my-participation/tender/${req.params.id}?error=server_error`);
   }
 };
 
@@ -268,19 +251,21 @@ exports.vendorRespondPO = async (req, res) => {
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === 'PO_NOT_FOUND')
-      return res.status(statusCode.NOT_FOUND).send('PO not found');
+    if (err.message === ERROR_MESSAGES.PO_NOT_FOUND)
+      return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.PO_NOT_FOUND);
 
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send('Server error');
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
 exports.getUploadPage = async (req, res) => {
   try {
-    const tenderId = req.params.tenderId;
+    const { tenderId } = req.params;
 
-    const { publisherAgreement } =
-      await myProfileService.getAgreementUploadData(tenderId, req.user._id);
+    const { publisherAgreement } = await myProfileService.getAgreementUploadData(
+      tenderId,
+      req.user._id
+    );
 
     return res.render('profile/agreementUpload', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -293,19 +278,19 @@ exports.getUploadPage = async (req, res) => {
 
     const redirectBase = `/user/my-participation/tender/${req.params.id}`;
 
-    if (err.message === 'PUBLISHER_AGREEMENT_NOT_FOUND') {
+    if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND) {
       return res.redirect(`${redirectBase}?error=publisher_agreement_missing`);
     }
 
-    if (err.message === 'PO_NOT_ACCEPTED') {
+    if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED) {
       return res.redirect(`${redirectBase}?error=po_not_accepted`);
     }
 
-    if (err.message === 'NOT_WINNER') {
+    if (err.message === ERROR_MESSAGES.NOT_WINNER) {
       return res.redirect(`${redirectBase}?error=not_winner`);
     }
 
-    if (err.message === 'PO_NOT_CREATED') {
+    if (err.message === ERROR_MESSAGES.PO_NOT_CREATED) {
       return res.redirect(`${redirectBase}?error=po_not_created`);
     }
 
@@ -321,17 +306,13 @@ exports.uploadSignedAgreement = async (req, res) => {
       file: req.file,
     });
 
-    return res.redirect(
-      `/user/my-participation/tender/${req.params.tenderId}?agreement=uploaded`
-    );
+    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}?agreement=uploaded`);
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === 'NO_FILE') {
-      return res.status(statusCode.BAD_REQUEST).send('No file uploaded');
+    if (err.message === ERROR_MESSAGES.NO_FILE) {
+      return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.NO_FILE_UPLOADED);
     }
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send('Error uploading agreement');
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.ERROR_UPLOADING_AGREEMENT);
   }
 };
-
-

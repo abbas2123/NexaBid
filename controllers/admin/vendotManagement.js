@@ -1,5 +1,4 @@
 const vendorService = require('../../services/admin/venderManagement');
-const statusCode = require('../../utils/statusCode');
 const sendMail = require('../../utils/email');
 const {
   VIEWS,
@@ -11,7 +10,6 @@ const {
 
 exports.getVendorApplication = async (req, res) => {
   const vendorApps = await vendorService.getAllVendorApplication();
-  console.log('vendorApps', vendorApps);
 
   res.render(VIEWS.ADMIN_VENDOR_LIST, {
     layout: LAYOUTS.ADMIN_LAYOUT,
@@ -23,7 +21,7 @@ exports.getVendorApplication = async (req, res) => {
 
 exports.startReview = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const vendor = await vendorService.startReview(id);
 
     return res.json({
@@ -38,9 +36,8 @@ exports.startReview = async (req, res) => {
 
 exports.getVendorDetails = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const vendor = await vendorService.getAllVentdorApplicationById(id);
-    console.log('ndsklnkdvndv', vendor.documents);
     return res.json({ success: true, vendor });
   } catch (err) {
     return res.json({
@@ -51,8 +48,8 @@ exports.getVendorDetails = async (req, res) => {
 };
 exports.approveVendor = async (req, res) => {
   try {
-    const id = req.params.id;
-    const comment = req.body.comment;
+    const { id } = req.params;
+    const { comment } = req.body;
     const vendor = await vendorService.approveVendor(id, comment, req);
 
     res.json({ success: true, message: SUCCESS_MESSAGES.VENDOR_APPROVED });
@@ -72,8 +69,8 @@ exports.approveVendor = async (req, res) => {
 
 exports.rejectVendor = async (req, res) => {
   try {
-    const id = req.params.id;
-    const comment = req.body.comment;
+    const { id } = req.params;
+    const { comment } = req.body;
     const vendor = await vendorService.rejectVendor(id, comment, req);
 
     if (!vendor) {
@@ -108,9 +105,9 @@ exports.rejectVendor = async (req, res) => {
 
 exports.removeVendor = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
 
-    const result = await vendorService.removeVendorService(id, req);
+    await vendorService.removeVendorService(id, req);
 
     return res.json({
       success: true,

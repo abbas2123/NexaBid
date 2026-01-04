@@ -1,21 +1,18 @@
-const statusCode = require("../utils/statusCode");
+const multer = require('multer');
+const statusCode = require('../utils/statusCode');
 
-module.exports = (err, req, res, next) => {
-  console.error("🔥 GLOBAL ERROR HANDLER:", err);
+module.exports = (err, req, res, _next) => {
+  console.error('🔥 GLOBAL ERROR HANDLER:', err);
 
- 
-  if (err instanceof require("multer").MulterError) {
+  if (err instanceof multer.MulterError) {
     return res.status(statusCode.BAD_REQUEST).json({
       success: false,
-      message: err.code === "LIMIT_FILE_SIZE"
-        ? "File too large"
-        : err.message || "Upload error",
+      message: err.code === 'LIMIT_FILE_SIZE' ? 'File too large' : err.message || 'Upload error',
     });
   }
 
-  // 2️⃣ Normal error fallback
   return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
     success: false,
-    message: err.message || "Server Error",
+    message: err.message || 'Server Error',
   });
 };

@@ -1,21 +1,13 @@
 const auctionResultService = require('../../services/auction/result');
 const statusCode = require('../../utils/statusCode');
-const {
-  LAYOUTS,
-  VIEWS,
-  ERROR_MESSAGES,
-  REDIRECTS,
-} = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS } = require('../../utils/constants');
 
 exports.loadAuctionResultPage = async (req, res) => {
   try {
-    const propertyId = req.params.propertyId;
+    const { propertyId } = req.params;
     const publisherId = req.user._id;
 
-    const result = await auctionResultService.getAuctionResultForPublisher(
-      propertyId,
-      publisherId
-    );
+    const result = await auctionResultService.getAuctionResultForPublisher(propertyId, publisherId);
 
     res.render(VIEWS.AUCTION_RESULT_PUBLISHER, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -37,13 +29,10 @@ exports.loadAuctionResultPage = async (req, res) => {
 
 exports.loadBuyerAuctionResultPage = async (req, res) => {
   try {
-    const propertyId = req.params.propertyId;
+    const { propertyId } = req.params;
     const buyerId = req.user._id;
 
-    const result = await auctionResultService.getBuyerAuctionResult(
-      propertyId,
-      buyerId
-    );
+    const result = await auctionResultService.getBuyerAuctionResult(propertyId, buyerId);
 
     return res.render(VIEWS.AUCTION_RESULT_BUYER, {
       layout: LAYOUTS.USER_LAYOUT,

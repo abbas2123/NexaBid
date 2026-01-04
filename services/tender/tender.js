@@ -1,18 +1,20 @@
-const Tender = require("../../models/tender");
-const FileModel = require("../../models/File");
+const Tender = require('../../models/tender');
+const FileModel = require('../../models/File');
+const statusCode = require('../../utils/statusCode');
+
 exports.getAllTenders = async (page = 1) => {
   const limit = 8; // tenders per page
   const skip = (page - 1) * limit;
 
   // Fetch tenders (only published)
-  const tenders = await Tender.find({ status: "published" })
+  const tenders = await Tender.find({ status: 'published' })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
 
   // Pagination data
-  const total = await Tender.countDocuments({ status: "published" });
+  const total = await Tender.countDocuments({ status: 'published' });
   const totalPages = Math.ceil(total / limit);
 
   return {
@@ -28,13 +30,11 @@ exports.getAllTenders = async (page = 1) => {
 
 exports.getTenderDetailsForUser = async (tenderId, user) => {
   // 1️⃣ Fetch tender with creator info
-  const tender = await Tender.findById(tenderId)
-    .populate("createdBy", "name role isVendor")
-    .lean();
+  const tender = await Tender.findById(tenderId).populate('createdBy', 'name role isVendor').lean();
 
   if (!tender) {
-    const err = new Error("Tender not found");
-    err.statusCode = 404;
+    const err = new Error('Tender not found');
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -45,29 +45,23 @@ exports.getTenderDetailsForUser = async (tenderId, user) => {
   let canViewFull = false;
 
   // ✅ Creator always has full access
-  if (
-    user &&
-    tender.createdBy &&
-    String(tender.createdBy._id) === String(user._id)
-  ) {
+  if (user && tender.createdBy && String(tender.createdBy._id) === String(user._id)) {
     canViewFull = true;
   }
 
   // ✅ Any verified vendor can see full details if tender is published
-  if (isVendor && ["published", "closed", "awarded"].includes(tender.status)) {
+  if (isVendor && ['published', 'closed', 'awarded'].includes(tender.status)) {
     canViewFull = true;
   }
 
   // ❌ If tender is still draft and user is NOT creator → block
   if (
-    tender.status === "draft" &&
-    (!user ||
-      !tender.createdBy ||
-      String(tender.createdBy._id) !== String(user._id))
+    tender.status === 'draft' &&
+    (!user || !tender.createdBy || String(tender.createdBy._id) !== String(user._id))
   ) {
-    const err = new Error("This tender is not yet published.");
-    err.statusCode = 403;
-    err.code = "TENDER_DRAFT";
+    const err = new Error('This tender is not yet published.');
+    err.statusCode = statusCode.FORBIDDEN;
+    err.code = 'TENDER_DRAFT';
     throw err;
   }
 
@@ -81,8 +75,8 @@ exports.getTenderForResubmit = async (tenderId) => {
   const tender = await Tender.findById(tenderId).lean();
 
   if (!tender) {
-    const err = new Error("Tender not found");
-    err.statusCode = 404;
+    const err = new Error('Tender not found');
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -91,16 +85,12 @@ exports.getTenderForResubmit = async (tenderId) => {
     files: tender.files || [],
   };
 };
-exports.resubmitTenderService = async (
-  tenderId,
-  updatedData,
-  uploadedFiles
-) => {
+exports.resubmitTenderService = async (tenderId, updatedData, uploadedFiles) => {
   const tender = await Tender.findById(tenderId);
 
   if (!tender) {
-    const err = new Error("Tender not found");
-    err.statusCode = 404;
+    const err = new Error('Tender not found');
+    err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
 
@@ -113,7 +103,7 @@ exports.resubmitTenderService = async (
   // Update eligibility
   tender.eligibility = {
     categories: updatedData.eligibilityCategories
-      ? updatedData.eligibilityCategories.split(",").map((x) => x.trim())
+      ? updatedData.eligibilityCategories.split(',').map((x) => x.trim())
       : tender.eligibility.categories,
     minGrade: updatedData.eligibilityGrade || tender.eligibility.minGrade,
   };
@@ -130,17 +120,17 @@ exports.resubmitTenderService = async (
   tender.finOpenAt = updatedData.finOpenAt || tender.finOpenAt;
 
   // Reset status for verification again
-  tender.status = "draft";
+  tender.status = 'draft';
   tender.adminComment = null;
 
   // If user attached new files
   if (uploadedFiles && uploadedFiles.length > 0) {
-    for (let file of uploadedFiles) {
-     const saved = await FileModel.create({
+    for (const file of uploadedFiles) {
+      const saved = await FileModel.create({
         fileName: file.originalname,
         fileUrl: file.path,
         size: file.size,
-         relatedType: "tender",
+        relatedType: 'tender',
         relatedId: tender._id,
       });
       tender.files.push({
@@ -150,8 +140,6 @@ exports.resubmitTenderService = async (
       });
       console.log('file', tender.files);
     }
-    
-   
   }
 
   await tender.save();

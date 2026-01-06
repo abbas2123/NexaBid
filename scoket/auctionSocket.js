@@ -163,6 +163,7 @@ module.exports = (io, socket) => {
       console.log(`💬 User ${userId} joined chat thread ${threadId}`);
 
       const lastMsg = await ChatService.markThreadRead(threadId, userId);
+
       io.to(threadId.toString()).emit('messages_seen', {
         threadId: threadId.toString(),
         seenBy: userId,

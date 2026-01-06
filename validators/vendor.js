@@ -6,20 +6,42 @@ const vendorVerificationSchema = z
     actionType: z.enum(['scan', 'submit']),
 
     // Fields collected through OCR OR manual entry
-    businessName: z.string().min(3, 'Business Name must be at least 3 characters').optional(),
+    businessName: z.preprocess((v) => {
+      if (!v) return undefined;
 
-    panNumber: z
-      .string()
-      .regex(/[A-Z]{5}[0-9]{4}[A-Z]{1}/, 'Invalid PAN Number')
-      .optional(),
+      const cleaned = String(v)
+        .replace(/\s+/g, ' ')
+        .replace(/[^a-zA-Z0-9 .&()-]/g, '')
+        .trim();
 
-    gstNumber: z
-      .string()
-      .regex(/^([0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1})$/, 'Invalid GST Number')
-      .optional(),
+      return cleaned.length ? cleaned : undefined;
+    }, z.string().min(3, 'Business Name must be at least 3 characters').optional()),
+
+    panNumber: z.preprocess(
+      (v) => {
+        if (!v) return undefined;
+        return String(v)
+          .replace(/[^a-zA-Z0-9]/g, '')
+          .toUpperCase();
+      },
+      z
+        .string()
+        .regex(/^[A-Z]{5}[0-9]{4}[A-Z]$/, 'Invalid PAN Number')
+        .optional()
+    ),
+    gstNumber: z.preprocess(
+      (v) => (v === '' ? undefined : v),
+      z
+        .string()
+        .transform((v) => v.replace(/[^a-zA-Z0-9]/g, '').toUpperCase())
+        .refine((v) => /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(v), {
+          message: 'Invalid GST Number',
+        })
+        .optional()
+    ),
 
     isConfirmed: z.string().optional(),
-    terms: z.string().optional(),
+    terms: z.preprocess((v) => v === 'on', z.boolean()).optional(),
   })
   .superRefine((data, ctx) => {
     // --- 1. If SCAN → files should exist (we validate in controller)
@@ -35,7 +57,7 @@ const vendorVerificationSchema = z
     }
 
     // --- 3. If SUBMIT → must accept terms
-    if (data.actionType === 'submit' && data.terms !== 'true') {
+    if (data.actionType === 'submit' && data.terms !== true) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: VALIDATION_MESSAGES.ACCEPT_TERMS,
@@ -43,5 +65,5 @@ const vendorVerificationSchema = z
       });
     }
   });
-
+console.log('vendorVerificationSchema.businessName', vendorVerificationSchema.businessName);
 module.exports = { vendorVerificationSchema };

@@ -35,8 +35,7 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
   >
     <!-- tells backend what we’re doing (scan vs final submit if you need it) -->
     <input type="hidden" name="actionType" id="actionType" value="scan" />
-    <input type="hidden" name="isConfirmed" id="isConfirmed" value="false" />
-
+<input type="hidden" name="isConfirmed" id="confirm" value="false" />
     <!-- Top Section -->
     <section class="max-w-4xl mx-auto px-4 sm:px-0 space-y-4">
       <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
@@ -346,6 +345,8 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
 <script>
 (function () {
 
+  const vendorForm = document.getElementById("vendorForm");
+
   const fileInput = document.getElementById("documents");
   const btnReplace = document.getElementById("btnReplace");
   const btnStartOCR = document.getElementById("btnStartOCR");
@@ -353,9 +354,8 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
   const btnEdit = document.getElementById("btnEdit");
   const btnSubmit = document.getElementById("btnSubmit");
   const termsCheckbox = document.getElementById("terms");
-
+  const confirmInput = document.getElementById("confirm");
   const actionTypeInput = document.getElementById("actionType");
-  const isConfirmedInput = document.getElementById("isConfirmed");
 
   const businessInput = document.getElementById("businessName");
   const panInput = document.getElementById("panNumber");
@@ -364,156 +364,75 @@ const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
   const ocrStatusText = document.getElementById("ocrStatusText");
   const previewNewFiles = document.getElementById("previewNewFiles");
 
-
-  /* ------------------------------
-        ENABLE SUBMIT BUTTON
-  ------------------------------ */
-  function updateSubmitState() {
-    btnSubmit.disabled = !(isConfirmedInput.value === "true" && termsCheckbox.checked);
+  function normalize() {
+    panInput.value = panInput.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+    gstInput.value = gstInput.value.replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
   }
+
+  function updateSubmitState() {
+    btnSubmit.disabled = !(confirmInput.value === "true" && termsCheckbox.checked);
+  }
+
   termsCheckbox.addEventListener("change", updateSubmitState);
 
-
-  /* ------------------------------
-        PREVIEW NEW UPLOADED FILES
-  ------------------------------ */
   fileInput.addEventListener("change", () => {
     previewNewFiles.innerHTML = "";
-
-    Array.from(fileInput.files).forEach(file => {
+    [...fileInput.files].forEach(file => {
       const box = document.createElement("div");
       box.className = "w-full h-24 bg-gray-200 rounded-lg overflow-hidden";
-
-      if (file.type.startsWith("image/")) {
-        box.innerHTML = `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">`;
-      } else {
-        box.innerHTML = `<p class='text-center text-xs p-2'>📄 ${file.name}</p>`;
-      }
-
+      box.innerHTML = file.type.startsWith("image/")
+        ? `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">`
+        : `<p class="text-xs text-center p-2">📄 ${file.name}</p>`;
       previewNewFiles.appendChild(box);
     });
-
-    ocrStatusText.textContent = "Status: Ready for OCR (file selected)";
+    ocrStatusText.textContent = "Status: Ready for OCR";
   });
 
-
-  /* ------------------------------
-        REPLACE BUTTON
-  ------------------------------ */
   btnReplace?.addEventListener("click", () => fileInput.click());
 
+  btnStartOCR?.addEventListener("click", async () => {
+    if (!fileInput.files.length) return Swal.fire("Error","Upload at least 1 document","error");
 
-  /* ------------------------------
-        OCR SCAN BUTTON (AJAX)
-  ------------------------------ */
- btnStartOCR?.addEventListener("click", async () => {
-
-  if (!fileInput.files.length) {
-    return Swal.fire("Error", "Please upload at least 1 document", "error");
-  }
-
-  // Show alert immediately (no delay)
-  Swal.fire({
-    title: "Scanning...",
-    text: "OCR is processing your document.",
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    didOpen: () => Swal.showLoading()
-  });
-
-  // tiny delay to allow UI to render the modal
-  setTimeout(async () => {
+    Swal.fire({title:"Scanning...",allowOutsideClick:false,didOpen:()=>Swal.showLoading()});
 
     actionTypeInput.value = "scan";
-    const form = document.getElementById("vendorForm");
-    const formData = new FormData(form);
-
-    const res = await fetch("/vendor/apply", {
-      method: "POST",
-      body: formData
-    });
-
+    const res = await fetch("/vendor/apply",{method:"POST",body:new FormData(vendorForm)});
     const data = await res.json();
+    if (!data.success) return Swal.fire("Error",data.message,"error");
 
-    if (!data.success) {
-      return Swal.fire("Error", data.message, "error");
-    }
+    Swal.fire("Success","OCR Completed","success");
+    setTimeout(()=>location.href=data.redirectUrl,1200);
+  });
 
-    Swal.fire("OCR Completed!", data.message, "success");
-
-    setTimeout(() => {
-      window.location.href = data.redirectUrl;
-    }, 1200);
-
-  }, 10);  // 👈 Very small delay makes modal instant
-});
-
-  /* ------------------------------
-        CONFIRM BUTTON
-  ------------------------------ */
   btnConfirm?.addEventListener("click", () => {
-
-    [businessInput, panInput, gstInput, fileInput].forEach(input => input.disabled = true);
-
+    [businessInput,panInput,gstInput,fileInput].forEach(i=>i.disabled=true);
     btnConfirm.classList.add("hidden");
-    btnStartOCR.disabled = true;
-    btnReplace.disabled = true;
     btnEdit.classList.remove("hidden");
-
-    isConfirmedInput.value = "true";
+    confirmInput.value="true";
     updateSubmitState();
   });
 
-
-  /* ------------------------------
-        EDIT BUTTON
-  ------------------------------ */
   btnEdit?.addEventListener("click", () => {
-
-    [businessInput, panInput, gstInput, fileInput].forEach(input => input.disabled = false);
-
+    [businessInput,panInput,gstInput,fileInput].forEach(i=>i.disabled=false);
     btnConfirm.classList.remove("hidden");
-    btnStartOCR.disabled = false;
-    btnReplace.disabled = false;
     btnEdit.classList.add("hidden");
-
-    isConfirmedInput.value = "false";
+    confirmInput.value="false";
     updateSubmitState();
   });
 
-
-  /* ------------------------------
-        FINAL SUBMIT (AJAX)
-  ------------------------------ */
-  btnSubmit?.addEventListener("click", async (e) => {
+  btnSubmit?.addEventListener("click", async e => {
     e.preventDefault();
-    console.log("Submit clicked!");
+    normalize();
+    actionTypeInput.value="submit";
 
-  actionTypeInput.value = "submit";
-    const form = document.getElementById("vendorForm");
-    const formData = new FormData(form);
-
-    const res = await fetch("/vendor/apply", {
-      method: "POST",
-      body: formData
-    });
-
+    const res = await fetch("/vendor/apply",{method:"POST",body:new FormData(vendorForm)});
     const data = await res.json();
-    console.log("SUBMIT RESPONSE:", data);
+    if(!data.success) return Swal.fire("Error",data.message,"error");
 
-    if (!data.success) {
-      return Swal.fire("Error", data.message, "error");
-    }
-
-    Swal.fire("Success!", data.message, "success");
-
-    setTimeout(() => {
-      window.location.href = data.redirectUrl;
-    }, 1500);
+    Swal.fire("Success",data.message,"success");
+    setTimeout(()=>location.href=data.redirectUrl,1200);
   });
-
 
   updateSubmitState();
-
 })();
 </script>

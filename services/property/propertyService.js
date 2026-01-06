@@ -120,13 +120,13 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   }
 
   const media = mediaFiles.map((file) => ({
-    url: `/uploads/property-media/${file.filename}`,
+    url: file.path,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
 
   const docs = docFiles.map((file) => ({
-    url: `/uploads/property-docs/${file.filename}`,
+    url: file.path,
     originalName: file.originalname,
     mimeType: file.mimetype,
   }));
@@ -241,7 +241,7 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   // media update
   if (files?.media?.length > 0) {
     const newMedia = files.media.map((file) => ({
-      url: `/uploads/property-media/${file.filename}`,
+      url: file.path,
       fileName: file.filename,
     }));
     existingProperty.media.push(...newMedia);
@@ -250,7 +250,7 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   // docs update
   if (files?.docs?.length > 0) {
     const newDocs = files.docs.map((file) => ({
-      url: `/uploads/property-docs/${file.filename}`,
+      url: file.path,
       fileName: file.filename,
     }));
     existingProperty.docs.push(...newDocs);

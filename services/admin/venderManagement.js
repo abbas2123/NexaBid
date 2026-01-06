@@ -10,8 +10,8 @@ exports.getAllVentdorApplicationById = async (id) =>
     .findById(id)
     .populate('userId')
     .populate({
-      path: 'documents.fileId', // IMPORTANT
-      select: 'fileName filePath type uploadedAt', // You need these in frontend
+      path: 'documents.fileId',
+      select: 'fileName fileUrl mimeType uploadedAt',
     })
     .lean();
 

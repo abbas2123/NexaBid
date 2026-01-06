@@ -1,6 +1,6 @@
 const Notification = require('../models/notification');
 
-exports.sendNotification = async (userId, message,link = '#',io) => {
+exports.sendNotification = async (userId, message, link = '#', io) => {
   try {
     const notification = await Notification.create({
       userId,

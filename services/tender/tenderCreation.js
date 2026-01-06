@@ -1,6 +1,5 @@
-const path = require('path');
 const crypto = require('crypto');
-const fs = require('fs');
+const cloudinary = require('../../config/cloudinary');
 const File = require('../../models/File');
 const Tender = require('../../models/tender');
 const { ERROR_MESSAGES } = require('../../utils/constants');
@@ -15,60 +14,73 @@ exports.creatTenderService = async (user, body, files) => {
   if (!body.category) throw new Error(ERROR_MESSAGES.CATEGORY_REQUIRED);
   if (!body.bidEndAt) throw new Error(ERROR_MESSAGES.BID_END_DATE_REQUIRED);
 
-  const globalChecksums = await File.find({ relatedType: 'tender' }).then((files) =>
-    files.map((f) => f.checksum)
+  // Get all existing tender checksums
+  const existingChecksums = await File.find({ relatedType: 'tender' }).then((f) =>
+    f.map((x) => x.checksum)
   );
 
-  let existingTenderChecksums = [];
-
   let existingTender = null;
-
   if (body.tenderId) {
     existingTender = await Tender.findById(body.tenderId).populate('files.fileId');
-
-    if (existingTender?.files?.length > 0) {
-      existingTenderChecksums = existingTender.files.map((f) => f.fileId.checksum || null);
+    if (existingTender?.files?.length) {
+      existingTender.files.forEach(
+        (f) => f.fileId?.checksum && existingChecksums.push(f.fileId.checksum)
+      );
     }
   }
 
-  const existingFileSums = [...globalChecksums, ...existingTenderChecksums];
-
   const fileRefsTosave = [];
 
-  if (files && files.length > 0) {
+  if (files?.length) {
     for (const file of files) {
-      const filePath = path.join(__dirname, '../../uploads/tender-docs', file.filename);
+      if (!file.buffer) throw new Error('File buffer missing');
 
-      const fileBuffer = fs.readFileSync(filePath);
-      const checksum = crypto.createHash('md5').update(fileBuffer).digest('hex');
-
-      if (existingFileSums.includes(checksum)) {
-        console.log('duplicate document detected', file.filename);
-
-        fs.unlinkSync(filePath);
+      // 1️⃣ CHECKSUM
+      const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
+      if (existingChecksums.includes(checksum)) {
         throw new Error(ERROR_MESSAGES.DUPLICATE_TENDER_DOCUMENT);
       }
+      existingChecksums.push(checksum);
 
-      existingFileSums.push(checksum);
+      // 2️⃣ CLOUDINARY UPLOAD
+      const cld = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            {
+              resource_type: 'auto',
+              folder: 'tender_docs',
+            },
+            (err, result) => (err ? reject(err) : resolve(result))
+          )
+          .end(file.buffer);
+      });
 
+      // 3️⃣ FILE DB RECORD
       const fileDoc = await File.create({
         ownerId: user._id,
         relatedType: 'tender',
         relatedId: null,
-        fileName: file.filename,
-        fileUrl: `/uploads/tender-docs/${file.filename}`,
+        fileName: file.originalname,
+        fileUrl: cld.secure_url,
         mimeType: file.mimetype,
         checksum,
-        size: file.size,
+        size: file.size || file.buffer.length,
+        version: 1,
+        metadata: {
+          cloudinary_public_id: cld.public_id,
+          cloudinary_version: cld.version,
+        },
       });
+
       fileRefsTosave.push({
         fileId: fileDoc._id,
         originalName: file.originalname,
-        size: file.size,
+        size: file.size || file.buffer.length,
       });
     }
   }
 
+  // CREATE TENDER
   const tender = await Tender.create({
     title: body.title,
     dept: body.dept,
@@ -76,7 +88,7 @@ exports.creatTenderService = async (user, body, files) => {
     description: body.description || null,
     createdBy: user._id,
     eligibility: {
-      categories: body.eligibilityCategories ? body.eligibilityCategories.split(',') : [],
+      categories: body.eligibilityCategories?.split(',') || [],
       minGrade: body.eligibilityGrade || null,
     },
     type: body.type || 'open',
@@ -90,6 +102,8 @@ exports.creatTenderService = async (user, body, files) => {
     status: 'draft',
     files: fileRefsTosave,
   });
+
+  // Attach file relations
   await File.updateMany(
     { _id: { $in: fileRefsTosave.map((f) => f.fileId) } },
     { $set: { relatedId: tender._id } }

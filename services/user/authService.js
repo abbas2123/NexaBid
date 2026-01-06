@@ -14,7 +14,9 @@ exports.registerUser = async ({ name, email, phone, password }) => {
 
   if (existingUser) {
     const error = new Error(
-      existingUser.email === email ? ERROR_MESSAGES.EMAIL_ALREADY_EXISTS : ERROR_MESSAGES.PHONE_ALREADY_EXISTS
+      existingUser.email === email
+        ? ERROR_MESSAGES.EMAIL_ALREADY_EXISTS
+        : ERROR_MESSAGES.PHONE_ALREADY_EXISTS
     );
     error.statusCode = statusCode.CONFLICT;
     throw error;
@@ -199,13 +201,16 @@ exports.resetPasswordService = async ({ userId, password }) => {
 
 // ---------------- DASHBOARD DATA ----------------
 exports.getDashboard = async () => {
+  const now = new Date();
+
   const property = await Property.find({
     status: 'published',
     verificationStatus: 'approved',
   })
     .limit(6)
     .lean();
-  const tender = await Tender.find({ status: 'published' }).limit(6);
+
+  const tender = await Tender.find({ status: 'published', bidEndAt: { $gt: now } }).limit(6);
   return { property, tender };
 };
 

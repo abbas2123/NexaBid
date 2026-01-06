@@ -166,24 +166,29 @@ document.querySelectorAll(".review-btn").forEach(btn => {
     const v = details.json.vendor;
 
     // Build document list
-    let docsHTML = "";
-    if (v.documents?.length) {
-      docsHTML = `
-        <p class="font-semibold mt-3">Documents:</p>
-        <div class="grid grid-cols-2 gap-3 mt-2">
-          ${v.documents
-            .map(doc => `
-              <a href="/uploads/vendor-docs/${doc.fileId.fileName}"
-                 class="text-blue-600 underline"
-                 target="_blank">
-                 ${doc.type}
-              </a>
-            `)
-            .join("")}
-        </div>
-      `;
-    }
+let docsHTML = "";
+if (v.documents?.length) {
+  docsHTML = `
+  <p class="font-semibold mt-3">Documents:</p>
+  <div class="grid grid-cols-2 gap-3 mt-2">
+    ${v.documents.map(doc => {
 
+      const url = doc.fileId.fileUrl;
+
+      const isImage = doc.fileId.mimeType?.startsWith("image/");
+
+      return `
+        <a href="${url}" target="_blank"
+           class="block border rounded-lg overflow-hidden hover:shadow">
+
+           ${isImage
+             ? `<img src="${url}" class="w-full h-32 object-cover">`
+             : `<div class="p-4 text-center">📄 View PDF</div>`}
+        </a>
+      `;
+    }).join("")}
+  </div>`;
+}
     // Fill modal
     content.innerHTML = `
       <p><b>Business Name:</b> ${v.businessName}</p>

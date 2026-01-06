@@ -1,5 +1,5 @@
 const { z } = require('zod');
-const {VALIDATION_MESSAGES} = require('../utils/constants');
+const { VALIDATION_MESSAGES } = require('../utils/constants');
 
 exports.singnupSchema = z.object({
   name: z.string().min(3, 'Name must have at least 3 characters'),

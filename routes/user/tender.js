@@ -1,11 +1,11 @@
 const express = require('express');
 
 const router = express.Router();
-const path = require('path');
+
 const authController = require('../../controllers/user/tender');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const tenderContorller = require('../../controllers/vendor/tenderCreation');
-const tenderUpload = require('../../middlewares/tenderUpload');
+const tenderUpload = require('../../middlewares/cloudinaryUploader');
 const Tender = require('../../models/tender');
 const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
@@ -43,19 +43,23 @@ router.patch(
   authController.resubmitTender
 );
 
-router.get('/doc/:fileId', async (req, res) => {
+router.get('/doc/:fileId', authMiddleware.protectRoute, async (req, res) => {
   try {
     const file = await File.findById(req.params.fileId);
     if (!file) return res.status(404).send('File not found');
 
-    const filePath = path.isAbsolute(file.fileUrl)
-      ? file.fileUrl
-      : path.join(process.cwd(), file.fileUrl);
+    let viewUrl = file.fileUrl;
 
-    return res.download(filePath, file.fileName);
+    // If PDF → force inline display
+    if (file.mimeType === 'application/pdf') {
+      viewUrl = file.fileUrl.replace('/raw/upload/', '/raw/upload/fl_attachment:false/');
+    }
+
+    // Redirect browser to Cloudinary file
+    return res.redirect(viewUrl);
   } catch (err) {
-    console.error('Download error:', err);
-    return res.status(500).send('Error downloading file');
+    console.error('Doc view error:', err);
+    return res.status(500).send('Unable to open file');
   }
 });
 

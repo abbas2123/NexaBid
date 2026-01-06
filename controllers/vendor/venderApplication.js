@@ -62,7 +62,7 @@ exports.submitVendorApplication = async (req, res) => {
     const userId = req.user._id;
 
     existingApp = await vendorService.getApplicationStatus(userId);
-console.log('existingApp',existingApp);
+    console.log('existingApp', existingApp);
     // Security check
     if (existingApp && existingApp.userId.toString() !== userId.toString()) {
       return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
@@ -77,11 +77,7 @@ console.log('existingApp',existingApp);
         });
       }
       try {
-         await vendorService.submitApplicationService(
-          req.user,
-          req.files,
-          ACTION_TYPES.SCAN
-        );
+        await vendorService.submitApplicationService(req.user, req.files, ACTION_TYPES.SCAN);
       } catch (err) {
         return res.json({ success: false, message: err.message });
       }
@@ -96,14 +92,14 @@ console.log('existingApp',existingApp);
 
     // ---- 2) CONFIRMATION REQUIRED ----
     updatedApp = await vendorService.getApplicationStatus(userId);
-    console.log('updatedApp',updatedApp);
+    console.log('updatedApp', updatedApp);
 
-if (!updatedApp) {
-  return res.json({
-    success: false,
-    message: ERROR_MESSAGES.PLEASE_SCAN_DOCUMENTS_FIRST,
-  });
-}
+    if (!updatedApp) {
+      return res.json({
+        success: false,
+        message: ERROR_MESSAGES.PLEASE_SCAN_DOCUMENTS_FIRST,
+      });
+    }
     if (!isConfirmed) {
       return res.json({
         success: false,

@@ -26,7 +26,6 @@ exports.getAllProperties = async (req, res) => {
   }
 };
 
-
 exports.getPropertyDetails = async (req, res) => {
   try {
     const property = await propertyService.getPropertyDetails(req.params.id);
@@ -45,7 +44,6 @@ exports.getPropertyDetails = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
 
 exports.approveProperty = async (req, res) => {
   try {
@@ -70,7 +68,6 @@ exports.approveProperty = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
 
 exports.rejectProperty = async (req, res) => {
   try {

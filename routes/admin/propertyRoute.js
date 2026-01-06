@@ -1,14 +1,12 @@
 const express = require('express');
 
 const router = express.Router();
-const { adminProtect} = require('../../middlewares/adminAuth');
+const { adminProtect } = require('../../middlewares/adminAuth');
 const authProperty = require('../../controllers/admin/propertyManagement');
 
 router.get('/', adminProtect, authProperty.getAllProperties);
 
-
 router.patch('/approve/:id', adminProtect, authProperty.approveProperty);
-
 
 router.patch('/reject/:id', adminProtect, authProperty.rejectProperty);
 

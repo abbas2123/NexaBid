@@ -1,15 +1,8 @@
 const express = require('express');
-
 const router = express.Router();
-const multer = require('multer');
-const path = require('path');
 const postAwardController = require('../../controllers/vendor/postAward');
 const auth = require('../../middlewares/authMiddleware');
-const uploads = require('../../middlewares/agreementupload');
-
-const upload = multer({
-  dest: path.join(__dirname, '../../uploads/poAttachments'),
-});
+const upload = require('../../middlewares/cloudinaryUploader');
 
 router.get(
   '/tender/:id/post-award',
@@ -28,7 +21,7 @@ router.get('/tender/:id/agreement/upload', auth.protectRoute, postAwardControlle
 router.post(
   '/tender/:id/agreement/upload',
   auth.protectRoute,
-  uploads.single('agreement'),
+  upload.single('agreement'),
   postAwardController.uploadAgreement
 );
 
@@ -51,10 +44,14 @@ router.get('/tender/:tenderId/workorder/issue', auth.protectRoute, postAwardCont
 router.post(
   '/tender/:tenderId/workorder',
   auth.protectRoute,
-  uploads.single('workOrderFile'),
+  upload.single('pdfFile'),
   postAwardController.issueWorkOrder
 );
 
-router.get('/file/:id', auth.protectRoute, postAwardController.view);
-
+router.get('/workorder/file/:fileId', auth.protectRoute, postAwardController.viewWorkOrder);
+router.get(
+  '/work-orders/:workOrderId/tracking',
+  auth.protectRoute,
+  postAwardController.trackingPage
+);
 module.exports = router;

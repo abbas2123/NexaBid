@@ -6,7 +6,7 @@ const router = express.Router();
 const authController = require('../../controllers/user/userProfile');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const TransactionControler = require('../../controllers/user/transaction');
-const uploads = require('../../middlewares/agreementupload');
+const uploads = require('../../middlewares/cloudinaryUploader');
 
 router.get('/profile', authMiddleware.protectRoute, authController.userProfile);
 router.get('/status', authMiddleware.protectRoute, authController.getUserStatuspage);
@@ -35,4 +35,28 @@ router.post(
   authController.uploadSignedAgreement
 );
 router.get('/transactions', authMiddleware.protectRoute, TransactionControler.getTransaction);
+
+router.get('/work-orders/:id', authMiddleware.protectRoute, authController.getWorkOrderDetails);
+router.post(
+  '/work-orders/:woId/milestones/:mid/start',
+  authMiddleware.protectRoute,
+  authController.startMilestone
+);
+router.post(
+  '/work-orders/:woId/milestones/:mid/upload-proof',
+  authMiddleware.protectRoute,
+  uploads.single('proof'),
+  authController.uploadProof
+);
+router.post(
+  '/work-orders/:woId/milestones/:mid/complete',
+  authMiddleware.protectRoute,
+  authController.completeMilestone
+);
+router.post(
+  '/work-orders/:woId/complete',
+  authMiddleware.protectRoute,
+  authController.completeWorkOrder
+);
+
 module.exports = router;

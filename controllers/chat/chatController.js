@@ -115,6 +115,8 @@ exports.unreaded = async (req, res) => {
     res.json({ success: true, count: totalUnread });
   } catch (error) {
     console.error('Error fetching unread count:', error);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, error: ERROR_MESSAGES.SERVER_ERROR });
+    res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .json({ success: false, error: ERROR_MESSAGES.SERVER_ERROR });
   }
 };

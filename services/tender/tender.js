@@ -5,9 +5,9 @@ const statusCode = require('../../utils/statusCode');
 exports.getAllTenders = async (page = 1) => {
   const limit = 8; // tenders per page
   const skip = (page - 1) * limit;
-
+  const now = new Date();
   // Fetch tenders (only published)
-  const tenders = await Tender.find({ status: 'published' })
+  const tenders = await Tender.find({ status: 'published', bidEndAt: { $gt: now } })
     .sort({ createdAt: -1 })
     .skip(skip)
     .limit(limit)

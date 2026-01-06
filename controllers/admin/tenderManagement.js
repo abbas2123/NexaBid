@@ -1,6 +1,4 @@
-
 const Tender = require('../../models/tender');
-const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
 const notificationService = require('../../services/notificationService');
 const {
@@ -37,31 +35,17 @@ exports.getTenderDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const tender = await Tender.findById(id).populate('createdBy', 'name email').lean();
+    const tender = await Tender.findById(id)
+      .populate('createdBy', 'name email phone')
+      .populate('files.fileId')
+      .lean();
 
     if (!tender) {
-      return res.status(statusCode.NOT_FOUND).json({
-        success: false,
-        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
-      });
+      return res.status(404).json({ success: false, message: 'Tender not found' });
     }
-
-    const files = await File.find({
-      relatedType: 'tender',
-      relatedId: id,
-    }).lean();
-
     return res.json({
       success: true,
-      tender: {
-        ...tender,
-        files: files.map((f) => ({
-          fileId: f._id,
-          originalName: f.fileName,
-          url: f.fileUrl,
-          size: f.size,
-        })),
-      },
+      tender,
     });
   } catch (error) {
     console.error('Tender fetch error', error);
@@ -96,7 +80,7 @@ exports.updateTenderStatus = async (req, res) => {
 
     tender.status = status;
     if (comment && comment.trim() !== '') {
-      tender.adminComment = comment.trim(); 
+      tender.adminComment = comment.trim();
     }
 
     await tender.save();
@@ -104,14 +88,13 @@ exports.updateTenderStatus = async (req, res) => {
 
     if (status === TENDER_STATUS.PUBLISHED) {
       await notificationService.sendNotification(
-        tender.createdBy, 
+        tender.createdBy,
         NOTIFICATION_MESSAGES.TENDER_PUBLISHED,
         `/tenders/${tender._id}`,
         io
       );
     }
 
-  
     if (status === TENDER_STATUS.REJECTED) {
       await notificationService.sendNotification(
         tender.createdBy,
@@ -121,7 +104,6 @@ exports.updateTenderStatus = async (req, res) => {
       );
     }
 
-   
     if (status === TENDER_STATUS.CLOSED) {
       await notificationService.sendNotification(
         tender.createdBy,

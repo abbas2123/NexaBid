@@ -12,10 +12,14 @@ exports.getPublisherPostAwardPage = async (req, res) => {
     const userId = req.user._id;
 
     const result = await postAwardService.getPublisherPostAwardService(tenderId, userId);
+    console.log('vvdvdv', result.workOrderId);
+    if (result.redirectToTracking) {
+      return res.redirect(`/publisher/work-orders/${result.workOrderId}/tracking`);
+    }
 
     if (result.redirectToEvaluation) return res.redirect(result.url);
 
-    return res.render('profile/postAward', {
+    res.render('profile/postAward', {
       layout: LAYOUTS.USER_LAYOUT,
       ...result,
       user: req.user,
@@ -53,7 +57,8 @@ exports.showCreatePOPage = async (req, res) => {
       tenderId,
       isWinner: true,
     }).populate('vendorId');
-    if (!winnerBid) return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.WINNER_VENDOR_NOT_FOUND);
+    if (!winnerBid)
+      return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.WINNER_VENDOR_NOT_FOUND);
 
     const vendor = winnerBid.vendorId;
     const { amount } = winnerBid.quotes;
@@ -80,30 +85,29 @@ exports.createPO = async (req, res) => {
       tenderId,
       publisher: req.user,
       form: req.body,
-      attachment: req.file,
       io: req.app.get('io'),
     });
+
     const winnerBid = await TenderBid.findOne({
       tenderId,
       isWinner: true,
     }).populate('vendorId');
-    if (!winnerBid) return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.WINNER_VENDOR_NOT_FOUND);
 
     const vendor = winnerBid.vendorId;
 
     return res.render('profile/createPO', {
       layout: LAYOUTS.USER_LAYOUT,
-      tender: po.tender,
+      tender: await Tender.findById(tenderId),
       user: req.user,
       showSuccessModal: true,
-      poNumber: po.po.poNumber,
-      fileUrl: po.po.fileUrl,
+      poNumber: po.poNumber,
+      fileUrl: po.pdfFile,
       vendor,
       amount: winnerBid.quotes.amount,
     });
   } catch (err) {
     console.error(err);
-    res.status(statusCode.INTERNAL_ERROR).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).send(err.message);
   }
 };
 
@@ -122,7 +126,9 @@ exports.viewPO = async (req, res) => {
     });
   } catch (err) {
     console.error(err);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
+    return res
+      .status(statusCode.INTERNAL_SERVER_ERROR)
+      .send(err.message || ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
@@ -162,10 +168,8 @@ exports.uploadAgreement = async (req, res) => {
 exports.view = async (req, res) => {
   try {
     const filePath = await postAwardService.viewAgreementFile(req.params.id);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline');
-    return res.sendFile(filePath);
+    console.log(filePath);
+    return res.redirect(filePath);
   } catch (err) {
     console.error(err.message);
 
@@ -193,7 +197,7 @@ exports.rejectAgreement = async (req, res) => {
       agreementId: req.params.agreementId,
       remarks: req.body.remarks,
     });
-
+    console.log('agreement1', agreement);
     return res.redirect(`/publisher/tender/${agreement.tenderId}/post-award?agreement=rejected`);
   } catch (err) {
     console.error(err.message);
@@ -225,25 +229,74 @@ exports.issueWorkOrder = async (req, res) => {
   try {
     const { tenderId } = req.params;
 
-    await postAwardService.issueWorkOrder(req.user._id, tenderId, req.body, req.file);
+    const wo = await postAwardService.issueWorkOrder(req.user._id, tenderId, req.body, req.file);
 
-    res.redirect(`/publisher/tender/${tenderId}/post-award`);
+    // res.json({
+    //   success: true,
+    //   tenderId,
+    // });
+    return res.redirect(`/publisher/work-orders/${wo._id}/tracking`);
   } catch (err) {
     console.error('Issue work order error:', err.message);
     res.status(statusCode.BAD_REQUEST).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
   }
 };
 
-exports.view = async (req, res) => {
+exports.viewWorkOrder = async (req, res) => {
   try {
-    console.log('PARAM ID:', req.params.id);
-    const filePath = await postAwardService.getWorkOrderFilePath(req.user._id, req.params.id);
-
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'inline');
-    res.sendFile(filePath);
+    const fileUrl = await postAwardService.getWorkOrderFilePath(req.params.fileId);
+    console.log('fileUrl', fileUrl);
+    return res.redirect(fileUrl);
   } catch (err) {
     console.error('View work order error:', err.message);
     res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.WORK_ORDER_NOT_FOUND);
   }
+};
+
+exports.trackingPage = async (req, res) => {
+  const workOrder = await postAwardService.getTrackingData(req.params.workOrderId);
+
+  if (workOrder.redirectToPostAward) return res.redirect('/auth/dashboard');
+
+  res.render('profile/workOrderTraking', {
+    layout: LAYOUTS.USER_LAYOUT,
+    workOrder,
+    user: req.user,
+  });
+};
+
+exports.addNote = async (req, res) => {
+  const { workOrderId } = req.params;
+  const { content } = req.body;
+
+  if (!content) return res.status(400).json({ success: false, message: 'Note empty' });
+
+  await postAwardService.addNote(workOrderId, req.user._id, content);
+  res.json({ success: true });
+};
+
+exports.reviewMilestone = async (req, res) => {
+  await postAwardService.reviewMilestone(
+    req.params.id,
+    req.params.mid,
+    req.body.action,
+    req.body.comment
+  );
+  res.json({ success: true });
+};
+
+exports.approveProof = async (req, res) => {
+  console.log('vdk', req.params);
+  await postAwardService.approveProof(req.params.workOrderId, req.params.pid);
+  res.json({ success: true });
+};
+
+exports.rejectProof = async (req, res) => {
+  await postAwardService.rejectProof(req.params.workOrderId, req.params.pid, req.body.reason);
+  res.json({ success: true });
+};
+
+exports.completeWorkOrder = async (req, res) => {
+  await postAwardService.completeWorkOrder(req.params.workOrderId);
+  res.json({ success: true });
 };

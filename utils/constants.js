@@ -32,10 +32,6 @@ module.exports = {
   },
   APPLICATION_STATUS: {
     SUBMITTED: 'submitted',
-    DRAFT: 'draft',
-    APPROVED: 'approved',
-    REJECTED: 'rejected',
-    PENDING: 'pending', 
   },
   TENDER_STATUS: {
     DRAFT: 'draft',
@@ -48,7 +44,8 @@ module.exports = {
     SCAN: 'scan',
   },
   ERROR_MESSAGES: {
-    INVALID_APPLICATION_STATE: 'INVALID_APPLICATION_STATE',
+    AGREEMENT_NOT_SIGNED: 'AGREEMENT_NOT_SIGNED',
+    PO_NOT_ACCEPTED_YET: 'PO_NOT_ACCEPTED_YET',
     INVALID_AUCTION: 'INVALID_AUCTION',
     UNAUTHORIZED: 'UNAUTHORIZED',
     PAYMENT_REQUIRED: 'PAYMENT_REQUIRED',

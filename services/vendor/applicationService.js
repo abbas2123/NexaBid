@@ -1,19 +1,22 @@
-const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
+
+const cloudinary = require('../../config/cloudinary');
 const vendorApplication = require('../../models/vendorApplication');
 const OCRResult = require('../../models/OCR_Result');
 const FraudFlag = require('../../models/fraudFlag');
-const fileModel = require('../../models/File');
+const File = require('../../models/File'); // ⬅ your File model
 const ocrService = require('../../utils/ocr');
 const fraudService = require('../../utils/fraudFlag');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
+// QUERIES
+exports.getApplicationStatus = async (userId) =>
+  vendorApplication.findOne({ userId }).populate('documents.fileId').populate('ocrResultId');
+
 exports.checkExistingApplication = async (userId) =>
   vendorApplication.findOne({ userId }).populate('documents.fileId');
-exports.getApplicationStatus = async (userId) =>
-  await vendorApplication.findOne({ userId }).populate('documents.fileId').populate('ocrResultId');
 
+// MAIN SERVICE
 exports.submitApplicationService = async (user, files, actionType) => {
   if (actionType !== 'scan') {
     return {
@@ -24,27 +27,25 @@ exports.submitApplicationService = async (user, files, actionType) => {
       fraud: null,
     };
   }
-  if (actionType === 'scan') {
-    if (!files || files.length === 0) {
-      throw new Error(ERROR_MESSAGES.UPLOAD_AT_LEAST_ONE_DOC);
-    }
+
+  if (!files || files.length === 0) {
+    throw new Error(ERROR_MESSAGES.UPLOAD_AT_LEAST_ONE_DOC);
   }
+
   const existingApp = (await vendorApplication.findOne({ userId: user._id })) || {};
 
-  const golobalChecksums = await fileModel
-    .find({ relatedType: 'vendor_application' })
-    .then((files) => files.map((f) => f.checksum));
+  // Get all existing checksums
+  const globalChecksums = await File.find({ relatedType: 'vendor_application' }).then((files) =>
+    files.map((f) => f.checksum)
+  );
 
-  const existingFileChecksums = await fileModel
-    .find({
-      _id: { $in: existingApp.documents?.map((d) => d.fileId) || [] },
-    })
-    .then((docs) => docs.map((f) => f.checksum));
+  const existingFileChecksums = await File.find({
+    _id: { $in: existingApp.documents?.map((d) => d.fileId) || [] },
+  }).then((docs) => docs.map((f) => f.checksum));
 
-  const existingFilesums = [...golobalChecksums, ...existingFileChecksums];
+  const existingChecksums = [...globalChecksums, ...existingFileChecksums];
 
   const newDocs = [];
-
   const extractedData = {
     businessName: null,
     panNumber: null,
@@ -53,27 +54,50 @@ exports.submitApplicationService = async (user, files, actionType) => {
   };
 
   for (const file of files) {
-    const filePath = path.join(__dirname, '../../uploads/vendor-docs', file.filename);
+    if (!file.buffer) {
+      throw new Error('Upload failed: file buffer missing');
+    }
 
-    const fileBuffer = fs.readFileSync(filePath);
-    const checksum = crypto.createHash('md5').update(fileBuffer).digest('hex');
+    // 1) CHECKSUM from buffer
+    const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
 
-    if (existingFilesums.includes(checksum)) {
-      console.log('⛔ Duplicate prevented:', file.filename);
-      fs.unlinkSync(filePath);
+    if (existingChecksums.includes(checksum)) {
       throw new Error(ERROR_MESSAGES.DUPLICATE_DOCUMENT);
     }
 
-    existingFilesums.push(checksum);
+    existingChecksums.push(checksum);
 
-    const fileData = await fileModel.create({
+    // 2) UPLOAD to Cloudinary using buffer
+    const cldResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          resource_type: 'auto',
+          folder: 'vendor_docs',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
+      uploadStream.end(file.buffer); // ⬅ send buffer
+    });
+
+    // 3) CREATE File model record
+    const fileData = await File.create({
       ownerId: user._id,
       relatedType: 'vendor_application',
       relatedId: existingApp?._id || null,
-      fileName: file.filename,
-      fileUrl: `/uploads/vendor-docs/${file.filename}`,
-      mimeType: file.mimetype,
+      fileName: file.originalname,
+      fileUrl: cldResult.secure_url,
       checksum,
+      mimeType: file.mimetype,
+      size: file.size || file.buffer.length, // ⬅ use your File model's size field
+      version: 1,
+      metadata: {
+        cloudinary_public_id: cldResult.public_id,
+        cloudinary_version: cldResult.version,
+        // add any other cldResult fields you want
+      },
     });
 
     newDocs.push({
@@ -82,18 +106,22 @@ exports.submitApplicationService = async (user, files, actionType) => {
       uploadedAt: new Date(),
     });
 
-    const ocrResult = await ocrService.extractTextFromImage(filePath);
+    // 4) OCR
+    const ocrResult = await ocrService.extractTextFromImage(cldResult.secure_url);
     extractedData.text += `\n${ocrResult.text || ''}`;
 
-    if (!extractedData.businessName && ocrResult.businessName)
+    if (!extractedData.businessName && ocrResult.businessName) {
       extractedData.businessName = ocrResult.businessName;
-
-    if (!extractedData.panNumber && ocrResult.panNumber)
-      extractedData.panNumber = ocrResult.panNumber;
-
-    if (!extractedData.gstNumber && ocrResult.gstNumber)
+    }
+    if (!extractedData.panNumber && ocrResult.panNumber) {
+      extractedData.panNumber = ocrResult.panNumber.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    }
+    if (!extractedData.gstNumber && ocrResult.gstNumber) {
       extractedData.gstNumber = ocrResult.gstNumber;
+    }
   }
+
+  // Attach docs
   if (newDocs.length > 0) {
     await vendorApplication.findOneAndUpdate(
       { userId: user._id },
@@ -102,12 +130,11 @@ exports.submitApplicationService = async (user, files, actionType) => {
     );
   }
 
+  // OCR + Fraud + Update app (same as before)
   let ocrFileId = newDocs[0]?.fileId;
-
   if (!ocrFileId && existingApp?.documents?.length > 0) {
     ocrFileId = existingApp.documents[existingApp.documents.length - 1].fileId;
   }
-
   if (!ocrFileId) {
     throw new Error(ERROR_MESSAGES.CANNOT_RUN_OCR);
   }
@@ -142,6 +169,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
     },
     { upsert: true }
   );
+
   const updatedApp = await vendorApplication
     .findOne({ userId: user._id })
     .populate('documents.fileId');

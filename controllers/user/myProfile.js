@@ -1,4 +1,3 @@
-const router = require('../../routes/user/authRoute');
 const myProfileService = require('../../services/profile/myProfileService');
 const statusCode = require('../../utils/statusCode');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
@@ -6,7 +5,8 @@ const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 exports.changePassword = async (req, res) => {
   try {
     console.log('req.body', req.body);
-    const { userId, newPassword, currentPassword, confirmPassword } = req.body;
+    const { newPassword, currentPassword, confirmPassword } = req.body;
+    const userId = req.user._id;
 
     if (!newPassword || !currentPassword || !confirmPassword) {
       return res.json({
@@ -15,12 +15,7 @@ exports.changePassword = async (req, res) => {
       });
     }
 
-    const response = await myProfileService.changePassword(
-      userId,
-      currentPassword,
-      newPassword,
-      confirmPassword
-    );
+    await myProfileService.changePassword(userId, currentPassword, newPassword, confirmPassword);
 
     return res.status(statusCode.OK).json({
       success: true,
@@ -38,7 +33,9 @@ exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user && req.user._id;
     if (!userId)
-      return res.status(statusCode.UNAUTHORIZED).json({ success: false, message: ERROR_MESSAGES.UNAUTHORIZED });
+      return res
+        .status(statusCode.UNAUTHORIZED)
+        .json({ success: false, message: ERROR_MESSAGES.UNAUTHORIZED });
 
     const fileInput = req.file || req.files || null;
 

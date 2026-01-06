@@ -1,7 +1,7 @@
 const vendorService = require('../../services/vendor/applicationService');
 const myProfileService = require('../../services/profile/profileService');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, _SUCCESS_MESSAGES } = require('../../utils/constants');
 const User = require('../../models/user');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
@@ -46,7 +46,7 @@ exports.getUserStatuspage = async (req, res) => {
       vendorApp,
       tenderStatus,
       propertyStatus,
-      tenders: userTenders, // ADD THIS
+      tenders: userTenders,
       latestTender,
       properties: userProperties || [],
     });
@@ -191,7 +191,13 @@ exports.viewTenderPostAward = async (req, res) => {
 
     const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
     console.log(result.po);
-
+    if (result.po && result.po.status === 'vendor_accepted') {
+      return res.redirect(`/user/${tenderId}/upload`);
+    }
+    if (result.redirectToWorkOrder) {
+      console.log('kvbkjdkjvkjwbvkjv');
+      return res.redirect(`/user/work-orders/${result.workOrderId}`);
+    }
     if (result.loseView) {
       return res.render('profile/tenderLoseView', {
         layout: LAYOUTS.USER_LAYOUT,
@@ -262,16 +268,16 @@ exports.getUploadPage = async (req, res) => {
   try {
     const { tenderId } = req.params;
 
-    const { publisherAgreement } = await myProfileService.getAgreementUploadData(
-      tenderId,
-      req.user._id
-    );
+    const data = await myProfileService.getAgreementUploadData(tenderId, req.user._id);
 
     return res.render('profile/agreementUpload', {
       layout: LAYOUTS.USER_LAYOUT,
       tenderId,
       user: req.user,
-      publisherAgreement,
+      publisherAgreement: data.publisherAgreement,
+      approved: data.approved,
+      remarks: data.remarks,
+      vendorAgreement: data.vendorAgreement || null,
     });
   } catch (err) {
     console.error('Agreement page error:', err.message);
@@ -300,19 +306,103 @@ exports.getUploadPage = async (req, res) => {
 
 exports.uploadSignedAgreement = async (req, res) => {
   try {
+    console.log('sdvdvdvd');
     await myProfileService.uploadVendorAgreement({
       tenderId: req.params.tenderId,
       vendorId: req.user._id,
       file: req.file,
     });
-
     return res.redirect(`/user/my-participation/tender/${req.params.tenderId}?agreement=uploaded`);
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === ERROR_MESSAGES.NO_FILE) {
-      return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.NO_FILE_UPLOADED);
+    const base = `/user/my-participation/tender/${req.params.tenderId}`;
+
+    if (err.message === ERROR_MESSAGES.NO_FILE) return res.redirect(`${base}?error=no_file`);
+
+    if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND)
+      return res.redirect(`${base}?error=publisher_agreement_missing`);
+
+    if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED)
+      return res.redirect(`${base}?error=po_not_accepted`);
+
+    if (err.message === ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED)
+      return res.redirect(`${base}?error=already_uploaded`);
+
+    return res.redirect(`${base}?error=upload_failed`);
+  }
+};
+
+exports.getWorkOrderDetails = async (req, res, next) => {
+  try {
+    const workOrder = await myProfileService.getWorkOrderDetailsService(req.params.id);
+
+    if (!workOrder) {
+      return res.status(404).render('error/404', {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: 'Work Order not found',
+        user: req.user,
+      });
     }
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.ERROR_UPLOADING_AGREEMENT);
+
+    res.render('profile/workOrderForbuyer', {
+      layout: LAYOUTS.USER_LAYOUT,
+      workOrder,
+      user: req.user,
+    });
+  } catch (error) {
+    console.error('Error fetching work order:', error);
+    next(error); // Pass to global error handler
+  }
+};
+
+exports.uploadProof = async (req, res) => {
+  try {
+    await myProfileService.uploadProofService(
+      req.params.woId,
+      req.params.mid,
+      req.file,
+      req.user._id
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+exports.completeMilestone = async (req, res) => {
+  try {
+    await myProfileService.completeMilestoneService(req.params.woId, req.params.mid);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+exports.completeWorkOrder = async (req, res) => {
+  try {
+    await myProfileService.completeWorkOrderService(req.params.woId);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ success: false, message: err.message });
+  }
+};
+
+exports.startMilestone = async (req, res) => {
+  try {
+    const { woId, mid } = req.params;
+
+    const milestone = await myProfileService.startMilestoneService(woId, mid, req.user._id);
+
+    res.json({
+      success: true,
+      message: 'Milestone started successfully',
+      milestone,
+    });
+  } catch (err) {
+    res.status(err.status || 500).json({
+      success: false,
+      message: err.message || 'Server error',
+    });
   }
 };

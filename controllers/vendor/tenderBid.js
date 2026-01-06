@@ -1,6 +1,6 @@
 const statusCode = require('../../utils/statusCode');
 const tenderBidService = require('../../services/tender/tenderBid');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES} = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getTenderTechBidForm = async (req, res) => {
   try {
@@ -25,7 +25,8 @@ exports.getTenderTechBidForm = async (req, res) => {
   } catch (err) {
     console.error(err);
 
-    if (err.message === ERROR_MESSAGES.NOT_VENDOR) return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.NOT_A_VENDOR);
+    if (err.message === ERROR_MESSAGES.NOT_VENDOR)
+      return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.NOT_A_VENDOR);
 
     return res.status(statusCode.INTERNAL_ERROR).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
   }
@@ -85,7 +86,8 @@ exports.getTenderFin = async (req, res) => {
 
     const tenderId = req.params.id;
 
-    if (err.message === ERROR_MESSAGES.NO_BID) return res.redirect(`/vendor/tender/${tenderId}/bid`);
+    if (err.message === ERROR_MESSAGES.NO_BID)
+      return res.redirect(`/vendor/tender/${tenderId}/bid`);
 
     if (err.message === ERROR_MESSAGES.TECH_REJECTED)
       return res.redirect(`/vendor/tender/${tenderId}/bid?rejected=true`);

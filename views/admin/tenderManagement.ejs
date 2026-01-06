@@ -214,22 +214,40 @@ document.querySelectorAll(".tender-review-btn").forEach(btn => {
     : ""
 }
 
-  <h3 class="font-semibold mt-4">Documents:</h3>
-  ${
-    t.files && t.files.length
-      ? t.files.map(d => `
-          <p>
-            <a href="/admin/file/${d.fileId}" 
-               class="text-blue-600 underline" target="_blank">
-              ${d.originalName || "Document"}
+ <h3 class="font-semibold mt-4">Documents:</h3>
+${
+  t.files && t.files.length
+    ? t.files.map(d => {
+        const file = d.fileId;
+        if (!file?.fileUrl) return "";
+
+        let viewUrl = file.fileUrl;
+
+        // Only for PDFs (raw)
+        if (file.mimeType === "application/pdf") {
+          viewUrl = file.fileUrl.replace(
+            "/raw/upload/",
+            "/raw/upload/fl_attachment:false/"
+          );
+        }
+
+        const isImage = file.mimeType?.startsWith("image/");
+
+        return `
+          <div class="mt-2">
+            <a href="${viewUrl}" target="_blank" class="text-blue-600 underline">
+              ${d.originalName || file.fileName}
             </a>
             <span class="text-xs text-gray-500">
-              (${(d.size / 1024).toFixed(1)} KB)
+              (${(file.size/1024).toFixed(1)} KB)
             </span>
-          </p>
-        `).join("")
-      : "<p class='text-gray-400'>No documents uploaded</p>"
-  }
+
+            ${isImage ? `<img src="${viewUrl}" class="mt-2 h-32 rounded border">` : ""}
+          </div>
+        `;
+      }).join("")
+    : "<p class='text-gray-400'>No documents uploaded</p>"
+}
 `;
     document.getElementById("tenderModal").classList.remove("hidden");
     document.getElementById("tenderModal").classList.add("flex");

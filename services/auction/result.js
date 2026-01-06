@@ -1,6 +1,5 @@
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid.js');
-const User = require('../../models/user.js');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getAuctionResultForPublisher = async (propertyId, publisherId) => {

@@ -122,9 +122,7 @@
 
       <% if (doc.fileId) { %>
         <a 
-          href="<%= doc.fileId.fileUrl 
-                  ? doc.fileId.fileUrl 
-                  : '/uploads/vendor-docs/' + doc.fileId.fileName %>"
+          href="<%= doc.fileId.fileUrl %>"
           target="_blank"
           class="bg-gray-100 p-2 text-center rounded block hover:bg-gray-200"
         >

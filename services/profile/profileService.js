@@ -10,6 +10,14 @@ const File = require('../../models/File');
 const PropertyParticipant = require('../../models/propertyParticipant');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 const TenderParticipants = require('../../models/tenderParticipants');
+const cloudinary = require('../../config/cloudinary');
+
+const upload = (buffer, folder) =>
+  new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream({ resource_type: 'raw', folder }, (e, r) => (e ? reject(e) : resolve(r)))
+      .end(buffer);
+  });
 
 exports.userStatus = async (userId) => {
   const vendorApp = await vendorApplication
@@ -214,25 +222,43 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
     };
   }
 
-  const po = await PurchaseOrder.findOne({ tenderId }).sort({ createdAt: -1 }).populate('pdfFile');
+  const po = await PurchaseOrder.findOne({
+    tenderId,
+    status: { $ne: 'archived' },
+  })
+    .sort({ createdAt: -1 })
+    .populate('pdfFile');
 
   console.log('rvevec', po);
-  const poCount = await PurchaseOrder.countDocuments({ tenderId });
+  const poCount = await PurchaseOrder.countDocuments({
+    tenderId,
+    status: { $ne: 'archived' },
+  });
+
   const isRegenerated = poCount > 1;
 
   const agreement = await Agreement.findOne({ tenderId })
     .populate('publisherAgreement')
     .populate('uploadedByVendor');
 
-  const workOrder = await WorkOrder.findOne({ tenderId }).populate('pdfFile');
+  const workOrder = await WorkOrder.findOne({ tenderId })
+    .populate('pdfFile')
+    .populate('vendorId', 'name email')
+    .populate('issuedBy', 'name email');
 
   const redirectToAgreementUpload =
     po &&
     po.status === 'vendor_accepted' &&
     agreement &&
     agreement.publisherAgreement &&
-    !agreement.uploadedByVendor;
-
+    (!agreement.uploadedByVendor || agreement.approvedByPublisher === false);
+  // 🔒 FINAL LOCK — redirect to tracking page
+  if (agreement && agreement.approvedByPublisher === true && workOrder) {
+    return {
+      redirectToWorkOrder: true,
+      workOrderId: workOrder._id,
+    };
+  }
   return {
     loseView: false,
     redirectToAgreementUpload,
@@ -247,7 +273,7 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
 
 exports.respondToPO = async ({ poId, action, reason }) => {
   const po = await PurchaseOrder.findById(poId).populate('tenderId');
-
+  console.log('action', action);
   if (!po) {
     throw new Error(ERROR_MESSAGES.PO_NOT_FOUND);
   }
@@ -279,49 +305,155 @@ exports.respondToPO = async ({ poId, action, reason }) => {
 };
 
 exports.getAgreementUploadData = async (tenderId, userId) => {
-  const po = await PurchaseOrder.findOne({ tenderId }).sort({ createdAt: -1 });
-
-  console.log('veenfw', userId);
+  const po = await PurchaseOrder.findOne({
+    tenderId,
+    status: { $ne: 'archived' },
+  }).sort({ createdAt: -1 });
 
   if (!po) throw new Error(ERROR_MESSAGES.PO_NOT_CREATED);
-
   if (po.vendorId.toString() !== userId.toString()) throw new Error(ERROR_MESSAGES.NOT_WINNER);
-
   if (po.status !== 'vendor_accepted') throw new Error(ERROR_MESSAGES.PO_NOT_ACCEPTED);
 
-  const agreement = await Agreement.findOne({ tenderId }).populate('publisherAgreement');
+  const agreement = await Agreement.findOne({ tenderId })
+    .populate('publisherAgreement')
+    .populate('uploadedByVendor');
 
-  if (!agreement || !agreement.publisherAgreement) throw new Error(ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND);
+  if (!agreement || !agreement.publisherAgreement)
+    throw new Error(ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND);
 
   return {
     publisherAgreement: agreement.publisherAgreement,
+    approved: agreement.approvedByPublisher,
+    remarks: agreement.publisherRemarks,
   };
 };
 
 exports.uploadVendorAgreement = async ({ tenderId, vendorId, file }) => {
-  if (!file) {
-    throw new Error(ERROR_MESSAGES.NO_FILE);
-  }
+  if (!file?.buffer) throw new Error(ERROR_MESSAGES.NO_FILE);
 
-  const fileData = await File.create({
-    fileName: file.filename,
-    originalName: file.originalname,
-    fileUrl: `/uploads/agreement/${file.filename}`,
-    uploadedBy: vendorId,
-  });
+  const activePO = await PurchaseOrder.findOne({
+    tenderId,
+    status: { $ne: 'archived' },
+  }).sort({ createdAt: -1 });
+
+  if (!activePO) throw new Error(ERROR_MESSAGES.PO_NOT_CREATED);
+  if (activePO.vendorId.toString() !== vendorId.toString())
+    throw new Error(ERROR_MESSAGES.NOT_WINNER);
+  if (activePO.status !== 'vendor_accepted') throw new Error(ERROR_MESSAGES.PO_NOT_ACCEPTED);
 
   let agreement = await Agreement.findOne({ tenderId });
+  if (!agreement || !agreement.publisherAgreement)
+    throw new Error(ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND);
 
-  if (!agreement) {
-    agreement = await Agreement.create({
-      tenderId,
-      vendorId,
-      uploadedByVendor: fileData._id,
-    });
-  } else {
-    agreement.uploadedByVendor = fileData._id;
-    await agreement.save();
-  }
+  // 🔥 Allow re-upload only if publisher rejected
+  if (agreement.uploadedByVendor && agreement.approvedByPublisher !== false)
+    throw new Error(ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED);
+
+  // upload
+  const cld = await upload(file.buffer, 'post_award/vendor_agreements');
+
+  const fileDoc = await File.create({
+    ownerId: vendorId,
+    fileName: file.originalname,
+    fileUrl: cld.secure_url,
+    mimeType: file.mimetype,
+    size: file.size,
+    metadata: { public_id: cld.public_id },
+  });
+
+  agreement.uploadedByVendor = fileDoc._id;
+  agreement.approvedByPublisher = null; // reset status
+  agreement.publisherRemarks = null;
+  await agreement.save();
 
   return true;
+};
+
+exports.getWorkOrderDetailsService = async (workOrderId) => {
+  return WorkOrder.findById(workOrderId)
+    .populate('vendorId', 'name email')
+    .populate('issuedBy', 'name email')
+    .populate('tenderId', 'title')
+    .populate('milestones')
+    .populate('vendorProofs')
+    .populate('attachments')
+    .populate('pdfFile')
+    .populate('notes.author', 'name email');
+};
+
+exports.uploadProofService = async (woId, milestoneId, file, _userId) => {
+  console.log('woId', woId);
+  const wo = await WorkOrder.findById(woId);
+  console.log(wo);
+  if (!wo) throw new Error('WORK_ORDER_NOT_FOUND');
+
+  const m = wo.milestones.id(milestoneId);
+  if (!m) throw new Error('MILESTONE_NOT_FOUND');
+
+  const cld = await upload(file.buffer, 'work_orders/proofs');
+
+  wo.vendorProofs.push({
+    filename: file.originalname,
+    fileUrl: cld.secure_url,
+    mimetype: file.mimetype,
+    size: file.size,
+    status: 'pending',
+  });
+  await wo.save();
+};
+
+exports.completeMilestoneService = async (woId, milestoneId) => {
+  const wo = await WorkOrder.findById(woId);
+  const m = wo.milestones.id(milestoneId);
+
+  m.status = 'completed';
+  m.approvedAt = new Date();
+  await wo.save();
+};
+
+exports.completeWorkOrderService = async (woId) => {
+  const wo = await WorkOrder.findById(woId);
+
+  if (!wo.milestones.every((m) => m.status === 'completed'))
+    throw new Error('COMPLETE_ALL_MILESTONES_FIRST');
+
+  wo.status = 'completed';
+  await wo.save();
+};
+exports.startMilestoneService = async (woId, mid, userId) => {
+  const workOrder = await WorkOrder.findById(woId);
+
+  if (!workOrder) {
+    throw { status: 404, message: 'Work order not found' };
+  }
+
+  // Authorization
+  if (
+    workOrder.vendorId.toString() !== userId.toString() &&
+    workOrder.issuedBy.toString() !== userId.toString()
+  ) {
+    throw { status: 403, message: 'Not authorized to update this milestone' };
+  }
+
+  const milestone = workOrder.milestones.id(mid);
+
+  if (!milestone) {
+    throw { status: 404, message: 'Milestone not found' };
+  }
+
+  if (!['scheduled', 'pending'].includes(milestone.status)) {
+    throw { status: 400, message: 'Milestone cannot be started from current status' };
+  }
+
+  milestone.status = 'in_progress';
+  milestone.startedAt = new Date();
+
+  await workOrder.save();
+
+  return {
+    _id: milestone._id,
+    description: milestone.description,
+    status: milestone.status,
+    startedAt: milestone.startedAt,
+  };
 };

@@ -70,18 +70,12 @@
 
         <!-- IMAGE -->
         <img
-          src="<%=
-  p.media && p.media.length > 0
-    ? p.media[0].url.startsWith('/')
-      ? p.media[0].url
-      : '/' + p.media[0].url
-    : 'https://via.placeholder.com/400x250'
-%>"
-          onerror="this.onerror=null;this.src='/images/default-property.jpg';"
-          alt="<%= p.title %>"
-          loading="lazy"
-          class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105"
-        />
+  src="<%= p.media && p.media.length > 0 ? p.media[0].url : 'https://via.placeholder.com/400x250' %>"
+  onerror="this.onerror=null;this.src='/images/default-property.jpg';"
+  alt="<%= p.title %>"
+  loading="lazy"
+  class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105"
+/>
 
         <!-- TITLE -->
         <h3 class="font-semibold text-lg truncate text-slate-900 dark:text-slate-100">

@@ -92,9 +92,9 @@
 
 
     <!------------------------ PRICING ------------------------------>
-   <section class="bg-white p-6 shadow-sm rounded-lg border space-y-4">
+<section class="bg-white p-6 shadow-sm rounded-lg border space-y-6">
 
-  <div class="flex justify-between">
+  <div class="flex justify-between items-center">
     <h2 class="text-lg font-bold">Pricing</h2>
 
     <label class="flex items-center gap-2 text-sm">
@@ -104,25 +104,17 @@
     </label>
   </div>
 
-  <!-- BUY NOW PRICE (ONLY FOR NON-AUCTION) -->
-  <div>
-    <label class="font-medium">Buy Now Price *</label>
-    <input type="number" id="buyNowPrice" name="buyNowPrice"
-           value="<%= property?.buyNowPrice || '' %>"
-           class="border rounded-lg p-2 w-full">
-  </div>
-
   <!-- AUCTION FIELDS -->
   <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-      <label class="font-medium">Base Price *</label>
+      <label class="font-medium block mb-1">Base Price *</label>
       <input type="number" id="basePrice" name="basePrice"
              value="<%= property?.basePrice || '' %>"
              class="border rounded-lg p-2 w-full">
     </div>
 
     <div>
-      <label class="font-medium">Auction Step *</label>
+      <label class="font-medium block mb-1">Auction Step *</label>
       <input type="number" id="auctionStep" name="auctionStep"
              value="<%= property?.auctionStep || '' %>"
              class="border rounded-lg p-2 w-full">
@@ -131,45 +123,27 @@
 
   <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-      <label class="font-medium">Reserve Price *</label>
+      <label class="font-medium block mb-1">Reserve Price *</label>
       <input type="number" id="auctionReservePrice" name="auctionReservePrice"
              value="<%= property?.auctionReservePrice || '' %>"
              class="border rounded-lg p-2 w-full">
     </div>
 
     <div>
-      <label class="font-medium">Auto Extend (mins)</label>
-      <input type="number" id="auctionAutoExtendMins" name="auctionAutoExtendMins"
-             value="<%= property?.auctionAutoExtendMins || '' %>"
-             class="border rounded-lg p-2 w-full">
+      <label class="font-medium block mb-1">Auction Starts At</label>
+      <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
+        value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
+        class="border rounded-lg p-2 w-full">
     </div>
   </div>
 
   <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div>
-      <label class="font-medium">Last Bid Window (mins)</label>
-      <input type="number" id="auctionLastBidWindowMins" name="auctionLastBidWindowMins"
-             value="<%= property?.auctionLastBidWindowMins || '' %>"
-             class="border rounded-lg p-2 w-full">
+      <label class="font-medium block mb-1">Auction Ends At</label>
+      <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
+        value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
+        class="border rounded-lg p-2 w-full">
     </div>
-
-    <div>
-      <label class="font-medium">Auction Starts At</label>
-      <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
-  value="<%= property?.auctionStartsAt
-  ? new Date(property.auctionStartsAt).toISOString().slice(0,16)
-  : '' %>"
-  class="border rounded-lg p-2 w-full">
-    </div>
-  </div>
-
-  <div class="auctionFields">
-    <label class="font-medium">Auction Ends At</label>
-    <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
-  value="<%= property?.auctionEndsAt
-  ? new Date(property.auctionEndsAt).toISOString().slice(0,16)
-  : '' %>"
-  class="border rounded-lg p-2 w-full">
   </div>
 
 </section>
@@ -266,15 +240,15 @@ console.log("Edit Mode?", isEditMode);
 // 🔥 Toggle auction fields
 const isAuctionInput = document.getElementById("isAuction");
 const auctionFields = document.querySelectorAll(".auctionFields");
-const buyNowPrice = document.getElementById("buyNowPrice");
+// const buyNowPrice = document.getElementById("buyNowPrice");
 
 function updatePricingUI() {
   if (isAuctionInput.checked) {
     auctionFields.forEach(f => f.classList.remove("hidden"));
-    buyNowPrice.disabled = true;
+    // buyNowPrice.disabled = true;
   } else {
     auctionFields.forEach(f => f.classList.add("hidden"));
-    buyNowPrice.disabled = false;
+    // buyNowPrice.disabled = false;
   }
 }
 

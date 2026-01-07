@@ -101,7 +101,7 @@ const timerElement = document.getElementById("otp-timer");
 const verifyBtn = document.getElementById("verifyBtn");
 const resendBtn = document.getElementById("resendOtpBtn");
 
-const countdown = setInterval(() => {
+let countdown = setInterval(() => {
   let minutes = Math.floor(time / 60);
   let seconds = time % 60;
 
@@ -115,7 +115,7 @@ const countdown = setInterval(() => {
     clearInterval(countdown);
 
     timerElement.textContent = "OTP Expired ❌";
-    verifyBtn.disabled = true;
+     verifyBtn.disabled = true;
 
     // 👇 Show "Resend OTP" button
     resendBtn.classList.remove("hidden");
@@ -139,7 +139,7 @@ function restartTimer() {
     if (time === 0) {
       clearInterval(countdown);
       timerElement.textContent = "OTP Expired ❌";
-      verifyBtn.disabled = true;
+       verifyBtn.disabled = true;
       resendBtn.classList.remove("hidden");
     }
   }, 1000);

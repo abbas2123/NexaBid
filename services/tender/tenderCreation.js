@@ -35,14 +35,14 @@ exports.creatTenderService = async (user, body, files) => {
     for (const file of files) {
       if (!file.buffer) throw new Error('File buffer missing');
 
-      // 1️⃣ CHECKSUM
+    
       const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
       if (existingChecksums.includes(checksum)) {
         throw new Error(ERROR_MESSAGES.DUPLICATE_TENDER_DOCUMENT);
       }
       existingChecksums.push(checksum);
 
-      // 2️⃣ CLOUDINARY UPLOAD
+    
       const cld = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream(

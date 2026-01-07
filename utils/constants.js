@@ -235,7 +235,7 @@ module.exports = {
     ADMIN_LAYOUT: 'layouts/admin/adminLayout',
   },
   REDIRECTS: {
-    DASHBOARD: '/dashboard',
+    DASHBOARD: '/auth/dashboard',
     PROPERTIES: '/properties',
     MY_PARTICIPATION: '/user/my-participation',
     PAYMENT_FAILURE: '/payments/failure',

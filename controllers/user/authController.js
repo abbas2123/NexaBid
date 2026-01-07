@@ -10,6 +10,7 @@ const {
 } = require('../../utils/constants');
 const User = require('../../models/user');
 
+
 exports.getSignupPage = (req, res) => {
   res.render(VIEWS.USER_SIGNUP, {
     layout: false,
@@ -267,3 +268,7 @@ exports.getDashboard = async (req, res) => {
     });
   }
 };
+
+
+
+

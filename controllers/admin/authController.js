@@ -83,6 +83,7 @@ exports.getAdminDashboard = async (req, res) => {
 
 exports.getUserManagement = async (req, res) => {
   try {
+    const page = parseInt(req.query.page)
     const users = await adminAuthService.getAllUsers();
 
     return res.render(VIEWS.ADMIN_USER_MANAGEMENT, {

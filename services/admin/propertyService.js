@@ -1,12 +1,46 @@
 const Property = require('../../models/property');
 const notificationService = require('../notificationService');
 
-exports.getAllProperties = async () =>
-  await Property.find({ deletedAt: null })
+exports.getAllProperties = async (page, filter) => {
+  const limit = 5;
+  const query = {
+    deletedAt: null,
+    verificationStatus: {
+      $exists: true,
+      $in: ['submitted', 'approved', 'rejected'],
+    },
+  };
+
+  if (filter.search && filter.search.trim() !== '') {
+    query.$or = [
+      { title: new RegExp(filter.search, 'i') },
+      { address: new RegExp(filter.search, 'i') },
+    ];
+  }
+
+  if (filter.status && filter.status.trim() !== '') {
+    query.verificationStatus = filter.status;
+  }
+
+  const total = await Property.countDocuments(query);
+
+  const property = await Property.find(query)
     .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
     .populate('sellerId', 'name email phone')
     .lean();
 
+  return {
+    property,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      hasPrevPage: page > 1,
+      hasNextPage: page * limit < total,
+    },
+  };
+};
 exports.getPropertyDetails = async (id) =>
   await Property.findById(id)
     .populate('sellerId', 'name email phone')

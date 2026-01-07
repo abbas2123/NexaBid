@@ -15,7 +15,7 @@ exports.getPropertyPage = async (req, res) => {
     };
 
     const { properties, pagination } = await propertyService.getProperties(page, filters);
-
+console.log(properties);
     res.render('user/property', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
@@ -81,14 +81,11 @@ exports.postCreateProperty = async (req, res) => {
       geoLat,
       geoLng,
       basePrice,
-      buyNowPrice,
       isAuction,
       auctionStartsAt,
       auctionEndsAt,
       auctionStep,
       auctionReservePrice,
-      auctionAutoExtendMins,
-      auctionLastBidWindowMins,
       bhk,
       size,
     } = req.body;
@@ -109,16 +106,11 @@ exports.postCreateProperty = async (req, res) => {
       geoLat: geoLat ? Number(geoLat) : undefined,
       geoLng: geoLng ? Number(geoLng) : undefined,
       basePrice: basePrice ? Number(basePrice) : undefined,
-      buyNowPrice: buyNowPrice ? Number(buyNowPrice) : undefined,
       isAuction: isAuctionBool,
       auctionStartsAt: auctionStartsAt ? new Date(auctionStartsAt) : undefined,
       auctionEndsAt: auctionEndsAt ? new Date(auctionEndsAt) : undefined,
       auctionStep: auctionStep ? Number(auctionStep) : undefined,
       auctionReservePrice: auctionReservePrice ? Number(auctionReservePrice) : undefined,
-      auctionAutoExtendMins: auctionAutoExtendMins ? Number(auctionAutoExtendMins) : undefined,
-      auctionLastBidWindowMins: auctionLastBidWindowMins
-        ? Number(auctionLastBidWindowMins)
-        : undefined,
       bhk,
       size,
     };
@@ -137,6 +129,7 @@ exports.postCreateProperty = async (req, res) => {
     });
   } catch (err) {
     console.error('Create Property Error:', err);
+    err.statusCode = statusCode.INTERNAL_ERROR
     return res
       .status(err.statusCode)
       .json({ success: false, message: err.message || 'Something went wrong' });

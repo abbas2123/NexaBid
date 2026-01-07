@@ -216,7 +216,7 @@
 
       <!-- CONTACT SELLER BUTTON -->
       <% if (!isOwner) { %>
-        <a href="/chat/start/<%= property.sellerId._id || property.sellerId %>/property/<%= property._id %>"
+        <a href="/chat/start/<%= property.sellerId._id %>/property/<%= property._id %>""
            class="w-full inline-flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition font-medium">
           <span class="material-symbols-outlined">chat</span>
           Contact Seller

@@ -23,29 +23,24 @@
   </div>
 
   <!-- LIVE AUCTIONS STRIP -->
-  <% 
-    const _now = new Date();
-    const liveAuctions = properties.filter(p => {
-      if (!p.isAuction || !p.auctionStartsAt || !p.auctionEndsAt) return false;
-      const s = new Date(p.auctionStartsAt);
-      const e = new Date(p.auctionEndsAt);
-      return s <= _now && e >= _now && p.status === 'published'
-    });
-  %>
+  
+    <% const _now = new Date(); %>
+<% const liveAuctionsList = typeof liveAuctions !== 'undefined' ? liveAuctions : []; %>
 
-  <% if (liveAuctions.length > 0) { %>
-    <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-lg font-bold text-red-700 flex items-center gap-2">
-          🔥 Live Auctions (<%= liveAuctions.length %>)
-        </h2>
-        <span class="text-xs text-red-700/80">
-          Showing properties with an auction currently in progress
-        </span>
-      </div>
 
-      <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <% liveAuctions.forEach(p => { %>
+  <% if (liveAuctionsList.length > 0) { %>
+  <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-bold text-red-700 flex items-center gap-2">
+        🔥 Live Auctions (<%= liveAuctionsList.length %>)
+      </h2>
+      <span class="text-xs text-red-700/80">
+        Showing properties with an auction currently in progress
+      </span>
+    </div>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <% liveAuctionsList.forEach(p => { %>
           <div class="rounded-md bg-white border border-red-200 p-3 flex flex-col gap-2 shadow-sm">
             <div class="flex justify-between items-start gap-2">
               <div>
@@ -251,7 +246,7 @@
     </div>
   </div>
 </div>
-
+<%- include('../partials/admin/pagination.ejs', { pagination}) %>
 
 <!-- SWEETALERT -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

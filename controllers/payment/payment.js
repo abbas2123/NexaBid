@@ -20,7 +20,7 @@ exports.initiatePayment = async (req, res) => {
 
     if (!type || !id) return res.redirect(REDIRECTS.DASHBOARD);
 
-    const payment = await paymentService.initiatePayment(userId, type, id);
+    const payment = await paymentService.startInitiatePayment(userId, type, id);
     res.redirect(`${ROUTES.PAYMENT_ESCROW}/${payment._id}`);
   } catch (err) {
     console.error(err);
@@ -113,33 +113,24 @@ exports.verifyPayment = async (req, res) => {
     const { paymentId } = req.body;
     const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
 
-    return res.status(statusCode.OK).json({
-      success: true,
-      redirect: `${ROUTES.PAYMENT_SUCCESS}/${payment._id}`,
-    });
+        return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
   } catch (err) {
     console.error(err);
-    const redirectUrl = req.body.paymentId
-      ? `${ROUTES.PAYMENT_FAILURE}/${req.body.paymentId}`
-      : REDIRECTS.PAYMENT_FAILURE;
-
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      redirect: redirectUrl,
-    });
+    return res.json({ success: false, redirect: `/payments/failure/${req.body.paymentId}` });
   }
 };
 
 exports.paymentSuccessPage = async (req, res) => {
   try {
-    const payment = await paymentService.getPaymentById(req.params.paymentId);
-    if (!payment || payment.status !== PAYMENT_STATUS.SUCCESS) {
+    console.log('sdddvd')
+    const payment = await paymentService.getSuccessPageData(req.params.paymentId);
+    if (!payment) {
       return res.redirect(REDIRECTS.DASHBOARD);
     }
 
     res.status(statusCode.OK).render(VIEWS.PAYMENT_SUCCESS, {
       layout: LAYOUTS.USER_LAYOUT,
-      payment,
+      ...payment,
       user: req.user,
     });
   } catch (err) {
@@ -150,12 +141,14 @@ exports.paymentSuccessPage = async (req, res) => {
 
 exports.paymentFailurePage = async (req, res) => {
   try {
-    const payment = await paymentService.getPaymentById(req.params.paymentId);
+    console.log('❌ Payment failure route hit');
+
+    const payment = await paymentService.getFailurePageData(req.params.paymentId);
     if (!payment) return res.redirect(REDIRECTS.DASHBOARD);
 
     res.status(statusCode.OK).render(VIEWS.PAYMENT_FAILS, {
       layout: LAYOUTS.USER_LAYOUT,
-      payment,
+      ...payment,
     });
   } catch (err) {
     console.error(err);

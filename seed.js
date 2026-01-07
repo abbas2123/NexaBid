@@ -1,386 +1,255 @@
-const mongoose = require('mongoose');
 require('dotenv').config();
-
-// Models
+const mongoose = require('mongoose');
 const Property = require('./models/property');
-const Tender = require('./models/tender');
-const User = require('./models/user');
 
-async function seedData() {
-  try {
-    console.log('Connecting to MongoDB...');
-    await mongoose.connect(process.env.MONGO_URI);
-    console.log('DB Connected ✔');
+async function seed() {
+  await mongoose.connect(process.env.MONGO_URI);
 
-    // Delete old data
-    await Property.deleteMany({});
-    await Tender.deleteMany({});
-    console.log('Old mock data deleted ✔');
+  // await Property.deleteMany({}); // optional clean
 
-    // ---------------- USER ---------------
-    const sampleUser = await User.findOne();
-    if (!sampleUser) {
-      console.log('❌ No user found — create at least 1 user first.');
-      process.exit();
-    }
+  const sellerId = new mongoose.Types.ObjectId('69454fa7548483e03b35c812');
 
-    // Create a dedicated seller (vendor)
-    // ----------- CREATE OR REUSE VENDOR USER ----------
-    let seller = await User.findOne({ email: 'vendor@test.com' });
+  const properties = [
+    {
+      sellerId,
+      title: '3 BHK Premium Villa',
+      description: 'Independent luxury villa with garden & parking',
+      type: 'house',
+      address: 'Kayamkulam, Alappuzha',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.1826,
+      geoLng: 76.5317,
+      bhk: 3,
+      size: 1850,
+      isAuction: true,
+      basePrice: 5500000,
+      auctionStep: 25000,
+      auctionReservePrice: 6000000,
+      auctionStartsAt: new Date('2026-01-10T10:00:00Z'),
+      auctionEndsAt: new Date('2026-01-15T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Commercial Highway Plot',
+      description: 'Roadside commercial land',
+      type: 'commercial',
+      address: 'NH 66, Kayamkulam',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.1865,
+      geoLng: 76.5341,
+      size: 3200,
+      isAuction: true,
+      basePrice: 7200000,
+      auctionStep: 50000,
+      auctionReservePrice: 8000000,
+      auctionStartsAt: new Date('2026-01-12T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-18T17:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1502005097973-6a7082348e28' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: '2 BHK Lake View Apartment',
+      description: 'Apartment facing Kayamkulam lake',
+      type: 'apartment',
+      address: 'Kayamkulam Lake Road',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.1841,
+      geoLng: 76.5302,
+      bhk: 2,
+      size: 1250,
+      isAuction: true,
+      basePrice: 4200000,
+      auctionStep: 20000,
+      auctionReservePrice: 4700000,
+      auctionStartsAt: new Date('2026-01-08T09:30:00Z'),
+      auctionEndsAt: new Date('2026-01-13T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Modern Duplex House',
+      description: 'Newly built duplex home',
+      type: 'house',
+      address: 'Haripad',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.2584,
+      geoLng: 76.4647,
+      bhk: 4,
+      size: 2100,
+      isAuction: true,
+      basePrice: 6800000,
+      auctionStep: 30000,
+      auctionReservePrice: 7500000,
+      auctionStartsAt: new Date('2026-01-14T10:00:00Z'),
+      auctionEndsAt: new Date('2026-01-20T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1560185127-6ed189bf02a4' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Beach Side Cottage',
+      description: 'Cottage near Alappuzha beach',
+      type: 'house',
+      address: 'Alappuzha Beach',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.4947,
+      geoLng: 76.3274,
+      bhk: 2,
+      size: 950,
+      isAuction: true,
+      basePrice: 5000000,
+      auctionStep: 20000,
+      auctionReservePrice: 5500000,
+      auctionStartsAt: new Date('2026-01-09T10:00:00Z'),
+      auctionEndsAt: new Date('2026-01-14T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Hill View Land',
+      description: 'Scenic hill facing land',
+      type: 'land',
+      address: 'Mavelikara',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.2667,
+      geoLng: 76.5589,
+      size: 5400,
+      isAuction: true,
+      basePrice: 3800000,
+      auctionStep: 15000,
+      auctionReservePrice: 4200000,
+      auctionStartsAt: new Date('2026-01-11T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-16T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'City Center Shop',
+      description: 'Retail shop in city center',
+      type: 'commercial',
+      address: 'Alappuzha Town',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.4981,
+      geoLng: 76.3388,
+      size: 600,
+      isAuction: true,
+      basePrice: 2500000,
+      auctionStep: 10000,
+      auctionReservePrice: 2800000,
+      auctionStartsAt: new Date('2026-01-10T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-15T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1554995207-c18c203602cb' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Farm Land Plot',
+      description: 'Agricultural land',
+      type: 'land',
+      address: 'Chengannur',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.3185,
+      geoLng: 76.6151,
+      size: 7000,
+      isAuction: true,
+      basePrice: 3000000,
+      auctionStep: 15000,
+      auctionReservePrice: 3400000,
+      auctionStartsAt: new Date('2026-01-13T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-19T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Luxury Penthouse',
+      description: 'Top floor penthouse with lake view',
+      type: 'apartment',
+      address: 'Kuttanad',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.3875,
+      geoLng: 76.4175,
+      bhk: 3,
+      size: 1900,
+      isAuction: true,
+      basePrice: 9000000,
+      auctionStep: 40000,
+      auctionReservePrice: 9800000,
+      auctionStartsAt: new Date('2026-01-14T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-21T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1598928506311-c55dedb3c6f0' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+    {
+      sellerId,
+      title: 'Warehouse Godown',
+      description: 'Large warehouse near NH',
+      type: 'commercial',
+      address: 'Ambalappuzha',
+      locationState: 'Kerala',
+      locationDistrict: 'Alappuzha',
+      geoLat: 9.3892,
+      geoLng: 76.3401,
+      size: 5000,
+      isAuction: true,
+      basePrice: 6500000,
+      auctionStep: 30000,
+      auctionReservePrice: 7200000,
+      auctionStartsAt: new Date('2026-01-15T09:00:00Z'),
+      auctionEndsAt: new Date('2026-01-22T16:00:00Z'),
+      media: [{ url: 'https://images.unsplash.com/photo-1581091870627-3f92f8f47bb1' }],
+      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      status: 'published',
+      verificationStatus: 'approved',
+      verificationRequestedAt: new Date(),
+    },
+  ];
 
-    if (!seller) {
-      seller = await User.create({
-        name: 'Mock Vendor',
-        email: 'vendor@test.com',
-        phone: '9998887776',
-        passwordHash: 'hashedpassword123',
-        role: 'vendor',
-      });
-      console.log('✔ New vendor created');
-    } else {
-      console.log('✔ Vendor already exists — using existing vendor');
-    }
-
-    // ---------------- PROPERTIES ---------------
-    await Property.create([
-      {
-        title: 'Luxury Villa in Kochi',
-        description: 'Beautiful villa near Marine Drive.',
-        basePrice: 7500000,
-        location: 'Kochi',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-10-20'),
-        auctionEndsAt: new Date('2026-10-20'),
-        bhk: '2BHK', // e.g. "3BHK"
-        size: '100 sqft',
-        media: [
-          'https://images.pexels.com/photos/259597/pexels-photo-259597.jpeg',
-          'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg',
-        ],
-        isFeatured: true, // ⭐ REQUIRED
-        featuredUntil: new Date('2030-01-01'), // ⭐ REQUIRED
-      },
-      {
-        title: '2BHK Flat in Kakkanad',
-        description: 'Premium flat near Infopark.',
-        basePrice: 4500000,
-        location: 'Kakkanad',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-10-20'),
-        auctionEndsAt: new Date('2026-10-20'),
-        bhk: '2BHK', // e.g. "3BHK"
-        size: '100 sqft',
-        media: [
-          'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg',
-          'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg',
-        ],
-        isFeatured: true, // ⭐ REQUIRED
-        featuredUntil: new Date('2030-01-01'), // ⭐ REQUIRED
-      },
-      {
-        title: 'Brototype in Kochi',
-        description: 'Brototype in kochi is selling due to BCE231 students',
-        basePrice: 45,
-        location: 'kochi',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-10-20'),
-        auctionEndsAt: new Date('2026-10-20'),
-        bhk: '2BHK', // e.g. "3BHK"
-        size: '100 sqft',
-        media: [
-          'https://content.jdmagicbox.com/v2/comp/ernakulam/n5/0484px484.x484.230607161106.d1n5/catalogue/brototype-kochi-kundannoor-ernakulam-computer-software-training-institutes-nhzlnbc7u2-250.jpg',
-          'https://content.jdmagicbox.com/v2/comp/ernakulam/n5/0484px484.x484.230607161106.d1n5/catalogue/brototype-kochi-kundannoor-ernakulam-computer-software-training-institutes-nhzlnbc7u2-250.jpg',
-        ],
-        isFeatured: true, // ⭐ REQUIRED
-        featuredUntil: new Date('2030-01-01'), // ⭐ REQUIRED
-      },
-      {
-        title: '3BHK Apartment in Edappally',
-        description: 'Spacious modern apartment near Lulu Mall.',
-        basePrice: 6200000,
-        location: 'Edappally',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-11-12'),
-        auctionEndsAt: new Date('2026-11-20'),
-        bhk: '3BHK',
-        size: '1500 sqft',
-        media: [
-          'https://images.pexels.com/photos/259950/pexels-photo-259950.jpeg',
-          'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg',
-        ],
-        isFeatured: true,
-        featuredUntil: new Date('2030-01-01'),
-      },
-      {
-        title: 'Luxury Beachfront Villa',
-        description: 'Beautiful villa with ocean view at Cherai beach.',
-        basePrice: 15000000,
-        location: 'Cherai',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-10-10'),
-        auctionEndsAt: new Date('2026-10-18'),
-        bhk: '4BHK',
-        size: '3200 sqft',
-        media: [
-          'https://images.pexels.com/photos/1643383/pexels-photo-1643383.jpeg',
-          'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg',
-        ],
-        isFeatured: true,
-        featuredUntil: new Date('2030-01-01'),
-      },
-      {
-        title: '1 Acre Land for Sale',
-        description: 'Perfect for commercial or residential development.',
-        basePrice: 9000000,
-        location: 'Thrissur',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-08-02'),
-        auctionEndsAt: new Date('2026-08-10'),
-        bhk: null,
-        size: '1 Acre',
-        media: ['https://images.pexels.com/photos/164005/pexels-photo-164005.jpeg'],
-        isFeatured: false,
-      },
-      {
-        title: 'Studio Apartment Near Marine Drive',
-        description: 'Compact studio ideal for bachelors.',
-        basePrice: 1800000,
-        location: 'Marine Drive',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-12-01'),
-        auctionEndsAt: new Date('2026-12-05'),
-        bhk: '1BHK',
-        size: '450 sqft',
-        media: ['https://images.pexels.com/photos/1428348/pexels-photo-1428348.jpeg'],
-        isFeatured: false,
-      },
-      {
-        title: 'Commercial Space in Kakkanad',
-        description: 'Ideal for IT offices near Infopark.',
-        basePrice: 8500000,
-        location: 'Kakkanad',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-06-15'),
-        auctionEndsAt: new Date('2026-06-20'),
-        size: '2000 sqft',
-        media: ['https://www.99acres.com/universalapp/img/noImageTopaz.png'],
-        isFeatured: true,
-        featuredUntil: new Date('2030-01-01'),
-      },
-      {
-        title: '5BHK Luxury House in Aluva',
-        description: 'Independent villa with private garden.',
-        basePrice: 12500000,
-        location: 'Aluva',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-09-01'),
-        auctionEndsAt: new Date('2026-09-10'),
-        bhk: '5BHK',
-        size: '2800 sqft',
-        media: ['https://images.pexels.com/photos/259962/pexels-photo-259962.jpeg'],
-        isFeatured: true,
-        featuredUntil: new Date('2030-01-01'),
-      },
-      {
-        title: 'Premium 3BHK at MG Road',
-        description: 'Located at the center of Kochi city.',
-        basePrice: 6800000,
-        location: 'MG Road',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-07-15'),
-        auctionEndsAt: new Date('2026-07-22'),
-        bhk: '3BHK',
-        size: '1600 sqft',
-        media: ['https://images.pexels.com/photos/259957/pexels-photo-259957.jpeg'],
-        isFeatured: false,
-      },
-      {
-        title: 'Budget Apartment Near Kalamassery',
-        description: 'Affordable 1BHK near metro station.',
-        basePrice: 2200000,
-        location: 'Kalamassery',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-11-05'),
-        auctionEndsAt: new Date('2026-11-09'),
-        bhk: '1BHK',
-        size: '600 sqft',
-        media: ['https://images.pexels.com/photos/271639/pexels-photo-271639.jpeg'],
-        isFeatured: false,
-      },
-      {
-        title: 'Office Building in Kochi',
-        description: '5-floor commercial building.',
-        basePrice: 25000000,
-        location: 'Kochi',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-03-02'),
-        auctionEndsAt: new Date('2026-03-08'),
-        size: '10000 sqft',
-        media: ['https://images.pexels.com/photos/323705/pexels-photo-323705.jpeg'],
-        isFeatured: true,
-        featuredUntil: new Date('2030-01-01'),
-      },
-      {
-        title: '3BHK Villa in Kottayam',
-        description: 'Independent villa with gated security.',
-        basePrice: 5200000,
-        location: 'Kottayam',
-        sellerId: seller._id,
-        auctionStartsAt: new Date('2026-02-10'),
-        auctionEndsAt: new Date('2026-02-16'),
-        bhk: '3BHK',
-        size: '1450 sqft',
-        media: ['https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg'],
-        isFeatured: false,
-      },
-    ]);
-    console.log('🏡 Properties inserted ✔');
-
-    // ---------------- TENDERS ---------------
-    const tenders = [
-      {
-        title: 'Road Construction Tender',
-        description: 'Road repair project in Kerala.',
-        dept: 'PWD',
-        category: 'Infrastructure',
-        basePrice: 2500000,
-        location: 'Alappuzha',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-        status: 'published', // valid value
-      },
-      {
-        title: 'School Building Maintenance',
-        description: 'Maintenance for Govt School.',
-        dept: 'Education Department',
-        category: 'Maintenance',
-        basePrice: 1200000,
-        location: 'Kollam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
-        status: 'published', // valid value
-      },
-      {
-        title: 'Brototype Maintenance',
-        description: 'Maintenance for Brocamp.',
-        dept: 'Education Department',
-        category: 'Maintenance',
-        location: 'Kollam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
-        status: 'published', // valid value
-      },
-      {
-        title: 'Bridge Construction Project',
-        description: 'New bridge construction over Periyar river.',
-        dept: 'PWD',
-        category: 'Infrastructure',
-        location: 'Ernakulam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 5 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Hospital Renovation Tender',
-        description: 'Renovation of govt hospital wards.',
-        dept: 'Health Department',
-        category: 'Renovation',
-        location: 'Kottayam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 8 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Water Supply Pipeline Project',
-        description: 'Installation of new water pipelines.',
-        dept: 'Water Authority',
-        category: 'Infrastructure',
-        location: 'Thrissur',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 6 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Highway Lighting Project',
-        description: 'LED street light installation.',
-        dept: 'Electricity Board',
-        category: 'Electrical',
-        location: 'Alappuzha',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 12 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'College Building Construction',
-        description: 'New engineering block construction.',
-        dept: 'Education Department',
-        category: 'Construction',
-        location: 'Kollam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 7 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Market Road Tarring',
-        description: 'Re-tarring of major market road.',
-        dept: 'Municipality',
-        category: 'Road Works',
-        location: 'Kottayam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 4 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Drainage Cleaning Tender',
-        description: 'City-wide drainage cleaning.',
-        dept: 'Corporation',
-        category: 'Sanitation',
-        location: 'Ernakulam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 10 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Smart Classroom Setup',
-        description: 'Setting up smart boards in schools.',
-        dept: 'Education Department',
-        category: 'Electronics',
-        location: 'Kollam',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 9 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Park Development Tender',
-        description: 'Development of children’s park.',
-        dept: 'Municipality',
-        category: 'Construction',
-        location: 'Thrissur',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 11 * 86400000),
-        status: 'published',
-      },
-      {
-        title: 'Waste Collection Contract',
-        description: 'Solid waste pickup & disposal.',
-        dept: 'Corporation',
-        category: 'Sanitation',
-        location: 'Alappuzha',
-        userId: seller._id,
-        bidEndAt: new Date(Date.now() + 14 * 86400000),
-        status: 'published',
-      },
-    ];
-
-    await Tender.insertMany(tenders);
-    console.log('📄 Tenders inserted ✔');
-
-    console.log('\n🌱 SEEDING COMPLETE!');
-    process.exit();
-  } catch (err) {
-    console.error('❌ Seed Error:', err);
-    process.exit();
-  }
+  await Property.insertMany(properties);
+  console.log('✅ 10 Properties seeded successfully');
+  process.exit();
 }
 
-seedData();
+seed();

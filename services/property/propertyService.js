@@ -3,6 +3,7 @@ const statusCode = require('../../utils/statusCode');
 const Payment = require('../../models/payment');
 const { parseLocalDatetime, formatIST } = require('../../utils/datetime');
 const { ERROR_MESSAGES } = require('../../utils/constants');
+const cloudinary = require('../../config/cloudinary');
 
 exports.getProperties = async (page = 1, filters = {}) => {
   const limit = 8;
@@ -118,18 +119,47 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
     err.statusCode = statusCode.CONFLICT;
     throw err;
   }
+const media = [];
+for (const file of mediaFiles) {
+  if (!file.buffer) throw new Error('File buffer missing');
 
-  const media = mediaFiles.map((file) => ({
-    url: file.path,
+  const cld = await new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream({ resource_type: 'auto', folder: 'property_media' }, (err, result) =>
+        err ? reject(err) : resolve(result)
+      )
+      .end(file.buffer);
+  });
+
+  media.push({
+    url: cld.secure_url,
+    publicId: cld.public_id,
     originalName: file.originalname,
     mimeType: file.mimetype,
-  }));
+  });
+}
 
-  const docs = docFiles.map((file) => ({
-    url: file.path,
+const docs = [];
+for (const file of docFiles) {
+  if (!file.buffer) throw new Error('File buffer missing');
+
+  const cld = await new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream({ resource_type: 'auto', folder: 'property_docs' }, (err, result) =>
+        err ? reject(err) : resolve(result)
+      )
+      .end(file.buffer);
+  });
+
+  docs.push({
+    url: cld.secure_url,
+    publicId: cld.public_id,
     originalName: file.originalname,
     mimeType: file.mimetype,
-  }));
+  });
+}
+    if (!docs.length) delete data.docs;
+if (!media.length) delete data.media;
 
   const property = await Property.create({
     sellerId: data.sellerId,
@@ -145,16 +175,12 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
     geoLng: data.geoLng,
 
     basePrice: data.basePrice,
-    buyNowPrice: data.buyNowPrice,
 
     isAuction: data.isAuction,
     auctionStartsAt: data.auctionStartsAt,
     auctionEndsAt: data.auctionEndsAt,
     auctionStep: data.auctionStep,
     auctionReservePrice: data.auctionReservePrice,
-    auctionAutoExtendMins: data.auctionAutoExtendMins,
-    auctionLastBidWindowMins: data.auctionLastBidWindowMins,
-
     bhk: data.bhk,
     size: data.size,
 
@@ -201,10 +227,6 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     existingProperty.auctionEndsAt = parseLocalDatetime(body.auctionEndsAt);
     existingProperty.auctionStep = body.auctionStep;
     existingProperty.auctionReservePrice = body.auctionReservePrice;
-    existingProperty.auctionAutoExtendMins = body.auctionAutoExtendMins;
-    existingProperty.auctionLastBidWindowMins = body.auctionLastBidWindowMins;
-    existingProperty.buyNowPrice = null;
-
     // Validate
     if (!existingProperty.auctionStartsAt || !existingProperty.auctionEndsAt) {
       const error = new Error('Auction start/end required');
@@ -218,14 +240,13 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
       throw error;
     }
   } else {
-    existingProperty.buyNowPrice = body.buyNowPrice;
+   
     existingProperty.basePrice = null;
     existingProperty.auctionStartsAt = null;
     existingProperty.auctionEndsAt = null;
     existingProperty.auctionStep = null;
     existingProperty.auctionReservePrice = null;
-    existingProperty.auctionAutoExtendMins = null;
-    existingProperty.auctionLastBidWindowMins = null;
+    
   }
 
   // Logs: show BOTH ISO (UTC) and IST (what you expect)
@@ -238,24 +259,41 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
   console.log('STORED start IST:', formatIST(existingProperty.auctionStartsAt));
   console.log('STORED end   IST:', formatIST(existingProperty.auctionEndsAt));
 
-  // media update
-  if (files?.media?.length > 0) {
-    const newMedia = files.media.map((file) => ({
-      url: file.path,
-      fileName: file.filename,
-    }));
-    existingProperty.media.push(...newMedia);
+  if (files?.media?.length) {
+    for (const file of files.media) {
+      const cld = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ resource_type: 'auto', folder: 'property_media' }, (err, result) =>
+            err ? reject(err) : resolve(result)
+          )
+          .end(file.buffer);
+      });
+
+      existingProperty.media.push({
+        url: cld.secure_url,
+        publicId: cld.public_id,
+        fileName: file.originalname,
+      });
+    }
   }
 
-  // docs update
-  if (files?.docs?.length > 0) {
-    const newDocs = files.docs.map((file) => ({
-      url: file.path,
-      fileName: file.filename,
-    }));
-    existingProperty.docs.push(...newDocs);
-  }
+  if (files?.docs?.length) {
+    for (const file of files.docs) {
+      const cld = await new Promise((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream({ resource_type: 'auto', folder: 'property_docs' }, (err, result) =>
+            err ? reject(err) : resolve(result)
+          )
+          .end(file.buffer);
+      });
 
+      existingProperty.docs.push({
+        url: cld.secure_url,
+        publicId: cld.public_id,
+        fileName: file.originalname,
+      });
+    }
+  }
   existingProperty.verificationStatus = 'submitted';
   existingProperty.rejectionMessage = null;
 

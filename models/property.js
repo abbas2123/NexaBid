@@ -23,16 +23,14 @@ const propertySchema = new mongoose.Schema(
     geoLng: Number,
 
     basePrice: Number,
-    buyNowPrice: Number,
+   
 
     isAuction: { type: Boolean, default: false },
     auctionStartsAt: Date,
     auctionEndsAt: Date,
     auctionStep: { type: Number, default: 1000 },
     auctionReservePrice: Number,
-    auctionAutoExtendMins: { type: Number, default: 5 },
-    auctionLastBidWindowMins: { type: Number, default: 10 },
-
+    
     currentHighestBid: { type: Number, default: 0 },
     currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 

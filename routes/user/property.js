@@ -2,7 +2,7 @@ const express = require('express');
 const authController = require('../../controllers/user/property');
 const router = express.Router();
 const authMiddleware = require('../../middlewares/authMiddleware');
-const propertyUpload = require('../../middlewares/propertyUpload');
+const propertyUpload = require('../../middlewares/cloudinaryUploader');
 
 router.get('/create', authMiddleware.protectRoute, authController.getCreatePropertyPage);
 router.post(

@@ -13,10 +13,10 @@
 
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     
-    <!-- LEFT COLUMN: Payment Details -->
+   
     <div class="lg:col-span-2 space-y-6">
       
-      <!-- PRODUCT DETAILS -->
+  
       <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -658,12 +658,8 @@
           })
           .then(res => res.json())
           .then(data => {
-            if (data.redirect) {
-              window.location.href = data.redirect;
-            } else {
-              window.location.href = "/payments/failure/<%= payment._id %>";
-            }
-          })
+  window.location.href = data.redirect || "/dashboard";
+})
           .catch(() => {
             window.location.href = "/payments/failure/<%= payment._id %>";
           });
@@ -680,8 +676,23 @@
         theme: { color: "#2563eb" }
       };
 
-      const rzp = new Razorpay(options);
-      rzp.open();
+     const rzp = new Razorpay(options);
+
+/* 🔴 VERY IMPORTANT – HANDLE FAILURES */
+rzp.on("payment.failed", function () {
+  console.log("❌ Razorpay failed");
+  window.location.href = "/payments/failure/<%= payment._id %>";
+});
+
+/* USER CANCEL / CLOSE */
+options.modal = {
+  ondismiss: function () {
+    console.log("❌ Razorpay dismissed");
+    window.location.href = "/payments/failure/<%= payment._id %>";
+  }
+};
+
+rzp.open();
     } catch (error) {
       console.error("❌ Payment error:", error);
       alert("Payment failed. Please try again.");

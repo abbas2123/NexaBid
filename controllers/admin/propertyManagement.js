@@ -13,11 +13,20 @@ const {
 
 exports.getAllProperties = async (req, res) => {
   try {
-    const properties = await propertyService.getAllProperties();
+    const page = parseInt(req.query.page)||1;
+   const filter ={
+    search : req.query.search || '',
+    status: req.query.status || '',
+   }
+console.log('rgrvrrbr',req.query.status);
+    const properties = await propertyService.getAllProperties(page,filter);
 
     res.render(VIEWS.ADMIN_PROPERTY_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
-      properties,
+      properties:properties.property,
+      pagination: properties.pagination,
+      applied: filter,
+      liveAuctions:properties.liveAuctions,
       currentPage: 'property-management',
     });
   } catch (err) {

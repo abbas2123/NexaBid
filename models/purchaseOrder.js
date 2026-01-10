@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const purchaseOrderSchema = new mongoose.Schema(
@@ -16,7 +18,7 @@ const purchaseOrderSchema = new mongoose.Schema(
 
     generatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // publisher
+      ref: 'User', 
       required: true,
     },
 
@@ -35,7 +37,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     endDate: { type: Date },
 
     terms: {
-      type: String, // or use File model if you upload PDF
+      type: String, 
       default: '',
     },
 

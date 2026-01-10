@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const agreementSchema = new mongoose.Schema(
@@ -14,14 +16,14 @@ const agreementSchema = new mongoose.Schema(
       required: true,
     },
 
-    // The agreement PDF uploaded by publisher
+    
     publisherAgreement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',
       default: null,
     },
 
-    // Signed PDF uploaded by vendor
+    
     uploadedByVendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',

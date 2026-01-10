@@ -1,0 +1,249 @@
+<div
+    class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark">
+    <main class="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-8 py-8 md:py-12">
+
+        <!-- Breadcrumb / Back -->
+        <div class="flex items-center gap-2 mb-6">
+            <a href="<%= userRole === 'admin' ? '/admin/reports/property-auctions' : '/user/reports/property-auctions' %>"
+                class="flex items-center text-sm text-gray-500 hover:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[20px] mr-1">arrow_back</span>
+                Back to Reports
+            </a>
+        </div>
+
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row md:items-start justify-between gap-6 mb-8">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">Auction Report</h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">
+                    Detail view for <span class="font-bold text-gray-800 dark:text-gray-200">
+                        <%= property.title %>
+                    </span>
+                </p>
+            </div>
+
+            <!-- Status Badge -->
+            <div class="flex items-center gap-2">
+                <% const now=new Date(); const ends=new Date(property.auctionEndsAt); const starts=new
+                    Date(property.auctionStartsAt); if (now> ends) { %>
+                    <span
+                        class="px-4 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-700 border border-gray-200">Auction
+                        Ended</span>
+                    <% } else if (now>= starts && now <= ends) { %>
+                            <span
+                                class="px-4 py-2 rounded-full text-sm font-bold bg-red-100 text-red-700 border border-red-200 animate-pulse flex items-center gap-2">
+                                <span class="w-2 h-2 rounded-full bg-red-600"></span> Live Auction
+                            </span>
+                            <% } else { %>
+                                <span
+                                    class="px-4 py-2 rounded-full text-sm font-bold bg-blue-100 text-blue-700 border border-blue-200">Upcoming</span>
+                                <% } %>
+            </div>
+        </div>
+
+        <!-- Top Overview Numbers -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Details -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Highest Bid</h3>
+                <p class="text-2xl font-black text-gray-900 dark:text-white">
+                    ₹<%= (property.currentHighestBid || 0).toLocaleString('en-IN') %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">Base Price: ₹<%= (property.basePrice || 0).toLocaleString('en-IN')
+                        %>
+                </p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Bids</h3>
+                <p class="text-2xl font-black text-blue-600 dark:text-blue-400">
+                    <%= bids ? bids.length : 0 %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">Participants placed bids</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Auction End Date</h3>
+                <p class="text-xl font-bold text-gray-900 dark:text-white">
+                    <%= new Date(property.auctionEndsAt).toLocaleDateString(undefined, { day: 'numeric' , month: 'short'
+                        , year: 'numeric' }) %>
+                </p>
+                <p class="text-xs text-gray-500 mt-1">
+                    <%= new Date(property.auctionEndsAt).toLocaleTimeString([], {hour: '2-digit' , minute:'2-digit'}) %>
+                </p>
+            </div>
+        </div>
+
+        <!-- content grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+            <!-- Left: Bid History -->
+            <div class="lg:col-span-2 space-y-6">
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+                        <h3 class="font-bold text-gray-900 dark:text-white">Bid History</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                            <thead class="bg-gray-50 dark:bg-gray-700/30 text-xs uppercase text-gray-500 font-bold">
+                                <tr>
+                                    <th class="px-6 py-3">Bidder</th>
+                                    <th class="px-6 py-3">Amount</th>
+                                    <th class="px-6 py-3 text-right">Time</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <% if (bids && bids.length> 0) { %>
+                                    <% bids.forEach((bid, index)=> { %>
+                                        <tr
+                                            class="<%= index === 0 ? 'bg-green-50/50 dark:bg-green-900/10' : '' %> hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td
+                                                class="px-6 py-4 font-medium text-gray-900 dark:text-white flex items-center gap-3">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-600 overflow-hidden">
+                                                    <% if (bid.bidderId && bid.bidderId.profileImage) { %>
+                                                        <img src="<%= bid.bidderId.profileImage %>" alt="User"
+                                                            class="w-full h-full object-cover">
+                                                        <% } else { %>
+                                                            <%= bid.bidderId ? bid.bidderId.name.charAt(0) : '?' %>
+                                                                <% } %>
+                                                </div>
+                                                <div>
+                                                    <p>
+                                                        <%= bid.bidderId ? bid.bidderId.name : 'Unknown' %>
+                                                    </p>
+                                                    <% if (index===0 && property.currentHighestBidder && bid.bidderId &&
+                                                        property.currentHighestBidder._id.toString()===bid.bidderId._id.toString())
+                                                        { %>
+                                                        <span
+                                                            class="text-[10px] font-bold text-green-600 bg-green-100 px-1.5 py-0.5 rounded">WINNER</span>
+                                                        <% } %>
+                                                </div>
+                                            </td>
+                                            <td
+                                                class="px-6 py-4 font-bold <%= index === 0 ? 'text-green-600 dark:text-green-400' : '' %>">
+                                                ₹<%= bid.amount.toLocaleString('en-IN') %>
+                                            </td>
+                                            <td class="px-6 py-4 text-right text-xs">
+                                                <%= new Date(bid.createdAt).toLocaleString() %>
+                                            </td>
+                                        </tr>
+                                        <% }) %>
+                                            <% } else { %>
+                                                <tr>
+                                                    <td colspan="3" class="px-6 py-8 text-center text-gray-400">No bids
+                                                        placed yet.</td>
+                                                </tr>
+                                                <% } %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Winner / Property Card -->
+            <div class="space-y-6">
+
+                <!-- Winner Card -->
+                <% if (property.currentHighestBidder && new Date()> new Date(property.auctionEndsAt)) { %>
+                    <div
+                        class="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/10 rounded-xl border border-green-200 dark:border-green-800 p-6 text-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 p-4 opacity-10">
+                            <span class="material-symbols-outlined text-9xl text-green-800">emoji_events</span>
+                        </div>
+
+                        <div class="relative z-10">
+                            <div
+                                class="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600 shadow-md">
+                                <span class="material-symbols-outlined text-4xl">emoji_events</span>
+                            </div>
+                            <h2 class="text-lg font-bold text-gray-900 dark:text-white uppercase tracking-wider mb-1">
+                                Auction Winner</h2>
+                            <div class="w-12 h-1 bg-green-500 mx-auto rounded-full mb-4 opacity-50"></div>
+
+                            <h3 class="text-xl font-black text-gray-900 dark:text-white mb-1">
+                                <%= property.currentHighestBidder.name %>
+                            </h3>
+                            <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
+                                <%= property.currentHighestBidder.email %>
+                            </p>
+
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-lg p-3 inline-block shadow-sm border border-gray-100 dark:border-gray-700">
+                                <p class="text-xs text-gray-500 uppercase font-bold">Winning Bid</p>
+                                <p class="text-lg font-black text-green-600">₹<%=
+                                        property.currentHighestBid.toLocaleString('en-IN') %>
+                                </p>
+                            </div>
+
+                            <% if (property.currentHighestBidder.phone) { %>
+                                <div class="mt-4 pt-4 border-t border-green-200 dark:border-green-800/50">
+                                    <p
+                                        class="text-xs text-green-800 dark:text-green-300 font-medium flex items-center justify-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">call</span>
+                                        <%= property.currentHighestBidder.phone %>
+                                    </p>
+                                </div>
+                                <% } %>
+                        </div>
+                    </div>
+                    <% } else if (property.currentHighestBidder) { %>
+                        <!-- Current Leader Card -->
+                        <div
+                            class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                            <h3 class="font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-blue-500">leaderboard</span>
+                                Current Leader
+                            </h3>
+                            <div class="flex items-center gap-4">
+                                <div
+                                    class="size-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                                    <%= property.currentHighestBidder.name.charAt(0) %>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-gray-900 dark:text-white">
+                                        <%= property.currentHighestBidder.name %>
+                                    </p>
+                                    <p class="text-xs text-gray-500">
+                                        <%= property.currentHighestBidder.email %>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <% } %>
+
+                            <!-- Property Mini Detail -->
+                            <div
+                                class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+                                <h3 class="font-bold text-gray-900 dark:text-white mb-4">About Property</h3>
+                                <div class="space-y-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-500 block text-xs">Address</span>
+                                        <span class="font-medium text-gray-800 dark:text-gray-200">
+                                            <%= property.address %>
+                                        </span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <span class="text-gray-500 block text-xs">Type</span>
+                                            <span class="font-medium text-gray-800 dark:text-gray-200">
+                                                <%= property.type %>
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500 block text-xs">Size</span>
+                                            <span class="font-medium text-gray-800 dark:text-gray-200">
+                                                <%= property.size || 'N/A' %>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+            </div>
+
+        </div>
+
+    </main>
+</div>

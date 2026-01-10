@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const propertySchema = new mongoose.Schema(
@@ -23,14 +25,15 @@ const propertySchema = new mongoose.Schema(
     geoLng: Number,
 
     basePrice: Number,
-   
 
     isAuction: { type: Boolean, default: false },
     auctionStartsAt: Date,
     auctionEndsAt: Date,
     auctionStep: { type: Number, default: 1000 },
     auctionReservePrice: Number,
-    
+    extended: { type: Boolean, default: false }, // For preventing infinite extension
+    autoBidLock: { type: Boolean, default: false }, // For preventing recursion
+
     currentHighestBid: { type: Number, default: 0 },
     currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
@@ -55,7 +58,7 @@ const propertySchema = new mongoose.Schema(
     media: [
       {
         url: { type: String, required: true },
-        type: { type: String, default: 'image' }, // image/pdf/video
+        type: { type: String, default: 'image' },
         uploadedAt: { type: Date, default: Date.now },
       },
     ],

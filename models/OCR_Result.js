@@ -1,4 +1,6 @@
-// models/OCRResult.js
+
+
+
 const mongoose = require('mongoose');
 
 const ocrResultSchema = new mongoose.Schema(
@@ -9,7 +11,7 @@ const ocrResultSchema = new mongoose.Schema(
       required: true,
     },
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    extracted: { type: Object }, // PAN, GST, Business Name etc.
+    extracted: { type: Object }, 
     status: {
       type: String,
       enum: ['pending', 'processed', 'failed'],

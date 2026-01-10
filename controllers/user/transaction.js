@@ -1,3 +1,5 @@
+
+
 const TransactionService = require('../../services/profile/transaction');
 const { LAYOUTS } = require('../../utils/constants');
 
@@ -15,13 +17,18 @@ exports.getTransaction = async (req, res) => {
     page,
     filters
   );
-  console.log('transactions:', transactions);
+  const pagination = {
+    currentPage: page,
+    totalPages,
+    hasPrevPage: page > 1,
+    hasNextPage: page < totalPages,
+  };
+
   res.render('profile/transaction', {
     layout: LAYOUTS.USER_LAYOUT,
     transactions,
-    currentPage: page,
-    totalPages,
+    pagination,
     user: req.user,
-    filters, // 👈 IMPORTANT
+    filters,
   });
 };

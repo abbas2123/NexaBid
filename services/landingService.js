@@ -1,3 +1,5 @@
+
+
 const Property = require('../models/property');
 
 exports.getLandingPageData = async () => {

@@ -1,11 +1,13 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const passport = require('passport');
 const jwt = require('jsonwebtoken');
 const authController = require('../../controllers/user/authController');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const validate = require('../../middlewares/validate');
+
+const router = express.Router();
 const {
   singnupSchema,
   loginSchema,

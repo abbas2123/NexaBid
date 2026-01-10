@@ -1,8 +1,10 @@
 const express = require('express');
 const authController = require('../../controllers/user/property');
-const router = express.Router();
 const authMiddleware = require('../../middlewares/authMiddleware');
-const propertyUpload = require('../../middlewares/cloudinaryUploader');
+const uploadFactory = require('../../middlewares/upload');
+const propertyUpload = uploadFactory('nexabid/properties');
+
+const router = express.Router();
 
 router.get('/create', authMiddleware.protectRoute, authController.getCreatePropertyPage);
 router.post(

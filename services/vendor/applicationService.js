@@ -4,19 +4,19 @@ const cloudinary = require('../../config/cloudinary');
 const vendorApplication = require('../../models/vendorApplication');
 const OCRResult = require('../../models/OCR_Result');
 const FraudFlag = require('../../models/fraudFlag');
-const File = require('../../models/File'); // ⬅ your File model
+const File = require('../../models/File'); 
 const ocrService = require('../../utils/ocr');
 const fraudService = require('../../utils/fraudFlag');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
-// QUERIES
+
 exports.getApplicationStatus = async (userId) =>
   vendorApplication.findOne({ userId }).populate('documents.fileId').populate('ocrResultId');
 
 exports.checkExistingApplication = async (userId) =>
   vendorApplication.findOne({ userId }).populate('documents.fileId');
 
-// MAIN SERVICE
+
 exports.submitApplicationService = async (user, files, actionType) => {
   if (actionType !== 'scan') {
     return {
@@ -34,7 +34,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
 
   const existingApp = (await vendorApplication.findOne({ userId: user._id })) || {};
 
-  // Get all existing checksums
+  
   const globalChecksums = await File.find({ relatedType: 'vendor_application' }).then((files) =>
     files.map((f) => f.checksum)
   );
@@ -58,7 +58,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
       throw new Error('Upload failed: file buffer missing');
     }
 
-    // 1) CHECKSUM from buffer
+    
     const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
 
     if (existingChecksums.includes(checksum)) {
@@ -67,7 +67,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
 
     existingChecksums.push(checksum);
 
-    // 2) UPLOAD to Cloudinary using buffer
+    
     const cldResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -79,10 +79,10 @@ exports.submitApplicationService = async (user, files, actionType) => {
           resolve(result);
         }
       );
-      uploadStream.end(file.buffer); // ⬅ send buffer
+      uploadStream.end(file.buffer); 
     });
 
-    // 3) CREATE File model record
+    
     const fileData = await File.create({
       ownerId: user._id,
       relatedType: 'vendor_application',
@@ -91,12 +91,12 @@ exports.submitApplicationService = async (user, files, actionType) => {
       fileUrl: cldResult.secure_url,
       checksum,
       mimeType: file.mimetype,
-      size: file.size || file.buffer.length, // ⬅ use your File model's size field
+      size: file.size || file.buffer.length, 
       version: 1,
       metadata: {
         cloudinary_public_id: cldResult.public_id,
         cloudinary_version: cldResult.version,
-        // add any other cldResult fields you want
+        
       },
     });
 
@@ -106,7 +106,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
       uploadedAt: new Date(),
     });
 
-    // 4) OCR
+    
     const ocrResult = await ocrService.extractTextFromImage(cldResult.secure_url);
     extractedData.text += `\n${ocrResult.text || ''}`;
 
@@ -121,7 +121,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
     }
   }
 
-  // Attach docs
+  
   if (newDocs.length > 0) {
     await vendorApplication.findOneAndUpdate(
       { userId: user._id },
@@ -130,7 +130,7 @@ exports.submitApplicationService = async (user, files, actionType) => {
     );
   }
 
-  // OCR + Fraud + Update app (same as before)
+  
   let ocrFileId = newDocs[0]?.fileId;
   if (!ocrFileId && existingApp?.documents?.length > 0) {
     ocrFileId = existingApp.documents[existingApp.documents.length - 1].fileId;

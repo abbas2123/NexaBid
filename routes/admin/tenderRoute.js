@@ -1,7 +1,9 @@
+
+
 const express = require('express');
+const tenderContorller = require('../../controllers/admin/tenderManagement');
 
 const router = express.Router();
-const tenderContorller = require('../../controllers/admin/tenderManagement');
 
 router.get('/', tenderContorller.getAdminTenderPage);
 router.get('/:id', tenderContorller.getTenderDetails);

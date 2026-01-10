@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const propertyParticipantSchema = new mongoose.Schema(
@@ -33,10 +35,7 @@ const propertyParticipantSchema = new mongoose.Schema(
   }
 );
 
-/**
- * Prevent same user from participating twice
- * in the same property
- */
+
 propertyParticipantSchema.index({ propertyId: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('PropertyParticipant', propertyParticipantSchema);

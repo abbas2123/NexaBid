@@ -5,520 +5,428 @@
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
     <!-- Search -->
-    <input 
-      id="searchInput"
-      type="text"
-      placeholder="Search by property, seller, location..."
-      class="w-full md:w-1/2 border rounded px-3 py-2"
-    />
+    <input id="searchInput" type="text" placeholder="Search by property, seller, location..."
+      value="<%= applied.search || '' %>" class="w-full md:w-1/2 border rounded px-3 py-2" />
 
     <!-- Status Filter -->
-    <select id="statusFilter"
-      class="w-full md:w-48 border px-3 py-2 rounded">
+    <select id="statusFilter" class="w-full md:w-48 border px-3 py-2 rounded">
       <option value="">All Status</option>
-      <option value="submitted">Submitted</option>
-      <option value="approved">Approved</option>
-      <option value="rejected">Rejected</option>
+      <option value="submitted" <%=applied.status==='submitted' ? 'selected' : '' %>>Submitted</option>
+      <option value="approved" <%=applied.status==='approved' ? 'selected' : '' %>>Approved</option>
+      <option value="rejected" <%=applied.status==='rejected' ? 'selected' : '' %>>Rejected</option>
     </select>
+
   </div>
 
-  <!-- LIVE AUCTIONS STRIP -->
-  
-    <% const _now = new Date(); %>
-<% const liveAuctionsList = typeof liveAuctions !== 'undefined' ? liveAuctions : []; %>
+  <!-- Active Filters Display -->
+  <% if (applied.search || applied.status) { %>
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <span class="text-sm text-gray-600">Active filters:</span>
 
+      <% if (applied.search) { %>
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center gap-2">
+          Search: "<%= applied.search %>"
+            <a href="?page=1&status=<%= applied.status || '' %>" class="hover:text-blue-900 font-bold">×</a>
+        </span>
+        <% } %>
 
-  <% if (liveAuctionsList.length > 0) { %>
-  <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
-    <div class="flex items-center justify-between mb-3">
-      <h2 class="text-lg font-bold text-red-700 flex items-center gap-2">
-        🔥 Live Auctions (<%= liveAuctionsList.length %>)
-      </h2>
-      <span class="text-xs text-red-700/80">
-        Showing properties with an auction currently in progress
-      </span>
+          <% if (applied.status) { %>
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center gap-2">
+              Status: <%= applied.status %>
+                <a href="?page=1&search=<%= applied.search || '' %>" class="hover:text-green-900 font-bold">×</a>
+            </span>
+            <% } %>
+
+              <a href="?page=1" class="text-xs text-red-600 hover:underline ml-2">Clear all filters</a>
     </div>
+    <% } %>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      <% liveAuctionsList.forEach(p => { %>
-          <div class="rounded-md bg-white border border-red-200 p-3 flex flex-col gap-2 shadow-sm">
-            <div class="flex justify-between items-start gap-2">
-              <div>
-                <p class="text-xs font-semibold text-red-600">LIVE AUCTION</p>
-                <h3 class="font-bold text-gray-900 text-sm line-clamp-2"><%= p.title %></h3>
-                <p class="text-xs text-gray-500 mt-1">
-                  Seller: <%= p.sellerId?.name || "Unknown" %>
-                </p>
-              </div>
-              <img
-                src="<%= p.media?.length ? p.media[0].url : '/public/no-img.png' %>"
-                class="w-16 h-16 rounded object-cover border"
-              />
+      <!-- Results Summary -->
+      <div class="mb-4 text-sm text-gray-600">
+        Showing <%= properties.length %> of <%= pagination.totalPages * 5 %> properties
+            <% if (applied.search || applied.status) { %>
+              (filtered)
+              <% } %>
+      </div>
+
+      <!-- LIVE AUCTIONS STRIP -->
+      <% const now=new Date(); const liveAuctionsList=typeof liveAuctions !=='undefined' ? liveAuctions : []; %>
+
+        <% if (liveAuctionsList.length> 0) { %>
+          <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h2 class="text-lg font-bold text-red-700 flex items-center gap-2">
+                🔴 Live Auctions (<%= liveAuctionsList.length %>)
+              </h2>
+              <span class="text-xs text-red-700/80">
+                Showing properties with an auction currently in progress
+              </span>
             </div>
 
-            <p class="text-xs text-gray-700">
-              Base Price:
-              <span class="font-semibold text-gray-900">
-                ₹<%= (p.basePrice || 0).toLocaleString("en-IN") %>
-              </span>
-            </p>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <% liveAuctionsList.forEach(p=> { %>
+                <div class="rounded-md bg-white border border-red-200 p-3 flex flex-col gap-2 shadow-sm">
+                  <div class="flex justify-between items-start gap-2">
+                    <div>
+                      <p class="text-xs font-semibold text-red-600">🔴 LIVE AUCTION</p>
+                      <h3 class="font-bold text-gray-900 text-sm line-clamp-2">
+                        <%= p.title %>
+                      </h3>
+                      <p class="text-xs text-gray-500 mt-1">
+                        Seller: <%= p.sellerId?.name || 'Unknown' %>
+                      </p>
+                    </div>
+                    <img src="<%= p.media?.length ? p.media[0].url : '/public/no-img.png' %>"
+                      class="w-16 h-16 rounded object-cover border" />
+                  </div>
 
-            <p class="text-xs text-gray-700">
-              Current Highest Bid:
-              <span class="font-semibold text-green-700">
-                ₹<%= (p.currentHighestBid || 0).toLocaleString("en-IN") %>
-              </span>
-            </p>
+                  <p class="text-xs text-gray-700">
+                    Base Price:
+                    <span class="font-semibold text-gray-900">₹<%= (p.basePrice || 0).toLocaleString('en-IN') %></span>
+                  </p>
 
-            <p class="text-[11px] text-gray-500">
-              Ends at:
-              <%= p.auctionEndsAt ? new Date(p.auctionEndsAt).toLocaleString("en-IN") : "Not set" %>
-            </p>
+                  <p class="text-xs text-gray-700">
+                    Current Highest Bid:
+                    <span class="font-semibold text-green-700">₹<%= (p.currentHighestBid || 0).toLocaleString('en-IN')
+                        %></span>
+                  </p>
 
-            <div class="flex gap-2 mt-1">
-              <button 
-                class="auction-report-btn flex-1 text-xs font-semibold px-3 py-1.5 rounded bg-purple-600 text-white hover:bg-purple-700"
-                data-id="<%= p._id %>">
-                Auction Report
-              </button>
-              <a
-                href="/admin/property-management/view/live/<%= p._id %>"
-                class="flex-1 text-xs font-semibold px-3 py-1.5 rounded border border-red-500 text-red-600 text-center hover:bg-red-50">
-                View Live
-              </a>
+                  <p class="text-[11px] text-gray-500">
+                    Ends at: <%= p.auctionEndsAt ? new Date(p.auctionEndsAt).toLocaleString('en-IN') : 'Not set' %>
+                  </p>
+
+                  <div class="flex gap-2 mt-1">
+                    <button
+                      class="auction-report-btn flex-1 text-xs font-semibold px-3 py-1.5 rounded bg-purple-600 text-white hover:bg-purple-700"
+                      data-id="<%= p._id %>">
+                      Auction Report
+                    </button>
+                    <a href="/admin/property-management/view/live/<%= p._id %>"
+                      class="flex-1 text-xs font-semibold px-3 py-1.5 rounded border border-red-500 text-red-600 text-center hover:bg-red-50">
+                      View Live
+                    </a>
+                  </div>
+                </div>
+                <% }) %>
             </div>
           </div>
-        <% }) %>
-      </div>
-    </div>
-  <% } %>
+          <% } %>
 
+            <!-- TABLE -->
+            <div class="bg-white rounded-lg border p-4 overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead>
+                  <tr class="text-gray-600 border-b">
+                    <th class="py-3 w-20">Image</th>
+                    <th class="py-3">Title</th>
+                    <th class="py-3">Seller</th>
+                    <th class="py-3">Price</th>
+                    <th class="py-3">Verification</th>
+                    <th class="py-3 w-40">Actions</th>
+                  </tr>
+                </thead>
 
-  <!-- TABLE -->
-  <div class="bg-white rounded-lg border p-4 overflow-x-auto">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="text-gray-600 border-b">
-          <th class="py-3 w-20">Image</th>
-          <th class="py-3">Title</th>
-          <th class="py-3">Seller</th>
-          <th class="py-3">Price</th>
-          <th class="py-3">Verification</th>
-          <th class="py-3 w-40">Actions</th>
-        </tr>
-      </thead>
+                <tbody>
+                  <% if (properties.length===0) { %>
+                    <tr>
+                      <td colspan="6" class="py-8 text-center text-gray-500">
+                        No properties found
+                        <% if (applied.search || applied.status) { %>
+                          matching your filters
+                          <% } %>
+                      </td>
+                    </tr>
+                    <% } else { %>
+                      <% properties.forEach(p=> { %>
+                        <tr class="border-b hover:bg-gray-50">
 
-      <tbody>
-        <% properties.forEach(p => { %>
-        <tr class="border-b hover:bg-gray-50">
+                          <td class="py-3">
+                            <img src="<%= p.media?.length ? p.media[0].url : '/public/no-img.png' %>"
+                              class="w-16 h-16 object-cover rounded border" />
+                          </td>
 
-          <td class="py-3">
-            <img src="<%= p.media?.length ? p.media[0].url : '/public/no-img.png' %>"
-                 class="w-16 h-16 object-cover rounded border" />
-          </td>
+                          <td class="py-3 font-semibold align-top">
+                            <div>
+                              <%= p.title %>
+                            </div>
+                            <% if (p.isAuction) { %>
+                              <span
+                                class="inline-block mt-1 text-[11px] px-2 py-0.5 rounded bg-purple-50 text-purple-700">
+                                Auction
+                              </span>
+                              <% } %>
+                          </td>
 
-          <td class="py-3 font-semibold align-top">
-            <div><%= p.title %></div>
-            <% if (p.isAuction) { %>
-              <span class="inline-block mt-1 text-[11px] px-2 py-0.5 rounded bg-purple-50 text-purple-700">
-                Auction
-              </span>
-            <% } %>
-          </td>
+                          <td class="align-top">
+                            <%= p.sellerId?.name || 'Unknown' %>
+                          </td>
 
-          <td class="align-top"><%= p.sellerId?.name || "Unknown" %></td>
+                          <td class="align-top text-green-600 font-bold">
+                            <% if (p.isAuction) { %>
+                              ₹<%= p.basePrice?.toLocaleString('en-IN') || '-' %>
+                                <% } else { %>
+                                  ₹<%= p.buyNowPrice?.toLocaleString('en-IN') || '-' %>
+                                    <% } %>
+                          </td>
 
-          <td class="align-top text-green-600 font-bold">
-            <% if (p.isAuction) { %>
-              ₹<%= p.basePrice?.toLocaleString("en-IN") || "-" %>
-            <% } else { %>
-              ₹<%= p.buyNowPrice?.toLocaleString("en-IN") || "-" %>
-            <% } %>
-          </td>
+                          <td class="align-top">
+                            <% if (p.verificationStatus==='submitted' ) { %>
+                              <span
+                                class="px-3 py-1 bg-yellow-200 text-yellow-700 rounded-full text-xs">Submitted</span>
+                              <% } else if (p.verificationStatus==='approved' ) { %>
+                                <span class="px-3 py-1 bg-green-200 text-green-700 rounded-full text-xs">Approved</span>
+                                <% } else if (p.verificationStatus==='rejected' ) { %>
+                                  <span class="px-3 py-1 bg-red-200 text-red-700 rounded-full text-xs">Rejected</span>
+                                  <% } else if (p.verificationStatus==='pending' ) { %>
+                                    <span
+                                      class="px-3 py-1 bg-orange-200 text-orange-700 rounded-full text-xs">Pending</span>
+                                    <% } %>
+                          </td>
 
-          <td class="align-top">
-            <% if (p.verificationStatus === "submitted") { %>
-              <span class="px-3 py-1 bg-yellow-200 text-yellow-700 rounded-full text-xs">Submitted</span>
-            <% } else if (p.verificationStatus === "approved") { %>
-              <span class="px-3 py-1 bg-green-200 text-green-700 rounded-full text-xs">Approved</span>
-            <% } else if (p.verificationStatus === "rejected") { %>
-              <span class="px-3 py-1 bg-red-200 text-red-700 rounded-full text-xs">Rejected</span>
-            <% } else if (p.verificationStatus === "pending") { %>
-              <span class="px-3 py-1 bg-orange-200 text-orange-700 rounded-full text-xs">Pending</span>
-            <% } %>
-          </td>
+                          <td class="align-top">
+                            <div class="flex flex-col gap-1">
+                              <button class="review-btn text-blue-600 font-semibold text-xs underline"
+                                data-id="<%= p._id %>">
+                                Review
+                              </button>
 
-          <td class="align-top">
-            <div class="flex flex-col gap-1">
-              <button class="review-btn text-blue-600 font-semibold text-xs underline" 
-                data-id="<%= p._id %>">
-                Review
-              </button>
+                              <% if (p.isAuction) { %>
+                                <button class="auction-report-btn text-purple-600 font-semibold text-xs underline"
+                                  data-id="<%= p._id %>">
+                                  Auction Report
+                                </button>
+                                <% } %>
+                            </div>
+                          </td>
 
-              <% if (p.isAuction) { %>
-                <button 
-                  class="auction-report-btn text-purple-600 font-semibold text-xs underline"
-                  data-id="<%= p._id %>">
-                  Auction Report
-                </button>
-              <% } %>
+                        </tr>
+                        <% }) %>
+                          <% } %>
+                </tbody>
+              </table>
             </div>
-          </td>
 
-        </tr>
-        <% }) %>
-      </tbody>
-    </table>
-  </div>
+            <!-- PAGINATION -->
+            <%- include('../partials/admin/pagination') %>
+
 </div>
 
-
 <!-- REVIEW MODAL -->
-<div id="reviewModal"
-  class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
-
+<div id="reviewModal" class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
   <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg relative">
 
     <!-- Modal Header -->
     <div class="flex justify-between items-center p-4 border-b sticky top-0 z-50 bg-white">
       <h2 class="text-xl font-bold">Property Review</h2>
-      <button id="closeReviewModal"
-        class="text-gray-700 text-xl font-bold hover:text-black">✖</button>
+      <button id="closeReviewModal" class="text-gray-700 text-xl font-bold hover:text-black">×</button>
     </div>
 
-    <!-- Modal Scrollable Content -->
+    <!-- Modal Content -->
     <div class="p-4 overflow-y-auto max-h-[60vh] space-y-4">
-
-      <!-- Dynamic Content -->
       <div id="reviewContent" class="space-y-3 text-gray-700 text-sm"></div>
 
       <!-- Admin Comments -->
       <div>
         <label class="font-semibold text-sm">Admin Comments</label>
-        <textarea id="adminComment"
-          class="w-full border rounded px-3 py-2 mt-2 text-sm"
-          rows="3"
+        <textarea id="adminComment" class="w-full border rounded px-3 py-2 mt-2 text-sm" rows="3"
           placeholder="Write comments here..."></textarea>
       </div>
     </div>
 
     <!-- Footer Buttons -->
     <div class="flex justify-end gap-3 p-4 border-t sticky bottom-0 bg-white z-50">
-      <button id="rejectBtn"
-        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
+      <button id="rejectBtn" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 text-sm">
         Reject
       </button>
-
-      <button id="approveBtn"
-        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
-        Approve & Publish
+      <button id="approveBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+        Approve
       </button>
     </div>
 
   </div>
 </div>
-
 
 <!-- AUCTION REPORT MODAL -->
-<div id="auctionModal"
-  class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
+<div id="auctionReportModal" class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
+  <div class="bg-white w-full max-w-4xl rounded-lg shadow-lg relative max-h-[90vh] overflow-y-auto">
 
-  <div class="bg-white w-full max-w-xl rounded-lg shadow-lg relative">
-
-    <!-- Header -->
-    <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-50">
+    <div class="flex justify-between items-center p-4 border-b sticky top-0 z-50 bg-white">
       <h2 class="text-xl font-bold">Auction Report</h2>
-      <button id="closeAuctionModal"
-        class="text-gray-700 text-xl font-bold hover:text-black">✖</button>
+      <button id="closeAuctionReportModal" class="text-gray-700 text-xl font-bold hover:text-black">×</button>
     </div>
 
-    <!-- Content -->
-    <div class="p-4 space-y-4 text-sm text-gray-800 max-h-[60vh] overflow-y-auto">
-      <div id="auctionContent" class="space-y-3"></div>
-    </div>
+    <div id="auctionReportContent" class="p-4"></div>
 
-    <!-- Footer -->
-    <div class="flex justify-end gap-2 p-4 border-t bg-white">
-      <button id="auctionCloseBtn"
-        class="px-4 py-2 rounded bg-gray-100 hover:bg-gray-200 text-sm">
-        Close
-      </button>
-    </div>
   </div>
 </div>
-<%- include('../partials/admin/pagination.ejs', { pagination}) %>
 
-<!-- SWEETALERT -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+<!-- JAVASCRIPT -->
 <script>
-let currentPropertyId = null;
-const reviewModal = document.getElementById("reviewModal");
-const closeModal = document.getElementById("closeReviewModal");
-const commentBox = document.getElementById("adminComment");
-const content = document.getElementById("reviewContent");
+  // ----------------- FILTERING ------------------ 
+  const searchInput = document.getElementById('searchInput');
+  const statusFilter = document.getElementById('statusFilter');
 
-// Auction modal refs
-const auctionModal = document.getElementById("auctionModal");
-const closeAuctionModal = document.getElementById("closeAuctionModal");
-const auctionCloseBtn = document.getElementById("auctionCloseBtn");
-const auctionContent = document.getElementById("auctionContent");
+  function applyFilter() {
+    const search = searchInput.value.trim();
+    const status = statusFilter.value;
 
-async function safeFetch(url, options={}) {
-  const res = await fetch(url, options);
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return text; }
-}
+    // Build query string
+    const params = new URLSearchParams();
+    params.set('page', '1'); // Reset to page 1 on filter change
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
 
-/* ----------------- REVIEW BUTTON LOGIC ------------------ */
-document.querySelectorAll(".review-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.dataset.id;
-    currentPropertyId = id;
+    // Redirect with filter params
+    window.location.href = '?' + params.toString();
+  }
 
-    const res = await safeFetch(`/admin/property-management/${id}`);
-    const p = res.property;
+  // Debounce function to avoid too many requests while typing
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
-    content.innerHTML = `
-      <p><b>Title:</b> ${p.title}</p>
-      <p><b>Type:</b> ${p.type || "-"}</p>
-      <p><b>Address:</b> ${p.address || "-"}</p>
-      <p><b>Seller:</b> ${p.sellerId?.name || "Unknown"}</p>
-      <p><b>Price:</b> ${
-        p.isAuction 
-          ? "₹" + (p.basePrice || 0).toLocaleString("en-IN")
-          : "₹" + (p.buyNowPrice || 0).toLocaleString("en-IN")
-      }</p>
-      <p><b>Description:</b> ${p.description || "-"}</p>
-      <p><b>Status:</b> ${p.verificationStatus}</p>
+  // Add event listeners
+  searchInput.addEventListener('input', debounce(applyFilter, 500)); // Wait 500ms after typing stops
+  statusFilter.addEventListener('change', applyFilter); // Immediate on dropdown change
 
-      <h3 class="font-semibold mt-4">Media Files:</h3>
-      ${
-        p.media?.length
-        ? `<div class="grid grid-cols-3 gap-3 mt-2">
-            ${p.media.map(img => `
-              <div class="cursor-pointer border rounded overflow-hidden hover:ring-2 hover:ring-blue-400">
-                <img 
-                  src="${img.url}" 
-                  class="w-full h-24 object-cover" />
-              </div>`).join("")}
-          </div>`
-        : `<p class="text-gray-400 text-sm">No media uploaded.</p>`
+
+  // ----------------- REVIEW MODAL ------------------
+  const reviewModal = document.getElementById('reviewModal');
+  const closeReviewModal = document.getElementById('closeReviewModal');
+  const reviewContent = document.getElementById('reviewContent');
+  const adminComment = document.getElementById('adminComment');
+  const approveBtn = document.getElementById('approveBtn');
+  const rejectBtn = document.getElementById('rejectBtn');
+
+  let currentPropertyId = null;
+
+  document.querySelectorAll('.review-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      currentPropertyId = btn.dataset.id;
+
+      try {
+        const res = await fetch(`/admin/property-management/${currentPropertyId}`);
+        const data = await res.json();
+
+        if (data.success) {
+          const p = data.property;
+          reviewContent.innerHTML = `
+          <div><strong>Title:</strong> ${p.title}</div>
+          <div><strong>Type:</strong> ${p.type}</div>
+          <div><strong>Address:</strong> ${p.address || 'N/A'}</div>
+          <div><strong>Size:</strong> ${p.size} sqft</div>
+          <div><strong>BHK:</strong> ${p.bhk || 'N/A'}</div>
+          <div><strong>Description:</strong> ${p.description || 'N/A'}</div>
+          <div><strong>Seller:</strong> ${p.sellerId?.name} (${p.sellerId?.email})</div>
+          <div><strong>Status:</strong> ${p.verificationStatus}</div>
+        `;
+
+          adminComment.value = p.rejectionMessage || '';
+          reviewModal.classList.remove('hidden');
+          reviewModal.classList.add('flex');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Failed to load property details');
       }
+    });
+  });
 
-      <h3 class="font-semibold mt-4">Documents:</h3>
-      ${
-        p.docs?.length
-        ? `<ul class="list-disc pl-6 space-y-1 mt-2 text-sm">
-            ${p.docs.map(d => `
-              <li>
-                <a href="${d.url}" 
-                   target="_blank" 
-                   class="text-blue-600 underline">
-                    ${d.name || "View Document"}
-                </a>
-              </li>`).join("")}
-          </ul>`
-        : `<p class="text-gray-400 text-sm">No documents uploaded.</p>`
+  closeReviewModal.addEventListener('click', () => {
+    reviewModal.classList.add('hidden');
+    reviewModal.classList.remove('flex');
+  });
+
+  approveBtn.addEventListener('click', async () => {
+    if (!confirm('Approve this property?')) return;
+
+    try {
+      const res = await fetch(`/admin/property-management/approve/${currentPropertyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approveMessage: adminComment.value })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        alert('Property approved!');
+        location.reload();
+      } else {
+        alert(data.message || 'Failed to approve');
       }
-    `;
-
-    reviewModal.classList.remove("hidden");
-    reviewModal.classList.add("flex");
-  });
-});
-
-closeModal.addEventListener("click", () => {
-  reviewModal.classList.add("hidden");
-  commentBox.value = "";
-});
-
-
-/* ----------------- APPROVE / REJECT ------------------ */
-document.getElementById("approveBtn").addEventListener("click", async ()=>{
-  const res = await safeFetch(`/admin/property-management/approve/${currentPropertyId}`, {
-    method:"PATCH",
-    body: JSON.stringify({ comment: commentBox.value }),
-    headers: { "Content-Type":"application/json" }
+    } catch (err) {
+      console.error(err);
+      alert('Error approving property');
+    }
   });
 
-  Swal.fire({
-    title: res.success ? "Property Approved and Published!" : "Approval Failed",
-    icon: res.success ? "success" : "error",
-    confirmButtonColor: "#10b981"
-  }).then(()=> location.reload());
-});
+  rejectBtn.addEventListener('click', async () => {
+    const comment = adminComment.value.trim();
+    if (!comment) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
 
-document.getElementById("rejectBtn").addEventListener("click", async ()=>{
-  const res = await safeFetch(`/admin/property-management/reject/${currentPropertyId}`, {
-    method:"PATCH",
-    body: JSON.stringify({ comment: commentBox.value }),
-    headers: { "Content-Type":"application/json" }
-  });
+    if (!confirm('Reject this property?')) return;
 
-  Swal.fire({
-    title: res.success ? "Property Rejected" : "Rejection Failed",
-    icon: res.success ? "info" : "error",
-    confirmButtonColor: "#ef4444"
-  }).then(()=> location.reload());
-});
+    try {
+      const res = await fetch(`/admin/property-management/reject/${currentPropertyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rejectionMessage: comment })
+      });
 
-
-/* ----------------- AUCTION REPORT MODAL ------------------ */
-function formatAmount(n) {
-  if (!n) return "₹0";
-  return "₹" + Number(n).toLocaleString("en-IN");
-}
-
-document.querySelectorAll(".auction-report-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    const id = btn.dataset.id;
-    currentPropertyId = id;
-
-    const res = await safeFetch(`/admin/property-management/${id}`);
-    const p = res.property;
-
-    const now = new Date();
-    const start = p.auctionStartsAt ? new Date(p.auctionStartsAt) : null;
-    const end   = p.auctionEndsAt ? new Date(p.auctionEndsAt) : null;
-
-    const isLive = p.isAuction && start && end && now >= start && now <= end;
-    const isScheduled = p.isAuction && start && now < start;
-    const isEnded = p.isAuction && end && now > end;
-
-    const hasWinner = p.status === "owned" && !!p.soldTo;
-    const winnerName = hasWinner ? (p.soldTo?.name || "Unknown user") : "No one won this auction";
-    const highestBid = p.currentHighestBid || 0;
-
-    auctionContent.innerHTML = `
-      <div class="space-y-2">
-        <p><b>Title:</b> ${p.title}</p>
-        <p><b>Seller:</b> ${p.sellerId?.name || "Unknown"}</p>
-        <p><b>Auction Status:</b> 
-          ${
-            !p.isAuction
-              ? "Not an auction listing"
-              : isLive ? "🔴 Live" 
-              : isScheduled ? "🕒 Scheduled"
-              : isEnded ? "❌ Ended"
-              : "Not configured"
-          }
-        </p>
-
-        <p><b>Base Price:</b> ${formatAmount(p.basePrice)}</p>
-        <p><b>Current Highest Bid:</b> ${formatAmount(highestBid)}</p>
-
-        <p><b>Starts At:</b> ${
-          start ? start.toLocaleString("en-IN") : "Not set"
-        }</p>
-
-        <p><b>Ends At:</b> ${
-          end ? end.toLocaleString("en-IN") : "Not set"
-        }</p>
-      </div>
-
-      <hr class="my-3" />
-
-      ${(() => {
-        // Winner block logic
-        if (!p.isAuction) {
-          return `
-            <div>
-              <p class="font-semibold text-gray-700">Winner Information</p>
-              <p class="text-sm text-gray-400">This is not an auction listing.</p>
-            </div>`;
-        }
-
-        if (isScheduled) {
-          return `
-            <div>
-              <p class="font-semibold text-gray-700">Winner Information</p>
-              <p class="text-sm text-gray-600">Auction has not started yet.</p>
-            </div>`;
-        }
-
-        if (isLive) {
-          return `
-            <div>
-              <p class="font-semibold text-gray-700">Winner Information</p>
-              <p class="text-sm text-blue-600">Auction is live. Winner will be decided after auction ends.</p>
-            </div>`;
-        }
-
-        if (isEnded && hasWinner) {
-          return `
-            <div class="space-y-1">
-              <p class="font-semibold text-gray-800">Winner Information</p>
-              <p><b>Winner:</b> ${winnerName}</p>
-              <p><b>Final Price:</b> ${formatAmount(highestBid)}</p>
-              <p><b>Sold At:</b> ${
-                p.soldAt ? new Date(p.soldAt).toLocaleString("en-IN") : "-"
-              }</p>
-            </div>`;
-        }
-
-        if (isEnded && !hasWinner) {
-          return `
-            <div>
-              <p class="font-semibold text-gray-800">Winner Information</p>
-              <p class="text-sm text-red-500">Auction ended with no winner.</p>
-            </div>`;
-        }
-
-        return `
-          <div>
-            <p class="font-semibold text-gray-700">Winner Information</p>
-            <p class="text-sm text-gray-500">Winner data not available.</p>
-          </div>`;
-      })()}
-
-      ${
-        isLive&&p.status==='published'
-          ? `
-          <div class="mt-4">
-            <a href="/admin/property-management/view/live/${p._id}"
-               class="block text-center bg-red-600 text-white font-semibold py-2 rounded hover:bg-red-700">
-              🔴 View Live Auction
-            </a>
-          </div>`
-          : ""
+      const data = await res.json();
+      if (data.success) {
+        alert('Property rejected');
+        location.reload();
+      } else {
+        alert(data.message || 'Failed to reject');
       }
-`;
-
-    auctionModal.classList.remove("hidden");
-    auctionModal.classList.add("flex");
+    } catch (err) {
+      console.error(err);
+      alert('Error rejecting property');
+    }
   });
-});
-
-function closeAuction() {
-  auctionModal.classList.add("hidden");
-}
-
-closeAuctionModal.addEventListener("click", closeAuction);
-auctionCloseBtn.addEventListener("click", closeAuction);
 
 
-/* ----------------- FILTERING ------------------ */
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
+  // ----------------- AUCTION REPORT MODAL ------------------
+  const auctionReportModal = document.getElementById('auctionReportModal');
+  const closeAuctionReportModal = document.getElementById('closeAuctionReportModal');
+  const auctionReportContent = document.getElementById('auctionReportContent');
 
-function filterTable(){
-  const s = searchInput.value.toLowerCase();
-  const st = statusFilter.value.toLowerCase();
+  document.querySelectorAll('.auction-report-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const propertyId = btn.dataset.id;
 
-  document.querySelectorAll("tbody tr").forEach(row=>{
-    const title = row.children[1].innerText.toLowerCase();
-    const seller = row.children[2].innerText.toLowerCase();
-    const status = row.children[4].innerText.toLowerCase();
+      try {
+        const res = await fetch(`/admin/property-management/auction-report/${propertyId}`);
+        const data = await res.json();
 
-    const match =
-      (title.includes(s) || seller.includes(s)) &&
-      (st === "" || status.includes(st));
-
-    row.style.display = match ? "" : "none";
+        if (data.success) {
+          auctionReportContent.innerHTML = data.html;
+          auctionReportModal.classList.remove('hidden');
+          auctionReportModal.classList.add('flex');
+        } else {
+          alert(data.message || 'Failed to load auction report');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error loading auction report');
+      }
+    });
   });
-}
 
-searchInput.addEventListener("input", filterTable);
-statusFilter.addEventListener("change", filterTable);
+  closeAuctionReportModal.addEventListener('click', () => {
+    auctionReportModal.classList.add('hidden');
+    auctionReportModal.classList.remove('flex');
+  });
 </script>

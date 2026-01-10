@@ -1,4 +1,5 @@
 const Razorpay = require('razorpay');
+const axios = require('axios');
 const crypto = require('crypto');
 const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
@@ -49,56 +50,56 @@ exports.getAllTransactions = async (req, res) => {
     console.log('📄 Loading all transactions for user:', userId);
     console.log('📋 Query params:', req.query);
 
-    // Get wallet
+
     const wallet = await Wallet.findOne({ userId });
 
     if (!wallet) {
       return res.redirect('/wallet');
     }
 
-    // Get filter parameters
+
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const transactionType = req.query.type; // 'credit' or 'debit'
-    const { source } = req.query; // 'payment', 'refund', etc.
+    const transactionType = req.query.type;
+    const { source } = req.query;
     const { fromDate } = req.query;
     const { toDate } = req.query;
 
-    // Build query
+
     const query = { userId };
 
-    // Filter by transaction type
+
     if (transactionType && ['credit', 'debit'].includes(transactionType)) {
       query.type = transactionType;
     }
 
-    // Filter by source
+
     if (source) {
       query.source = source;
     }
 
-    // Filter by date range
+
     if (fromDate || toDate) {
       query.createdAt = {};
 
       if (fromDate) {
         const from = new Date(fromDate);
-        from.setHours(0, 0, 0, 0); // Start of day
+        from.setHours(0, 0, 0, 0);
         query.createdAt.$gte = from;
       }
 
       if (toDate) {
         const to = new Date(toDate);
-        to.setHours(23, 59, 59, 999); // End of day
+        to.setHours(23, 59, 59, 999);
         query.createdAt.$lte = to;
       }
     }
 
     console.log('🔍 Filter query:', query);
 
-    // Get transactions with filters
+
     const transactions = await WalletTransaction.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -110,7 +111,7 @@ exports.getAllTransactions = async (req, res) => {
 
     console.log(`📊 Found ${transactions.length} transactions (Page ${page}/${totalPages})`);
 
-    // Get unique sources for filter dropdown
+
     const allSources = await WalletTransaction.distinct('source', { userId });
 
     res.render('profile/allTransactions', {
@@ -121,7 +122,7 @@ exports.getAllTransactions = async (req, res) => {
       totalPages,
       totalTransactions,
       user: req.user,
-      // Pass filters back to template
+
       filters: {
         type: transactionType || '',
         source: source || '',
@@ -194,7 +195,7 @@ exports.createAddFundsOrder = async (req, res) => {
 
     console.log('📝 Creating order request:', { amount, userId });
 
-    // Validate amount
+
     if (!amount || amount < 100) {
       console.log('❌ Invalid amount:', amount);
       return res.json({
@@ -203,7 +204,7 @@ exports.createAddFundsOrder = async (req, res) => {
       });
     }
 
-    // Check environment variables
+
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
 
@@ -222,15 +223,15 @@ exports.createAddFundsOrder = async (req, res) => {
       key_secret: razorpayKeySecret,
     });
 
-    // ✅ FIXED: Shorter receipt (max 40 chars)
-    const timestamp = Date.now().toString().slice(-10); // Last 10 digits
-    const userIdShort = userId.toString().slice(-8); // Last 8 chars of userId
-    const receipt = `WLT_${userIdShort}_${timestamp}`; // Format: WLT_12345678_1234567890 (max 28 chars)
+
+    const timestamp = Date.now().toString().slice(-10);
+    const userIdShort = userId.toString().slice(-8);
+    const receipt = `WLT_${userIdShort}_${timestamp}`;
 
     const orderOptions = {
       amount: Math.round(amount * 100),
       currency: 'INR',
-      receipt, // ✅ Now within 40 char limit
+      receipt,
       notes: {
         userId: userId.toString(),
         purpose: 'wallet_topup',
@@ -240,12 +241,31 @@ exports.createAddFundsOrder = async (req, res) => {
 
     console.log('📦 Creating Razorpay order:', {
       ...orderOptions,
-      receiptLength: receipt.length, // Should be < 40
+      receiptLength: receipt.length,
     });
 
-    const razorOrder = await razorpay.orders.create(orderOptions);
+    let razorOrder;
+    try {
+      razorOrder = await razorpay.orders.create(orderOptions);
+      console.log('✅ Razorpay order created via SDK:', razorOrder.id);
+    } catch (sdkError) {
+      console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
 
-    console.log('✅ Razorpay order created:', razorOrder.id);
+      // Fallback using Axios
+      const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString('base64');
+      const response = await axios.post(
+        'https://api.razorpay.com/v1/orders',
+        orderOptions,
+        {
+          headers: {
+            'Authorization': `Basic ${auth}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      razorOrder = response.data;
+      console.log('✅ Razorpay order created via Axios Fallback:', razorOrder.id);
+    }
 
     return res.json({
       success: true,
@@ -253,6 +273,9 @@ exports.createAddFundsOrder = async (req, res) => {
       orderId: razorOrder.id,
     });
   } catch (error) {
+    console.error('Full Error Stack:', error.stack);
+    console.error('Error Object Keys:', Object.keys(error));
+
     console.error('❌ Order creation error:', {
       name: error.name,
       message: error.message,
@@ -281,7 +304,7 @@ exports.verifyAddFundsPayment = async (req, res) => {
       userId,
     });
 
-    // Verify signature
+
 
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -298,14 +321,14 @@ exports.verifyAddFundsPayment = async (req, res) => {
 
     console.log('✅ Signature verified successfully');
 
-    // Get or create wallet
+
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       console.log('⚠️ Creating new wallet for user');
       wallet = await Wallet.create({ userId, balance: 0 });
     }
 
-    // Credit wallet
+
     const previousBalance = wallet.balance;
     wallet.balance += amount;
     wallet.updatedAt = new Date();
@@ -317,12 +340,12 @@ exports.verifyAddFundsPayment = async (req, res) => {
       newBalance: wallet.balance,
     });
 
-    // ✅ FIXED: Create transaction record with valid enum value
+
     await WalletTransaction.create({
       walletId: wallet._id,
       userId,
       type: 'credit',
-      source: 'payment', // ✅ Changed from 'razorpay' to 'payment'
+      source: 'payment',
       amount,
       balanceAfter: wallet.balance,
       metadata: {

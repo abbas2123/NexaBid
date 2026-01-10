@@ -1,8 +1,10 @@
+
+
 const Payment = require('../../models/payment');
 const WalletTransaction = require('../../models/walletTransaction');
 
 exports.getTransacation = async (userId, page, filters) => {
-  const limit = 10;
+  const limit = 5;
   const skip = (page - 1) * limit;
 
   const payments = await Payment.find({ userId }).lean();
@@ -25,13 +27,13 @@ exports.getTransacation = async (userId, page, filters) => {
     })),
   ];
 
-  // Type filter
+  
   if (filters.type) ledger = ledger.filter((x) => x.type === filters.type);
 
-  // Source filter
+  
   if (filters.source) ledger = ledger.filter((x) => x.source === filters.source);
 
-  // Date filter
+  
   if (filters.dateRange) {
     const now = new Date();
     ledger = ledger.filter((tx) => {

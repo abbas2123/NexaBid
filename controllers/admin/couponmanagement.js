@@ -1,10 +1,13 @@
 const statusCode = require('../../utils/statusCode');
+
 const {
   VIEWS,
   LAYOUTS,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
+
   COUPON_MESSAGES,
+  TITLES,
 } = require('../../utils/constants');
 
 const {
@@ -21,13 +24,17 @@ exports.couponManagementPage = async (req, res) => {
 
     res.render(VIEWS.ADMIN_COUPON_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
+      title: TITLES.COUPON_MANAGEMENT,
       coupons,
       user: req.admin,
       currentPage: 'coupons',
     });
   } catch (err) {
     console.error('coupon Management Error:', err);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
 

@@ -1,8 +1,10 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const { adminProtect } = require('../../middlewares/adminAuth');
 const authProperty = require('../../controllers/admin/propertyManagement');
+
+const router = express.Router();
 
 router.get('/', adminProtect, authProperty.getAllProperties);
 

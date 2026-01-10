@@ -12,7 +12,7 @@ const {
 
 exports.liveAuctionPage = async (req, res) => {
   try {
-    const data = await AuctionService.getAuctionPageData(req.params.propertyId);
+    const data = await AuctionService.getAuctionPageData(req.params.propertyId, req.user?._id);
 
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
       return res.redirect(`${ROUTES.AUCTION_WON}/${req.params.propertyId}`);

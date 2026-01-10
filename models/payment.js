@@ -1,4 +1,4 @@
-// models/Payment.js
+
 const mongoose = require('mongoose');
 
 const paymentSchema = new mongoose.Schema(
@@ -36,8 +36,8 @@ const paymentSchema = new mongoose.Schema(
       default: 'razorpay',
     },
 
-    gatewayPaymentId: String, // Razorpay order_id
-    gatewayTransactionId: String, // Razorpay payment_id
+    gatewayPaymentId: String,
+    gatewayTransactionId: String,
 
     status: {
       type: String,
@@ -65,12 +65,12 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-paymentSchema.pre('save', function preSave(_next) {
+paymentSchema.pre('save', async function () {
   if (!this.orderNumber) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
     const time = Date.now().toString().slice(-4);
     this.orderNumber = `NEXA-${rand}${time}`;
   }
 });
-paymentSchema.index({ orderNumber: 1 }, { unique: true });
+
 module.exports = mongoose.model('Payment', paymentSchema);

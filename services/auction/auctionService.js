@@ -10,7 +10,7 @@ const {
 } = require('../../utils/constants');
 
 class AuctionService {
-  static async getAuctionPageData(propertyId) {
+  static async getAuctionPageData(propertyId, userId) {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
@@ -26,6 +26,20 @@ class AuctionService {
           ? AUCTION_STATUS.ENDED
           : AUCTION_STATUS.LIVE;
 
+    let myAutoBidMax = 0;
+    if (userId) {
+      const myBid = await PropertyBid.findOne({
+        propertyId,
+        bidderId: userId,
+        isAutoBid: true,
+        bidStatus: BID_STATUS.ACTIVE,
+      }).select('autoBidMax').lean();
+
+      if (myBid) {
+        myAutoBidMax = myBid.autoBidMax;
+      }
+    }
+
     return {
       property,
       auctionStatus,
@@ -34,6 +48,7 @@ class AuctionService {
       auctionStep: property.auctionStep || 1000,
       auctionStartsAt: property.auctionStartsAt,
       auctionEndsAt: property.auctionEndsAt,
+      myAutoBidMax,
     };
   }
 
@@ -100,7 +115,8 @@ class AuctionService {
     const participationPayment = await Payment.findOne({
       userId,
       contextId: propertyId,
-      contextType: PAYMENT_TYPES.PARTICIPATION_FEE,
+      contextType: 'property',
+      type: PAYMENT_TYPES.PARTICIPATION_FEE,
       status: PAYMENT_STATUS.SUCCESS,
     });
 
@@ -143,6 +159,88 @@ class AuctionService {
       currentHighestBid: property.currentHighestBid || property.basePrice,
       auctionStep: property.auctionStep,
     };
+  }
+
+  static async handleAutoBids(propertyId, io) {
+    let rounds = 0;
+    while (rounds < 50) { // Safety break
+      const property = await Property.findById(propertyId);
+      if (!property || !property.isAuction || new Date() > property.auctionEndsAt) break;
+
+      // Find someone who can beat the current price
+      const currentPrice = property.currentHighestBid || property.basePrice;
+      const step = property.auctionStep || 1000;
+      let nextBidAmount = currentPrice + step;
+
+      // Smart Logic:
+      // 1. Find candidates who can afford > currentPrice
+      // 2. If they can't afford nextBidAmount (full step), allow "All-in" (partial step)
+
+      const candidate = await PropertyBid.findOne({
+        propertyId,
+        isAutoBid: true,
+        bidStatus: BID_STATUS.ACTIVE,
+        bidderId: { $ne: property.currentHighestBidder },
+        autoBidMax: { $gt: currentPrice },
+      }).populate('bidderId', 'name').sort({ autoBidMax: -1, updatedAt: 1 }); // Strongest bidder first
+
+      if (!candidate) break; // No one can beat current
+
+      // "All-in" check
+      if (candidate.autoBidMax < nextBidAmount) {
+        nextBidAmount = candidate.autoBidMax;
+      }
+
+      // Execute Bid
+      const updated = await Property.findOneAndUpdate(
+        {
+          _id: propertyId,
+          currentHighestBid: { $lt: nextBidAmount }
+        },
+        {
+          $set: {
+            currentHighestBid: nextBidAmount,
+            currentHighestBidder: candidate.bidderId._id
+          }
+        },
+        { new: true }
+      );
+
+      if (updated) {
+        await PropertyBid.findOneAndUpdate(
+          { propertyId, bidderId: candidate.bidderId._id },
+          {
+            amount: nextBidAmount,
+            isAutoBid: true,
+            // Keep other fields same
+            escrowPaymentId: candidate.escrowPaymentId,
+            autoBidMax: candidate.autoBidMax,
+            bidStatus: BID_STATUS.ACTIVE
+          },
+          { upsert: true }
+        );
+
+        // Notify
+        const room = `auction_${propertyId}`;
+        io.to(room).emit('new_bid', {
+          amount: nextBidAmount,
+          bidderId: candidate.bidderId._id,
+          bidderName: candidate.bidderId.name,
+          time: new Date(),
+          isAutoBid: true
+        });
+
+        console.log(`🤖 AutoBid: ${candidate.bidderId.name} placed ${nextBidAmount}`);
+        rounds++;
+
+        // UX Enhancement: Add delay to simulate "thinking" and make the bidding war visible
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } else {
+        // Race condition lost, retry loop
+        continue;
+      }
+    }
   }
 }
 

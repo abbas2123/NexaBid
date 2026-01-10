@@ -1,0 +1,55 @@
+const landingRoute = require('./user/landing');
+const authRoute = require('./user/authRoute');
+const authVendor = require('./vendor/venderRoute');
+const adminRoute = require('./admin/authRoute');
+const profileRoute = require('./user/userProfile');
+const fileRoute = require('./admin/fileRoute');
+const authProperty = require('./user/property');
+const authTender = require('./user/tender');
+const routerSearch = require('./user/search');
+const notification = require('./user/notification');
+const adminPropertyRoutes = require('./admin/propertyRoute');
+const adminTenderRoutes = require('./admin/tenderRoute');
+const adminContractRoutes = require('./admin/contractManagemet');
+const adminCouponRoutes = require('./admin/couponManagement');
+const userStatusRoutes = require('./user/status');
+const userProfileRoutes = require('./user/myProfile');
+const userListingRoutes = require('./user/mylisting');
+const userWalletRoutes = require('./user/wallet');
+const vendorTenderRoutes = require('./vendor/tenderBId');
+const vendorPostAwardRoutes = require('./vendor/postAwardRoute');
+const paymentRoutes = require('./paymentRoute/payment');
+const auctionRoutes = require('./auction/liveAuction');
+const chatRoute = require('./chat/routerChat');
+const workOrder = require('./vendor/workOrders');
+
+module.exports = function registerRoutes(app) {
+  // Split routes to avoid 'Unexpected ?' PathError in strict express routers
+  app.get('/secure-files/:fileId/:filename', require('../middlewares/authMiddleware').protectRoute, require('../controllers/common/fileProxy').downloadSecureFile);
+  app.get('/secure-files/:fileId', require('../middlewares/authMiddleware').protectRoute, require('../controllers/common/fileProxy').downloadSecureFile);
+
+  app.use('/', landingRoute);
+  app.use('/auth', authRoute);
+  app.use('/vendor', authVendor);
+  app.use('/admin', adminRoute);
+  app.use('/admin/file', fileRoute);
+  app.use('/user', profileRoute);
+  app.use('/properties', authProperty);
+  app.use('/tenders', authTender);
+  app.use('/search', routerSearch);
+  app.use('/notifications', notification);
+  app.use('/admin/property-management', adminPropertyRoutes);
+  app.use('/admin/tender-management', adminTenderRoutes);
+  app.use('/admin/contract-management', adminContractRoutes);
+  app.use('/admin/coupon-management', adminCouponRoutes);
+  app.use('/user/status', userStatusRoutes);
+  app.use('/user/status', userProfileRoutes);
+  app.use('/user/status/my-listing', userListingRoutes);
+  app.use('/wallet', userWalletRoutes);
+  app.use('/vendor/tender', vendorTenderRoutes);
+  app.use('/publisher', vendorPostAwardRoutes);
+  app.use('/payments', paymentRoutes);
+  app.use('/auctions', auctionRoutes);
+  app.use('/chat', chatRoute);
+  app.use('/', workOrder);
+};

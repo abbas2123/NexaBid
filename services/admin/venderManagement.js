@@ -1,10 +1,60 @@
+
+
 const User = require('../../models/user');
 const vendorApplication = require('../../models/vendorApplication');
 const notificationService = require('../notificationService');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
-exports.getAllVendorApplication = async () =>
-  await vendorApplication.find().populate('userId', 'name email phone').sort({ createdAt: -1 });
+exports.getAllVendorApplications = async (page, filter) => {
+  const limit = 10; 
+  const query = {};
+
+  
+  if (filter.status && filter.status.trim() !== '') {
+    query.status = filter.status.trim();
+  }
+
+  
+  if (filter.search && filter.search.trim() !== '') {
+    
+    const users = await User.find({
+      $or: [
+        { name: new RegExp(filter.search.trim(), 'i') },
+        { email: new RegExp(filter.search.trim(), 'i') },
+      ],
+    }).select('_id');
+
+    const userIds = users.map((u) => u._id);
+
+    query.$or = [
+      { businessName: new RegExp(filter.search.trim(), 'i') },
+      { panNumber: new RegExp(filter.search.trim(), 'i') },
+      { gstNumber: new RegExp(filter.search.trim(), 'i') },
+      { userId: { $in: userIds } },
+    ];
+  }
+
+  const total = await vendorApplication.countDocuments(query);
+
+  const applications = await vendorApplication
+    .find(query)
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * limit)
+    .limit(limit)
+    .populate('userId', 'name email phone')
+    .lean();
+
+  return {
+    applications,
+    pagination: {
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      hasPrevPage: page > 1,
+      hasNextPage: page * limit < total,
+    },
+  };
+};
+
 exports.getAllVentdorApplicationById = async (id) =>
   await vendorApplication
     .findById(id)

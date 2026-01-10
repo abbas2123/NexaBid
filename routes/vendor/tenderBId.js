@@ -1,15 +1,17 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const authControler = require('../../controllers/vendor/tenderBid');
 const authMiddleware = require('../../middlewares/authMiddleware');
-const uploads = require('../../middlewares/cloudinaryUploader');
+const uploads = require('../../middlewares/upload');
+
+const router = express.Router();
 router.get('/:id/bid', authMiddleware.protectRoute, authControler.getTenderTechBidForm);
 
 router.post(
   '/upload/all/:id',
   authMiddleware.protectRoute,
-  uploads.fields([
+  uploads('nexabid/tender_bids').fields([
     { name: 'proposalFiles', maxCount: 20 },
     { name: 'techFiles', maxCount: 20 },
   ]),
@@ -19,7 +21,7 @@ router.get('/:id/financial', authMiddleware.protectRoute, authControler.getTende
 router.post(
   '/uploads/:id/financial',
   authMiddleware.protectRoute,
-  uploads.fields([
+  uploads('nexabid/tender_bids').fields([
     { name: 'finForms', maxCount: 20 },
     { name: 'quotationFiles', maxCount: 20 },
   ]),

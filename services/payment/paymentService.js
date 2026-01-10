@@ -1,4 +1,5 @@
 const Razorpay = require('razorpay');
+const axios = require('axios');
 const crypto = require('crypto');
 const Property = require('../../models/property');
 const Payment = require('../../models/payment');
@@ -25,6 +26,11 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+console.log('🔑 Razorpay Config:', {
+  keyIdLength: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 0,
+  keySecretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0
+});
+
 const _handlePostPaymentActions = async (payment, userId) => {
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(payment.contextId);
@@ -42,7 +48,7 @@ const _handlePostPaymentActions = async (payment, userId) => {
     console.log('✅ Bid created/updated with escrowPaymentId');
   }
 
-  // 2. Coupon redemption
+
   if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
       couponId: payment.metadata.coupon.id,
@@ -89,7 +95,7 @@ exports.startInitiatePayment = async (userId, type, id) => {
 
   if (existing) return existing;
   let amount = 0;
-
+  console.log('exis', existing);
   if (type === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(id);
     if (!property) throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
@@ -97,7 +103,7 @@ exports.startInitiatePayment = async (userId, type, id) => {
   } else if (type === CONTEXT_TYPES.TENDER) {
     const tender = await Tender.findById(id);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
-    amount = 5000 + tender.emdAmount;
+    amount = 5000 + (tender.emdAmount || 0);
   } else {
     throw new Error(ERROR_MESSAGES.INVALID_CONTEXT_TYPE);
   }
@@ -114,11 +120,11 @@ exports.startInitiatePayment = async (userId, type, id) => {
 };
 
 exports.createRazorpayOrder = async (paymentId, amount) => {
-   const payment = await Payment.findOne({
-     _id: paymentId,
-     status: { $in: [PAYMENT_STATUS.PENDING, PAYMENT_STATUS.FAILED] },
-   });
-
+  const payment = await Payment.findOne({
+    _id: paymentId,
+    status: PAYMENT_STATUS.PENDING, // FIX #2: Only allow PENDING
+  });
+  console.log('payment', payment);
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
@@ -128,13 +134,42 @@ exports.createRazorpayOrder = async (paymentId, amount) => {
       amound: payment.amount * 100,
     };
   }
-  const razorOrder = await razorpay.orders.create({
-    amount: Math.round(amount * 100),
-    currency: 'INR',
-    receipt: `rcpt_${Date.now()}`,
-  });
 
-  payment.amount = amount;
+  // FIX #5: Always calculate from DB/Metadata, ignore frontend amount
+  const payable = payment.metadata?.payableAmount || payment.amount;
+
+  let razorOrder;
+  try {
+    razorOrder = await razorpay.orders.create({
+      amount: Math.round(payable * 100),
+      currency: 'INR',
+      receipt: `rcpt_${Date.now()}`,
+    });
+    console.log('✅ Razorpay order created via SDK:', razorOrder.id);
+  } catch (sdkError) {
+    console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
+    const auth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString('base64');
+    const response = await axios.post(
+      'https://api.razorpay.com/v1/orders',
+      {
+        amount: Math.round(payable * 100),
+        currency: 'INR',
+        receipt: `rcpt_${Date.now()}`,
+      },
+      {
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    razorOrder = response.data;
+    console.log('✅ Razorpay order created via Axios Fallback:', razorOrder.id);
+  }
+
+  // FIX #1: Do NOT overwrite payment.amount here
+  // payment.amount = amount; 
+
   payment.gatewayPaymentId = razorOrder.id;
   await payment.save();
 
@@ -152,8 +187,8 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
+  console.log('escro', payment);
 
-  // Get or create wallet
   let userWallet = await Wallet.findOne({ userId });
   if (!userWallet) {
     userWallet = await Wallet.create({ userId, balance: 0 });
@@ -207,13 +242,15 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
     userWallet = await Wallet.create({ userId, balance: 0 });
   }
 
-  if (userWallet.balance < amount) {
+  const payable = payment.metadata?.payableAmount || payment.amount;
+
+  if (userWallet.balance < payable) {
     throw new Error(
-      `Insufficient balance. Available: ₹${userWallet.balance}, Required: ₹${amount}`
+      `Insufficient balance. Available: ₹${userWallet.balance}, Required: ₹${payable}`
     );
   }
 
-  userWallet.balance -= amount;
+  userWallet.balance -= payable;
   userWallet.updatedAt = new Date();
   await userWallet.save();
 
@@ -222,7 +259,7 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
     userId,
     type: 'debit',
     source: 'payment',
-    amount,
+    amount: payable, // FIX #3: Use correct payable amount
     balanceAfter: userWallet.balance,
     metadata: {
       paymentId: payment._id,
@@ -235,6 +272,10 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
   payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gateway = GATEWAYS.WALLET;
   payment.gatewayTransactionId = `WALLET_${Date.now()}`;
+
+  // Finalize amount on success
+  payment.amount = payable;
+
   await payment.save();
 
   await _handlePostPaymentActions(payment, userId);
@@ -248,24 +289,36 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
 exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = razorpayData;
 
+  if (!razorpay_payment_id || !razorpay_order_id || !razorpay_signature) {
+    throw new Error('Missing required Razorpay payment data');
+  }
+
   const payment = await Payment.findOne({
     _id: paymentId,
     status: PAYMENT_STATUS.PENDING,
   });
   if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
-
+  console.log('paymentVeri', payment);
+  const stringToSign = `${razorpay_order_id}|${razorpay_payment_id}`;
   const generatedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+    .update(stringToSign)
     .digest('hex');
-  console.log('generatedSignature', generatedSignature);
+
+  console.log('🔐 Verification Debug:', {
+    sentSignature: razorpay_signature,
+    generatedSignature: generatedSignature,
+    stringToSign: stringToSign,
+    secretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0
+  });
 
   if (generatedSignature !== razorpay_signature) {
+    console.error('❌ Signature mismatch!');
     payment.status = PAYMENT_STATUS.FAILED;
-     if (payment.metadata?.originalAmount) {
-       payment.amount = payment.metadata.originalAmount;
-       payment.metadata = null;
-     }
+    payment.metadata = { ...payment.metadata, failureReason: 'Signature mismatch' };
+    if (payment.metadata?.originalAmount) {
+      payment.amount = payment.metadata.originalAmount;
+    }
     console.log('payment.status', payment.status);
     await payment.save();
     throw new Error(ERROR_MESSAGES.SIGNATURE_FAILED);
@@ -273,9 +326,13 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
 
   payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gatewayTransactionId = razorpay_payment_id;
+
+  // Finalize the amount to what was actually paid
+  payment.amount = payment.metadata?.payableAmount || payment.amount;
+
   await payment.save();
 
-  // Execute shared post-payment logic
+
   await _handlePostPaymentActions(payment, payment.userId);
 
   return payment;
@@ -324,9 +381,10 @@ exports.getFailurePageData = async (paymentId) => {
     productType: payment.contextType,
     walletBalance: wallet?.balance || 0,
     canRetry: true,
-    errorReason: 'Bank declined the transaction',
+    errorReason: payment.metadata?.failureReason || 'Bank declined the transaction',
   };
 };
+
 exports.applyCoupon = async (userId, intentId, couponCode) => {
   const payment = await Payment.findById(intentId);
   if (!payment || payment.status !== PAYMENT_STATUS.PENDING)
@@ -376,14 +434,13 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
       value: coupon.value,
     },
     discount,
-    originalAmount,
-    finalAmount,
+    originalAmount: payment.amount,
+    payableAmount: finalAmount,
   };
 
-  payment.amount = finalAmount;
   await payment.save();
 
-  return { discount, newAmount: payment.amount };
+  return { discount, newAmount: finalAmount };
 };
 
 exports.removeCoupon = async (intentId) => {
@@ -393,12 +450,11 @@ exports.removeCoupon = async (intentId) => {
     throw new Error(ERROR_MESSAGES.CANNOT_MODIFY_COMPLETED);
   if (!payment.metadata?.coupon) throw new Error(ERROR_MESSAGES.NO_COUPON_APPLIED);
 
-  const { originalAmount } = payment.metadata;
+  const originalAmount = payment.amount;
   const removedCouponCode = payment.metadata.coupon.code;
 
-  payment.amount = originalAmount;
-  payment.metadata = null;
+  payment.metadata = {}; // FIX #4: Use empty object instead of null
   await payment.save();
 
-  return { amount: payment.amount, removedCouponCode };
+  return { amount: originalAmount, removedCouponCode };
 };

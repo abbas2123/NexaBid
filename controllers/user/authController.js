@@ -192,13 +192,13 @@ exports.resendOtp = async (req, res) => {
       });
     }
 
-    // 👇 Immediately return response
+    
     res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.OTP_RESENT,
     });
 
-    // 👇 Continue async work AFTER response
+    
     setTimeout(async () => {
       await authService.resendOtpByUserId(userId);
       console.log('OTP resend operation completed');

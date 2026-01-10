@@ -1,8 +1,10 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const authController = require('../../controllers/user/status');
 const authMiddleware = require('../../middlewares/authMiddleware');
+
+const router = express.Router();
 
 router.get('/propertyStatus', authMiddleware.protectRoute, authController.propertyStatus);
 router.get(

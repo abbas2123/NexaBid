@@ -6,8 +6,7 @@
       <%= property ? "Update Property" : "List a New Property" %>
     </h1>
 
-    <a href="/properties"
-       class="text-sm px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+    <a href="/properties" class="text-sm px-3 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
       Back
     </a>
   </div>
@@ -23,9 +22,8 @@
       <div class="space-y-4">
         <div>
           <label>Title *</label>
-          <input required name="title" id="title"
-                 value="<%= property?.title || '' %>"
-                 class="w-full border rounded p-2" />
+          <input required name="title" id="title" value="<%= property?.title || '' %>"
+            class="w-full border rounded p-2" />
         </div>
 
         <div>
@@ -38,19 +36,17 @@
           <label>Type *</label>
           <select name="type" id="type" class="w-full border rounded p-2">
             <option value="">Select</option>
-            <option value="house" <%= property?.type==="house" ? "selected" : "" %>>House</option>
-            <option value="apartment" <%= property?.type==="apartment" ? "selected" : "" %>>Apartment</option>
-            <option value="land" <%= property?.type==="land" ? "selected" : "" %>>Land</option>
-            <option value="commercial" <%= property?.type==="commercial" ? "selected" : "" %>>Commercial</option>
+            <option value="house" <%=property?.type==="house" ? "selected" : "" %>>House</option>
+            <option value="apartment" <%=property?.type==="apartment" ? "selected" : "" %>>Apartment</option>
+            <option value="land" <%=property?.type==="land" ? "selected" : "" %>>Land</option>
+            <option value="commercial" <%=property?.type==="commercial" ? "selected" : "" %>>Commercial</option>
           </select>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <input placeholder="BHK" name="bhk" id="bhk"
-                 value="<%= property?.bhk || '' %>" class="border rounded p-2" />
-          <input placeholder="Size in sqft" name="size" id="size"
-                 value="<%= property?.size || '' %>"
-                 class="border rounded p-2" />
+          <input placeholder="BHK" name="bhk" id="bhk" value="<%= property?.bhk || '' %>" class="border rounded p-2" />
+          <input placeholder="Size in sqft" name="size" id="size" value="<%= property?.size || '' %>"
+            class="border rounded p-2" />
         </div>
 
       </div>
@@ -61,19 +57,15 @@
     <section class="bg-white p-6 shadow-sm rounded-lg border space-y-4">
       <h2 class="text-lg font-bold mb-4">Location</h2>
 
-      <input name="address" id="address"
-             value="<%= property?.address || '' %>"
-             placeholder="Enter address"
-             class="w-full border rounded p-2" />
+      <input name="address" id="address" value="<%= property?.address || '' %>" placeholder="Enter address"
+        class="w-full border rounded p-2" />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <input placeholder="State" name="locationState" id="locationState"
-               value="<%= property?.locationState || '' %>"
-               class="border rounded p-2" />
+        <input placeholder="State" name="locationState" id="locationState" value="<%= property?.locationState || '' %>"
+          class="border rounded p-2" />
 
         <input placeholder="District" name="locationDistrict" id="locationDistrict"
-               value="<%= property?.locationDistrict || '' %>"
-               class="border rounded p-2" />
+          value="<%= property?.locationDistrict || '' %>" class="border rounded p-2" />
       </div>
 
       <p class="text-sm font-semibold mt-2">
@@ -83,139 +75,128 @@
       <div id="map" class="w-full h-64 rounded bg-gray-300"></div>
 
       <div class="grid grid-cols-2 gap-4 mt-2">
-        <input readonly name="geoLat" id="geoLat"
-               value="<%= property?.geoLat || '' %>" class="border rounded p-2" />
-        <input readonly name="geoLng" id="geoLng"
-               value="<%= property?.geoLng || '' %>" class="border rounded p-2" />
+        <input readonly name="geoLat" id="geoLat" value="<%= property?.geoLat || '' %>" class="border rounded p-2" />
+        <input readonly name="geoLng" id="geoLng" value="<%= property?.geoLng || '' %>" class="border rounded p-2" />
       </div>
     </section>
 
 
     <!------------------------ PRICING ------------------------------>
-<section class="bg-white p-6 shadow-sm rounded-lg border space-y-6">
+    <section class="bg-white p-6 shadow-sm rounded-lg border space-y-6">
 
-  <div class="flex justify-between items-center">
-    <h2 class="text-lg font-bold">Pricing</h2>
+      <div class="flex justify-between items-center">
+        <h2 class="text-lg font-bold">Pricing</h2>
 
-    <label class="flex items-center gap-2 text-sm">
-      <span>Auction?</span>
-      <input name="isAuction" id="isAuction" type="checkbox"
-             <%= property?.isAuction ? "checked" : "" %> />
-    </label>
-  </div>
+        <label class="flex items-center gap-2 text-sm">
+          <span>Auction?</span>
+          <input name="isAuction" id="isAuction" type="checkbox" <%=property?.isAuction ? "checked" : "" %> />
+        </label>
+      </div>
 
-  <!-- AUCTION FIELDS -->
-  <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div>
-      <label class="font-medium block mb-1">Base Price *</label>
-      <input type="number" id="basePrice" name="basePrice"
-             value="<%= property?.basePrice || '' %>"
-             class="border rounded-lg p-2 w-full">
-    </div>
+      <!-- AUCTION FIELDS -->
+      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="font-medium block mb-1">Base Price *</label>
+          <input type="number" id="basePrice" name="basePrice" value="<%= property?.basePrice || '' %>"
+            class="border rounded-lg p-2 w-full">
+        </div>
 
-    <div>
-      <label class="font-medium block mb-1">Auction Step *</label>
-      <input type="number" id="auctionStep" name="auctionStep"
-             value="<%= property?.auctionStep || '' %>"
-             class="border rounded-lg p-2 w-full">
-    </div>
-  </div>
+        <div>
+          <label class="font-medium block mb-1">Auction Step *</label>
+          <input type="number" id="auctionStep" name="auctionStep" value="<%= property?.auctionStep || '' %>"
+            class="border rounded-lg p-2 w-full">
+        </div>
+      </div>
 
-  <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div>
-      <label class="font-medium block mb-1">Reserve Price *</label>
-      <input type="number" id="auctionReservePrice" name="auctionReservePrice"
-             value="<%= property?.auctionReservePrice || '' %>"
-             class="border rounded-lg p-2 w-full">
-    </div>
+      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="font-medium block mb-1">Reserve Price *</label>
+          <input type="number" id="auctionReservePrice" name="auctionReservePrice"
+            value="<%= property?.auctionReservePrice || '' %>" class="border rounded-lg p-2 w-full">
+        </div>
 
-    <div>
-      <label class="font-medium block mb-1">Auction Starts At</label>
-      <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
-        value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
-        class="border rounded-lg p-2 w-full">
-    </div>
-  </div>
+        <div>
+          <label class="font-medium block mb-1">Auction Starts At</label>
+          <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
+            value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
+            class="border rounded-lg p-2 w-full">
+        </div>
+      </div>
 
-  <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
-    <div>
-      <label class="font-medium block mb-1">Auction Ends At</label>
-      <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
-        value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
-        class="border rounded-lg p-2 w-full">
-    </div>
-  </div>
+      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="font-medium block mb-1">Auction Ends At</label>
+          <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
+            value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
+            class="border rounded-lg p-2 w-full">
+        </div>
+      </div>
 
-</section>
+    </section>
 
 
     <!------------------- EXISTING MEDIA ----------------------->
-<% if (property && media && media.length > 0) { %>
-<section class="bg-white p-6 border rounded-lg shadow-sm">
-  <h3 class="font-bold mb-4">Existing Images</h3>
+    <% if (property && media && media.length> 0) { %>
+      <section class="bg-white p-6 border rounded-lg shadow-sm">
+        <h3 class="font-bold mb-4">Existing Images</h3>
 
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-    <% media.forEach(img => { %>
-      <div id="image-<%= img._id %>" class="relative group">
-        <img src="<%= img.url %>" class="w-full h-36 object-cover rounded" />
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <% media.forEach(img=> { %>
+            <div id="image-<%= img._id %>" class="relative group">
+              <img src="<%= img.url %>" class="w-full h-36 object-cover rounded" />
 
-        <button 
-        type="button"
-          onclick="deleteImage('<%= property._id %>', '<%= img._id %>')"
-          class="hidden group-hover:block absolute top-1 right-1 bg-red-600 text-white px-2 py-1 text-xs rounded">
-          Delete
-        </button>
-      </div>
-    <% }) %>
-  </div>
-</section>
-<% } %>
+              <button type="button" onclick="deleteImage('<%= property._id %>', '<%= img._id %>')"
+                class="hidden group-hover:block absolute top-1 right-1 bg-red-600 text-white px-2 py-1 text-xs rounded">
+                Delete
+              </button>
+            </div>
+            <% }) %>
+        </div>
+      </section>
+      <% } %>
 
 
 
-<!------------------- EXISTING DOCS ----------------------->
-<% if (property && docs && docs.length > 0) { %>
-<section class="bg-white p-6 border rounded-lg shadow-sm mt-4">
-  <h3 class="font-bold mb-4">Existing Documents</h3>
+        <!------------------- EXISTING DOCS ----------------------->
+        <% if (property && docs && docs.length> 0) { %>
+          <section class="bg-white p-6 border rounded-lg shadow-sm mt-4">
+            <h3 class="font-bold mb-4">Existing Documents</h3>
 
-  <div class="space-y-2">
-    <% docs.forEach(doc => { %>
-      <div id="doc-<%= doc._id %>" class="flex justify-between border rounded p-2 bg-gray-50 items-center">
-        
-        <a href="<%= doc.url %>" class="text-blue-600 underline" target="_blank">
-          <%= doc.name || "Document" %>
-        </a>
+            <div class="space-y-2">
+              <% docs.forEach(doc=> { %>
+                <div id="doc-<%= doc._id %>" class="flex justify-between border rounded p-2 bg-gray-50 items-center">
 
-        <button 
-        type="button"
-          onclick="deleteDoc('<%= property._id %>', '<%= doc._id %>')"
-          class="bg-red-600 text-white px-3 py-1 text-xs rounded">
-          Delete
-        </button>
-      </div>
-    <% }) %>
-  </div>
+                  <a href="<%= doc.url %>" class="text-blue-600 underline" target="_blank">
+                    <%= doc.name || "Document" %>
+                  </a>
 
-</section>
-<% } %>
+                  <button type="button" onclick="deleteDoc('<%= property._id %>', '<%= doc._id %>')"
+                    class="bg-red-600 text-white px-3 py-1 text-xs rounded">
+                    Delete
+                  </button>
+                </div>
+                <% }) %>
+            </div>
+
+          </section>
+          <% } %>
 
 
-    <!-------------------- NEW UPLOADS ------------------------->
-    <section class="bg-white p-6 border rounded-lg shadow-sm space-y-3">
-      <h3 class="font-bold">Upload Images</h3>
-      <input type="file" name="media" id="media" multiple class="border rounded p-2 w-full" />
+            <!-------------------- NEW UPLOADS ------------------------->
+            <section class="bg-white p-6 border rounded-lg shadow-sm space-y-3">
+              <h3 class="font-bold">Upload Images</h3>
+              <input type="file" name="media" id="media" multiple class="border rounded p-2 w-full" />
 
-      <h3 class="font-bold">Upload Documents</h3>
-      <input type="file" name="docs" id="docs" multiple class="border rounded p-2 w-full" />
-    </section>
+              <h3 class="font-bold">Upload Documents</h3>
+              <input type="file" name="docs" id="docs" multiple class="border rounded p-2 w-full" />
+            </section>
 
-    <!-------------------- SUBMIT BUTTON ------------------------->
-    <div class="flex justify-end">
-      <button type="submit"
-        class="bg-primary text-white px-6 py-2 font-semibold rounded hover:bg-blue-700">
-        <%= property ? "Update Property" : "Submit Property" %>
-      </button>
-    </div>
+            <!-------------------- SUBMIT BUTTON ------------------------->
+            <div class="flex justify-end">
+              <button type="submit" class="bg-primary text-white px-6 py-2 font-semibold rounded hover:bg-blue-700">
+                <%= property ? "Update Property" : "Submit Property" %>
+              </button>
+            </div>
 
   </form>
 </div>
@@ -226,112 +207,111 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script defer
   src="https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&libraries=places&callback=initMap">
-</script>
+  </script>
 
 
 <script>
-console.log("🚀 JS Loaded");
+  console.log("🚀 JS Loaded");
 
-const form = document.getElementById("propertyForm");
-const isEditMode = form.dataset.id !== "";
-console.log("Edit Mode?", isEditMode);
+  const form = document.getElementById("propertyForm");
+  const isEditMode = form.dataset.id !== "";
+  console.log("Edit Mode?", isEditMode);
 
 
-// 🔥 Toggle auction fields
-const isAuctionInput = document.getElementById("isAuction");
-const auctionFields = document.querySelectorAll(".auctionFields");
-// const buyNowPrice = document.getElementById("buyNowPrice");
+  // 🔥 Toggle auction fields
+  const isAuctionInput = document.getElementById("isAuction");
+  const auctionFields = document.querySelectorAll(".auctionFields");
 
-function updatePricingUI() {
-  if (isAuctionInput.checked) {
-    auctionFields.forEach(f => f.classList.remove("hidden"));
-    // buyNowPrice.disabled = true;
-  } else {
-    auctionFields.forEach(f => f.classList.add("hidden"));
-    // buyNowPrice.disabled = false;
-  }
-}
-
-// apply on load
-updatePricingUI();
-
-// apply when change
-isAuctionInput.addEventListener("change", updatePricingUI);
-
-// 📌 Submit Handler
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  console.log("🔥 SUBMIT STARTED");
- const propertyId = form.dataset.id; 
-  const lat = document.getElementById("geoLat").value.trim();
-  const lng = document.getElementById("geoLng").value.trim();
-
-  // Important validation change ⬇️
-  if (!isEditMode && (!lat || !lng)) {
-    return Swal.fire({ icon: "error", title: "Pick a location on map" });
+  function updatePricingUI() {
+    if (isAuctionInput.checked) {
+      auctionFields.forEach(f => f.classList.remove("hidden"));
+      // buyNowPrice.disabled = true;
+    } else {
+      auctionFields.forEach(f => f.classList.add("hidden"));
+      // buyNowPrice.disabled = false;
+    }
   }
 
-  const formData = new FormData(form);
-  formData.set("isAuction", isAuctionInput.checked ? "true" : "false");
+  // apply on load
+  updatePricingUI();
 
-  let url = "/properties/create";
-  let method = "POST";
+  // apply when change
+  isAuctionInput.addEventListener("change", updatePricingUI);
 
-  if (isEditMode) {
-    url = `/properties/update/${propertyId}`;
-    method = "PATCH";
-  }
+  // 📌 Submit Handler
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("🔥 SUBMIT STARTED");
+    const propertyId = form.dataset.id;
+    const lat = document.getElementById("geoLat").value.trim();
+    const lng = document.getElementById("geoLng").value.trim();
 
-  console.log("📌 Sending →", method, url);
+    // Important validation change ⬇️
+    if (!isEditMode && (!lat || !lng)) {
+      return Swal.fire({ icon: "error", title: "Pick a location on map" });
+    }
 
-  const res = await fetch(url, { method, body: formData });
-  const data = await res.json();
+    const formData = new FormData(form);
+    formData.set("isAuction", isAuctionInput.checked ? "true" : "false");
 
-  console.log("🛬 API Response:", data);
+    let url = "/properties/create";
+    let method = "POST";
 
-  if (!data.success) {
-    return Swal.fire({ icon: "error", title: data.message || "Something failed" });
-  }
+    if (isEditMode) {
+      url = `/properties/update/${propertyId}`;
+      method = "PATCH";
+    }
 
-  Swal.fire({ icon: "success", title: isEditMode ? "Updated!" : "Submitted!" })
-    .then(() => window.location.href = "/user/status/propertyStatus");
-});
+    console.log("📌 Sending →", method, url);
 
+    const res = await fetch(url, { method, body: formData });
+    const data = await res.json();
 
-// 📌 Load Google Map & restore previous location
-let map, marker;
-function initMap() {
-  const storedLat = parseFloat(document.getElementById("geoLat").value);
-  const storedLng = parseFloat(document.getElementById("geoLng").value);
+    console.log("🛬 API Response:", data);
 
-  const defaultPos = (!isNaN(storedLat) && !isNaN(storedLng))
-    ? { lat: storedLat, lng: storedLng }
-    : { lat: 10.1632, lng: 76.6413 };
+    if (!data.success) {
+      return Swal.fire({ icon: "error", title: data.message || "Something failed" });
+    }
 
-  map = new google.maps.Map(document.getElementById("map"), {
-    zoom: 12,
-    center: defaultPos,
+    Swal.fire({ icon: "success", title: isEditMode ? "Updated!" : "Submitted!" })
+      .then(() => window.location.href = "/user/status/propertyStatus");
   });
 
-  marker = new google.maps.Marker({
-    map,
-    position: defaultPos,
-    draggable: true,
-  });
 
-  marker.addListener("dragend", updateLatLng);
+  // 📌 Load Google Map & restore previous location
+  let map, marker;
+  function initMap() {
+    const storedLat = parseFloat(document.getElementById("geoLat").value);
+    const storedLng = parseFloat(document.getElementById("geoLng").value);
 
-  map.addListener("click", (e) => {
-    marker.setPosition(e.latLng);
-    updateLatLng();
-  });
+    const defaultPos = (!isNaN(storedLat) && !isNaN(storedLng))
+      ? { lat: storedLat, lng: storedLng }
+      : { lat: 10.1632, lng: 76.6413 };
 
-  function updateLatLng() {
-    const pos = marker.getPosition();
-    document.getElementById("geoLat").value = pos.lat().toFixed(6);
-    document.getElementById("geoLng").value = pos.lng().toFixed(6);
+    map = new google.maps.Map(document.getElementById("map"), {
+      zoom: 12,
+      center: defaultPos,
+    });
+
+    marker = new google.maps.Marker({
+      map,
+      position: defaultPos,
+      draggable: true,
+    });
+
+    marker.addListener("dragend", updateLatLng);
+
+    map.addListener("click", (e) => {
+      marker.setPosition(e.latLng);
+      updateLatLng();
+    });
+
+    function updateLatLng() {
+      const pos = marker.getPosition();
+      document.getElementById("geoLat").value = pos.lat().toFixed(6);
+      document.getElementById("geoLng").value = pos.lng().toFixed(6);
+    }
   }
-}
 
 
 </script>

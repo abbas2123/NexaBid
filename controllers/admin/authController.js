@@ -1,11 +1,14 @@
 const adminAuthService = require('../../services/admin/authService');
 const statusCode = require('../../utils/statusCode');
+
 const {
   VIEWS,
   REDIRECTS,
   SUCCESS_MESSAGES,
   LAYOUTS,
+
   ERROR_MESSAGES,
+  TITLES,
 } = require('../../utils/constants');
 
 exports.getAdminLogin = (req, res) => {
@@ -19,7 +22,7 @@ exports.getAdminLogin = (req, res) => {
 
   res.render(VIEWS.ADMIN_LOGIN, {
     layout: false,
-    title: 'Admin login - nexaBid',
+    title: TITLES.ADMIN_LOGIN,
   });
 };
 
@@ -61,40 +64,57 @@ exports.adminLogout = (req, res) => {
 
 exports.getAdminDashboard = async (req, res) => {
   try {
-    console.log('admin:', req.admin._id);
-    const stats = await adminAuthService.getDashboardStats();
+    const filters = {
+      timeframe: req.query.timeframe || 'weekly',
+      category: req.query.category || 'all',
+    };
+
+    const stats = await adminAuthService.getDashboardStats(filters);
     const activities = await adminAuthService.getRecentActivities();
     const tasks = await adminAuthService.getPendingTasks();
-    console.log('📊 Dashboard Stats:', stats);
-    console.log('📊 Dashboard Stats:', tasks);
+
     return res.render(VIEWS.ADMIN_DASHBOARD, {
       layout: LAYOUTS.ADMIN_LAYOUT,
-      title: 'Admin Dashboard - NexaBid',
+      title: TITLES.ADMIN_DASHBOARD,
       stats,
       activities,
       tasks,
+      applied: filters,
       currentPage: 'dashboard',
     });
   } catch (err) {
     console.error('Admin dashboard Error:', err);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
 
 exports.getUserManagement = async (req, res) => {
   try {
-    const page = parseInt(req.query.page)
-    const users = await adminAuthService.getAllUsers();
+    const page = parseInt(req.query.page) || 1;
+    const filter = {
+      search: req.query.search || '',
+      role: req.query.role || '',
+      status: req.query.status || '',
+    };
+    const users = await adminAuthService.getAllUsers(page, filter);
 
     return res.render(VIEWS.ADMIN_USER_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
-      title: 'User Management',
-      users,
+      title: TITLES.USER_MANAGEMENT,
+      users: users.users,
+      pagination: users.pagination,
+      applied: filter,
       currentPage: 'user-management',
     });
   } catch (err) {
     console.error('User Management Error:', err);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
 

@@ -1,10 +1,11 @@
+
+
 const myProfileService = require('../../services/profile/myProfileService');
 const statusCode = require('../../utils/statusCode');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.changePassword = async (req, res) => {
   try {
-    console.log('req.body', req.body);
     const { newPassword, currentPassword, confirmPassword } = req.body;
     const userId = req.user._id;
 

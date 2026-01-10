@@ -1,22 +1,15 @@
-const cloudinary = require('../../config/cloudinary');
+
+
 const Tender = require('../../models/tender');
 const TenderBid = require('../../models/tenderBid');
 const Payment = require('../../models/payment');
 const File = require('../../models/File');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
-const uploadToCloudinary = (buffer, folder) =>
-  new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ resource_type: 'auto', folder }, (err, result) =>
-        err ? reject(err) : resolve(result)
-      )
-      .end(buffer);
-  });
 
 module.exports = {
   async getTechBidData(tenderId, user) {
-    if (!user || user.role !== 'vendor' || !user.isVendor)
+    if (!user || (!user.isVendor && user.role !== 'vendor'))
       throw new Error(ERROR_MESSAGES.NOT_VENDOR);
 
     const tender = await Tender.findById(tenderId);
@@ -48,14 +41,14 @@ module.exports = {
 
     if (files.proposalFiles) {
       for (const file of files.proposalFiles) {
-        const cld = await uploadToCloudinary(file.buffer, 'tender_bids/proposal');
+        
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: cld.secure_url,
+          fileUrl: file.path,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: cld.public_id },
+          metadata: { public_id: file.filename },
         });
         proposalIds.push(saved._id);
       }
@@ -64,14 +57,13 @@ module.exports = {
 
     if (files.techFiles) {
       for (const file of files.techFiles) {
-        const cld = await uploadToCloudinary(file.buffer, 'tender_bids/technical');
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: cld.secure_url,
+          fileUrl: file.path,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: cld.public_id },
+          metadata: { public_id: file.filename },
         });
         techIds.push(saved._id);
       }
@@ -94,14 +86,13 @@ module.exports = {
 
     if (files.finForms) {
       for (const file of files.finForms) {
-        const cld = await uploadToCloudinary(file.buffer, 'tender_bids/financial');
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: cld.secure_url,
+          fileUrl: file.path,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: cld.public_id },
+          metadata: { public_id: file.filename },
         });
         finIds.push(saved._id);
       }
@@ -110,14 +101,13 @@ module.exports = {
 
     if (files.quotationFiles) {
       for (const file of files.quotationFiles) {
-        const cld = await uploadToCloudinary(file.buffer, 'tender_bids/quotes');
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: cld.secure_url,
+          fileUrl: file.path,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: cld.public_id },
+          metadata: { public_id: file.filename },
         });
         quoteIds.push(saved._id);
       }

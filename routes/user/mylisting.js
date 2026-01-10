@@ -1,4 +1,7 @@
+
+
 const express = require('express');
+const { protectRoute } = require('../../middlewares/authMiddleware');
 
 const router = express.Router();
 const {
@@ -8,7 +11,6 @@ const {
   selectWinner,
 } = require('../../controllers/user/mylisting');
 
-const { protectRoute } = require('../../middlewares/authMiddleware');
 
 router.get('/owner/tender/:id/evaluation', protectRoute, getTenderEvaluationPage);
 

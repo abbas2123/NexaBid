@@ -1,18 +1,25 @@
 const tenderCreationService = require('../../services/tender/tenderCreation');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
+
+const {
+  LAYOUTS,
+  VIEWS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  TITLES,
+} = require('../../utils/constants');
 
 exports.getCreateTenderPage = async (req, res) => {
   try {
-    res.render('vendor/tenderCreate', {
+    res.render(VIEWS.TENDER_CREATE, {
       layout: LAYOUTS.USER_LAYOUT,
-      title: 'Create Tender',
+      title: TITLES.CREATE_TENDER,
       user: req.user,
-      tender: null, // IMPORTANT!
+      tender: null, 
       files: [],
     });
   } catch (error) {
-    console.log('Create Tender Page Error:', error);
+    console.error('Create Tender Page Error:', error);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: ERROR_MESSAGES.ERROR_LOADING_TENDER_PAGE,

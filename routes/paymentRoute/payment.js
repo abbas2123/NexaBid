@@ -1,8 +1,10 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const paymentController = require('../../controllers/payment/payment');
 const authMiddleware = require('../../middlewares/authMiddleware');
+
+const router = express.Router();
 
 router.get('/initiate', authMiddleware.protectRoute, paymentController.initiatePayment);
 

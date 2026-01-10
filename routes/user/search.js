@@ -1,8 +1,10 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
+
+const router = express.Router();
 
 router.get('/', async (req, res) => {
   console.log('search');

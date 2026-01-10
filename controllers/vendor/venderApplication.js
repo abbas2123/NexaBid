@@ -1,5 +1,8 @@
 const vendorService = require('../../services/vendor/applicationService');
 const statusCode = require('../../utils/statusCode');
+const OCRResult = require('../../models/OCR_Result');
+const vendorApplication = require('../../models/vendorApplication');
+
 const {
   LAYOUTS,
   ERROR_MESSAGES,
@@ -9,23 +12,17 @@ const {
   ACTION_TYPES,
   SUCCESS_MESSAGES,
   APPLICATION_STATUS,
+  TITLES,
 } = require('../../utils/constants');
-const OCRResult = require('../../models/OCR_Result');
-const vendorApplication = require('../../models/vendorApplication');
 
 exports.getVendorApplicationPage = async (req, res) => {
   try {
-    console.log('Auth: JWT user');
-
     if (!req.user) {
-      console.log('❌ No user — redirecting to login');
       return res.redirect(REDIRECTS.LOGIN);
     }
     const { user } = req;
 
-    console.log('user.......', user.role);
     if (user.role === ROLES.VENDOR) {
-      console.log('klndjafnladjfad');
       return res.redirect(REDIRECTS.AUTH_DASHBOARD);
     }
     const existingApp = await vendorService.getApplicationStatus(user._id);
@@ -37,7 +34,7 @@ exports.getVendorApplicationPage = async (req, res) => {
     }
     res.render(VIEWS.VENDOR_APPLICATION, {
       layout: LAYOUTS.USER_LAYOUT,
-      title: 'Vendor Application',
+      title: TITLES.VENDOR_APPLICATION,
       vendor: req.user,
       user,
       application: existingApp || null,
@@ -47,12 +44,15 @@ exports.getVendorApplicationPage = async (req, res) => {
     });
   } catch (err) {
     console.error('error loading vender page:', err);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
   }
 };
 
 exports.submitVendorApplication = async (req, res) => {
-  console.log('sumit');
   let existingApp = null;
   let updatedApp = null;
 
@@ -62,13 +62,12 @@ exports.submitVendorApplication = async (req, res) => {
     const userId = req.user._id;
 
     existingApp = await vendorService.getApplicationStatus(userId);
-    console.log('existingApp', existingApp);
-    // Security check
+    
     if (existingApp && existingApp.userId.toString() !== userId.toString()) {
       return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
     }
 
-    // ---- 1) OCR SCAN FLOW ----
+    
     if (actionType === ACTION_TYPES.SCAN) {
       if (!req.files || req.files.length === 0) {
         return res.json({
@@ -81,7 +80,7 @@ exports.submitVendorApplication = async (req, res) => {
       } catch (err) {
         return res.json({ success: false, message: err.message });
       }
-      // updatedApp = await vendorService.getApplicationStatus(userId);
+      
 
       return res.json({
         success: true,
@@ -90,9 +89,8 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    // ---- 2) CONFIRMATION REQUIRED ----
+    
     updatedApp = await vendorService.getApplicationStatus(userId);
-    console.log('updatedApp', updatedApp);
 
     if (!updatedApp) {
       return res.json({
@@ -107,7 +105,7 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    // ---- 3) TERMS REQUIRED ----
+    
     if (!req.body.terms) {
       return res.json({
         success: false,
@@ -115,7 +113,7 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    // ---- 4) SUBMIT APPLICATION ----
+    
     await vendorApplication.findOneAndUpdate(
       { userId },
       { $set: { status: APPLICATION_STATUS.SUBMITTED } },

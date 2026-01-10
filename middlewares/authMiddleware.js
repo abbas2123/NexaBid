@@ -1,3 +1,5 @@
+
+
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
@@ -22,7 +24,7 @@ const protectRoute = async (req, res, next) => {
         { expiresIn: '7d' }
       );
 
-      res.cookie('user_jwt', newToken, {
+      res.cookie('token', newToken, {
         httpOnly: true,
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
@@ -69,13 +71,13 @@ const preventAuthPages = (req, res, next) => {
   next();
 };
 const isAuthenticated = (req, res, next) => {
-  // If user already exists from Passport session -> OK
+  
   if (req.user) {
     console.log('Auth: Passport session user');
     return next();
   }
 
-  // Else check for JWT token
+  
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -85,7 +87,7 @@ const isAuthenticated = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; // Attach decoded user data to req
+    req.user = decoded; 
     console.log('Auth: JWT user');
     return next();
   } catch (err) {

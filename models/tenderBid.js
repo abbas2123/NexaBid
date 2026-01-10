@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const tenderBidSchema = new mongoose.Schema(
@@ -37,7 +39,7 @@ const tenderBidSchema = new mongoose.Schema(
       remarks: String,
     },
 
-    // PHASE 2 — FINANCIAL BID
+    
     finForms: {
       files: [{ type: mongoose.Schema.Types.ObjectId, ref: 'File' }],
       remarks: String,

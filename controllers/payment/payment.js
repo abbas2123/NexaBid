@@ -1,7 +1,6 @@
 const paymentService = require('../../services/payment/paymentService');
 const statusCode = require('../../utils/statusCode');
 const {
-  PAYMENT_STATUS,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
   VIEWS,
@@ -112,8 +111,8 @@ exports.verifyPayment = async (req, res) => {
   try {
     const { paymentId } = req.body;
     const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
-
-        return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
+    console.log('')
+    return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
   } catch (err) {
     console.error(err);
     return res.json({ success: false, redirect: `/payments/failure/${req.body.paymentId}` });
@@ -127,7 +126,7 @@ exports.paymentSuccessPage = async (req, res) => {
     if (!payment) {
       return res.redirect(REDIRECTS.DASHBOARD);
     }
-
+    console.log('succ', payment)
     res.status(statusCode.OK).render(VIEWS.PAYMENT_SUCCESS, {
       layout: LAYOUTS.USER_LAYOUT,
       ...payment,
@@ -145,10 +144,11 @@ exports.paymentFailurePage = async (req, res) => {
 
     const payment = await paymentService.getFailurePageData(req.params.paymentId);
     if (!payment) return res.redirect(REDIRECTS.DASHBOARD);
-
+    console.log('failed', payment);
     res.status(statusCode.OK).render(VIEWS.PAYMENT_FAILS, {
       layout: LAYOUTS.USER_LAYOUT,
       ...payment,
+      errorReason: req.query.reason || payment.errorReason,
     });
   } catch (err) {
     console.error(err);

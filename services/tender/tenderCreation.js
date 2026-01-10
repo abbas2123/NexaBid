@@ -1,3 +1,5 @@
+
+
 const crypto = require('crypto');
 const cloudinary = require('../../config/cloudinary');
 const File = require('../../models/File');
@@ -14,7 +16,7 @@ exports.creatTenderService = async (user, body, files) => {
   if (!body.category) throw new Error(ERROR_MESSAGES.CATEGORY_REQUIRED);
   if (!body.bidEndAt) throw new Error(ERROR_MESSAGES.BID_END_DATE_REQUIRED);
 
-  // Get all existing tender checksums
+  
   const existingChecksums = await File.find({ relatedType: 'tender' }).then((f) =>
     f.map((x) => x.checksum)
   );
@@ -35,14 +37,12 @@ exports.creatTenderService = async (user, body, files) => {
     for (const file of files) {
       if (!file.buffer) throw new Error('File buffer missing');
 
-    
       const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
       if (existingChecksums.includes(checksum)) {
         throw new Error(ERROR_MESSAGES.DUPLICATE_TENDER_DOCUMENT);
       }
       existingChecksums.push(checksum);
 
-    
       const cld = await new Promise((resolve, reject) => {
         cloudinary.uploader
           .upload_stream(
@@ -55,7 +55,7 @@ exports.creatTenderService = async (user, body, files) => {
           .end(file.buffer);
       });
 
-      // 3️⃣ FILE DB RECORD
+      
       const fileDoc = await File.create({
         ownerId: user._id,
         relatedType: 'tender',
@@ -80,7 +80,7 @@ exports.creatTenderService = async (user, body, files) => {
     }
   }
 
-  // CREATE TENDER
+  
   const tender = await Tender.create({
     title: body.title,
     dept: body.dept,
@@ -103,7 +103,7 @@ exports.creatTenderService = async (user, body, files) => {
     files: fileRefsTosave,
   });
 
-  // Attach file relations
+  
   await File.updateMany(
     { _id: { $in: fileRefsTosave.map((f) => f.fileId) } },
     { $set: { relatedId: tender._id } }

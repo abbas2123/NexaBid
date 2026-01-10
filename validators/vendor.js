@@ -1,3 +1,5 @@
+
+
 const { z } = require('zod');
 const { VALIDATION_MESSAGES } = require('../utils/constants');
 
@@ -5,7 +7,7 @@ const vendorVerificationSchema = z
   .object({
     actionType: z.enum(['scan', 'submit']),
 
-    // Fields collected through OCR OR manual entry
+
     businessName: z.preprocess((v) => {
       if (!v) return undefined;
 
@@ -44,10 +46,10 @@ const vendorVerificationSchema = z
     terms: z.preprocess((v) => v === 'on', z.boolean()).optional(),
   })
   .superRefine((data, ctx) => {
-    // --- 1. If SCAN → files should exist (we validate in controller)
+
     if (data.actionType === 'scan') return;
 
-    // --- 2. If SUBMIT → must confirm details
+
     if (data.actionType === 'submit' && data.isConfirmed !== 'true') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -56,7 +58,7 @@ const vendorVerificationSchema = z
       });
     }
 
-    // --- 3. If SUBMIT → must accept terms
+
     if (data.actionType === 'submit' && data.terms !== true) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -65,5 +67,5 @@ const vendorVerificationSchema = z
       });
     }
   });
-console.log('vendorVerificationSchema.businessName', vendorVerificationSchema.businessName);
+
 module.exports = { vendorVerificationSchema };

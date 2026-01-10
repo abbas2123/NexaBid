@@ -6,7 +6,7 @@ exports.getPropertyPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
 
-    // Extract filters from query params
+    
     const filters = {
       type: req.query.type || '',
       district: req.query.district || '',
@@ -21,7 +21,7 @@ console.log(properties);
       user: req.user,
       properties,
       pagination,
-      applied: filters, // Send applied filters to EJS
+      applied: filters, 
     });
   } catch (error) {
     console.error('Property page error:', error);

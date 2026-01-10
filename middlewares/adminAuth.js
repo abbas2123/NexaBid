@@ -1,3 +1,5 @@
+
+
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { ERROR_MESSAGES } = require('../utils/constants');
@@ -21,7 +23,7 @@ exports.adminProtect = async (req, res, next) => {
     return res.redirect('/admin/login');
   }
 };
-// Prevent back-button from accessing admin dashboard
+
 exports.preventAdminBack = (req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');

@@ -1,14 +1,17 @@
+
+
 const express = require('express');
-
-const router = express.Router();
-
 const authController = require('../../controllers/user/tender');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const tenderContorller = require('../../controllers/vendor/tenderCreation');
-const tenderUpload = require('../../middlewares/cloudinaryUploader');
+const uploadFactory = require('../../middlewares/upload');
+const tenderUpload = uploadFactory('nexabid/tenders');
 const Tender = require('../../models/tender');
 const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
+
+const router = express.Router();
+
 
 router.get('/', authMiddleware.protectRoute, authController.getTenderListingPage);
 router.get('/create', authMiddleware.protectRoute, tenderContorller.getCreateTenderPage);
@@ -50,12 +53,12 @@ router.get('/doc/:fileId', authMiddleware.protectRoute, async (req, res) => {
 
     let viewUrl = file.fileUrl;
 
-    // If PDF → force inline display
+
     if (file.mimeType === 'application/pdf') {
       viewUrl = file.fileUrl.replace('/raw/upload/', '/raw/upload/fl_attachment:false/');
     }
 
-    // Redirect browser to Cloudinary file
+
     return res.redirect(viewUrl);
   } catch (err) {
     console.error('Doc view error:', err);

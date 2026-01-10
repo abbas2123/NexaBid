@@ -1,62 +1,75 @@
-console.log('🔥 userProfile ROUTES LOADED');
+
+
 const express = require('express');
-
-const router = express.Router();
-
-const authController = require('../../controllers/user/userProfile');
+const profileController = require('../../controllers/user/profile');
+const vendorOpController = require('../../controllers/user/vendorOperations');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const TransactionControler = require('../../controllers/user/transaction');
-const uploads = require('../../middlewares/cloudinaryUploader');
+const uploads = require('../../middlewares/upload');
+const reportManagementController = require('../../controllers/user/reportManagement');
+const userController = require('../../controllers/vendor/agreementController')
+const router = express.Router();
 
-router.get('/profile', authMiddleware.protectRoute, authController.userProfile);
-router.get('/status', authMiddleware.protectRoute, authController.getUserStatuspage);
-router.get('/logout', authController.logOut);
 
-router.get('/my-profile', authMiddleware.protectRoute, authController.getMyProfile);
+router.get('/profile', authMiddleware.protectRoute, profileController.userProfile);
+router.get('/status', authMiddleware.protectRoute, profileController.getUserStatuspage);
+router.get('/logout', profileController.logOut);
 
-router.get('/my-listings', authMiddleware.protectRoute, authController.getMyListingPage);
+router.get('/my-profile', authMiddleware.protectRoute, profileController.getMyProfile);
 
-router.get('/about-us', authMiddleware.protectRoute, authController.getAboutUs);
+router.get('/my-listings', authMiddleware.protectRoute, vendorOpController.getMyListingPage);
 
-router.get('/contact', authMiddleware.protectRoute, authController.getContact);
-router.get('/my-participation', authMiddleware.protectRoute, authController.getMyParticipation);
+router.get('/about-us', authMiddleware.protectRoute, profileController.getAboutUs);
+
+router.get('/contact', authMiddleware.protectRoute, profileController.getContact);
+router.get('/my-participation', authMiddleware.protectRoute, vendorOpController.getMyParticipation);
+router.get('/tender-reports', authMiddleware.protectRoute, vendorOpController.getTenderReports);
 router.get(
   '/my-participation/tender/:id',
   authMiddleware.protectRoute,
-  authController.viewTenderPostAward
+  vendorOpController.viewTenderPostAward
 );
-router.post('/vendor/po/:id/respond', authMiddleware.protectRoute, authController.vendorRespondPO);
+router.post(
+  '/vendor/po/:id/respond',
+  authMiddleware.protectRoute,
+  vendorOpController.vendorRespondPO
+);
 
-router.get('/:tenderId/upload', authMiddleware.protectRoute, authController.getUploadPage);
+router.get('/:tenderId/upload', authMiddleware.protectRoute, vendorOpController.getUploadPage);
 router.post(
   '/:tenderId/upload',
   authMiddleware.protectRoute,
-  uploads.single('signedAgreement'),
-  authController.uploadSignedAgreement
+  uploads('nexabid/agreements', ['pdf'], undefined, 'memory').single('agreement'),
+  vendorOpController.uploadSignedAgreement
 );
+router.get('/files/view/:id', authMiddleware.protectRoute, userController.view);
 router.get('/transactions', authMiddleware.protectRoute, TransactionControler.getTransaction);
+router.get('/report-management', authMiddleware.protectRoute, reportManagementController.getReportManagement);
+router.get('/reports/property-auctions', authMiddleware.protectRoute, reportManagementController.getPropertyAuctionReports);
+router.get('/reports/balance', authMiddleware.protectRoute, reportManagementController.getBalanceReport);
+router.get('/reports/view/:id', authMiddleware.protectRoute, reportManagementController.getAuctionDetailReport);
 
-router.get('/work-orders/:id', authMiddleware.protectRoute, authController.getWorkOrderDetails);
+router.get('/work-orders/:id', authMiddleware.protectRoute, vendorOpController.getWorkOrderDetails);
 router.post(
   '/work-orders/:woId/milestones/:mid/start',
   authMiddleware.protectRoute,
-  authController.startMilestone
+  vendorOpController.startMilestone
 );
 router.post(
   '/work-orders/:woId/milestones/:mid/upload-proof',
   authMiddleware.protectRoute,
-  uploads.single('proof'),
-  authController.uploadProof
+  uploads('nexabid/proofs').single('proof'),
+  vendorOpController.uploadProof
 );
 router.post(
   '/work-orders/:woId/milestones/:mid/complete',
   authMiddleware.protectRoute,
-  authController.completeMilestone
+  vendorOpController.completeMilestone
 );
 router.post(
   '/work-orders/:woId/complete',
   authMiddleware.protectRoute,
-  authController.completeWorkOrder
+  vendorOpController.completeWorkOrder
 );
 
 module.exports = router;

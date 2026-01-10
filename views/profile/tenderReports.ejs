@@ -1,0 +1,425 @@
+<div
+  class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark">
+
+  <main class="flex-grow w-full max-w-[1280px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Page Heading -->
+    <div class="mb-8">
+      <div class="flex flex-col gap-2">
+        <!-- Breadcrumb -->
+        <div class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2 flex-wrap">
+          <a href="/vendor/dashboard" class="hover:text-primary transition-colors">Home</a>
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          <a href="/vendor/tenders" class="hover:text-primary transition-colors">Tenders</a>
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          <span class="text-primary font-medium">Reports</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          My Tender Reports
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 text-base max-w-2xl">
+          Access, manage, and download all your generated documentation for ongoing and completed tenders.
+        </p>
+      </div>
+    </div>
+
+    <!-- Filters & Controls -->
+    <div class="bg-white dark:bg-[#1e2532] rounded-xl border border-slate-200 dark:border-slate-700 p-4 mb-6 shadow-sm">
+      <form id="filterForm" class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+
+        <!-- Search Filter -->
+        <div class="w-full lg:w-auto flex-1 max-w-md">
+          <div class="relative">
+            <span
+              class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <input id="searchInput" name="search" value="<%= applied.search || '' %>"
+              class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-primary focus:border-primary placeholder:text-slate-400 text-slate-900 dark:text-white transition-shadow"
+              placeholder="Search by Tender Title..." type="text" />
+          </div>
+        </div>
+
+        <!-- Dropdown Filters -->
+        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+          <!-- Report Type Filter -->
+          <select id="reportTypeFilter" name="reportType"
+            class="form-select pl-3 pr-10 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm focus:ring-primary focus:border-primary">
+            <option value="">All Report Types</option>
+            <option value="bid_summary" <%=applied.reportType==='bid_summary' ? 'selected' : '' %>>Bid Summary</option>
+            <option value="evaluation" <%=applied.reportType==='evaluation' ? 'selected' : '' %>>Evaluation Summary
+            </option>
+            <option value="completion" <%=applied.reportType==='completion' ? 'selected' : '' %>>Completion Report
+            </option>
+            <option value="winner" <%=applied.reportType==='winner' ? 'selected' : '' %>>Winner Report</option>
+          </select>
+
+          <!-- Date Filter -->
+          <div class="relative">
+            <input id="dateFilter" name="date" value="<%= applied.date || '' %>"
+              class="form-input pl-3 pr-3 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm focus:ring-primary focus:border-primary"
+              placeholder="Select Date" type="date" />
+          </div>
+
+          <!-- Apply Button -->
+          <button type="button" onclick="applyFilters()"
+            class="bg-primary hover:bg-blue-700 text-white font-medium px-5 py-2.5 rounded-lg text-sm transition-colors flex items-center gap-2 shadow-sm shadow-blue-500/20">
+            <span class="material-symbols-outlined text-[18px]">filter_list</span>
+            Apply Filters
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Active Filters Display -->
+    <% if (applied.search || applied.reportType || applied.date) { %>
+      <div class="flex items-center gap-2 mb-4 flex-wrap">
+        <span class="text-sm text-slate-600 dark:text-slate-400">Active filters:</span>
+
+        <% if (applied.search) { %>
+          <span
+            class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-xs flex items-center gap-2">
+            Search: "<%= applied.search %>"
+              <a href="?page=1&reportType=<%= applied.reportType || '' %>&date=<%= applied.date || '' %>"
+                class="hover:text-blue-900 dark:hover:text-blue-100 font-bold">×</a>
+          </span>
+          <% } %>
+
+            <% if (applied.reportType) { %>
+              <span
+                class="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs flex items-center gap-2">
+                Type: <%= applied.reportType.replace('_', ' ' ).replace(/\b\w/g, l=> l.toUpperCase()) %>
+                  <a href="?page=1&search=<%= applied.search || '' %>&date=<%= applied.date || '' %>"
+                    class="hover:text-purple-900 dark:hover:text-purple-100 font-bold">×</a>
+              </span>
+              <% } %>
+
+                <% if (applied.date) { %>
+                  <span
+                    class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-xs flex items-center gap-2">
+                    Date: <%= applied.date %>
+                      <a href="?page=1&search=<%= applied.search || '' %>&reportType=<%= applied.reportType || '' %>"
+                        class="hover:text-green-900 dark:hover:text-green-100 font-bold">×</a>
+                  </span>
+                  <% } %>
+
+                    <a href="?page=1" class="text-xs text-red-600 dark:text-red-400 hover:underline ml-2">Clear all
+                      filters</a>
+      </div>
+      <% } %>
+
+        <!-- Data Table -->
+        <div
+          class="bg-white dark:bg-[#1e2532] rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700">
+                  <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Tender Title
+                  </th>
+                  <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Report Type
+                  </th>
+                  <th
+                    class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                    Generated Date
+                  </th>
+                  <th class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th
+                    class="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-700">
+                <% if (!reports || reports.length===0) { %>
+                  <tr>
+                    <td colspan="5" class="px-6 py-12 text-center">
+                      <div class="flex flex-col items-center gap-3">
+                        <span
+                          class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600">description</span>
+                        <p class="text-slate-500 dark:text-slate-400 text-base">
+                          No reports found
+                          <% if (applied.search || applied.reportType || applied.date) { %>
+                            matching your filters
+                            <% } %>
+                        </p>
+                      </div>
+                    </td>
+                  </tr>
+                  <% } else { %>
+                    <% reports.forEach(report=> { %>
+                      <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
+
+                        <!-- Tender Title -->
+                        <td class="px-6 py-4">
+                          <div class="flex flex-col">
+                            <span
+                              class="font-bold text-slate-900 dark:text-white text-sm group-hover:text-primary transition-colors">
+                              <%= report.tenderId?.title || 'Untitled Tender' %>
+                            </span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400">
+                              ID: #<%= report.tenderId?._id.toString().slice(-8).toUpperCase() || 'N/A' %>
+                            </span>
+                          </div>
+                        </td>
+
+                        <!-- Report Type -->
+                        <td class="px-6 py-4">
+                          <span class="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                            <%= report.reportType?.replace('_', ' ' ).replace(/\b\w/g, l=> l.toUpperCase()) || 'N/A' %>
+                          </span>
+                        </td>
+
+                        <!-- Generated Date -->
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span class="text-sm text-slate-500 dark:text-slate-400">
+                            <%= report.generatedAt ? new Date(report.generatedAt).toLocaleDateString('en-US', {
+                              year: 'numeric' , month: 'short' , day: 'numeric' }) : 'N/A' %>
+                          </span>
+                        </td>
+
+                        <!-- Status -->
+                        <td class="px-6 py-4">
+                          <% if (report.status==='available' ) { %>
+                            <span
+                              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20">
+                              <span class="size-1.5 rounded-full bg-emerald-500"></span>
+                              Available
+                            </span>
+                            <% } else if (report.status==='generating' ) { %>
+                              <span
+                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700 border border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20">
+                                <span
+                                  class="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+                                Generating
+                              </span>
+                              <% } else { %>
+                                <span
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-700 dark:text-slate-300 dark:border-slate-600">
+                                  Unknown
+                                </span>
+                                <% } %>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="px-6 py-4 text-right">
+                          <div class="flex items-center justify-end gap-2">
+                            <% if (report.status==='available' ) { %>
+                              <!-- View Button -->
+                              <button data-id="<%= report._id %>" data-type="<%= report.reportType %>"
+                                class="view-report-btn p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                                title="View Preview">
+                                <span class="material-symbols-outlined text-[20px]">visibility</span>
+                              </button>
+                              <!-- Download Button -->
+                              <button data-id="<%= report._id %>"
+                                data-title="<%= (report.tenderId?.title || 'report').replace(/'/g, " \\'") %>"
+                                class="download-report-btn flex items-center gap-2 px-3 py-1.5 bg-slate-100
+                                dark:bg-slate-700
+                                hover:bg-primary hover:text-white text-slate-700 dark:text-slate-200 text-xs font-bold
+                                rounded-lg transition-all"
+                                title="Download PDF">
+                                <span class="material-symbols-outlined text-[18px]">download</span>
+                                Download
+                              </button>
+                              <% } else { %>
+                                <!-- Disabled Buttons -->
+                                <button class="p-2 text-slate-300 dark:text-slate-600 cursor-not-allowed rounded-lg"
+                                  disabled title="Not Available">
+                                  <span class="material-symbols-outlined text-[20px]">visibility_off</span>
+                                </button>
+                                <button
+                                  class="flex items-center gap-2 px-3 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 text-xs font-bold rounded-lg cursor-not-allowed border border-slate-200 dark:border-slate-700"
+                                  disabled>
+                                  <span class="material-symbols-outlined text-[18px]">pending</span>
+                                  Processing
+                                </button>
+                                <% } %>
+                          </div>
+                        </td>
+
+                      </tr>
+                      <% }) %>
+                        <% } %>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Footer / Stats -->
+          <div
+            class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>Showing <%= reports.length %> of <%= pagination.totalPages * 10 %> reports</span>
+            <span>Data updated: <%= new Date().toLocaleDateString('en-US', { month: 'short' , day: 'numeric' }) %>, <%=
+                  new Date().toLocaleTimeString('en-US', { hour: '2-digit' , minute: '2-digit' }) %></span>
+          </div>
+        </div>
+
+        <!-- Pagination -->
+        <!-- Pagination -->
+        <% let queryParams='' ; if (applied.search) queryParams +='&search=' + applied.search; if (applied.reportType)
+          queryParams +='&reportType=' + applied.reportType; if (applied.date) queryParams +='&date=' + applied.date; %>
+          <%- include('../partials/user/pagination', { pagination, queryParams }) %>
+
+  </main>
+</div>
+
+<!-- Required CDN Links -->
+<link
+  href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;700&display=swap"
+  rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Tailwind Config
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "primary": "#135bec",
+          "background-light": "#f6f6f8",
+          "background-dark": "#101622",
+        },
+        fontFamily: {
+          "display": ["Manrope", "sans-serif"],
+          "body": ["Noto Sans", "sans-serif"]
+        },
+      },
+    },
+  }
+
+  // Apply Filters Function
+  function applyFilters() {
+    const search = document.getElementById('searchInput').value.trim();
+    const reportType = document.getElementById('reportTypeFilter').value;
+    const date = document.getElementById('dateFilter').value;
+
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    if (search) params.set('search', search);
+    if (reportType) params.set('reportType', reportType);
+    if (date) params.set('date', date);
+
+    window.location.href = '?' + params.toString();
+  }
+
+  // Debounce Search
+  let searchTimeout;
+  document.getElementById('searchInput')?.addEventListener('input', function () {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      applyFilters();
+    }, 500);
+  });
+
+  // Attach Event Listeners for report buttons
+  document.addEventListener('click', (e) => {
+    const viewBtn = e.target.closest('.view-report-btn');
+    const downloadBtn = e.target.closest('.download-report-btn');
+
+    if (viewBtn) {
+      viewReport(viewBtn.dataset.id, viewBtn.dataset.type);
+    } else if (downloadBtn) {
+      downloadReport(downloadBtn.dataset.id, downloadBtn.dataset.title);
+    }
+  });
+
+  // View Report Function
+  async function viewReport(id, type) {
+    if (type === 'completion') {
+      window.open(`/publisher/work-order/completed/${id}`, '_blank');
+    } else if (type === 'winner') {
+      window.open(`/publisher/work-order/completed/${id.replace('winner-', '')}`, '_blank');
+    } else {
+      window.open(`/vendor/my-participations`, '_blank');
+    }
+  }
+
+  // Download Report Function
+  async function downloadReport(reportId, tenderTitle) {
+    try {
+      const res = await fetch(`/vendor/reports/download/${reportId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${tenderTitle.replace(/\s+/g, '-').toLowerCase()}-report.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Downloaded!',
+          text: 'Report has been downloaded successfully',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } else {
+        throw new Error('Download failed');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire({
+        icon: 'error',
+        title: 'Download Failed',
+        text: 'Failed to download report. Please try again.'
+      });
+    }
+  }
+</script>
+
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+  }
+
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: #1e293b;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
+
+  /* Responsive table */
+  @media (max-width: 768px) {
+    table {
+      font-size: 0.875rem;
+    }
+
+    th,
+    td {
+      padding: 0.75rem 1rem;
+    }
+  }
+</style>

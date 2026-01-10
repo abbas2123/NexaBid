@@ -1,22 +1,40 @@
 const vendorService = require('../../services/admin/venderManagement');
 const sendMail = require('../../utils/email');
+const statusCode = require('../../utils/statusCode');
+
 const {
   VIEWS,
   LAYOUTS,
   SUCCESS_MESSAGES,
   ERROR_MESSAGES,
+
   NOTIFICATION_MESSAGES,
+  TITLES,
 } = require('../../utils/constants');
+exports.getAllVendorApplications = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const filter = {
+      status: req.query.status || '',
+    };
 
-exports.getVendorApplication = async (req, res) => {
-  const vendorApps = await vendorService.getAllVendorApplication();
+    const vendorApps = await vendorService.getAllVendorApplications(page, filter);
 
-  res.render(VIEWS.ADMIN_VENDOR_LIST, {
-    layout: LAYOUTS.ADMIN_LAYOUT,
-    title: 'Vendor Management - NexaBid',
-    currentPage: 'vendor-applications',
-    vendorApps,
-  });
+    res.render(VIEWS.ADMIN_VENDOR_LIST, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      title: TITLES.VENDOR_APPLICATIONS,
+      vendorApps: vendorApps.applications,
+      pagination: vendorApps.pagination,
+      applied: filter,
+      currentPage: 'vendor-applications',
+    });
+  } catch (err) {
+    console.error('Error loading vendor applications:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
+  }
 };
 
 exports.startReview = async (req, res) => {
@@ -58,8 +76,7 @@ exports.approveVendor = async (req, res) => {
       await sendMail.sendMailUser(
         vendor.userId.email,
         NOTIFICATION_MESSAGES.VENDOR_APPROVED_SUBJECT,
-        `<h2>congratulations!</h2>
-            <p>Your vendor application <b>${vendor.businessName}</b> is approved.</p>`
+        `<p>${NOTIFICATION_MESSAGES.VENDOR_APPROVED_BODY}</p>`
       );
     }, 0);
   } catch (err) {
@@ -84,18 +101,7 @@ exports.rejectVendor = async (req, res) => {
       await sendMail.sendMailUser(
         vendor.userId.email,
         NOTIFICATION_MESSAGES.VENDOR_REJECTED_SUBJECT,
-        `
-       <div style="font-family: Arial; padding: 20px; border-radius: 10px; border: 1px solid #ddd;">
-      <h2 style="color: #d9534f;">Vendor Application Update</h2>
-
-      <p>Hello <strong>${vendor.userId.name}</strong>,</p>
-
-      <p>Your vendor application for <strong>${vendor.businessName}</strong> has been <span style="color:red;">rejected</span>.</p>
-
-      <p>You may update your documents and apply again.</p>
-
-      <p>Regards,<br><strong>NexaBid Admin Team</strong></p>
-  </div>`
+        `<p>${NOTIFICATION_MESSAGES.VENDOR_REJECTED_BODY}<br>Reason: ${comment}</p>`
       );
     }, 0);
   } catch (err) {

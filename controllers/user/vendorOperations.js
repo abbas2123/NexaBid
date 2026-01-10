@@ -1,112 +1,15 @@
-const vendorService = require('../../services/vendor/applicationService');
+
+
 const myProfileService = require('../../services/profile/profileService');
+const listingService = require('../../services/user/listingService');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, _SUCCESS_MESSAGES } = require('../../utils/constants');
-const User = require('../../models/user');
-const Property = require('../../models/property');
-const Tender = require('../../models/tender');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 const TenderBid = require('../../models/tenderBid');
-
-exports.userProfile = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.redirect('/auth/login');
-    }
-    const { user } = req;
-    const application = await vendorService.getApplicationStatus(user._id);
-
-    res.render('profile/profile', {
-      layout: LAYOUTS.USER_LAYOUT,
-      title: 'My profile - NexaBid',
-      user: user || {},
-      application: application || null,
-    });
-  } catch (error) {
-    console.error('Profile load Error:', error);
-    res.status(statusCode.INTERNAL_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
-  }
-};
-
-exports.getUserStatuspage = async (req, res) => {
-  try {
-    if (!req.user) {
-      return res.redirect('/auth/login');
-    }
-
-    const { user } = req;
-    const userId = user._id;
-
-    const { vendorApp, propertyStatus, tenderStatus, latestTender, userProperties, userTenders } =
-      await myProfileService.userStatus(userId);
-
-    return res.render('profile/status', {
-      layout: LAYOUTS.USER_LAYOUT,
-      title: 'Account Status',
-      user,
-      vendorApp,
-      tenderStatus,
-      propertyStatus,
-      tenders: userTenders,
-      latestTender,
-      properties: userProperties || [],
-    });
-  } catch (error) {
-    console.error('Status Page Error:', error);
-    return res.redirect('/auth/login');
-  }
-};
-
-exports.logOut = (req, res) => {
-  try {
-    res.clearCookie('token');
-    return res.redirect('/auth/login');
-  } catch (error) {
-    console.error('logout error:', error);
-    return res.redirect('/');
-  }
-};
-
-exports.getMyProfile = async (req, res) => {
-  try {
-    if (!req.user) {
-      console.log('❌ No req.user → Redirecting to login');
-      return res.redirect('/auth/login');
-    }
-
-    const freshUser = await User.findById(req.user._id);
-
-    if (!freshUser) {
-      console.log('❌ User not found in DB');
-      return res.redirect('/auth/login');
-    }
-
-    return res.render('profile/myProfile.ejs', {
-      layout: LAYOUTS.USER_LAYOUT,
-      title: 'My Profile',
-      user: freshUser,
-      application: null,
-    });
-  } catch (err) {
-    console.error('❌ Profile load error:', err);
-    return res.redirect('/auth/dashboard');
-  }
-};
-
 exports.getMyListingPage = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    console.log('Logged-in User:', userId);
-
-    const properties = await Property.find({
-      sellerId: userId,
-      deletedAt: null,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
-
-    console.log('Fetched Properties:', properties);
-    const tenders = await Tender.find({ createdBy: userId }).sort({ createdAt: -1 }).lean();
+    const { properties, tenders } = await listingService.getMyListings(userId);
 
     res.render('profile/myListing', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -115,27 +18,11 @@ exports.getMyListingPage = async (req, res) => {
       tenders,
     });
   } catch (err) {
-    console.log('GLOBAL ERROR HANDLER:', err);
-
     return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: ERROR_MESSAGES.UNABLE_LOAD_LISTINGS,
     });
   }
-};
-
-exports.getAboutUs = (req, res) => {
-  res.render('profile/aboutUs', {
-    layout: LAYOUTS.USER_LAYOUT,
-    user: req.user,
-  });
-};
-
-exports.getContact = (req, res) => {
-  res.render('user/contact', {
-    layout: LAYOUTS.USER_LAYOUT,
-    user: req.user,
-  });
 };
 
 exports.getMyParticipation = async (req, res) => {
@@ -152,15 +39,46 @@ exports.getMyParticipation = async (req, res) => {
     });
   } catch (err) {
     console.error('Participation Page Error:', err);
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
   }
 };
+
+exports.getTenderReports = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const filter = {
+      search: req.query.search || '',
+      reportType: req.query.reportType || '',
+      date: req.query.date || '',
+    };
+
+    const reports = await myProfileService.getVendorTenderReports(req.user._id, page, filter);
+    res.render('profile/tenderReports', {
+      layout: LAYOUTS.USER_LAYOUT,
+      reports: reports.reports,
+      pagination: reports.pagination,
+      applied: filter,
+      currentPage: 'tender-reports',
+    });
+  } catch (err) {
+    console.error('Error loading reports:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
+  }
+};
+
 exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-    console.log('tenderId', tenderId);
-
+    console.log('ddd')
     const bid = await TenderBid.findOne({ tenderId, vendorId: userId });
 
     if (!bid) {
@@ -190,14 +108,18 @@ exports.viewTenderPostAward = async (req, res) => {
     }
 
     const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
-    console.log(result.po);
-    if (result.po && result.po.status === 'vendor_accepted') {
-      return res.redirect(`/user/${tenderId}/upload`);
+    console.log('result', result);
+    if (result.po) {
+      console.log('📄 Vendor PO PDF:', result.po.pdfFile);
     }
     if (result.redirectToWorkOrder) {
-      console.log('kvbkjdkjvkjwbvkjv');
       return res.redirect(`/user/work-orders/${result.workOrderId}`);
     }
+
+    if (result.redirectToAgreementUpload && !req.query.fromUpload) {
+      return res.redirect(`/user/${tenderId}/upload`);
+    }
+
     if (result.loseView) {
       return res.render('profile/tenderLoseView', {
         layout: LAYOUTS.USER_LAYOUT,
@@ -209,10 +131,6 @@ exports.viewTenderPostAward = async (req, res) => {
       });
     }
 
-    if (result.redirectToAgreementUpload && !req.query.fromUpload) {
-      return res.redirect(`/user/${tenderId}/upload?fromPostAward=true`);
-    }
-
     return res.render('profile/vendorPostAward', {
       layout: LAYOUTS.USER_LAYOUT,
       tender: result.tender,
@@ -220,12 +138,29 @@ exports.viewTenderPostAward = async (req, res) => {
       po: result.po,
       agreement: result.agreement,
       workOrder: result.workOrder,
-      user: req.user,
       isRegenerated: result.isRegenerated,
+      user: req.user,
     });
+
   } catch (err) {
     console.error('Post Award Error:', err.message);
-    console.log('error.message', err.message);
+
+    if (err.message === ERROR_MESSAGES.TENDER_NOT_FOUND) {
+      return res.status(404).render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
+        user: req.user,
+      });
+    }
+
+    if (err.message === ERROR_MESSAGES.NOT_PARTICIPATED) {
+      return res.status(403).render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: 'You have not participated in this tender.',
+        user: req.user,
+      });
+    }
+
     if (req.query.error) {
       return res.render('profile/vendorPostAward', {
         layout: LAYOUTS.USER_LAYOUT,
@@ -239,7 +174,8 @@ exports.viewTenderPostAward = async (req, res) => {
       });
     }
 
-    return res.redirect(`/user/my-participation/tender/${req.params.id}?error=server_error`);
+    // Redirect back with error message for unknown errors
+    return res.redirect(`/user/my-participation?error=${encodeURIComponent(err.message)}`);
   }
 };
 
@@ -250,24 +186,33 @@ exports.vendorRespondPO = async (req, res) => {
       action: req.body.action,
       reason: req.body.reason,
     });
-
+    console.log('result', result)
     return res.redirect(
       `/user/my-participation/tender/${result.tenderId}?response=${result.response}`
     );
   } catch (err) {
     console.error(err.message);
 
-    if (err.message === ERROR_MESSAGES.PO_NOT_FOUND)
-      return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.PO_NOT_FOUND);
+    if (err.message === ERROR_MESSAGES.PO_NOT_FOUND) {
+      return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: ERROR_MESSAGES.PO_NOT_FOUND,
+        user: req.user,
+      });
+    }
 
-    return res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
   }
 };
 
 exports.getUploadPage = async (req, res) => {
   try {
+    console.log('ssddsgsg');
     const { tenderId } = req.params;
-
     const data = await myProfileService.getAgreementUploadData(tenderId, req.user._id);
 
     return res.render('profile/agreementUpload', {
@@ -278,58 +223,46 @@ exports.getUploadPage = async (req, res) => {
       approved: data.approved,
       remarks: data.remarks,
       vendorAgreement: data.vendorAgreement || null,
+      // ✅ ADD THESE LINES:
+      formAction: `/user/${tenderId}/agreement/upload`, // Match your upload route
+      downloadLink: data.publisherAgreement
+        ? `/user/files/view/${data.publisherAgreement._id}?flags=attachment`
+        : '#',
+      viewLink: data.publisherAgreement ? `/user/files/view/${data.publisherAgreement._id}` : '#',
     });
   } catch (err) {
     console.error('Agreement page error:', err.message);
-
-    const redirectBase = `/user/my-participation/tender/${req.params.id}`;
-
-    if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND) {
-      return res.redirect(`${redirectBase}?error=publisher_agreement_missing`);
-    }
-
-    if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED) {
-      return res.redirect(`${redirectBase}?error=po_not_accepted`);
-    }
-
-    if (err.message === ERROR_MESSAGES.NOT_WINNER) {
-      return res.redirect(`${redirectBase}?error=not_winner`);
-    }
-
-    if (err.message === ERROR_MESSAGES.PO_NOT_CREATED) {
-      return res.redirect(`${redirectBase}?error=po_not_created`);
-    }
-
-    return res.redirect(`${redirectBase}?error=server_error`);
+    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}/respond`);
   }
 };
 
+
 exports.uploadSignedAgreement = async (req, res) => {
   try {
-    console.log('sdvdvdvd');
+
     await myProfileService.uploadVendorAgreement({
       tenderId: req.params.tenderId,
       vendorId: req.user._id,
       file: req.file,
     });
-    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}?agreement=uploaded`);
+    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}/respond`);
   } catch (err) {
     console.error(err.message);
 
-    const base = `/user/my-participation/tender/${req.params.tenderId}`;
+    const base = `/user/my-participation/tender/${req.params.tenderId}/respond`;
 
-    if (err.message === ERROR_MESSAGES.NO_FILE) return res.redirect(`${base}?error=no_file`);
+    if (err.message === ERROR_MESSAGES.NO_FILE) return res.redirect(base);
 
     if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND)
-      return res.redirect(`${base}?error=publisher_agreement_missing`);
+      return res.redirect(base);
 
     if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED)
-      return res.redirect(`${base}?error=po_not_accepted`);
+      return res.redirect(base);
 
     if (err.message === ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED)
-      return res.redirect(`${base}?error=already_uploaded`);
+      return res.redirect(base);
 
-    return res.redirect(`${base}?error=upload_failed`);
+    return res.redirect(base);
   }
 };
 
@@ -352,7 +285,7 @@ exports.getWorkOrderDetails = async (req, res, next) => {
     });
   } catch (error) {
     console.error('Error fetching work order:', error);
-    next(error); // Pass to global error handler
+    next(error);
   }
 };
 

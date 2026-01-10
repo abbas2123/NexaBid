@@ -1,14 +1,17 @@
+
+
 const ChatService = require('../../services/chat/chatService');
-const ChatThread = require('../../models/chatThread');
 const statusCode = require('../../utils/statusCode');
-const { ERROR_MESSAGES } = require('../../utils/constants');
+const { ERROR_MESSAGES, VIEWS, LAYOUTS, TITLES } = require('../../utils/constants');
+const Property = require('../../models/property');
 
 exports.openInbox = async (req, res, next) => {
   try {
     const threads = await ChatService.getInbox(req.user._id);
 
-    res.render('chat/chat', {
-      layout: 'layouts/user/userLayout',
+    res.render(VIEWS.CHAT, {
+      layout: LAYOUTS.USER_LAYOUT,
+      title: TITLES.CHAT,
       threads,
       thread: null,
       messages: [],
@@ -23,6 +26,37 @@ exports.openInbox = async (req, res, next) => {
 exports.startChat = async (req, res, next) => {
   try {
     const { userId, type, relatedId } = req.params;
+
+    if (type === 'property') {
+      const property = await Property.findById(relatedId);
+      if (property && property.isAuction) {
+        // Rule 1: Chat allowed only after auction ends
+        if (new Date() < property.auctionEndsAt) {
+          // You might want to flash an error or handle this more gracefully
+          return res.redirect(`/properties/${relatedId}?error=Chat allowed only after auction ends`);
+        }
+
+        // Rule 2: Restrict to Winner <-> Seller
+        const isSeller = property.sellerId.toString() === req.user._id.toString();
+        const isWinner = property.currentHighestBidder && property.currentHighestBidder.toString() === req.user._id.toString();
+
+        if (!isSeller && !isWinner) {
+          return res.redirect(`/properties/${relatedId}?error=Only winner and seller can chat`);
+        }
+
+        // Ensure the target user is the correct counterparty
+        const targetIsSeller = property.sellerId.toString() === userId.toString();
+        const targetIsWinner = property.currentHighestBidder && property.currentHighestBidder.toString() === userId.toString();
+
+        if ((isSeller && !targetIsWinner) || (isWinner && !targetIsSeller)) {
+          return res.redirect(`/properties/${relatedId}?error=Invalid chat participant`);
+        }
+      }
+    } else if (type === 'tender') {
+      // For tenders, we might want to restrict to issuer and participants, 
+      // but for now, we'll allow it to proceed to getOrCreateThread
+      // verify relatedId exists if needed
+    }
 
     const thread = await ChatService.getOrCreateThread(req.user._id, userId, type, relatedId);
 
@@ -42,8 +76,9 @@ exports.openThread = async (req, res, next) => {
     const messages = await ChatService.getMessages(threadId);
     const threads = await ChatService.getInbox(req.user._id);
 
-    res.render('chat/chat', {
-      layout: 'layouts/user/userLayout',
+    res.render(VIEWS.CHAT, {
+      layout: LAYOUTS.USER_LAYOUT,
+      title: TITLES.CHAT,
       threads,
       thread,
       otherUser: thread.other,
@@ -61,14 +96,14 @@ exports.postMessage = async (req, res, next) => {
     const { message } = req.body;
 
     if (!message || !message.trim()) {
-      return res.redirect(`/chat/thread/${threadId}`);
+      return res.redirect();
     }
 
     await ChatService.send({
       threadId,
       senderId: req.user._id,
       message: message.trim(),
-    });
+    }, req.app.get('io'));
 
     res.redirect(`/chat/thread/${threadId}`);
   } catch (err) {
@@ -79,9 +114,9 @@ exports.postMessage = async (req, res, next) => {
 exports.uploadFile = async (req, res, next) => {
   try {
     const { threadId } = req.params;
-    if (!req.file) return res.redirect(`/chat/thread/${threadId}`);
+    if (!req.file) return res.redirect();
 
-    const fileUrl = `/uploads/chat/${req.file.filename}`;
+    const fileUrl = req.file.path;
 
     await ChatService.send({
       threadId,
@@ -90,7 +125,7 @@ exports.uploadFile = async (req, res, next) => {
       fileUrl,
       fileName: req.file.originalname,
       fileType: req.file.mimetype,
-    });
+    }, req.app.get('io'));
 
     res.redirect(`/chat/thread/${threadId}`);
   } catch (err) {
@@ -101,16 +136,7 @@ exports.uploadFile = async (req, res, next) => {
 exports.unreaded = async (req, res) => {
   try {
     const userId = req.user._id.toString();
-    console.log('userId', userId);
-    const threads = await ChatThread.find({
-      participants: userId,
-    });
-
-    let totalUnread = 0;
-    threads.forEach((thread) => {
-      const unreadCount = thread.unreadCounts?.get(userId) || 0;
-      totalUnread += unreadCount;
-    });
+    const totalUnread = await ChatService.getUnreadCount(userId);
 
     res.json({ success: true, count: totalUnread });
   } catch (error) {

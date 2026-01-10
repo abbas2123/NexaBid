@@ -1,3 +1,6 @@
+
+
+
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/user');
@@ -8,7 +11,6 @@ const Tender = require('../../models/tender');
 const Otp = require('../../models/otp');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
-// ---------------- REGISTER USER ----------------
 exports.registerUser = async ({ name, email, phone, password }) => {
   const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
 
@@ -42,7 +44,7 @@ exports.registerUser = async ({ name, email, phone, password }) => {
     expiresAt: Date.now() + 60 * 1000,
   });
 
-  sendOtpEmail(email, otp).catch((err) => console.log('Email send error:', err));
+  sendOtpEmail(email, otp).catch((err) => console.error('Email send error:', err));
 
   return {
     success: true,
@@ -51,7 +53,7 @@ exports.registerUser = async ({ name, email, phone, password }) => {
   };
 };
 
-// ---------------- VERIFY OTP ----------------
+
 exports.verifyOtpService = async ({ userId, otp }) => {
   const user = await User.findById(userId);
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
@@ -83,7 +85,7 @@ exports.verifyOtpService = async ({ userId, otp }) => {
   return { message: SUCCESS_MESSAGES.ACCOUNT_VERIFIED };
 };
 
-// ---------------- LOGIN USER ----------------
+
 exports.LoginUser = async ({ email, password }) => {
   const user = await User.findOne({ email });
 
@@ -127,10 +129,10 @@ exports.LoginUser = async ({ email, password }) => {
   };
 };
 
-// ---------------- FORGOTPASSWORD ----------------
+
 exports.forgotPasswordService = async (email) => {
   const user = await User.findOne({ email });
-  // console.log("user:...........",user);
+  
   if (!user) {
     const err = new Error(ERROR_MESSAGES.EMAIL_NOT_FOUND);
     err.statusCode = statusCode.NOT_FOUND;
@@ -147,7 +149,7 @@ exports.forgotPasswordService = async (email) => {
     otpHash,
   });
 
-  sendOtpEmail(email, otp).catch((err) => console.log('email error:', err));
+  sendOtpEmail(email, otp).catch((err) => console.error('email error:', err));
 
   return {
     success: true,
@@ -156,7 +158,7 @@ exports.forgotPasswordService = async (email) => {
   };
 };
 
-// ---------------- VERIFY FORGOT PASSWORD OTP ----------------
+
 
 exports.verifyForgotOtService = async ({ userId, otp }) => {
   const otpRecord = await Otp.findOne({ userId });
@@ -182,7 +184,7 @@ exports.verifyForgotOtService = async ({ userId, otp }) => {
   };
 };
 
-// ---------------- RESET PASSWORD ----------------
+
 
 exports.resetPasswordService = async ({ userId, password }) => {
   const user = await User.findById(userId);
@@ -199,7 +201,7 @@ exports.resetPasswordService = async ({ userId, password }) => {
   };
 };
 
-// ---------------- DASHBOARD DATA ----------------
+
 exports.getDashboard = async () => {
   const now = new Date();
 

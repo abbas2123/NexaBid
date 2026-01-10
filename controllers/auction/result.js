@@ -1,6 +1,8 @@
+
+
 const auctionResultService = require('../../services/auction/result');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS } = require('../../utils/constants');
+const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS, TITLES } = require('../../utils/constants');
 
 exports.loadAuctionResultPage = async (req, res) => {
   try {
@@ -11,7 +13,7 @@ exports.loadAuctionResultPage = async (req, res) => {
 
     res.render(VIEWS.AUCTION_RESULT_PUBLISHER, {
       layout: LAYOUTS.USER_LAYOUT,
-      title: 'Auction Result',
+      title: TITLES.AUCTION_RESULT,
       property: result.property,
       winningBid: result.winningBid,
       winner: result.winner,
@@ -36,7 +38,7 @@ exports.loadBuyerAuctionResultPage = async (req, res) => {
 
     return res.render(VIEWS.AUCTION_RESULT_BUYER, {
       layout: LAYOUTS.USER_LAYOUT,
-      title: 'Auction Won',
+      title: TITLES.AUCTION_WON,
       property: result.property,
       winningBid: result.winningBid,
       seller: result.seller,
@@ -46,7 +48,7 @@ exports.loadBuyerAuctionResultPage = async (req, res) => {
   } catch (err) {
     console.error('Buyer Auction Result Error:', err.message);
 
-    // Friendly redirects
+    
     if (
       err.message === ERROR_MESSAGES.NOT_WINNER ||
       err.message === ERROR_MESSAGES.AUCTION_NOT_ENDED

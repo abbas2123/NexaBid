@@ -1,8 +1,9 @@
+
+
 const bcrypt = require('bcrypt');
-const path = require('path');
-const fs = require('fs');
 const User = require('../../models/user');
 const { ERROR_MESSAGES } = require('../../utils/constants');
+const { VALIDATION_MESSAGES } = require('../../utils/constants');
 
 exports.changePassword = async (userId, currectPassword, newPassword, confirmPassword) => {
   const user = await User.findById(userId);
@@ -13,7 +14,6 @@ exports.changePassword = async (userId, currectPassword, newPassword, confirmPas
   if (!isMatch) throw new Error(ERROR_MESSAGES.PASSWORD_NOT_CORRECT);
 
   if (newPassword !== confirmPassword) {
-    const { VALIDATION_MESSAGES } = require('../../utils/constants');
     return { success: false, message: VALIDATION_MESSAGES.PASSWORDS_DO_NOT_MATCH };
   }
 
@@ -42,22 +42,8 @@ exports.updateProfile = async (userId, data = {}, fileInput = null) => {
     }
   }
 
-  if (avatarFile && avatarFile.filename) {
-    const publicPath = `/uploads/avatar/${avatarFile.filename}`;
-    updateData.avatar = publicPath;
-
-    try {
-      const existing = await User.findById(userId).select('avatar').lean();
-      if (existing && existing.avatar) {
-        const oldFilename = path.basename(existing.avatar);
-        const oldFull = path.join(process.cwd(), 'uploads', 'avatar', oldFilename);
-        if (fs.existsSync(oldFull)) {
-          fs.unlinkSync(oldFull);
-        }
-      }
-    } catch (err) {
-      console.warn('Could not remove old avatar:', err.message);
-    }
+  if (avatarFile && avatarFile.path) {
+    updateData.avatar = avatarFile.path;
   }
 
   if (Object.keys(updateData).length === 0) {

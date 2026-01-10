@@ -1,10 +1,12 @@
-const express = require('express');
 
-const router = express.Router();
+
+const express = require('express');
 const auctionController = require('../../controllers/auction/PropertyAuction');
 const auctionResult = require('../../controllers/auction/result');
 const userAuth = require('../../middlewares/authMiddleware');
 const { LAYOUTS } = require('../../utils/constants');
+
+const router = express.Router();
 
 router.get('/live/:propertyId', userAuth.protectRoute, auctionController.liveAuctionPage);
 router.get(

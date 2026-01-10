@@ -3,26 +3,76 @@
   <!-- PAGE TITLE -->
   <h1 class="text-2xl font-bold mb-6">User Management</h1>
 
-  <!-- SEARCH BAR -->
-  <div class="flex justify-between mb-4">
+  <!-- FILTERS -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    
+    <!-- Search -->
     <input 
       type="text"
       id="searchInput"
-      placeholder="Search users..."
-      class="border px-4 py-2 rounded w-1/3"
+      placeholder="Search by name, email, phone..."
+      value="<%= applied.search || '' %>"
+      class="w-full md:w-1/2 border rounded px-3 py-2"
     />
 
-    <select id="roleFilter" class="border px-4 py-2 rounded">
+    <!-- Role Filter -->
+    <select id="roleFilter" class="w-full md:w-48 border px-3 py-2 rounded">
       <option value="">All Roles</option>
-      <option value="user">Users</option>
-      <option value="vendor">Vendors</option>
-      <option value="admin">Admins</option>
+      <option value="user" <%= applied.role === 'user' ? 'selected' : '' %>>Users</option>
+      <option value="vendor" <%= applied.role === 'vendor' ? 'selected' : '' %>>Vendors</option>
+      <!-- <option value="admin" <%= applied.role === 'admin' ? 'selected' : '' %>>Admins</option> -->
     </select>
+
+    <!-- Status Filter -->
+    <select id="statusFilter" class="w-full md:w-48 border px-3 py-2 rounded">
+      <option value="">All Status</option>
+      <option value="active" <%= applied.status === 'active' ? 'selected' : '' %>>Active</option>
+      <option value="blocked" <%= applied.status === 'blocked' ? 'selected' : '' %>>Blocked</option>
+    </select>
+
+  </div>
+
+  <!-- Active Filters Display -->
+  <% if (applied.search || applied.role || applied.status) { %>
+  <div class="flex items-center gap-2 mb-4 flex-wrap">
+    <span class="text-sm text-gray-600">Active filters:</span>
+    
+    <% if (applied.search) { %>
+    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center gap-2">
+      Search: "<%= applied.search %>"
+      <a href="?page=1&role=<%= applied.role || '' %>&status=<%= applied.status || '' %>" class="hover:text-blue-900 font-bold">×</a>
+    </span>
+    <% } %>
+    
+    <% if (applied.role) { %>
+    <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs flex items-center gap-2">
+      Role: <%= applied.role %>
+      <a href="?page=1&search=<%= applied.search || '' %>&status=<%= applied.status || '' %>" class="hover:text-purple-900 font-bold">×</a>
+    </span>
+    <% } %>
+    
+    <% if (applied.status) { %>
+    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center gap-2">
+      Status: <%= applied.status %>
+      <a href="?page=1&search=<%= applied.search || '' %>&role=<%= applied.role || '' %>" class="hover:text-green-900 font-bold">×</a>
+    </span>
+    <% } %>
+    
+    <a href="?page=1" class="text-xs text-red-600 hover:underline ml-2">Clear all filters</a>
+  </div>
+  <% } %>
+
+  <!-- Results Summary -->
+  <div class="mb-4 text-sm text-gray-600">
+    Showing <%= users.length %> users
+    <% if (applied.search || applied.role || applied.status) { %>
+      (filtered)
+    <% } %>
   </div>
 
   <!-- USER TABLE -->
   <div class="bg-white rounded-lg border p-4 overflow-x-auto">
-    <table class="w-full text-left" id="userTable">
+    <table class="w-full text-left text-sm">
       <thead>
         <tr class="text-gray-600 border-b">
           <th class="py-3">Name</th>
@@ -35,73 +85,116 @@
       </thead>
 
       <tbody>
-        <% users.forEach(u => { %>
-          <tr class="border-b user-row">
-            <td class="py-3"><%= u.name %></td>
-            <td><%= u.email %></td>
-            <td><%= u.phone %></td>
-            <td><%= u.role %></td>
-            <td>
-  <span 
-    id="status-<%= u._id %>"
-    class="px-3 py-1 rounded-lg 
-    <%= u.status === 'active' ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800' %>">
-    
-    <%= u.status %>
-  </span>
-</td>
-           <td class="flex gap-2">
+        <% if (users.length === 0) { %>
+        <tr>
+          <td colspan="6" class="py-8 text-center text-gray-500">
+            No users found
+            <% if (applied.search || applied.role || applied.status) { %>
+              matching your filters
+            <% } %>
+          </td>
+        </tr>
+        <% } else { %>
+          <% users.forEach(u => { %>
+          <tr class="border-b hover:bg-gray-50">
+            <td class="py-3 font-semibold"><%= u.name %></td>
+            <td class="py-3"><%= u.email %></td>
+            <td class="py-3"><%= u.phone || 'N/A' %></td>
+            <td class="py-3">
+              <span class="px-2 py-1 rounded text-xs
+                <%= u.role === 'admin' ? 'bg-purple-100 text-purple-700' : '' %>
+                <%= u.role === 'vendor' ? 'bg-blue-100 text-blue-700' : '' %>
+                <%= u.role === 'user' ? 'bg-gray-100 text-gray-700' : '' %>">
+                <%= u.role %>
+              </span>
+            </td>
+            <td class="py-3">
+              <span 
+                id="status-<%= u._id %>"
+                class="px-3 py-1 rounded-full text-xs
+                <%= u.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' %>">
+                <%= u.status %>
+              </span>
+            </td>
+            <td class="py-3">
+              <div class="flex gap-2">
+                <!-- BLOCK BUTTON -->
+                <button
+                  id="block-<%= u._id %>"
+                  data-id="<%= u._id %>"
+                  class="block-btn px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600
+                         <%= u.status === 'blocked' ? 'hidden' : '' %>">
+                  Block
+                </button>
 
-        <!-- BLOCK BUTTON -->
-        <button
-          id="block-<%= u._id %>"
-          data-id="<%= u._id %>"
-          class="block-btn px-3 py-1 bg-red-500 text-white rounded
-                 <%= u.status === 'blocked' ? 'hidden' : '' %>">
-          Block
-        </button>
-
-        <!-- UNBLOCK BUTTON -->
-        <button
-          id="unblock-<%= u._id %>"
-          data-id="<%= u._id %>"
-          class="unblock-btn px-3 py-1 bg-green-500 text-white rounded
-                 <%= u.status === 'active' ? 'hidden' : '' %>">
-          Unblock
-        </button>
-
-      </td>
+                <!-- UNBLOCK BUTTON -->
+                <button
+                  id="unblock-<%= u._id %>"
+                  data-id="<%= u._id %>"
+                  class="unblock-btn px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600
+                         <%= u.status === 'active' ? 'hidden' : '' %>">
+                  Unblock
+                </button>
+              </div>
+            </td>
           </tr>
-        <% }) %>
+          <% }) %>
+        <% } %>
       </tbody>
 
     </table>
   </div>
 
+  <!-- PAGINATION -->
+  <%- include('../partials/admin/pagination') %>
+
 </div>
-<%- include('../partials/admin/pagination.ejs', { pagination}) %>
-<!-- BLOCK / UNBLOCK AJAX -->
+
+<!-- JAVASCRIPT -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-document.getElementById("searchInput").addEventListener("input", filterUsers);
-document.getElementById("roleFilter").addEventListener("change", filterUsers);
+// ----------------- FILTERING ------------------ 
+const searchInput = document.getElementById('searchInput');
+const roleFilter = document.getElementById('roleFilter');
+const statusFilter = document.getElementById('statusFilter');
 
-function filterUsers() {
-  let query = document.getElementById("searchInput").value.toLowerCase();
-  let roleFilter = document.getElementById("roleFilter").value;
-
-  document.querySelectorAll(".user-row").forEach(row => {
-    let name = row.children[0].textContent.toLowerCase();
-    let email = row.children[1].textContent.toLowerCase();
-    let role = row.children[3].textContent;
-
-    let matchSearch = name.includes(query) || email.includes(query);
-    let matchRole = !roleFilter || role === roleFilter;
-
-    row.style.display = matchSearch && matchRole ? "" : "none";
-  });
+function applyFilter() {
+  const search = searchInput.value.trim();
+  const role = roleFilter.value;
+  const status = statusFilter.value;
+  
+  // Build query string
+  const params = new URLSearchParams();
+  params.set('page', '1'); // Reset to page 1 on filter change
+  if (search) params.set('search', search);
+  if (role) params.set('role', role);
+  if (status) params.set('status', status);
+  
+  // Redirect with filter params
+  window.location.href = '?' + params.toString();
 }
+
+// Debounce function to avoid too many requests while typing
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
+
+// Add event listeners
+searchInput.addEventListener('input', debounce(applyFilter, 500)); // Wait 500ms after typing stops
+roleFilter.addEventListener('change', applyFilter); // Immediate on dropdown change
+statusFilter.addEventListener('change', applyFilter); // Immediate on dropdown change
+
+
+// ----------------- BLOCK / UNBLOCK USERS ------------------
 document.addEventListener("DOMContentLoaded", () => {
 
     // BLOCK USER
@@ -135,14 +228,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.querySelector(`#unblock-${userId}`).classList.remove("hidden");
 
                 const status = document.querySelector(`#status-${userId}`);
+                status.textContent = "blocked";
 
-status.textContent = "blocked";
+                // REMOVE active styles
+                status.classList.remove("bg-green-100", "text-green-700");
 
-// REMOVE active styles
-status.classList.remove("bg-green-200", "text-green-800");
-
-// ADD blocked styles
-status.classList.add("bg-red-200", "text-red-800");
+                // ADD blocked styles
+                status.classList.add("bg-red-100", "text-red-700");
             } else {
                 Swal.fire("Error", data.message, "error");
             }
@@ -180,15 +272,14 @@ status.classList.add("bg-red-200", "text-red-800");
                 btn.classList.add("hidden");
                 document.querySelector(`#block-${userId}`).classList.remove("hidden");
 
-               const status = document.querySelector(`#status-${userId}`);
+                const status = document.querySelector(`#status-${userId}`);
+                status.textContent = "active";
 
-status.textContent = "active";
+                // REMOVE blocked styles
+                status.classList.remove("bg-red-100", "text-red-700");
 
-// REMOVE blocked styles
-status.classList.remove("bg-red-200", "text-red-800");
-
-// ADD active styles
-status.classList.add("bg-green-200", "text-green-800");
+                // ADD active styles
+                status.classList.add("bg-green-100", "text-green-700");
             } else {
                 Swal.fire("Error", data.message, "error");
             }

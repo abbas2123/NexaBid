@@ -1,8 +1,9 @@
-const path = require('path');
+
+
 const contractService = require('../../services/admin/contractManagement');
 const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
-const { VIEWS, LAYOUTS, ERROR_MESSAGES } = require('../../utils/constants');
+const { VIEWS, LAYOUTS, ERROR_MESSAGES, TITLES } = require('../../utils/constants');
 
 exports.contractManagementPage = async (req, res) => {
   const tab = req.query.tab || 'tender';
@@ -11,6 +12,7 @@ exports.contractManagementPage = async (req, res) => {
 
   res.render(VIEWS.ADMIN_CONTRACT_MANAGEMENT, {
     layout: LAYOUTS.ADMIN_LAYOUT,
+    title: TITLES.CONTRACT_MANAGEMENT,
     user: req.admin,
     activeTab: tab,
     summary,
@@ -20,9 +22,6 @@ exports.contractManagementPage = async (req, res) => {
 };
 
 exports.getContractDetails = async (req, res) => {
-  console.log('🟡 HIT getContractDetails');
-  console.log('🟡 tenderId:', req.params.tenderId);
-  console.log('🟡 admin:', req.admin?._id);
   try {
     const { tenderId } = req.params;
 
@@ -41,15 +40,19 @@ exports.view = async (req, res) => {
   const { id } = req.params;
 
   if (!id || id === 'undefined') {
-    return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.INVALID_FILE_ID);
+    return res.status(statusCode.BAD_REQUEST).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.INVALID_FILE_ID,
+    });
   }
 
   const file = await File.findById(id);
-  if (!file) return res.status(statusCode.NOT_FOUND).send(ERROR_MESSAGES.FILE_NOT_FOUND);
+  if (!file) {
+    return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.FILE_NOT_FOUND,
+    });
+  }
 
-  const absolutePath = path.join(process.cwd(), file.fileUrl.replace('/uploads', 'uploads'));
-
-  res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', 'inline');
-  res.sendFile(absolutePath);
+  return res.redirect(file.fileUrl);
 };

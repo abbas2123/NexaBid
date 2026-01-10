@@ -1,3 +1,5 @@
+
+
 const mongoose = require('mongoose');
 
 const milestoneSchema = new mongoose.Schema(
@@ -34,24 +36,24 @@ const noteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-/* ================= MAIN WORK ORDER ================= */
+
 const workOrderSchema = new mongoose.Schema(
   {
-    /* Core Relations */
+    
     tenderId: { type: mongoose.Schema.Types.ObjectId, ref: 'Tender', required: true, index: true },
     vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     issuedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
 
-    /* Identification */
+    
     woNumber: { type: String, unique: true, index: true },
     contractRef: String,
 
-    /* Business Details */
+    
     title: { type: String, required: true },
     description: { type: String, required: true },
 
-    value: { type: Number, required: true }, // contract value
-    paidAmount: { type: Number, default: 0 }, // auto increases on milestone approval
+    value: { type: Number, required: true }, 
+    paidAmount: { type: Number, default: 0 }, 
 
     startDate: { type: Date, required: true },
     completionDate: { type: Date, required: true },
@@ -62,11 +64,11 @@ const workOrderSchema = new mongoose.Schema(
       default: 'active',
     },
 
-    /* Milestones & Proofs */
+    
     milestones: [milestoneSchema],
     vendorProofs: [proofSchema],
 
-    /* Attachments */
+    
     attachments: [
       {
         filename: String,
@@ -77,13 +79,13 @@ const workOrderSchema = new mongoose.Schema(
       },
     ],
 
-    /* Generated PDF */
+    
     pdfFile: { type: mongoose.Schema.Types.ObjectId, ref: 'File' },
 
-    /* Notes */
+    
     notes: [noteSchema],
 
-    /* Auditing */
+    
     createdAt: { type: Date, default: Date.now },
     completedAt: Date,
   },

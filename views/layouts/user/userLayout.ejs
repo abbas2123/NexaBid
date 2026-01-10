@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title><%= title %> - NexaBid</title>
+  <title>
+    <%= title %> - NexaBid
+  </title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
   <link rel="stylesheet"
-href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -68,126 +71,145 @@ href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@20
     <!-- Header -->
     <%- include("../../partials/user/header.ejs", { user }) %>
 
-    <!-- Main Content -->
-    <main class="w-full flex justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
-      <div class="w-full max-w-[1800px] grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-14">
-        
-        <!-- Center content: page body -->
-        <div class="lg:col-span-2 space-y-10">
-          <%- body %>
+      <!-- Main Content -->
+      <main class="w-full flex justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
+        <div class="w-full max-w-[1800px] grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-14">
+
+          <!-- Center content: page body -->
+          <div class="lg:col-span-2 space-y-10">
+            <%- body %>
+          </div>
+
+          <aside class="space-y-6 lg:pt-10">
+            <%- include("../../partials/user/quickActions.ejs", { user }) %>
+          </aside>
+
+
         </div>
+      </main>
 
-       <aside class="space-y-6 lg:pt-10">
-          <%- include("../../partials/user/quickActions.ejs", { user }) %>
-        </aside>
-
-
-      </div> 
-    </main>
-
-    <!-- Footer -->
-    <%- include("../../partials/user/footer.ejs") %>
+      <!-- Footer -->
+      <%- include("../../partials/user/footer.ejs") %>
   </div>
- <script>
-window.alert = function(message) {
-  Swal.fire({
-    icon: "info",
-    title: "Notice",
-    text: message
-  });
-};
-</script>
+  <script>
+    window.alert = function (message) {
+      Swal.fire({
+        icon: "info",
+        title: "Notice",
+        text: message
+      });
+    };
+  </script>
 
-<script src="/socket.io/socket.io.js"></script>
+  <script src="/socket.io/socket.io.js"></script>
 
-<script>
-  // Initialize Socket.IO
-  const socket = io();
+  <script>
+    // Initialize Socket.IO
+    const socket = io();
 
   <% if (user) { %>
-    socket.emit("join", "<%= user._id.toString() %>");
+      socket.emit("joinUser", "<%= user._id.toString() %>");
   <% } %>
 
-  // Load notifications from DB
-  async function loadNotifications() {
-  const list = document.getElementById("notificationsList");
-  const emptyMsg = document.getElementById("noNotifications");
-  const badge = document.getElementById("notificationBadge");
+      // Load notifications from DB
+      async function loadNotifications() {
+        const list = document.getElementById("notificationsList");
+        const emptyMsg = document.getElementById("noNotifications");
+        const badge = document.getElementById("notificationBadge");
 
-  const res = await fetch("/notifications");
-  const data = await res.json();
+        const res = await fetch("/notifications");
+        const data = await res.json();
 
-  list.innerHTML = ""; // clear old items
+        list.innerHTML = ""; // clear old items
 
-  if (data.length === 0) {
-    emptyMsg.classList.remove("hidden");
-    badge.classList.add("hidden");
-    return;
-  }
+        if (data.length === 0) {
+          emptyMsg.classList.remove("hidden");
+          badge.classList.add("hidden");
+          return;
+        }
 
-  emptyMsg.classList.add("hidden");
+        emptyMsg.classList.add("hidden");
 
-  // Count unread notifications
-  const unread = data.filter(n => !n.isRead).length;
+        // Count unread notifications
+        const unread = data.filter(n => !n.isRead).length;
 
-  if (unread > 0) {
-    badge.classList.remove("hidden");
-    badge.innerText = unread;
-  } else {
-    badge.classList.add("hidden");
-  }
+        if (unread > 0) {
+          badge.classList.remove("hidden");
+          badge.innerText = unread;
+        } else {
+          badge.classList.add("hidden");
+        }
 
- // Render ONLY unread notifications
-data.filter(n => !n.isRead).forEach(n => {
-  const item = document.createElement("div");
-  item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
-  item.innerHTML = `
+        // Render ONLY unread notifications
+        data.filter(n => !n.isRead).forEach(n => {
+          const item = document.createElement("div");
+          item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
+          item.innerHTML = `
     <p class="text-sm text-gray-800 dark:text-gray-200">${n.message}</p>
     <span class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</span>
   `;
-  list.append(item);
-});
-}
+          list.append(item);
+        });
+      }
 
-loadNotifications();
+    loadNotifications();
 
-  // Listen for realtime notifications
-  socket.on("newNotification", (data) => {
-    console.log("📩 NEW notification:", data);
+    // Listen for realtime notifications
+    socket.on("newNotification", (data) => {
+      console.log("📩 NEW notification:", data);
 
-    const list = document.getElementById("notificationsList");
-    const badge = document.getElementById("notificationBadge");
-    const emptyMsg = document.getElementById("noNotifications");
+      const list = document.getElementById("notificationsList");
+      const badge = document.getElementById("notificationBadge");
+      const emptyMsg = document.getElementById("noNotifications");
 
-    emptyMsg.classList.add("hidden");
+      emptyMsg.classList.add("hidden");
 
-    badge.classList.remove("hidden");
-    badge.innerText = Number(badge.innerText || 0) + 1;
+      badge.classList.remove("hidden");
+      badge.innerText = Number(badge.innerText || 0) + 1;
 
-    const item = document.createElement("div");
-    item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700 animate-slide-down";
-    item.innerHTML = `
+      const item = document.createElement("div");
+      item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700 animate-slide-down";
+      item.innerHTML = `
       <p class="text-sm text-gray-800 dark:text-gray-200">${data.message}</p>
       <span class="text-xs text-gray-500">Just now</span>
     `;
 
-    list.prepend(item);
-  });
+      list.prepend(item);
 
-  socket.on("forceLogout", (data) => {
+      // SWEETALERT TOAST
+      const Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        didOpen: (toast) => {
+          toast.addEventListener('mouseenter', Swal.stopTimer)
+          toast.addEventListener('mouseleave', Swal.resumeTimer)
+        }
+      });
 
-    Swal.fire({
+      Toast.fire({
+        icon: 'info',
+        title: data.message
+      });
+    });
+
+    socket.on("forceLogout", (data) => {
+
+      Swal.fire({
         icon: "warning",
         title: "Access Restricted",
         text: data.message || "You have been blocked by admin",
         confirmButtonText: "OK",
         allowOutsideClick: false
-    }).then(() => {
+      }).then(() => {
         window.location.href = "/user/logout";
-    });
+      });
 
-});
-</script>
+    });
+  </script>
 
 </body>
+
 </html>

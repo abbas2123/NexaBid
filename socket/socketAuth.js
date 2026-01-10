@@ -23,7 +23,7 @@ module.exports = async (socket, next) => {
     if (!user) return next(new Error('USER_NOT_FOUND'));
 
     socket.user = user;
-    socket.isAdmin = user.role === 'admin'; // ✅ FIXED
+    socket.isAdmin = user.role === 'admin'; 
 
     next();
   } catch (e) {

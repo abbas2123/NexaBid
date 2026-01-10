@@ -18,98 +18,304 @@
       </thead>
 
       <tbody>
-        <% tasks.forEach(t => { %>
-        <tr class="border-b">
-          <td class="py-3"><%= t.task %> — <%= t.name %></td>
+        <% tasks.forEach(t=> { %>
+          <tr class="border-b">
+            <td class="py-3">
+              <%= t.task %> — <%= t.name %>
+            </td>
 
-          <td>
-            <span class="px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-xs md:text-sm">
-              <%= t.status %>
-            </span>
-          </td>
+            <td>
+              <span class="px-3 py-1 rounded-lg bg-gray-200 text-gray-700 text-xs md:text-sm">
+                <%= t.status %>
+              </span>
+            </td>
 
-          <td class="whitespace-nowrap"><%= t.dueDate %></td>
+            <td class="whitespace-nowrap">
+              <%= t.dueDate %>
+            </td>
 
-          <td>
-            <a href="/admin/vendor-management"
-              class="text-blue-600 font-medium text-sm md:text-base">Open</a>
-          </td>
-        </tr>
-        <% }) %>
+            <td>
+              <a href="/admin/vendor-management" class="text-blue-600 font-medium text-sm md:text-base">Open</a>
+            </td>
+          </tr>
+          <% }) %>
       </tbody>
     </table>
   </div>
 
+  <!-- ----------- FILTERS -------------- -->
+  <div
+    class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+    <div class="flex items-center gap-2">
+      <span class="p-2 bg-blue-50 text-blue-600 rounded-lg">
+        <span class="material-symbols-outlined text-sm">filter_list</span>
+      </span>
+      <h2 class="text-lg font-bold text-slate-800 tracking-tight">Dashboard Filters</h2>
+    </div>
+
+    <form action="" method="GET" class="flex flex-wrap items-center gap-3">
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Timeframe</label>
+        <select name="timeframe" onchange="this.form.submit()"
+          class="bg-slate-50 border-0 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 p-2.5">
+          <option value="weekly" <%=applied.timeframe==='weekly' ? 'selected' : '' %>>Weekly</option>
+          <option value="monthly" <%=applied.timeframe==='monthly' ? 'selected' : '' %>>Monthly</option>
+          <option value="yearly" <%=applied.timeframe==='yearly' ? 'selected' : '' %>>Yearly</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-[10px] font-black uppercase text-slate-400 ml-1">Global Filter</label>
+        <select name="category" onchange="this.form.submit()"
+          class="bg-slate-50 border-0 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-44 p-2.5">
+          <option value="all" <%=applied.category==='all' ? 'selected' : '' %>>All Categories</option>
+          <option value="users" <%=applied.category==='users' ? 'selected' : '' %>>Users Only</option>
+          <option value="tenders" <%=applied.category==='tenders' ? 'selected' : '' %>>Tenders Only</option>
+          <option value="properties" <%=applied.category==='properties' ? 'selected' : '' %>>Properties Only</option>
+          <option value="vendors" <%=applied.category==='vendors' ? 'selected' : '' %>>Vendors Only</option>
+        </select>
+      </div>
+
+      <% if (applied.timeframe || applied.category) { %>
+        <a href="/admin/dashboard" class="mt-4 p-2.5 text-slate-400 hover:text-red-500 transition-colors">
+          <span class="material-symbols-outlined">restart_alt</span>
+        </a>
+        <% } %>
+    </form>
+  </div>
+
   <!-- ----------- ANALYTICS -------------- -->
-  <h2 class="text-xl font-semibold mt-8 mb-4">Analytics Overview</h2>
+  <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+    <span class="material-symbols-outlined text-blue-600">monitoring</span>
+    Analytics Insights
+  </h2>
 
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-    <!-- Users -->
-    <div class="analytics-card bg-white rounded-lg border p-4 md:p-6">
-      <p class="font-semibold text-sm md:text-base">New Users This Month</p>
-      <p class="text-3xl md:text-4xl font-bold"><%= stats.recentUsers %></p>
-      <p class="text-green-600 text-xs md:text-sm">vs. last month +20%</p>
-
-      <canvas id="usersChart" class="w-full h-32 md:h-40 mt-4"></canvas>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <!-- Stat Card: Users -->
+    <div
+      class="analytics-card bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Total Joins</span>
+      </div>
+      <p class="text-3xl font-black text-slate-900 mb-1">
+        <%= stats.userStats.reduce((a, b)=> a + b, 0) %>
+      </p>
+      <p class="text-xs text-slate-500 flex items-center gap-1">
+        <span class="text-emerald-500 font-bold flex items-center">+<%= stats.recentUsers %></span>
+        this week
+      </p>
+      <canvas id="usersChart" class="w-full h-32 mt-6"></canvas>
     </div>
 
-    <!-- Tenders -->
-    <div class="analytics-card bg-white rounded-lg border p-4 md:p-6">
-      <p class="font-semibold text-sm md:text-base">Tenders Processed</p>
-      <p class="text-3xl md:text-4xl font-bold"><%= stats.activeTender %></p>
-      <p class="text-green-600 text-xs md:text-sm">vs. last month +15%</p>
-
-      <canvas id="tendersChart" class="w-full h-32 md:h-40 mt-4"></canvas>
+    <!-- Stat Card: Tenders -->
+    <div
+      class="analytics-card bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-xl hover:shadow-purple-500/5 transition-all duration-300">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl">
+          <span class="material-symbols-outlined">assignment</span>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Tenders</span>
+      </div>
+      <p class="text-3xl font-black text-slate-900 mb-1">
+        <%= stats.tenderStats.reduce((a, b)=> a + b, 0) %>
+      </p>
+      <p class="text-xs text-slate-500">Global activity tracked</p>
+      <canvas id="tendersChart" class="w-full h-32 mt-6"></canvas>
     </div>
 
+    <!-- Stat Card: Properties -->
+    <div
+      class="analytics-card bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-xl hover:shadow-orange-500/5 transition-all duration-300">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
+          <span class="material-symbols-outlined">real_estate_agent</span>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Properties</span>
+      </div>
+      <p class="text-3xl font-black text-slate-900 mb-1">
+        <%= stats.propertyStats.reduce((a, b)=> a + b, 0) %>
+      </p>
+      <p class="text-xs text-slate-500 flex items-center gap-1">
+        <span class="text-orange-600 font-bold">
+          <%= stats.pendingProperties %>
+        </span>
+        waiting review
+      </p>
+      <canvas id="propertiesChart" class="w-full h-32 mt-6"></canvas>
+    </div>
+
+    <!-- Stat Card: Vendors -->
+    <div
+      class="analytics-card bg-white rounded-2xl border border-slate-100 p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+      <div class="flex justify-between items-start mb-4">
+        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+          <span class="material-symbols-outlined">storefront</span>
+        </div>
+        <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">Vendors</span>
+      </div>
+      <p class="text-3xl font-black text-slate-900 mb-1">
+        <%= stats.vendorStats.reduce((a, b)=> a + b, 0) %>
+      </p>
+      <p class="text-xs text-slate-500 flex items-center gap-1">
+        <span class="text-emerald-600 font-bold">
+          <%= stats.pendingVendor %>
+        </span>
+        new applications
+      </p>
+      <canvas id="vendorsChart" class="w-full h-32 mt-6"></canvas>
+    </div>
+  </div>
+
+  <!-- ----------- PENDING TASKS -------------- -->
+  <div class="mb-10">
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+        <span class="material-symbols-outlined text-amber-500">priority_high</span>
+        Pending Tasks
+      </h2>
+      <a href="/admin/property-management" class="text-sm font-bold text-blue-600 hover:text-blue-700">View All
+        Tasks</a>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <table class="w-full text-left">
+        <thead class="bg-slate-50/50">
+          <tr class="text-[10px] font-black uppercase tracking-widest text-slate-400 border-b">
+            <th class="py-4 px-6">Task Details</th>
+            <th class="py-4 px-6 text-center">Status</th>
+            <th class="py-4 px-6 text-right whitespace-nowrap">Submission Date</th>
+            <th class="py-4 px-6 text-right">Action</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-100">
+          <% tasks.forEach(t=> { %>
+            <tr class="hover:bg-slate-50/50 transition-colors group">
+              <td class="py-4 px-6">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="size-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
+                    <span class="material-symbols-outlined text-sm">
+                      <%= t.task.includes('Vendor') ? 'storefront' : t.task.includes('Property') ? 'real_estate_agent'
+                        : 'assignment' %>
+                    </span>
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-slate-900 leading-none mb-1">
+                      <%= t.name %>
+                    </p>
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                      <%= t.task %>
+                    </p>
+                  </div>
+                </div>
+              </td>
+
+              <td class="py-4 px-6 text-center">
+                <span
+                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-[10px] font-black uppercase tracking-wider border border-amber-100">
+                  <span class="size-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                  <%= t.status %>
+                </span>
+              </td>
+
+              <td class="py-4 px-6 text-right">
+                <p class="text-xs font-black text-slate-500 font-mono tracking-tighter">
+                  <%= t.dueDate %>
+                </p>
+              </td>
+
+              <td class="py-4 px-6 text-right">
+                <a href="<%= t.action %>"
+                  class="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <span class="material-symbols-outlined text-lg font-bold">arrow_forward</span>
+                </a>
+              </td>
+            </tr>
+            <% }) %>
+        </tbody>
+      </table>
+    </div>
   </div>
 
   <!-- ----------- RECENT ACTIVITIES -------------- -->
-  <h2 class="text-xl font-semibold mt-10 mb-4">Recent Activities</h2>
+  <div class="mb-10">
+    <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-indigo-600">history</span>
+      Activity Log
+    </h2>
 
-  <div class="bg-white rounded-lg border p-4 space-y-3">
-    <% activities.forEach(a => { %>
-    <div class="text-sm md:text-base">
-      <p class="font-medium"><%= a.title %></p>
-      <p class="text-gray-500"><%= a.message %></p>
+    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 space-y-4">
+      <% activities.forEach((a, i)=> { %>
+        <div class="flex gap-4 <%= i !== activities.length - 1 ? 'border-b border-slate-50 pb-4' : '' %>">
+          <div
+            class="size-2 rounded-full mt-2 <%= i === 0 ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-slate-300' %> flex-shrink-0">
+          </div>
+          <div>
+            <p class="text-sm font-bold text-slate-900 mb-0.5">
+              <%= a.title %>
+            </p>
+            <p class="text-xs text-slate-500">
+              <%= a.message %>
+            </p>
+          </div>
+        </div>
+        <% }) %>
     </div>
-    <% }) %>
   </div>
 
 </div>
-<!-- Charts -->
+
+<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-const weeklyUsers = <%- JSON.stringify(stats.weeklyUsers) %>;
-const weeklyTenders = <%- JSON.stringify(stats.weeklyTenders) %>;
+  const timeframe = '<%= applied.timeframe %>';
+  const getLabels = (count) => {
+    if (timeframe === 'weekly') return Array.from({ length: count }, (_, i) => `W${i + 1}`);
+    if (timeframe === 'monthly') return ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"].slice(12 - count);
+    if (timeframe === 'yearly') return Array.from({ length: count }, (_, i) => `Year ${i + 1}`);
+    return Array.from({ length: count }, (_, i) => i + 1);
+  };
 
-const ctx1 = document.getElementById("usersChart").getContext("2d");
-new Chart(ctx1, {
-    type: "bar",
-    data: {
-        labels: ["Week 1","Week 2","Week 3","Week 4"],
-        datasets: [{
-            label: "New Users",
-            data: weeklyUsers,
-            backgroundColor: "#60A5FA"
-        }]
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      x: { display: false },
+      y: { display: false }
+    },
+    elements: {
+      point: { radius: 0 },
+      line: { tension: 0.4 }
     }
-});
+  };
 
-const ctx2 = document.getElementById("tendersChart").getContext("2d");
-new Chart(ctx2, {
-    type: "line",
-    data: {
-        labels: ["Week 1","Week 2","Week 3","Week 4"],
+  const createChart = (id, label, data, color, type = 'line') => {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: type,
+      data: {
+        labels: getLabels(data.length),
         datasets: [{
-            label: "Tenders",
-            data: weeklyTenders,
-            borderColor: "#2563EB",
-            fill: false,
+          label: label,
+          data: data,
+          borderColor: color,
+          backgroundColor: type === 'bar' ? color : `${color}20`,
+          borderWidth: 2,
+          fill: true
         }]
-    }
-});
+      },
+      options: chartOptions
+    });
+  };
+
+  createChart('usersChart', 'Users', <% - JSON.stringify(stats.userStats) %>, '#3B82F6');
+  createChart('tendersChart', 'Tenders', <% - JSON.stringify(stats.tenderStats) %>, '#A855F7', 'bar');
+  createChart('propertiesChart', 'Properties', <% - JSON.stringify(stats.propertyStats) %>, '#F97316');
+  createChart('vendorsChart', 'Vendors', <% - JSON.stringify(stats.vendorStats) %>, '#10B981', 'bar');
 </script>
-

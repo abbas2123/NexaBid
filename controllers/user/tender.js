@@ -1,5 +1,6 @@
 const tenderService = require('../../services/tender/tender');
 const statusCode = require('../../utils/statusCode');
+
 const {
   VIEWS,
   LAYOUTS,
@@ -24,7 +25,11 @@ exports.getTenderListingPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Tender list error:', err);
-    res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
   }
 };
 
@@ -41,7 +46,7 @@ exports.getTenderDetailsPage = async (req, res) => {
     const isOwner =
       user && tender.createdBy && tender.createdBy._id.toString() === user._id.toString();
 
-    // If owner → force isVendor = false
+    
     const canParticipate = isVendor && !isOwner;
 
     return res.render(VIEWS.TENDER_DETAILS, {
@@ -58,7 +63,7 @@ exports.getTenderDetailsPage = async (req, res) => {
   } catch (err) {
     console.error('Tender Details Error:', err);
 
-    // Special handling for draft / restricted
+    
     if (err.code === ERROR_CODES.TENDER_DRAFT || err.statusCode === statusCode.FORBIDDEN) {
       return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
@@ -79,17 +84,14 @@ exports.resubmitTender = async (req, res) => {
     const tenderId = req.params.id;
     const { body } = req;
     const uploadedFiles = req.files || [];
-    console.log('req.files:', req.files);
     const updatedTender = await tenderService.resubmitTenderService(tenderId, body, uploadedFiles);
-    //
+    
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,
       tenderId: updatedTender._id,
     });
   } catch (err) {
-    console.log('Resubmission failed:', err);
-
     return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message || ERROR_MESSAGES.SERVER_ERROR,

@@ -1,9 +1,10 @@
+
+
 const Property = require('../../models/property');
 const statusCode = require('../../utils/statusCode');
 const Payment = require('../../models/payment');
-const { parseLocalDatetime, formatIST } = require('../../utils/datetime');
+const { parseLocalDatetime } = require('../../utils/datetime');
 const { ERROR_MESSAGES } = require('../../utils/constants');
-const cloudinary = require('../../config/cloudinary');
 
 exports.getProperties = async (page = 1, filters = {}) => {
   const limit = 8;
@@ -14,17 +15,17 @@ exports.getProperties = async (page = 1, filters = {}) => {
     deletedAt: null,
   };
 
-  // TYPE FILTER
+
   if (filters.type) {
     query.type = filters.type;
   }
 
-  // DISTRICT FILTER
+
   if (filters.district) {
     query.locationDistrict = { $regex: filters.district, $options: 'i' };
   }
 
-  // PRICE FILTER
+
   if (filters.minPrice || filters.maxPrice) {
     query.$or = [
       {
@@ -70,10 +71,10 @@ exports.getPropertyDetails = async (propertyId, user) => {
 
   if (!property) return { property: null, userHasPaidForProperty: false, isOwner: false };
 
-  // ✅ Calculate isOwner FIRST
+
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
 
-  // Verification check (owner bypasses)
+
   if (property.verificationStatus !== 'approved') {
     if (!isOwner && user.role !== 'admin') {
       return { property: null, userHasPaidForProperty: false, isOwner: false };
@@ -86,25 +87,22 @@ exports.getPropertyDetails = async (propertyId, user) => {
     status: 'success',
   });
 
-  console.log('userhaspaid', userHasPaidForProperty);
-  console.log('isOwner', !!isOwner); // ✅ Now shows true
-
   return {
     property,
     userHasPaidForProperty: !!userHasPaidForProperty,
-    isOwner, // ✅ true for owner
+    isOwner,
   };
 };
 
 const normalize = (value = '') => value.toLowerCase().trim().replace(/\s+/g, ' ');
 
 exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
-  // Normalize strings
+
   const normTitle = normalize(data.title);
   const normAddress = normalize(data.address);
   const normType = normalize(data.type);
 
-  // 🔍 Global duplicate check
+
   const existing = await Property.findOne({
     title: normTitle,
     address: normAddress,
@@ -119,47 +117,28 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
     err.statusCode = statusCode.CONFLICT;
     throw err;
   }
-const media = [];
-for (const file of mediaFiles) {
-  if (!file.buffer) throw new Error('File buffer missing');
+  const media = [];
+  for (const file of mediaFiles) {
+    
+    media.push({
+      url: file.path,
+      publicId: file.filename,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+    });
+  }
 
-  const cld = await new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ resource_type: 'auto', folder: 'property_media' }, (err, result) =>
-        err ? reject(err) : resolve(result)
-      )
-      .end(file.buffer);
-  });
-
-  media.push({
-    url: cld.secure_url,
-    publicId: cld.public_id,
-    originalName: file.originalname,
-    mimeType: file.mimetype,
-  });
-}
-
-const docs = [];
-for (const file of docFiles) {
-  if (!file.buffer) throw new Error('File buffer missing');
-
-  const cld = await new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ resource_type: 'auto', folder: 'property_docs' }, (err, result) =>
-        err ? reject(err) : resolve(result)
-      )
-      .end(file.buffer);
-  });
-
-  docs.push({
-    url: cld.secure_url,
-    publicId: cld.public_id,
-    originalName: file.originalname,
-    mimeType: file.mimetype,
-  });
-}
-    if (!docs.length) delete data.docs;
-if (!media.length) delete data.media;
+  const docs = [];
+  for (const file of docFiles) {
+    docs.push({
+      url: file.path,
+      publicId: file.filename,
+      originalName: file.originalname,
+      mimeType: file.mimetype,
+    });
+  }
+  if (!docs.length) delete data.docs;
+  if (!media.length) delete data.media;
 
   const property = await Property.create({
     sellerId: data.sellerId,
@@ -207,7 +186,7 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     throw error;
   }
 
-  // Update base fields
+
   existingProperty.title = body.title;
   existingProperty.description = body.description;
   existingProperty.type = body.type;
@@ -227,7 +206,7 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     existingProperty.auctionEndsAt = parseLocalDatetime(body.auctionEndsAt);
     existingProperty.auctionStep = body.auctionStep;
     existingProperty.auctionReservePrice = body.auctionReservePrice;
-    // Validate
+
     if (!existingProperty.auctionStartsAt || !existingProperty.auctionEndsAt) {
       const error = new Error('Auction start/end required');
       error.statusCode = statusCode.BAD_REQUEST;
@@ -240,38 +219,21 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
       throw error;
     }
   } else {
-   
     existingProperty.basePrice = null;
     existingProperty.auctionStartsAt = null;
     existingProperty.auctionEndsAt = null;
     existingProperty.auctionStep = null;
     existingProperty.auctionReservePrice = null;
-    
   }
 
-  // Logs: show BOTH ISO (UTC) and IST (what you expect)
-  console.log('INPUT start:', body.auctionStartsAt);
-  console.log('INPUT end  :', body.auctionEndsAt);
 
-  console.log('STORED start ISO:', existingProperty.auctionStartsAt?.toISOString());
-  console.log('STORED end   ISO:', existingProperty.auctionEndsAt?.toISOString());
 
-  console.log('STORED start IST:', formatIST(existingProperty.auctionStartsAt));
-  console.log('STORED end   IST:', formatIST(existingProperty.auctionEndsAt));
 
   if (files?.media?.length) {
     for (const file of files.media) {
-      const cld = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream({ resource_type: 'auto', folder: 'property_media' }, (err, result) =>
-            err ? reject(err) : resolve(result)
-          )
-          .end(file.buffer);
-      });
-
       existingProperty.media.push({
-        url: cld.secure_url,
-        publicId: cld.public_id,
+        url: file.path,
+        publicId: file.filename,
         fileName: file.originalname,
       });
     }
@@ -279,17 +241,9 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
 
   if (files?.docs?.length) {
     for (const file of files.docs) {
-      const cld = await new Promise((resolve, reject) => {
-        cloudinary.uploader
-          .upload_stream({ resource_type: 'auto', folder: 'property_docs' }, (err, result) =>
-            err ? reject(err) : resolve(result)
-          )
-          .end(file.buffer);
-      });
-
       existingProperty.docs.push({
-        url: cld.secure_url,
-        publicId: cld.public_id,
+        url: file.path,
+        publicId: file.filename,
         fileName: file.originalname,
       });
     }
@@ -379,7 +333,7 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
     throw err;
   }
 
-  // Remove media entry
+
   property.media.pull({ _id: mediaId });
   await property.save();
 

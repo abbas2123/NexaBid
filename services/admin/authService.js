@@ -43,43 +43,39 @@ exports.getDashboardStats = async () => {
     const recentUsers = await User.countDocuments({
       createdAt: { $gte: sevenDaysAgo },
     });
-    const weeklyUsers = [];
+    const userStats = [];
+    const tenderStats = [];
+    const propertyStats = [];
+    const vendorStats = [];
+
     for (let i = 0; i < 4; i++) {
       const start = new Date();
       start.setDate(start.getDate() - 7 * (i + 1));
-
       const end = new Date();
       end.setDate(end.getDate() - 7 * i);
 
-      const count = await User.countDocuments({
-        createdAt: { $gte: start, $lt: end },
-      });
+      const [uCount, tCount, pCount, vCount] = await Promise.all([
+        User.countDocuments({ createdAt: { $gte: start, $lt: end } }),
+        Tender.countDocuments({ createdAt: { $gte: start, $lt: end } }),
+        Property.countDocuments({ createdAt: { $gte: start, $lt: end } }),
+        vendorApplication.countDocuments({ createdAt: { $gte: start, $lt: end } }),
+      ]);
 
-      weeklyUsers.unshift(count);
+      userStats.unshift(uCount);
+      tenderStats.unshift(tCount);
+      propertyStats.unshift(pCount);
+      vendorStats.unshift(vCount);
     }
 
-    // Weekly Tender Stats
-    const weeklyTenders = [];
-    for (let i = 0; i < 4; i++) {
-      const start = new Date();
-      start.setDate(start.getDate() - 7 * (i + 1));
-
-      const end = new Date();
-      end.setDate(end.getDate() - 7 * i);
-
-      const count = await Tender.countDocuments({
-        createdAt: { $gte: start, $lt: end },
-      });
-
-      weeklyTenders.unshift(count);
-    }
     return {
       pendingVendor,
       pendingProperties,
       activeTender,
       recentUsers,
-      weeklyUsers,
-      weeklyTenders,
+      userStats,
+      tenderStats,
+      propertyStats,
+      vendorStats,
     };
   } catch (err) {
     console.error('Dashboard service Error:', err);
@@ -111,7 +107,7 @@ exports.getRecentActivities = async () => {
 exports.getPendingTasks = async () => {
   const tasks = [];
 
-  // Vendor Applications
+
   const vendors = await vendorApplication
     .find({ status: { $in: ['pending', 'submitted'] } })
     .sort({ createdAt: -1 })
@@ -127,7 +123,7 @@ exports.getPendingTasks = async () => {
     });
   });
 
-  // Properties Awaiting verification
+
   const properties = await Property.find({ verificationStatus: 'pending' })
     .sort({ createdAt: -1 })
     .limit(5);
@@ -142,7 +138,7 @@ exports.getPendingTasks = async () => {
     });
   });
 
-  // Tenders
+
   const tenders = await Tender.find({ status: 'draft' }).sort({ createdAt: -1 }).limit(5);
 
   tenders.forEach((t) => {

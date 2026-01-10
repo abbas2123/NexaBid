@@ -1,15 +1,23 @@
+
+
 const Property = require('../../models/property');
+const PropertyBid = require('../../models/propertyBid');
 const notificationService = require('../notificationService');
 
 exports.getAllProperties = async (page, filter) => {
   const limit = 5;
   const query = {
     deletedAt: null,
-    verificationStatus: {
+  };
+
+  if (filter.status && filter.status.trim() !== '') {
+    query.verificationStatus = filter.status;
+  } else {
+    query.verificationStatus = {
       $exists: true,
       $in: ['submitted', 'approved', 'rejected'],
-    },
-  };
+    };
+  }
 
   if (filter.search && filter.search.trim() !== '') {
     query.$or = [
@@ -18,9 +26,6 @@ exports.getAllProperties = async (page, filter) => {
     ];
   }
 
-  if (filter.status && filter.status.trim() !== '') {
-    query.verificationStatus = filter.status;
-  }
 
   const total = await Property.countDocuments(query);
 
@@ -31,8 +36,22 @@ exports.getAllProperties = async (page, filter) => {
     .populate('sellerId', 'name email phone')
     .lean();
 
+  
+  const now = new Date();
+  const liveAuctions = await Property.find({
+    isAuction: true,
+    verificationStatus: 'approved',
+    auctionStartsAt: { $lte: now },
+    auctionEndsAt: { $gte: now },
+    deletedAt: null,
+  })
+    .sort({ auctionEndsAt: 1 })
+    .limit(3)
+    .lean();
+
   return {
     property,
+    liveAuctions,
     pagination: {
       currentPage: page,
       totalPages: Math.ceil(total / limit),
@@ -41,6 +60,7 @@ exports.getAllProperties = async (page, filter) => {
     },
   };
 };
+
 exports.getPropertyDetails = async (id) =>
   await Property.findById(id)
     .populate('sellerId', 'name email phone')
@@ -88,4 +108,59 @@ exports.rejectPropertyService = async (id, adminId, message, io) => {
     io
   );
   return property;
+};
+
+exports.getAuctionReportData = async (propertyId) => {
+  const property = await Property.findById(propertyId)
+    .populate('sellerId', 'name email phone')
+    .populate('currentHighestBidder', 'name email phone')
+    .lean();
+
+  if (!property) return null;
+
+  const bids = await PropertyBid.find({ propertyId })
+    .populate('bidderId', 'name email phone')
+    .sort({ amount: -1 })
+    .lean();
+
+  const winningBid = bids.length > 0 ? bids[0] : null;
+
+  return {
+    property,
+    winningBid,
+    totalBids: bids.length,
+    bids,
+  };
+};
+
+exports.getAdminLiveAuctionData = async (propertyId) => {
+  const property = await Property.findById(propertyId)
+    .populate('sellerId', 'name email phone')
+    .populate('currentHighestBidder', 'name email phone')
+    .lean();
+
+  if (!property) return null;
+
+  const bids = await PropertyBid.find({ propertyId })
+    .populate('bidderId', 'name email phone')
+    .sort({ createdAt: -1 })
+    .lean();
+
+  const now = new Date();
+  let auctionStatus = 'upcoming';
+  if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
+    auctionStatus = 'live';
+  } else if (now > property.auctionEndsAt) {
+    auctionStatus = 'ended';
+  }
+
+  return {
+    property,
+    bids,
+    auctionStatus,
+    currentHighestBid: property.currentHighestBid || 0,
+    highestBidder: property.currentHighestBidder,
+    auctionEndsAt: property.auctionEndsAt,
+    propertyId: property._id,
+  };
 };

@@ -15,7 +15,7 @@
         </h1>
         <h2 class="error-message">Oops! Page Not Found</h2>
         <p class="error-description">
-          The page you're looking for doesn't exist or has been moved. 
+          The page you're looking for doesn't exist or has been moved.
           Let's get you back on track!
         </p>
         <a href="/" class="home-button">Back to Home</a>
@@ -34,7 +34,8 @@
     align-items: center;
     color: #fff;
     width: 100%;
-    min-height: calc(100vh - 80px); /* 80px ≈ header height; adjust if needed */
+    min-height: calc(100vh - 80px);
+    /* 80px ≈ header height; adjust if needed */
   }
 
   .error-page {
@@ -69,13 +70,28 @@
     animation: float 3s ease-in-out infinite;
   }
 
-  .error-code span:nth-child(1) { animation-delay: 0s; }
-  .error-code span:nth-child(2) { animation-delay: 0.2s; }
-  .error-code span:nth-child(3) { animation-delay: 0.4s; }
+  .error-code span:nth-child(1) {
+    animation-delay: 0s;
+  }
+
+  .error-code span:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .error-code span:nth-child(3) {
+    animation-delay: 0.4s;
+  }
 
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-20px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-20px);
+    }
   }
 
   .error-message {
@@ -149,25 +165,61 @@
   }
 
   @keyframes pulse {
-    0% { transform: scale(1); opacity: 0.3; }
-    100% { transform: scale(1.2); opacity: 0.1; }
+    0% {
+      transform: scale(1);
+      opacity: 0.3;
+    }
+
+    100% {
+      transform: scale(1.2);
+      opacity: 0.1;
+    }
   }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @media (max-width: 768px) {
-    .error-container { padding: 1.5rem; }
-    .error-code { gap: 0.3rem; }
-    .home-button { padding: 12px 30px; font-size: 0.9rem; }
-    .circle-1, .circle-2 { display: none; }
-    .circle-3 { width: 100px; height: 100px; }
+    .error-container {
+      padding: 1.5rem;
+    }
+
+    .error-code {
+      gap: 0.3rem;
+    }
+
+    .home-button {
+      padding: 12px 30px;
+      font-size: 0.9rem;
+    }
+
+    .circle-1,
+    .circle-2 {
+      display: none;
+    }
+
+    .circle-3 {
+      width: 100px;
+      height: 100px;
+    }
   }
 
   @media (max-width: 480px) {
-    .error-container { padding: 1rem; }
-    .bg-circle { display: none; }
+    .error-container {
+      padding: 1rem;
+    }
+
+    .bg-circle {
+      display: none;
+    }
   }
 </style>

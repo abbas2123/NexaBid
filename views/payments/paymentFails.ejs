@@ -99,10 +99,17 @@
         <% } %>
 
         <!-- Back to Listings -->
-        <a href="/<%= productType %>s"
+          <% if (productType === 'property') { %>
+        <a href="/properties"
            class="w-full inline-block text-gray-600 font-medium py-2 hover:text-gray-800 transition">
           ← Back to Listings
         </a>
+         <% } else { %>
+          <a href="/tenders"
+           class="w-full inline-block text-gray-600 font-medium py-2 hover:text-gray-800 transition">
+          ← Back to Listings
+        </a>
+          <% } %>
       </div>
 
       <!-- Help Section -->

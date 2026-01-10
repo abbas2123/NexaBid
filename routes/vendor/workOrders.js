@@ -1,19 +1,20 @@
 const express = require('express');
-const router = express.Router();
 const auth = require('../../middlewares/authMiddleware');
-const controller = require('../../controllers/vendor/postAward');
+const controller = require('../../controllers/vendor/workOrderController');
 
-// Notes
+const router = express.Router();
+
+
 router.post('/user/work-orders/:workOrderId/notes', auth.protectRoute, controller.addNote);
 
-// Milestones
+
 router.post(
   '/user/work-orders/:workOrderId/milestones/:mid/review',
   auth.protectRoute,
   controller.reviewMilestone
 );
 
-// Proofs
+
 router.post(
   '/user/work-orders/:workOrderId/proofs/:pid/approve',
   auth.protectRoute,
@@ -26,7 +27,7 @@ router.post(
   controller.rejectProof
 );
 
-// Complete
+
 router.post(
   '/user/work-orders/:workOrderId/complete',
   auth.protectRoute,

@@ -1,5 +1,4 @@
-<aside id="sidebar"
-  class="
+<aside id="sidebar" class="
     fixed md:sticky
     left-0 top-0
     h-screen md:h-screen
@@ -20,45 +19,41 @@
       <!-- MENU ITEMS -->
       <div class="flex flex-col space-y-6">
 
-        <a class="sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>" 
-           href="/admin/dashboard">
+        <a class="sidebar-item <%= currentPage === 'dashboard' ? 'active' : '' %>" href="/admin/dashboard">
           Dashboard
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'user-management' ? 'active' : '' %>" 
-           href="/admin/user-management">
+        <a class="sidebar-item <%= currentPage === 'user-management' ? 'active' : '' %>" href="/admin/user-management">
           User Management
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'property-management' ? 'active' : '' %>" 
-           href="/admin/property-management">
+        <a class="sidebar-item <%= currentPage === 'property-management' ? 'active' : '' %>"
+          href="/admin/property-management">
           Property Management
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'tender-management' ? 'active' : '' %>" 
-           href="/admin/tender-management">
+        <a class="sidebar-item <%= currentPage === 'tender-management' ? 'active' : '' %>"
+          href="/admin/tender-management">
           Tender Management
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'vendor-applications' ? 'active' : '' %>" 
-           href="/admin/vendor-management">
+        <a class="sidebar-item <%= currentPage === 'vendor-applications' ? 'active' : '' %>"
+          href="/admin/vendor-management">
           Vendor Applications
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'contract-management' ? 'active' : '' %>" 
-           href="/admin/contract-management">
+        <a class="sidebar-item <%= currentPage === 'contract-management' ? 'active' : '' %>"
+          href="/admin/contract-management">
           Contract Management
         </a>
 
-        <a class="sidebar-item <%= currentPage === 'audit' ? 'active' : '' %>"
-           href="/admin/coupon-management">
+        <a class="sidebar-item <%= currentPage === 'audit' ? 'active' : '' %>" href="/admin/coupon-management">
           coupons
         </a>
 
-        <!-- <a class="sidebar-item <%= currentPage === 'audit' ? 'active' : '' %>"
-           href="/admin/audit">
-          Audit Logs
-        </a> -->
+        <a class="sidebar-item <%= currentPage === 'reports' ? 'active' : '' %>" href="/admin/report-management">
+          Report Management
+        </a>
 
       </div>
 
@@ -70,10 +65,9 @@
 
   <!-- LOGOUT -->
   <div class="px-5 pb-5 border-t border-gray-200 mt-4">
-    <a href="/admin/logout" id="logoutBtn" 
-       class="sidebar-item flex items-center gap-2 cursor-pointer">
-      <span class="material-icons">logout</span> 
-    
+    <a href="/admin/logout" id="logoutBtn" class="sidebar-item flex items-center gap-2 cursor-pointer">
+      <span class="material-icons">logout</span>
+
     </a>
   </div>
 

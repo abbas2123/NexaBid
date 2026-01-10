@@ -1,10 +1,8 @@
-const path = require('path');
-const fs = require('fs');
+
+
 const propertyService = require('../../services/property/propertyService');
-const Property = require('../../models/property');
-const Tender = require('../../models/tender');
 const tenderService = require('../../services/tender/tender');
-const File = require('../../models/File');
+const statusService = require('../../services/user/statusService');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 
@@ -14,22 +12,14 @@ exports.propertyStatus = async (req, res) => {
       return res.redirect('/auth/login');
     }
 
-    const { user } = req;
-
-    const properties = await Property.find({
-      sellerId: user._id,
-      deletedAt: null,
-    })
-      .sort({ createdAt: -1 })
-      .lean();
+    const { properties } = await statusService.getPropertyStatus(req.user._id);
 
     return res.render('profile/propertyStatus', {
       layout: LAYOUTS.USER_LAYOUT,
       properties,
-      user,
+      user: req.user,
     });
   } catch (err) {
-    console.log('Property status error', err);
     res.render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
@@ -124,7 +114,7 @@ exports.getTenderStatusPage = async (req, res) => {
   try {
     if (!req.user) return res.redirect('/auth/login');
 
-    const tenders = await Tender.find({ createdBy: req.user._id }).sort({ createdAt: -1 }).lean();
+    const { tenders } = await statusService.getTenderStatus(req.user._id);
 
     return res.render('profile/tenderStatus', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -133,7 +123,6 @@ exports.getTenderStatusPage = async (req, res) => {
       title: 'My Tender Status',
     });
   } catch (error) {
-    console.log('Tender Status Error', error);
     return res.render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: ERROR_MESSAGES.UNABLE_LOAD_TENDER_STATUS,
@@ -167,47 +156,21 @@ exports.getResubmitTenderPage = async (req, res) => {
 exports.deleteTender = async (req, res) => {
   try {
     const tenderId = req.params.id;
+    const userId = req.user._id;
 
-    const tender = await Tender.findOne({
-      _id: tenderId,
-      createdBy: req.user._id,
-    });
-
-    if (!tender) {
-      return res.status(statusCode.NOT_FOUND).json({
-        success: false,
-        message: ERROR_MESSAGES.TENDER_NOT_FOUND_UNAUTHORIZED,
-      });
-    }
-
-    // delete documents
-    const fileIds = tender.files.map((f) => f.fileId);
-
-    if (fileIds.length > 0) {
-      const files = await File.find({ _id: { $in: fileIds } });
-      for (const f of files) {
-        try {
-          const filePath = path.join(process.cwd(), 'uploads', 'tender-docs', f.fileName);
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        } catch (err) {
-          return res.render(VIEWS.ERROR, {
-            layout: LAYOUTS.USER_LAYOUT,
-            message: ERROR_MESSAGES.FILE_NOT_FOUND,
-          });
-        }
-      }
-
-      await File.deleteMany({ _id: { $in: fileIds } });
-    }
-
-    await Tender.deleteOne({ _id: tenderId });
+    await statusService.deleteTender(tenderId, userId);
 
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_DELETED,
     });
   } catch (error) {
-    console.log('Tender deletion error:', error);
+    if (error.statusCode === statusCode.NOT_FOUND) {
+      return res.status(statusCode.NOT_FOUND).json({
+        success: false,
+        message: error.message,
+      });
+    }
     return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: ERROR_MESSAGES.SERVER_ERROR_DELETING_TENDER,

@@ -26,7 +26,7 @@ router.get('/tender/:id/agreement/upload',auth.protectRoute,postAwardController.
 router.post('/tender/:id/agreement/upload',auth.protectRoute,uploads.single('agreement'),postAwardController.uploadAgreement);
 
 
-router.get("/view/:id",auth.protectRoute,postAwardController.view);
+router.get("/view/:id",auth.protectRoute,postAwardController.aview);
 
 router.post(
   "/agreement/:agreementId/approve",

@@ -171,8 +171,9 @@ exports.uploadAgreement = async (req, res) => {
 };
 
 
-exports.view = async (req, res) => {
+exports.aview = async (req, res) => {
   try {
+    console.log('dsvdsdsvsdv')
     const filePath = await postAwardService.viewAgreementFile(
       req.params.id
     );

@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const propertyParticipantSchema = new mongoose.Schema(
@@ -34,7 +32,6 @@ const propertyParticipantSchema = new mongoose.Schema(
     timestamps: { createdAt: true, updatedAt: false },
   }
 );
-
 
 propertyParticipantSchema.index({ propertyId: 1, userId: 1 }, { unique: true });
 

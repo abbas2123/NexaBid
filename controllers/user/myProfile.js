@@ -1,5 +1,3 @@
-
-
 const myProfileService = require('../../services/profile/myProfileService');
 const statusCode = require('../../utils/statusCode');
 const { ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');

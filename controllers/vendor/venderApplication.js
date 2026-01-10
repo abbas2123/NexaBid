@@ -62,12 +62,11 @@ exports.submitVendorApplication = async (req, res) => {
     const userId = req.user._id;
 
     existingApp = await vendorService.getApplicationStatus(userId);
-    
+
     if (existingApp && existingApp.userId.toString() !== userId.toString()) {
       return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
     }
 
-    
     if (actionType === ACTION_TYPES.SCAN) {
       if (!req.files || req.files.length === 0) {
         return res.json({
@@ -80,7 +79,6 @@ exports.submitVendorApplication = async (req, res) => {
       } catch (err) {
         return res.json({ success: false, message: err.message });
       }
-      
 
       return res.json({
         success: true,
@@ -89,7 +87,6 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    
     updatedApp = await vendorService.getApplicationStatus(userId);
 
     if (!updatedApp) {
@@ -105,7 +102,6 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    
     if (!req.body.terms) {
       return res.json({
         success: false,
@@ -113,7 +109,6 @@ exports.submitVendorApplication = async (req, res) => {
       });
     }
 
-    
     await vendorApplication.findOneAndUpdate(
       { userId },
       { $set: { status: APPLICATION_STATUS.SUBMITTED } },

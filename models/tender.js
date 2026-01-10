@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const tenderSchema = new mongoose.Schema(
@@ -118,7 +116,6 @@ const tenderSchema = new mongoose.Schema(
 
   { timestamps: true }
 );
-
 
 tenderSchema.index({ status: 1, bidEndAt: -1 });
 tenderSchema.index({ category: 1 });

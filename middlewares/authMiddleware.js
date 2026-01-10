@@ -1,5 +1,3 @@
-
-
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
@@ -15,7 +13,10 @@ const protectRoute = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const updatedUser = await User.findById(decoded.id).lean();
 
-    if (!updatedUser) return res.redirect('/auth/login');
+    if (!updatedUser|| updatedUser.status==='blocked') {
+      res.clearCookie('token')
+      return res.redirect('/auth/login');
+    }
 
     if (decoded.role !== updatedUser.role) {
       const newToken = jwt.sign(
@@ -71,13 +72,11 @@ const preventAuthPages = (req, res, next) => {
   next();
 };
 const isAuthenticated = (req, res, next) => {
-  
   if (req.user) {
     console.log('Auth: Passport session user');
     return next();
   }
 
-  
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
 
   if (!token) {
@@ -87,7 +86,7 @@ const isAuthenticated = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded; 
+    req.user = decoded;
     console.log('Auth: JWT user');
     return next();
   } catch (err) {

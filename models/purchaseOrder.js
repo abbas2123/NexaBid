@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const purchaseOrderSchema = new mongoose.Schema(
@@ -18,7 +16,7 @@ const purchaseOrderSchema = new mongoose.Schema(
 
     generatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', 
+      ref: 'User',
       required: true,
     },
 
@@ -37,7 +35,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     endDate: { type: Date },
 
     terms: {
-      type: String, 
+      type: String,
       default: '',
     },
 

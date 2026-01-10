@@ -46,7 +46,6 @@ exports.getTenderDetailsPage = async (req, res) => {
     const isOwner =
       user && tender.createdBy && tender.createdBy._id.toString() === user._id.toString();
 
-    
     const canParticipate = isVendor && !isOwner;
 
     return res.render(VIEWS.TENDER_DETAILS, {
@@ -63,7 +62,6 @@ exports.getTenderDetailsPage = async (req, res) => {
   } catch (err) {
     console.error('Tender Details Error:', err);
 
-    
     if (err.code === ERROR_CODES.TENDER_DRAFT || err.statusCode === statusCode.FORBIDDEN) {
       return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
@@ -85,7 +83,7 @@ exports.resubmitTender = async (req, res) => {
     const { body } = req;
     const uploadedFiles = req.files || [];
     const updatedTender = await tenderService.resubmitTenderService(tenderId, body, uploadedFiles);
-    
+
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,

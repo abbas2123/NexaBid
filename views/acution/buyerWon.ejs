@@ -1,6 +1,5 @@
 <main class="flex-1 flex justify-center py-8 md:py-12 px-4 md:px-6">
   <div class="flex flex-col max-w-[1120px] w-full gap-8 md:gap-12">
-
     <!-- SUCCESS HEADER -->
     <div class="flex flex-col items-center text-center gap-6">
       <div class="rounded-full bg-green-100 p-4">
@@ -26,24 +25,27 @@
 
     <!-- GRID -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
       <!-- PROPERTY CARD -->
       <div class="lg:col-span-8">
-        <div class="bg-white rounded-2xl border shadow-sm p-4 md:p-6 flex flex-col md:flex-row gap-6">
-
+        <div
+          class="bg-white rounded-2xl border shadow-sm p-4 md:p-6 flex flex-col md:flex-row gap-6"
+        >
           <!-- IMAGE -->
           <div
             class="w-full md:w-1/2 aspect-video bg-cover bg-center rounded-xl relative"
-            style="background-image:url('<%= property.media?.[0]?.url || '/images/no-image.png' %>')"
+            style="
+              background-image: url('<%= property.media?.[0]?.url || '/images/no-image.png' %>');
+            "
           >
-            <span class="absolute top-3 left-3 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+            <span
+              class="absolute top-3 left-3 bg-green-600 text-white text-xs font-bold px-3 py-1 rounded-full"
+            >
               Sold to You
             </span>
           </div>
 
           <!-- DETAILS -->
           <div class="flex flex-col justify-between flex-1 gap-4">
-
             <div>
               <p class="text-sm text-gray-500">Winning Bid</p>
               <p class="text-3xl font-extrabold text-green-600">
@@ -54,9 +56,7 @@
             <hr />
 
             <div>
-              <h3 class="text-xl md:text-2xl font-bold mb-1">
-                <%= property.title %>
-              </h3>
+              <h3 class="text-xl md:text-2xl font-bold mb-1"><%= property.title %></h3>
 
               <p class="text-gray-500 flex items-start gap-1">
                 <span class="material-symbols-outlined text-lg">location_on</span>
@@ -83,17 +83,14 @@
               <span class="material-symbols-outlined text-base">visibility</span>
               View Property Details
             </a>
-
           </div>
         </div>
       </div>
 
       <!-- SELLER INFO -->
       <div class="lg:col-span-4 flex flex-col gap-6">
-
         <div class="bg-white rounded-2xl border shadow-sm p-6">
           <div class="flex items-center gap-4 mb-6">
-
             <img
               src="<%= seller.avatar || '/images/default-user.png' %>"
               class="w-16 h-16 rounded-full border"
@@ -136,14 +133,15 @@
         </div>
 
         <!-- NOTE -->
-        <div class="bg-gray-50 border border-dashed rounded-xl p-4 text-sm text-gray-600 flex gap-2">
+        <div
+          class="bg-gray-50 border border-dashed rounded-xl p-4 text-sm text-gray-600 flex gap-2"
+        >
           <span class="material-symbols-outlined">info</span>
           <p>
-            <strong>Note:</strong> NexaBid only facilitates auctions.
-            Payments and legal formalities are handled privately.
+            <strong>Note:</strong> NexaBid only facilitates auctions. Payments and legal formalities
+            are handled privately.
           </p>
         </div>
-
       </div>
     </div>
   </div>

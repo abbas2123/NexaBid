@@ -1,5 +1,3 @@
-
-
 const propertyService = require('../../services/property/propertyService');
 const tenderService = require('../../services/tender/tender');
 const statusService = require('../../services/user/statusService');

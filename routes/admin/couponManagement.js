@@ -1,5 +1,3 @@
-
-
 const router = require('express').Router();
 const authAdmin = require('../../middlewares/adminAuth');
 const adminControler = require('../../controllers/admin/couponManagement');

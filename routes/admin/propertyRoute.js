@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const { adminProtect } = require('../../middlewares/adminAuth');
 const authProperty = require('../../controllers/admin/propertyManagement');
@@ -13,5 +11,6 @@ router.patch('/approve/:id', adminProtect, authProperty.approveProperty);
 router.patch('/reject/:id', adminProtect, authProperty.rejectProperty);
 
 router.get('/:id', adminProtect, authProperty.getPropertyDetails);
+router.get('/auction-report/:propertyId', adminProtect, authProperty.getAuctionReport);
 router.get('/view/live/:propertyId', adminProtect, authProperty.adminLiveAuctionPage);
 module.exports = router;

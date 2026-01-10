@@ -111,7 +111,7 @@ exports.verifyPayment = async (req, res) => {
   try {
     const { paymentId } = req.body;
     const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
-    console.log('')
+    console.log('');
     return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
   } catch (err) {
     console.error(err);
@@ -121,12 +121,12 @@ exports.verifyPayment = async (req, res) => {
 
 exports.paymentSuccessPage = async (req, res) => {
   try {
-    console.log('sdddvd')
+    console.log('sdddvd');
     const payment = await paymentService.getSuccessPageData(req.params.paymentId);
     if (!payment) {
       return res.redirect(REDIRECTS.DASHBOARD);
     }
-    console.log('succ', payment)
+    console.log('succ', payment);
     res.status(statusCode.OK).render(VIEWS.PAYMENT_SUCCESS, {
       layout: LAYOUTS.USER_LAYOUT,
       ...payment,

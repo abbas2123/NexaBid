@@ -1,5 +1,3 @@
-
-
 const TransactionService = require('../../services/profile/transaction');
 const { LAYOUTS } = require('../../utils/constants');
 

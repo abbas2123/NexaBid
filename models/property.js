@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const propertySchema = new mongoose.Schema(
@@ -31,8 +29,8 @@ const propertySchema = new mongoose.Schema(
     auctionEndsAt: Date,
     auctionStep: { type: Number, default: 1000 },
     auctionReservePrice: Number,
-    extended: { type: Boolean, default: false }, // For preventing infinite extension
-    autoBidLock: { type: Boolean, default: false }, // For preventing recursion
+    extended: { type: Boolean, default: false },
+    autoBidLock: { type: Boolean, default: false },
 
     currentHighestBid: { type: Number, default: 0 },
     currentHighestBidder: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

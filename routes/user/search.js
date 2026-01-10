@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');

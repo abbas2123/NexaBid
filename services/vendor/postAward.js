@@ -1,5 +1,3 @@
-
-
 const Tender = require('../../models/tender');
 const TenderBid = require('../../models/tenderBid');
 const PO = require('../../models/purchaseOrder');
@@ -10,21 +8,7 @@ const { ERROR_MESSAGES } = require('../../utils/constants');
 const statusCode = require('../../utils/statusCode');
 const generateWorkOrderPDF = require('./workOrderPdf');
 const cloudinary = require('../../config/cloudinary');
-
-const upload = (buffer, folder, filename) =>
-  new Promise((resolve, reject) =>
-    cloudinary.uploader
-      .upload_stream(
-        {
-          resource_type: 'raw', // ✅ Changed from 'auto' to 'raw'
-          access_mode: 'public', // ✅ Added for public access
-          folder,
-          public_id: filename,
-        },
-        (e, r) => (e ? reject(e) : resolve(r))
-      )
-      .end(buffer)
-  );
+const { uploadToCloudinary, generateSignedUrl } = require('../../utils/cloudinaryHelper');
 
 exports.getPublisherPostAwardService = async (tenderId, userId) => {
   const wo = await WorkOrder.findOne({ tenderId });
@@ -43,7 +27,7 @@ exports.getPublisherPostAwardService = async (tenderId, userId) => {
   if (tender.status !== 'awarded') {
     return {
       redirectToEvaluation: true,
-      url: `/vendor/tender/${tender._id}/evaluation`,
+      url: `/ vendor / tender / ${tender._id}/evaluation`,
     };
   }
 
@@ -74,12 +58,11 @@ exports.getPublisherPostAwardService = async (tenderId, userId) => {
   };
 };
 
-
-
 exports.getPublisherAgreementUploadData = async (tenderId, publisherId) => {
   const tender = await Tender.findById(tenderId);
   if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
-  if (tender.createdBy.toString() !== publisherId.toString()) throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+  if (tender.createdBy.toString() !== publisherId.toString())
+    throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
 
   const po = await PO.findOne({ tenderId, status: 'vendor_accepted' });
   if (!po) throw new Error(ERROR_MESSAGES.PO_NOT_ACCEPTED);
@@ -92,7 +75,7 @@ exports.getPublisherAgreementUploadData = async (tenderId, publisherId) => {
     publisherAgreement: agreement?.publisherAgreement,
     vendorAgreement: agreement?.uploadedByVendor,
     approved: agreement?.approvedByPublisher,
-    remarks: agreement?.publisherRemarks
+    remarks: agreement?.publisherRemarks,
   };
 };
 
@@ -103,32 +86,31 @@ exports.uploadPublisherAgreement = async ({ tenderId, publisherId, file }) => {
     throw new Error(ERROR_MESSAGES.PO_NOT_ACCEPTED_YET);
   }
 
-
   if (!file) throw new Error(ERROR_MESSAGES.NO_FILE);
 
   const winnerBid = await TenderBid.findOne({ tenderId, isWinner: true });
   if (!winnerBid) throw new Error(ERROR_MESSAGES.WINNER_NOT_FOUND);
 
-  // Sanitize filename: remove extension, replace spaces/special chars
-  const nameWithoutExt = file.originalname.replace(/\.[^/.]+$/, '');
-  const sanitizedFilename = nameWithoutExt.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const cld = await uploadToCloudinary(
+    file.buffer,
+    'post_award/agreements',
+    file.originalname,
+    'auto'
+  );
 
-  const cld = await upload(file.buffer, 'postaward/agreements', sanitizedFilename);
-
-const fileDoc = await File.create({
-  ownerId: publisherId,
-  fileName: file.originalname,
-  fileUrl: cld.secure_url,
-  mimeType: file.mimetype,
-  size: file.size,
-  metadata: {
-    public_id: cld.public_id,
-    resource_type: cld.resource_type,  // ✅ This will now be 'raw'
-    type: cld.type,
-    version: cld.version
-  },
-});
-  console.log('fileDoc', fileDoc);
+  const fileDoc = await File.create({
+    ownerId: publisherId,
+    fileName: file.originalname,
+    fileUrl: cld.secure_url,
+    mimeType: file.mimetype,
+    size: file.size,
+    metadata: {
+      public_id: cld.public_id,
+      resource_type: cld.resource_type,
+      type: cld.type,
+      version: cld.version,
+    },
+  });
   let agreement = await Agreement.findOne({ tenderId });
   if (!agreement) {
     agreement = await Agreement.create({
@@ -145,45 +127,21 @@ const fileDoc = await File.create({
 
 exports.viewAgreementFile = async (fileId) => {
   const file = await File.findById(fileId);
-  console.log('file', file);
-
   if (!file?.fileUrl) throw new Error(ERROR_MESSAGES.FILE_NOT_FOUND);
 
-  // ✅ FIX 1: Check metadata first, then URL pattern
-  let resourceType = 'raw'; // Default to 'raw' for PDFs
+  const resourceType = file.metadata?.resource_type === 'raw' ? 'raw' : 'image';
 
-  if (file.metadata?.resource_type) {
-    resourceType = file.metadata.resource_type;
-  } else if (file.fileUrl.includes('/image/upload/')) {
-    resourceType = 'image';
-  } else if (file.fileUrl.includes('/raw/upload/')) {
-    resourceType = 'raw';
-  }
+  const url = generateSignedUrl(
+    file.metadata.public_id,
+    file.version,
+    resourceType,
+    file.mimeType === 'application/pdf' ? 'pdf' : null
+  );
 
-  // ✅ FIX 2: For PDFs, force 'raw' resource type
-  if (file.mimeType === 'application/pdf') {
-    resourceType = 'raw';
-  }
-    
-  const url = cloudinary.url(file.metadata.public_id, {
-    resource_type: resourceType,
-    type: 'upload',
-    sign_url: true,
-    secure: true,
-    version: file.version,
-    flags: 'attachment', // ✅ FIX 3: Force download instead of inline view
-  });
-
-  console.log('DEBUG Generated Signed URL:', url);
-  console.log('Resource Type Used:', resourceType);
-  console.log('MIME Type:', file.mimeType);
-
-  return url;
+  return url || file.fileUrl;
 };
 
-
 exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
-
   const existingWO = await WorkOrder.findOne({ tenderId });
   if (existingWO) throw new Error(ERROR_MESSAGES.WORK_ORDER_ALREADY_ISSUED);
 
@@ -201,7 +159,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
   if (!agreement || !agreement.uploadedByVendor)
     throw new Error(ERROR_MESSAGES.AGREEMENT_NOT_SIGNED);
 
-
   let milestones = [];
   if (Array.isArray(body.milestones)) {
     milestones = body.milestones.map((m) => ({
@@ -212,7 +169,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
   }
 
   const woNumber = `WO-${Date.now()}`;
-
 
   const cld = await generateWorkOrderPDF({
     tender,
@@ -229,7 +185,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
     size: cld.bytes,
     metadata: { public_id: cld.public_id },
   });
-
 
   const wo = await WorkOrder.create({
     tenderId,
@@ -256,7 +211,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
 
   return wo;
 };
-
 
 exports.getWorkOrderFilePath = async (fileId) => {
   const file = await File.findById(fileId);
@@ -322,6 +276,7 @@ exports.getIssuePageData = async (publisherId, tenderId) => {
     tender,
     vendor: winnerBid.vendorId,
     contractRef: `${tender.title}-Contract`,
+    amount: winnerBid.quotes.amount,
   };
 };
 
@@ -388,12 +343,17 @@ exports.completeWorkOrder = async (workOrderId) => {
 };
 
 exports.getCompletionSummary = async (WorkOrderId) => {
+  console.log('[DEBUG] getCompletionSummary Service. ID:', WorkOrderId);
   const workOrderId = WorkOrderId.replace('completion-', '');
+  console.log('[DEBUG] Cleaned ID:', workOrderId);
+
   const wo = await WorkOrder.findById(workOrderId)
     .populate('vendorId', 'name')
     .populate('issuedBy', 'name')
     .populate('tenderId', 'title')
     .lean();
+
+  console.log('[DEBUG] WorkOrder found:', !!wo);
 
   if (!wo) throw new Error('WORK_ORDER_NOT_FOUND');
 
@@ -424,7 +384,6 @@ exports.getCompletionSummary = async (WorkOrderId) => {
     },
   };
 };
-
 
 exports.getCreatePOPageData = async (tenderId, userId) => {
   const tender = await Tender.findById(tenderId);

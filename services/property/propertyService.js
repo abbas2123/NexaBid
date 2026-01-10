@@ -1,6 +1,7 @@
-
-
 const Property = require('../../models/property');
+const TenderParticipants = require('../../models/tenderParticipants');
+const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
+const User = require('../../models/user');
 const statusCode = require('../../utils/statusCode');
 const Payment = require('../../models/payment');
 const { parseLocalDatetime } = require('../../utils/datetime');
@@ -15,16 +16,13 @@ exports.getProperties = async (page = 1, filters = {}) => {
     deletedAt: null,
   };
 
-
   if (filters.type) {
     query.type = filters.type;
   }
 
-
   if (filters.district) {
     query.locationDistrict = { $regex: filters.district, $options: 'i' };
   }
-
 
   if (filters.minPrice || filters.maxPrice) {
     query.$or = [
@@ -46,6 +44,7 @@ exports.getProperties = async (page = 1, filters = {}) => {
   const total = await Property.countDocuments(query);
 
   const properties = await Property.find(query)
+    .sort({ createdAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
     .lean();
@@ -71,9 +70,7 @@ exports.getPropertyDetails = async (propertyId, user) => {
 
   if (!property) return { property: null, userHasPaidForProperty: false, isOwner: false };
 
-
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
-
 
   if (property.verificationStatus !== 'approved') {
     if (!isOwner && user.role !== 'admin') {
@@ -97,11 +94,9 @@ exports.getPropertyDetails = async (propertyId, user) => {
 const normalize = (value = '') => value.toLowerCase().trim().replace(/\s+/g, ' ');
 
 exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
-
   const normTitle = normalize(data.title);
   const normAddress = normalize(data.address);
   const normType = normalize(data.type);
-
 
   const existing = await Property.findOne({
     title: normTitle,
@@ -119,7 +114,6 @@ exports.createProperty = async ({ data, mediaFiles = [], docFiles = [] }) => {
   }
   const media = [];
   for (const file of mediaFiles) {
-    
     media.push({
       url: file.path,
       publicId: file.filename,
@@ -186,7 +180,6 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     throw error;
   }
 
-
   existingProperty.title = body.title;
   existingProperty.description = body.description;
   existingProperty.type = body.type;
@@ -226,14 +219,21 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
     existingProperty.auctionReservePrice = null;
   }
 
-
-
-
   if (files?.media?.length) {
     for (const file of files.media) {
+      let url = file.path;
+      if (file.buffer) {
+        const cld = await uploadToCloudinary(
+          file.buffer,
+          'nexabid/properties',
+          file.originalname,
+          'image'
+        );
+        url = cld.secure_url;
+      }
       existingProperty.media.push({
-        url: file.path,
-        publicId: file.filename,
+        url: url,
+        publicId: file.filename || `prop_${Date.now()}`,
         fileName: file.originalname,
       });
     }
@@ -241,9 +241,19 @@ exports.updatePropertyService = async (propertyId, userId, body, files) => {
 
   if (files?.docs?.length) {
     for (const file of files.docs) {
+      let url = file.path;
+      if (file.buffer) {
+        const cld = await uploadToCloudinary(
+          file.buffer,
+          'nexabid/properties',
+          file.originalname,
+          'raw'
+        );
+        url = cld.secure_url;
+      }
       existingProperty.docs.push({
-        url: file.path,
-        publicId: file.filename,
+        url: url,
+        publicId: file.filename || `doc_${Date.now()}`,
         fileName: file.originalname,
       });
     }
@@ -332,7 +342,6 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
     err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
-
 
   property.media.pull({ _id: mediaId });
   await property.save();

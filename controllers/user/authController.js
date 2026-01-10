@@ -10,7 +10,6 @@ const {
 } = require('../../utils/constants');
 const User = require('../../models/user');
 
-
 exports.getSignupPage = (req, res) => {
   res.render(VIEWS.USER_SIGNUP, {
     layout: false,
@@ -192,13 +191,11 @@ exports.resendOtp = async (req, res) => {
       });
     }
 
-    
     res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.OTP_RESENT,
     });
 
-    
     setTimeout(async () => {
       await authService.resendOtpByUserId(userId);
       console.log('OTP resend operation completed');
@@ -268,7 +265,3 @@ exports.getDashboard = async (req, res) => {
     });
   }
 };
-
-
-
-

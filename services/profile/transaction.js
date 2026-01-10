@@ -1,5 +1,3 @@
-
-
 const Payment = require('../../models/payment');
 const WalletTransaction = require('../../models/walletTransaction');
 
@@ -27,13 +25,10 @@ exports.getTransacation = async (userId, page, filters) => {
     })),
   ];
 
-  
   if (filters.type) ledger = ledger.filter((x) => x.type === filters.type);
 
-  
   if (filters.source) ledger = ledger.filter((x) => x.source === filters.source);
 
-  
   if (filters.dateRange) {
     const now = new Date();
     ledger = ledger.filter((tx) => {

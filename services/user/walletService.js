@@ -1,6 +1,3 @@
-
-
-
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const Wallet = require('../../models/wallet');
@@ -20,12 +17,11 @@ const getOrCreateWallet = async (userId) => {
   return wallet;
 };
 
-
 exports.getWalletPageData = async (userId) => {
   const wallet = await getOrCreateWallet(userId);
 
   const transactions = await WalletTransaction.find({ userId })
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .limit(10)
     .lean();
 
@@ -34,7 +30,6 @@ exports.getWalletPageData = async (userId) => {
     transactions,
   };
 };
-
 
 exports.getAllTransactionsData = async (userId, filters) => {
   const wallet = await getOrCreateWallet(userId);
@@ -48,19 +43,15 @@ exports.getAllTransactionsData = async (userId, filters) => {
   const { fromDate } = filters;
   const { toDate } = filters;
 
-
   const query = { userId };
-
 
   if (transactionType && ['credit', 'debit'].includes(transactionType)) {
     query.type = transactionType;
   }
 
-
   if (source) {
     query.source = source;
   }
-
 
   if (fromDate || toDate) {
     query.createdAt = {};
@@ -78,16 +69,14 @@ exports.getAllTransactionsData = async (userId, filters) => {
     }
   }
 
-
   const transactions = await WalletTransaction.find(query)
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
 
   const totalTransactions = await WalletTransaction.countDocuments(query);
   const totalPages = Math.ceil(totalTransactions / limit);
-
 
   const allSources = await WalletTransaction.distinct('source', { userId });
 
@@ -101,7 +90,6 @@ exports.getAllTransactionsData = async (userId, filters) => {
   };
 };
 
-
 exports.getWalletBalance = async (userId) => {
   const wallet = await getOrCreateWallet(userId);
 
@@ -111,7 +99,6 @@ exports.getWalletBalance = async (userId) => {
   };
 };
 
-
 exports.getAddFundsPageData = async (userId) => {
   const wallet = await getOrCreateWallet(userId);
 
@@ -120,15 +107,12 @@ exports.getAddFundsPageData = async (userId) => {
   };
 };
 
-
 exports.createAddFundsOrder = async (userId, amount) => {
-
   if (!amount || amount < 100) {
     const error = new Error(ERROR_MESSAGES.MINIMUM_AMOUNT_REQUIRED);
     error.statusCode = 400;
     throw error;
   }
-
 
   const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
   const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -143,7 +127,6 @@ exports.createAddFundsOrder = async (userId, amount) => {
     key_id: razorpayKeyId,
     key_secret: razorpayKeySecret,
   });
-
 
   const timestamp = Date.now().toString().slice(-10);
   const receipt = `receipt#${timestamp}`;
@@ -169,10 +152,8 @@ exports.createAddFundsOrder = async (userId, amount) => {
   };
 };
 
-
 exports.verifyAddFundsPayment = async (userId, paymentData) => {
   const { razorpay_payment_id, razorpay_order_id, razorpay_signature, amount } = paymentData;
-
 
   const generatedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -185,18 +166,15 @@ exports.verifyAddFundsPayment = async (userId, paymentData) => {
     throw error;
   }
 
-
   let wallet = await Wallet.findOne({ userId });
   if (!wallet) {
     wallet = await Wallet.create({ userId, balance: 0 });
   }
 
-
   const _previousBalance = wallet.balance;
   wallet.balance += parseFloat(amount);
   wallet.updatedAt = new Date();
   await wallet.save();
-
 
   await WalletTransaction.create({
     walletId: wallet._id,

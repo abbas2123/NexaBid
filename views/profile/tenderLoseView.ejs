@@ -1,27 +1,24 @@
 <main class="flex flex-1 justify-center py-8 px-4 sm:px-6 lg:px-8">
   <div class="layout-content-container flex flex-col w-full max-w-3xl gap-6">
-
     <!-- HEADER -->
     <div class="text-center">
-      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">
-        Tender Result
-      </h1>
+      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white">Tender Result</h1>
       <p class="mt-2 text-slate-600 dark:text-slate-400">
         Tender ID: <span class="font-semibold"><%= tender._id %></span>
       </p>
     </div>
 
     <!-- STATUS CARD -->
-    <div class="p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-center">
+    <div
+      class="p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-center"
+    >
       <div class="flex justify-center mb-3">
         <span class="material-symbols-outlined text-red-600 dark:text-red-400 text-5xl">
           cancel
         </span>
       </div>
 
-      <h2 class="text-xl font-bold text-red-700 dark:text-red-300">
-        You did not win this tender
-      </h2>
+      <h2 class="text-xl font-bold text-red-700 dark:text-red-300">You did not win this tender</h2>
 
       <p class="mt-2 text-sm text-red-600 dark:text-red-400">
         Another vendor was selected by the publisher for this tender.
@@ -30,9 +27,7 @@
 
     <!-- BID DETAILS -->
     <div class="p-6 bg-white dark:bg-background-dark rounded-xl border dark:border-gray-800">
-      <h3 class="text-lg font-bold mb-4 text-slate-900 dark:text-white">
-        Your Bid Details
-      </h3>
+      <h3 class="text-lg font-bold mb-4 text-slate-900 dark:text-white">Your Bid Details</h3>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         <div>
@@ -53,26 +48,30 @@
 
     <!-- OPTIONAL PO INFO -->
     <% if (po) { %>
-      <div class="p-5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-xl">
-        <p class="text-yellow-800 dark:text-yellow-300 text-sm font-semibold">
-          ℹ️ Purchase Order was issued to the winning vendor.
-        </p>
-      </div>
+    <div
+      class="p-5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-xl"
+    >
+      <p class="text-yellow-800 dark:text-yellow-300 text-sm font-semibold">
+        ℹ️ Purchase Order was issued to the winning vendor.
+      </p>
+    </div>
     <% } %>
 
     <!-- ACTIONS -->
     <div class="flex flex-col sm:flex-row gap-3 justify-center">
-      <a href="/user/my-participation"
-         class="px-6 py-3 rounded-lg bg-primary text-white font-bold text-sm text-center">
+      <a
+        href="/user/my-participation"
+        class="px-6 py-3 rounded-lg bg-primary text-white font-bold text-sm text-center"
+      >
         Back to My Participation
       </a>
 
-      <a href="/tenders"
-         class="px-6 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 
-                text-slate-800 dark:text-slate-200 font-bold text-sm text-center">
+      <a
+        href="/tenders"
+        class="px-6 py-3 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-sm text-center"
+      >
         Explore New Tenders
       </a>
     </div>
-
   </div>
 </main>

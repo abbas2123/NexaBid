@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const agreementSchema = new mongoose.Schema(
@@ -16,14 +14,12 @@ const agreementSchema = new mongoose.Schema(
       required: true,
     },
 
-    
     publisherAgreement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',
       default: null,
     },
 
-    
     uploadedByVendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',

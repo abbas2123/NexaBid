@@ -1,5 +1,3 @@
-
-
 const statusCode = require('../utils/statusCode');
 const { LAYOUTS, ERROR_MESSAGES } = require('../utils/constants');
 

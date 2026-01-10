@@ -1,10 +1,10 @@
-
-
 const myProfileService = require('../../services/profile/profileService');
 const listingService = require('../../services/user/listingService');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 const TenderBid = require('../../models/tenderBid');
+const Tender = require('../../models/tender');
+
 exports.getMyListingPage = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -78,7 +78,17 @@ exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-    console.log('ddd')
+
+    // FETCH TENDER FIRST
+    const tender = await Tender.findById(tenderId);
+    if (!tender) {
+      return res.status(404).render(VIEWS.ERROR, {
+        layout: LAYOUTS.USER_LAYOUT,
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
+        user: req.user,
+      });
+    }
+
     const bid = await TenderBid.findOne({ tenderId, vendorId: userId });
 
     if (!bid) {
@@ -91,20 +101,30 @@ exports.viewTenderPostAward = async (req, res) => {
     const techStatus = bid.techReviewStatus;
     const finStatus = bid.finReviewStatus;
 
-    if (!hasTechFiles) {
-      return res.redirect(`/vendor/tender/${tenderId}/bid`);
-    }
+    // Check if tender is effectively OVER
+    const isTenderClosed = ['awarded', 'closed', 'completed'].includes(tender.status);
 
-    if (hasTechFiles && techStatus !== 'accepted') {
-      return res.redirect(`/vendor/tender/${tenderId}/bid`);
-    }
+    // ONLY enforce these checks if the tender is STILL ACTIVE
+    if (!isTenderClosed) {
+      if (!hasTechFiles) {
+        return res.redirect(`/vendor/tender/${tenderId}/bid`);
+      }
 
-    if (techStatus === 'accepted' && !hasFinFiles) {
-      return res.redirect(`/vendor/tender/${tenderId}/financial`);
-    }
+      if (hasTechFiles && techStatus !== 'accepted') {
+        // If rejected, maybe show a "You were rejected" view?
+        // But for now, keeping existing logic (redirect to bid) or maybe we should allow fallthrough?
+        // If I am rejected, I can't edit my bid. Redirecting me to /bid might show a read-only view?
+        // Assuming /bid handles rejected state.
+        return res.redirect(`/vendor/tender/${tenderId}/bid`);
+      }
 
-    if (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted') {
-      return res.redirect(`/vendor/tender/${tenderId}/financial`);
+      if (techStatus === 'accepted' && !hasFinFiles) {
+        return res.redirect(`/vendor/tender/${tenderId}/financial`);
+      }
+
+      if (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted') {
+        return res.redirect(`/vendor/tender/${tenderId}/financial`);
+      }
     }
 
     const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
@@ -141,7 +161,6 @@ exports.viewTenderPostAward = async (req, res) => {
       isRegenerated: result.isRegenerated,
       user: req.user,
     });
-
   } catch (err) {
     console.error('Post Award Error:', err.message);
 
@@ -174,7 +193,6 @@ exports.viewTenderPostAward = async (req, res) => {
       });
     }
 
-    // Redirect back with error message for unknown errors
     return res.redirect(`/user/my-participation?error=${encodeURIComponent(err.message)}`);
   }
 };
@@ -186,7 +204,7 @@ exports.vendorRespondPO = async (req, res) => {
       action: req.body.action,
       reason: req.body.reason,
     });
-    console.log('result', result)
+    console.log('result', result);
     return res.redirect(
       `/user/my-participation/tender/${result.tenderId}?response=${result.response}`
     );
@@ -223,8 +241,7 @@ exports.getUploadPage = async (req, res) => {
       approved: data.approved,
       remarks: data.remarks,
       vendorAgreement: data.vendorAgreement || null,
-      // ✅ ADD THESE LINES:
-      formAction: `/user/${tenderId}/agreement/upload`, // Match your upload route
+      formAction: `/user/${tenderId}/upload`,
       downloadLink: data.publisherAgreement
         ? `/user/files/view/${data.publisherAgreement._id}?flags=attachment`
         : '#',
@@ -232,35 +249,30 @@ exports.getUploadPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Agreement page error:', err.message);
-    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}/respond`);
+    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}`);
   }
 };
 
-
 exports.uploadSignedAgreement = async (req, res) => {
   try {
-
     await myProfileService.uploadVendorAgreement({
       tenderId: req.params.tenderId,
       vendorId: req.user._id,
       file: req.file,
     });
-    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}/respond`);
+    return res.redirect(`/user/my-participation/tender/${req.params.tenderId}`);
   } catch (err) {
     console.error(err.message);
 
-    const base = `/user/my-participation/tender/${req.params.tenderId}/respond`;
+    const base = `/user/my-participation/tender/${req.params.tenderId}`;
 
     if (err.message === ERROR_MESSAGES.NO_FILE) return res.redirect(base);
 
-    if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND)
-      return res.redirect(base);
+    if (err.message === ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND) return res.redirect(base);
 
-    if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED)
-      return res.redirect(base);
+    if (err.message === ERROR_MESSAGES.PO_NOT_ACCEPTED) return res.redirect(base);
 
-    if (err.message === ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED)
-      return res.redirect(base);
+    if (err.message === ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED) return res.redirect(base);
 
     return res.redirect(base);
   }
@@ -269,7 +281,10 @@ exports.uploadSignedAgreement = async (req, res) => {
 exports.getWorkOrderDetails = async (req, res, next) => {
   try {
     const workOrder = await myProfileService.getWorkOrderDetailsService(req.params.id);
-
+    console.log('dvwwv', workOrder.status);
+    if (workOrder.status === 'completed') {
+      return res.redirect(`/publisher/work-order/completed/completion-${workOrder._id}`);
+    }
     if (!workOrder) {
       return res.status(404).render('error/404', {
         layout: LAYOUTS.USER_LAYOUT,

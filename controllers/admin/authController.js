@@ -67,6 +67,8 @@ exports.getAdminDashboard = async (req, res) => {
     const filters = {
       timeframe: req.query.timeframe || 'weekly',
       category: req.query.category || 'all',
+      year: req.query.year || null,
+      month: req.query.month || null,
     };
 
     const stats = await adminAuthService.getDashboardStats(filters);

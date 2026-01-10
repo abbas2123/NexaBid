@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const { protectRoute } = require('../../middlewares/authMiddleware');
 
@@ -10,7 +8,6 @@ const {
   rejectTechnicalEvaluation,
   selectWinner,
 } = require('../../controllers/user/mylisting');
-
 
 router.get('/owner/tender/:id/evaluation', protectRoute, getTenderEvaluationPage);
 

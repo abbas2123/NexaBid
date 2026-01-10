@@ -11,14 +11,9 @@ const PropertyParticipant = require('../../models/propertyParticipant');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 const TenderParticipants = require('../../models/tenderParticipants');
 const cloudinary = require('../../config/cloudinary');
+const statusCode = require('../../utils/statusCode');
+const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
 const User = require('../../models/user');
-
-const upload = (buffer, folder, filename) =>
-  new Promise((resolve, reject) => {
-    cloudinary.uploader
-      .upload_stream({ resource_type: 'auto', folder, public_id: filename }, (e, r) => (e ? reject(e) : resolve(r)))
-      .end(buffer);
-  });
 
 exports.getMyProfileData = async (userId) => {
   const user = await User.findById(userId).select('-password').lean();
@@ -109,7 +104,6 @@ exports.getMyParticipationData = async (userId) => {
     }
   }
 
-
   const properties = participations
     .filter((p) => p.propertyId)
     .map((p) => {
@@ -119,7 +113,6 @@ exports.getMyParticipationData = async (userId) => {
       const now = new Date();
       const auctionEndDate = property.auctionEndsAt ? new Date(property.auctionEndsAt) : null;
       const auctionStartDate = property.auctionStartsAt ? new Date(property.auctionStartsAt) : null;
-
 
       const isEnded =
         property.status === 'owned' ||
@@ -154,7 +147,6 @@ exports.getMyParticipationData = async (userId) => {
           : '—',
       };
     });
-
 
   const tenderParticipations = await TenderParticipants.find({ userId })
     .populate('tenderId')
@@ -353,16 +345,15 @@ exports.uploadVendorAgreement = async ({ tenderId, vendorId, file }) => {
   if (!agreement || !agreement.publisherAgreement)
     throw new Error(ERROR_MESSAGES.PUBLISHER_AGREEMENT_NOT_FOUND);
 
-
   if (agreement.uploadedByVendor && agreement.approvedByPublisher !== false)
     throw new Error(ERROR_MESSAGES.AGREEMENT_ALREADY_SIGNED);
 
-
-  // Sanitize filename: remove extension, replace spaces/special chars
-  const nameWithoutExt = file.originalname.replace(/\.[^/.]+$/, '');
-  const sanitizedFilename = nameWithoutExt.replace(/[^a-zA-Z0-9._-]/g, '_');
-
-  const cld = await upload(file.buffer, 'post_award/vendor_agreements', sanitizedFilename);
+  const cld = await uploadToCloudinary(
+    file.buffer,
+    'post_award/vendor_agreements',
+    file.originalname,
+    'auto'
+  );
 
   const fileDoc = await File.create({
     ownerId: vendorId,
@@ -370,7 +361,12 @@ exports.uploadVendorAgreement = async ({ tenderId, vendorId, file }) => {
     fileUrl: cld.secure_url,
     mimeType: file.mimetype,
     size: file.size,
-    metadata: { public_id: cld.public_id },
+    metadata: {
+      public_id: cld.public_id,
+      resource_type: cld.resource_type,
+      type: cld.type,
+      version: cld.version,
+    },
   });
 
   agreement.uploadedByVendor = fileDoc._id;
@@ -402,7 +398,12 @@ exports.uploadProofService = async (woId, milestoneId, file, _userId) => {
   const m = wo.milestones.id(milestoneId);
   if (!m) throw new Error('MILESTONE_NOT_FOUND');
 
-  const cld = await upload(file.buffer, 'work_orders/proofs');
+  const cld = await uploadToCloudinary(
+    file.buffer,
+    'work_orders/proofs',
+    file.originalname,
+    'auto'
+  );
 
   wo.vendorProofs.push({
     filename: file.originalname,
@@ -439,7 +440,6 @@ exports.startMilestoneService = async (woId, mid, userId) => {
     throw { status: 404, message: 'Work order not found' };
   }
 
-
   if (
     workOrder.vendorId.toString() !== userId.toString() &&
     workOrder.issuedBy.toString() !== userId.toString()
@@ -473,80 +473,75 @@ exports.startMilestoneService = async (woId, mid, userId) => {
 exports.getVendorTenderReports = async (userId, page = 1, filter = {}) => {
   const limit = 10;
 
-  // 1. Get all tenders user participated in
   const participations = await TenderParticipants.find({ userId })
     .populate('tenderId', 'title status bidEndAt createdAt')
     .lean();
 
   let allReports = [];
 
-  // 2. Generate virtual reports based on tender status
   for (const p of participations) {
     const tender = p.tenderId;
     if (!tender) continue;
 
-    // Report 1: Bid Summary (Always available if participated)
     allReports.push({
-      _id: `bid-${tender._id}`, // Virtual ID
+      _id: `bid-${tender._id}`,
       tenderId: tender,
       reportType: 'bid_summary',
-      generatedAt: p.joinedAt || tender.createdAt, // fallback
-      status: 'available'
+      generatedAt: p.joinedAt || tender.createdAt,
+      status: 'available',
     });
 
-    // Report 2: Evaluation Summary (If evaluation started/done)
-    if (['technical_evaluation', 'financial_evaluation', 'awarded', 'closed', 'completed'].includes(tender.status)) {
+    if (
+      ['technical_evaluation', 'financial_evaluation', 'awarded', 'closed', 'completed'].includes(
+        tender.status
+      )
+    ) {
       allReports.push({
         _id: `eval-${tender._id}`,
         tenderId: tender,
         reportType: 'evaluation',
         generatedAt: tender.bidEndAt || new Date(),
-        status: 'available'
+        status: 'available',
       });
     }
 
-    // Report 3: Winner Report (If awarded/completed)
     if (['awarded', 'completed'].includes(tender.status)) {
       allReports.push({
         _id: `winner-${tender._id}`,
         tenderId: tender,
         reportType: 'winner',
-        generatedAt: new Date(), // Ideally when awarded
-        status: 'available'
+        generatedAt: new Date(),
+        status: 'available',
       });
     }
 
-    // Report 4: Completion Report (If completed)
     if (tender.status === 'completed') {
       allReports.push({
         _id: `completion-${tender._id}`,
         tenderId: tender,
         reportType: 'completion',
         generatedAt: new Date(),
-        status: 'available'
+        status: 'available',
       });
     }
   }
 
-  // 3. Apply Filters (Memory filtering since reports are virtual)
   if (filter.search) {
     const searchLower = filter.search.toLowerCase();
-    allReports = allReports.filter(r => r.tenderId.title.toLowerCase().includes(searchLower));
+    allReports = allReports.filter((r) => r.tenderId.title.toLowerCase().includes(searchLower));
   }
 
   if (filter.reportType) {
-    allReports = allReports.filter(r => r.reportType === filter.reportType);
+    allReports = allReports.filter((r) => r.reportType === filter.reportType);
   }
 
   if (filter.date) {
     const filterDate = new Date(filter.date).toDateString();
-    allReports = allReports.filter(r => new Date(r.generatedAt).toDateString() === filterDate);
+    allReports = allReports.filter((r) => new Date(r.generatedAt).toDateString() === filterDate);
   }
 
-  // 4. Sort (Newest first)
   allReports.sort((a, b) => new Date(b.generatedAt) - new Date(a.generatedAt));
 
-  // 5. Pagination
   const totalReports = allReports.length;
   const totalPages = Math.ceil(totalReports / limit);
   const paginatedReports = allReports.slice((page - 1) * limit, page * limit);
@@ -557,7 +552,7 @@ exports.getVendorTenderReports = async (userId, page = 1, filter = {}) => {
       currentPage: Number(page),
       totalPages,
       hasNextPage: page < totalPages,
-      hasPrevPage: page > 1
-    }
+      hasPrevPage: page > 1,
+    },
   };
 };

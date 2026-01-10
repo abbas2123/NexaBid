@@ -1,5 +1,3 @@
-
-
 const Tender = require('../../models/tender');
 
 exports.getAllTenders = async (page, filter) => {
@@ -22,7 +20,7 @@ exports.getAllTenders = async (page, filter) => {
   const total = await Tender.countDocuments(query);
 
   const tenders = await Tender.find(query)
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate('createdBy', 'name email')
@@ -46,13 +44,43 @@ exports.getTenderById = async (id) => {
     .lean();
 };
 
-exports.updateTenderStatus = async (id, status, comment) => {
+const notificationService = require('../../services/notificationService');
+const { NOTIFICATION_MESSAGES, TENDER_STATUS } = require('../../utils/constants');
+
+exports.updateTenderStatus = async (id, status, comment, io) => {
   const tender = await Tender.findById(id);
   if (!tender) return null;
 
   tender.status = status;
   if (comment?.trim()) tender.adminComment = comment.trim();
   await tender.save();
+
+  if (status === TENDER_STATUS.PUBLISHED) {
+    await notificationService.sendNotification(
+      tender.createdBy,
+      NOTIFICATION_MESSAGES.TENDER_PUBLISHED,
+      `/tenders/${tender._id}`,
+      io
+    );
+  }
+
+  if (status === TENDER_STATUS.REJECTED) {
+    await notificationService.sendNotification(
+      tender.createdBy,
+      NOTIFICATION_MESSAGES.TENDER_REJECTED,
+      `/tenders/${tender._id}`,
+      io
+    );
+  }
+
+  if (status === TENDER_STATUS.CLOSED) {
+    await notificationService.sendNotification(
+      tender.createdBy,
+      NOTIFICATION_MESSAGES.TENDER_CLOSED,
+      `/tenders/${tender._id}`,
+      io
+    );
+  }
 
   return tender;
 };

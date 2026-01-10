@@ -1,9 +1,11 @@
 <!-- Confetti Container -->
 <div id="confetti-container"></div>
 
-<div class="min-h-screen flex items-center justify-center p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+<div
+  class="min-h-screen flex items-center justify-center p-4"
+  style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+>
   <div class="glass-card rounded-3xl p-8 md:p-12 max-w-2xl w-full scale-in">
-    
     <!-- Lottie Animation -->
     <div class="float-animation">
       <div id="lottie-success" class="w-64 h-64 mx-auto"></div>
@@ -11,9 +13,13 @@
 
     <!-- Trophy Icon -->
     <div class="text-center mb-6 fade-in-up">
-      <div class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full p-4 pulse-glow">
+      <div
+        class="inline-block bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full p-4 pulse-glow"
+      >
         <svg class="w-16 h-16 text-white" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+          <path
+            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+          ></path>
         </svg>
       </div>
     </div>
@@ -33,11 +39,15 @@
       <div class="space-y-4">
         <div class="flex justify-between items-center">
           <span class="text-gray-600 font-medium">Winning Bid:</span>
-          <span class="text-2xl font-bold text-purple-600">₹<%= property.currentHighestBid || property.basePrice %></span>
+          <span class="text-2xl font-bold text-purple-600"
+            >₹<%= property.currentHighestBid || property.basePrice %></span
+          >
         </div>
         <div class="flex justify-between items-center">
           <span class="text-gray-600 font-medium">Property:</span>
-          <span class="text-lg font-semibold text-gray-800"><%= property.title || property._id %></span>
+          <span class="text-lg font-semibold text-gray-800"
+            ><%= property.title || property._id %></span
+          >
         </div>
         <div class="flex justify-between items-center">
           <span class="text-gray-600 font-medium">Status:</span>
@@ -69,50 +79,87 @@
 
     <!-- Action Buttons -->
     <div class="flex flex-col sm:flex-row gap-4 fade-in-up delay-3">
-      <a href="/user/my-participation" 
-         class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-center hover:shadow-lg hover:scale-105 transition-all duration-300">
+      <a
+        href="/user/my-participation"
+        class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-bold text-center hover:shadow-lg hover:scale-105 transition-all duration-300"
+      >
         View My Bids
       </a>
-      <a href="/properties" 
-         class="flex-1 bg-white text-purple-600 border-2 border-purple-600 px-8 py-4 rounded-xl font-bold text-center hover:bg-purple-50 hover:scale-105 transition-all duration-300">
+      <a
+        href="/properties"
+        class="flex-1 bg-white text-purple-600 border-2 border-purple-600 px-8 py-4 rounded-xl font-bold text-center hover:bg-purple-50 hover:scale-105 transition-all duration-300"
+      >
         Browse More
       </a>
     </div>
 
     <!-- Support Info -->
     <div class="text-center mt-8 text-gray-600 text-sm fade-in-up delay-3">
-      <p>Need help? Contact us at <a href="mailto:support@nexabid.com" class="text-purple-600 font-semibold hover:underline">support@nexabid.com</a></p>
+      <p>
+        Need help? Contact us at
+        <a href="mailto:support@nexabid.com" class="text-purple-600 font-semibold hover:underline"
+          >support@nexabid.com</a
+        >
+      </p>
     </div>
-
   </div>
 </div>
 
 <!-- Styles -->
 <style>
   @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
   }
 
   @keyframes scaleIn {
-    0% { transform: scale(0); opacity: 0; }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
   }
 
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes confetti-fall {
-    0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    0% {
+      transform: translateY(-100vh) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+      opacity: 0;
+    }
   }
 
   @keyframes shimmer {
-    0% { background-position: -1000px 0; }
-    100% { background-position: 1000px 0; }
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
   }
 
   .float-animation {
@@ -128,9 +175,15 @@
     opacity: 0;
   }
 
-  .delay-1 { animation-delay: 0.2s; }
-  .delay-2 { animation-delay: 0.4s; }
-  .delay-3 { animation-delay: 0.6s; }
+  .delay-1 {
+    animation-delay: 0.2s;
+  }
+  .delay-2 {
+    animation-delay: 0.4s;
+  }
+  .delay-3 {
+    animation-delay: 0.6s;
+  }
 
   .confetti {
     position: fixed;
@@ -163,8 +216,13 @@
   }
 
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: .7; }
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
   }
 
   #confetti-container {
@@ -187,21 +245,21 @@
     renderer: 'svg',
     loop: true,
     autoplay: true,
-    path: 'https://lottie.host/a82aa150-b781-4754-b8e7-9fe53b659e4b/bKqqcDyey8.lottie'
+    path: 'https://lottie.host/a82aa150-b781-4754-b8e7-9fe53b659e4b/bKqqcDyey8.lottie',
   });
 
   // Confetti Effect
   function createConfetti() {
     const container = document.getElementById('confetti-container');
     const colors = ['#667eea', '#764ba2', '#f093fb', '#ffd700', '#ff6b6b', '#4ecdc4'];
-    
+
     for (let i = 0; i < 50; i++) {
       setTimeout(() => {
         const confetti = document.createElement('div');
         confetti.classList.add('confetti');
         confetti.style.left = Math.random() * 100 + '%';
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        confetti.style.animationDuration = Math.random() * 3 + 2 + 's';
         confetti.style.animationDelay = Math.random() * 2 + 's';
         container.appendChild(confetti);
 

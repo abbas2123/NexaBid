@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const propertyBidSchema = new mongoose.Schema(
@@ -23,7 +21,6 @@ const propertyBidSchema = new mongoose.Schema(
       required: true,
     },
 
-    
     isAutoBid: {
       type: Boolean,
       default: false,
@@ -34,7 +31,6 @@ const propertyBidSchema = new mongoose.Schema(
       default: null,
     },
 
-    
     bidStatus: {
       type: String,
       enum: ['active', 'outbid', 'won', 'cancelled'],
@@ -54,7 +50,6 @@ const propertyBidSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 
 propertyBidSchema.index({ propertyId: 1, amount: -1 });
 propertyBidSchema.index({ bidderId: 1, propertyId: 1 }, { unique: true });

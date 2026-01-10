@@ -1,11 +1,9 @@
-
-
 const Tender = require('../../models/tender');
 const TenderBid = require('../../models/tenderBid');
 const Payment = require('../../models/payment');
 const File = require('../../models/File');
+const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
 const { ERROR_MESSAGES } = require('../../utils/constants');
-
 
 module.exports = {
   async getTechBidData(tenderId, user) {
@@ -41,7 +39,6 @@ module.exports = {
 
     if (files.proposalFiles) {
       for (const file of files.proposalFiles) {
-        
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
@@ -57,13 +54,27 @@ module.exports = {
 
     if (files.techFiles) {
       for (const file of files.techFiles) {
+        let fileUrl = file.path;
+        let publicId = file.filename;
+
+        if (file.buffer) {
+          const cld = await uploadToCloudinary(
+            file.buffer,
+            'nexabid/bids/tech',
+            file.originalname,
+            'raw'
+          );
+          fileUrl = cld.secure_url;
+          publicId = cld.public_id;
+        }
+
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: file.path,
+          fileUrl: fileUrl,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: file.filename },
+          metadata: { public_id: publicId },
         });
         techIds.push(saved._id);
       }
@@ -86,13 +97,27 @@ module.exports = {
 
     if (files.finForms) {
       for (const file of files.finForms) {
+        let fileUrl = file.path;
+        let publicId = file.filename;
+
+        if (file.buffer) {
+          const cld = await uploadToCloudinary(
+            file.buffer,
+            'nexabid/bids/fin',
+            file.originalname,
+            'raw'
+          );
+          fileUrl = cld.secure_url;
+          publicId = cld.public_id;
+        }
+
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: file.path,
+          fileUrl: fileUrl,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: file.filename },
+          metadata: { public_id: publicId },
         });
         finIds.push(saved._id);
       }
@@ -101,13 +126,27 @@ module.exports = {
 
     if (files.quotationFiles) {
       for (const file of files.quotationFiles) {
+        let fileUrl = file.path;
+        let publicId = file.filename;
+
+        if (file.buffer) {
+          const cld = await uploadToCloudinary(
+            file.buffer,
+            'nexabid/bids/fin',
+            file.originalname,
+            'raw'
+          );
+          fileUrl = cld.secure_url;
+          publicId = cld.public_id;
+        }
+
         const saved = await File.create({
           ownerId: userId,
           fileName: file.originalname,
-          fileUrl: file.path,
+          fileUrl: fileUrl,
           mimeType: file.mimetype,
           size: file.size,
-          metadata: { public_id: file.filename },
+          metadata: { public_id: publicId },
         });
         quoteIds.push(saved._id);
       }

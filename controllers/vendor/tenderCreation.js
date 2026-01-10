@@ -15,7 +15,7 @@ exports.getCreateTenderPage = async (req, res) => {
       layout: LAYOUTS.USER_LAYOUT,
       title: TITLES.CREATE_TENDER,
       user: req.user,
-      tender: null, 
+      tender: null,
       files: [],
     });
   } catch (error) {

@@ -1,5 +1,3 @@
-
-
 const poService = require('../../services/vendor/poService');
 const postAwardService = require('../../services/vendor/postAward');
 const statusCode = require('../../utils/statusCode');
@@ -97,7 +95,8 @@ exports.viewPO = async (req, res) => {
 
 exports.issuePage = async (req, res) => {
   try {
-    const { tenderId } = req.params;
+    const tenderId = req.params.id;
+    console.log(`[DEBUG] Issue Page Request - TenderId: ${tenderId}, User: ${req.user._id}`);
 
     const data = await postAwardService.getIssuePageData(req.user._id, tenderId);
 
@@ -106,6 +105,7 @@ exports.issuePage = async (req, res) => {
       tender: data.tender,
       vendor: data.vendor,
       contractRef: data.contractRef,
+      amount: data.amount,
     });
   } catch (err) {
     console.error('Issue page error:', err);

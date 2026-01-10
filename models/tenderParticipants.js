@@ -1,5 +1,3 @@
-
-
 const mongoose = require('mongoose');
 
 const tenderParticipantSchema = new mongoose.Schema(

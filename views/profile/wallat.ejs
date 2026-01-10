@@ -1,299 +1,334 @@
 <body class="bg-gray-50 min-h-screen">
-
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
     <!-- Page Header -->
     <div class="mb-8 animate-slideIn">
-        <div class="flex items-center justify-between flex-wrap gap-4">
-            <div>
-                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">My Wallet</h1>
-                <p class="text-gray-600">
-                    Manage your funds for tenders and auctions
-                </p>
-            </div>
-            <button 
-                onclick="window.location.reload()"
-                class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
-                <span class="material-icons text-xl">refresh</span>
-                <span class="hidden sm:inline">Refresh</span>
-            </button>
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">My Wallet</h1>
+          <p class="text-gray-600">Manage your funds for tenders and auctions</p>
         </div>
+        <button
+          onclick="window.location.reload()"
+          class="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <span class="material-icons text-xl">refresh</span>
+          <span class="hidden sm:inline">Refresh</span>
+        </button>
+      </div>
     </div>
 
     <!-- Balance Cards Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <!-- Main Balance Card -->
-        <div class="lg:col-span-2">
-            <div class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-8 shadow-xl relative overflow-hidden">
-                <!-- Animated Background Pattern -->
-                <div class="absolute inset-0 opacity-10">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32"></div>
-                    <div class="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full -ml-24 -mb-24"></div>
-                    <div class="absolute top-1/2 left-1/2 w-32 h-32 bg-white rounded-full -ml-16 -mt-16"></div>
-                </div>
-                
-                <div class="relative z-10">
-                    <div class="flex items-center justify-between mb-6">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                <span class="material-icons text-white text-2xl">account_balance_wallet</span>
-                            </div>
-                            <div>
-                                <p class="text-white/80 text-sm font-medium">Available Balance</p>
-                                <p class="text-white/60 text-xs">NexaBid Wallet</p>
-                            </div>
-                        </div>
-                        <div class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                            <span class="material-icons text-white">more_vert</span>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-6">
-                        <div class="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
-                            ₹<%= (walletBalance || 0).toLocaleString('en-IN') %>
-                        </div>
-                        <p class="text-white/70 text-sm">
-                            Last updated: <%= new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
-                        </p>
-                    </div>
-                    
-                    <button 
-                        onclick="window.location.href='/wallet/add-funds'"
-                        class="w-full sm:w-auto px-8 py-3.5 bg-white text-purple-600 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group">
-                        <span class="material-icons text-xl group-hover:scale-110 transition-transform">add_circle</span>
-                        <span>Add Funds</span>
-                    </button>
-                </div>
-            </div>
-        </div>
+      <!-- Main Balance Card -->
+      <div class="lg:col-span-2">
+        <div
+          class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-8 shadow-xl relative overflow-hidden"
+        >
+          <!-- Animated Background Pattern -->
+          <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white rounded-full -mr-32 -mt-32"></div>
+            <div
+              class="absolute bottom-0 left-0 w-48 h-48 bg-white rounded-full -ml-24 -mb-24"
+            ></div>
+            <div
+              class="absolute top-1/2 left-1/2 w-32 h-32 bg-white rounded-full -ml-16 -mt-16"
+            ></div>
+          </div>
 
-        <!-- Quick Stats -->
-        <div class="space-y-4">
-            <!-- Total Spent -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
-                        <span class="material-icons text-red-600 text-2xl">trending_down</span>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">This Month</span>
+          <div class="relative z-10">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm"
+                >
+                  <span class="material-icons text-white text-2xl">account_balance_wallet</span>
                 </div>
-                <p class="text-sm text-gray-600 mb-1">Total Spent</p>
-                <p class="text-2xl font-bold text-gray-900">
-                    ₹<%= transactions.filter(t => t.type === 'debit' && new Date(t.createdAt).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0).toLocaleString('en-IN') %>
-                </p>
+                <div>
+                  <p class="text-white/80 text-sm font-medium">Available Balance</p>
+                  <p class="text-white/60 text-xs">NexaBid Wallet</p>
+                </div>
+              </div>
+              <div
+                class="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm"
+              >
+                <span class="material-icons text-white">more_vert</span>
+              </div>
             </div>
 
-            <!-- Total Received -->
-            <div class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                        <span class="material-icons text-green-600 text-2xl">trending_up</span>
-                    </div>
-                    <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">This Month</span>
-                </div>
-                <p class="text-sm text-gray-600 mb-1">Total Received</p>
-                <p class="text-2xl font-bold text-gray-900">
-                    ₹<%= transactions.filter(t => t.type === 'credit' && new Date(t.createdAt).getMonth() === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0).toLocaleString('en-IN') %>
-                </p>
+            <div class="mb-6">
+              <div class="text-5xl md:text-6xl font-bold text-white mb-2 tracking-tight">
+                ₹<%= (walletBalance || 0).toLocaleString('en-IN') %>
+              </div>
+              <p class="text-white/70 text-sm">
+                Last updated: <%= new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute:
+                '2-digit' }) %>
+              </p>
             </div>
+
+            <button
+              onclick="window.location.href = '/wallet/add-funds'"
+              class="w-full sm:w-auto px-8 py-3.5 bg-white text-purple-600 font-semibold rounded-xl hover:bg-gray-50 transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2 group"
+            >
+              <span class="material-icons text-xl group-hover:scale-110 transition-transform"
+                >add_circle</span
+              >
+              <span>Add Funds</span>
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="space-y-4">
+        <!-- Total Spent -->
+        <div
+          class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-red-600 text-2xl">trending_down</span>
+            </div>
+            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
+              >This Month</span
+            >
+          </div>
+          <p class="text-sm text-gray-600 mb-1">Total Spent</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ₹<%= transactions.filter(t => t.type === 'debit' && new Date(t.createdAt).getMonth() ===
+            new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0).toLocaleString('en-IN') %>
+          </p>
+        </div>
+
+        <!-- Total Received -->
+        <div
+          class="bg-white rounded-xl p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+        >
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+              <span class="material-icons text-green-600 text-2xl">trending_up</span>
+            </div>
+            <span class="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full"
+              >This Month</span
+            >
+          </div>
+          <p class="text-sm text-gray-600 mb-1">Total Received</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ₹<%= transactions.filter(t => t.type === 'credit' && new Date(t.createdAt).getMonth()
+            === new Date().getMonth()).reduce((sum, t) => sum + t.amount, 0).toLocaleString('en-IN')
+            %>
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Transactions Section -->
     <section class="animate-fadeIn">
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-            <!-- Header -->
-            <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
-                <div class="flex items-center justify-between flex-wrap gap-4">
-                    <div>
-                        <h2 class="text-xl font-bold text-gray-900">Recent Transactions</h2>
-                        <p class="text-sm text-gray-600 mt-1">
-                            <%= transactions.length %> transactions in the last 30 days
-                        </p>
-                    </div>
-                </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-gray-200 bg-gray-50">
+          <div class="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 class="text-xl font-bold text-gray-900">Recent Transactions</h2>
+              <p class="text-sm text-gray-600 mt-1">
+                <%= transactions.length %> transactions in the last 30 days
+              </p>
             </div>
-
-            <% if (transactions && transactions.length > 0) { %>
-            <!-- Desktop Table -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b border-gray-200 bg-gray-50">
-                            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                Transaction
-                            </th>
-                            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                Details
-                            </th>
-                            <th class="py-4 px-6 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                Amount
-                            </th>
-                            <th class="py-4 px-6 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                                Date & Time
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <% transactions.forEach(transaction => { %>
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="py-5 px-6">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-11 h-11 <%= transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100' %> rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <span class="material-icons text-xl <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>">
-                                            <%= transaction.type === 'credit' ? 'arrow_downward' : 'arrow_upward' %>
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <p class="font-semibold text-gray-900 capitalize">
-                                            <%= transaction.type %>
-                                        </p>
-                                        <p class="text-sm text-gray-500">
-                                            <%= transaction.source || 'N/A' %>
-                                        </p>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-5 px-6">
-                                <% if (transaction.metadata && transaction.metadata.reason) { %>
-                                <p class="text-sm text-gray-700"><%= transaction.metadata.reason %></p>
-                                <% } else { %>
-                                <p class="text-sm text-gray-400">No details</p>
-                                <% } %>
-                            </td>
-                            <td class="py-5 px-6 text-right">
-                                <span class="text-base font-bold <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>">
-                                    <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= Math.abs(transaction.amount).toLocaleString('en-IN') %>
-                                </span>
-                            </td>
-                            <td class="py-5 px-6 text-right">
-                                <p class="text-sm font-medium text-gray-900">
-                                    <%= new Date(transaction.createdAt).toLocaleDateString('en-IN', { 
-                                        day: 'numeric', 
-                                        month: 'short', 
-                                        year: 'numeric' 
-                                    }) %>
-                                </p>
-                                <p class="text-xs text-gray-500">
-                                    <%= new Date(transaction.createdAt).toLocaleTimeString('en-IN', { 
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                    }) %>
-                                </p>
-                            </td>
-                        </tr>
-                        <% }) %>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Mobile Cards -->
-            <div class="md:hidden divide-y divide-gray-200">
-                <% transactions.forEach(transaction => { %>
-                <div class="p-5 hover:bg-gray-50 transition-colors">
-                    <div class="flex items-start justify-between mb-4">
-                        <div class="flex items-start gap-3">
-                            <div class="w-12 h-12 <%= transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100' %> rounded-xl flex items-center justify-center flex-shrink-0">
-                                <span class="material-icons text-xl <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>">
-                                    <%= transaction.type === 'credit' ? 'arrow_downward' : 'arrow_upward' %>
-                                </span>
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-900 capitalize mb-1">
-                                    <%= transaction.type %>
-                                </p>
-                                <p class="text-sm text-gray-500">
-                                    <%= transaction.source || 'N/A' %>
-                                </p>
-                            </div>
-                        </div>
-                        <p class="text-lg font-bold <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>">
-                            <%= transaction.type === 'credit' ? '+' : '-' %>₹<%= Math.abs(transaction.amount).toLocaleString('en-IN') %>
-                        </p>
-                    </div>
-                    
-                    <% if (transaction.metadata && transaction.metadata.reason) { %>
-                    <div class="mb-3 p-3 bg-gray-100 rounded-lg">
-                        <p class="text-sm text-gray-700"><%= transaction.metadata.reason %></p>
-                    </div>
-                    <% } %>
-                    
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <span>
-                            <%= new Date(transaction.createdAt).toLocaleDateString('en-IN', { 
-                                day: 'numeric', 
-                                month: 'short', 
-                                year: 'numeric' 
-                            }) %>
-                        </span>
-                        <span>
-                            <%= new Date(transaction.createdAt).toLocaleTimeString('en-IN', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                            }) %>
-                        </span>
-                    </div>
-                </div>
-                <% }) %>
-            </div>
-            <% } else { %>
-            <!-- Empty State -->
-            <div class="py-16 px-6 text-center">
-                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <span class="material-icons text-5xl text-gray-400">receipt_long</span>
-                </div>
-                <h3 class="text-xl font-bold text-gray-900 mb-2">
-                    No Transactions Yet
-                </h3>
-                <p class="text-gray-600 mb-6 max-w-sm mx-auto">
-                    Your wallet transaction history will appear here once you start participating in auctions and tenders
-                </p>
-                <button 
-                    onclick="window.location.href='/wallet/add-funds'"
-                    class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl">
-                    Add Funds to Get Started
-                </button>
-            </div>
-            <% } %>
-
-            <!-- Footer -->
-            <% if (transactions && transactions.length > 0) { %>
-            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                <a 
-                    href="/wallet/transactions" 
-                    class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors group">
-                    <span>View All Transactions</span>
-                    <span class="material-icons text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                </a>
-            </div>
-            <% } %>
+          </div>
         </div>
-    </section>
-</main>
 
-<style>
+        <% if (transactions && transactions.length > 0) { %>
+        <!-- Desktop Table -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200 bg-gray-50">
+                <th
+                  class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                >
+                  Transaction
+                </th>
+                <th
+                  class="py-4 px-6 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                >
+                  Details
+                </th>
+                <th
+                  class="py-4 px-6 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                >
+                  Amount
+                </th>
+                <th
+                  class="py-4 px-6 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                >
+                  Date & Time
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <% transactions.forEach(transaction => { %>
+              <tr class="hover:bg-gray-50 transition-colors">
+                <td class="py-5 px-6">
+                  <div class="flex items-center gap-4">
+                    <div
+                      class="w-11 h-11 <%= transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100' %> rounded-xl flex items-center justify-center flex-shrink-0"
+                    >
+                      <span
+                        class="material-icons text-xl <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>"
+                      >
+                        <%= transaction.type === 'credit' ? 'arrow_downward' : 'arrow_upward' %>
+                      </span>
+                    </div>
+                    <div>
+                      <p class="font-semibold text-gray-900 capitalize"><%= transaction.type %></p>
+                      <p class="text-sm text-gray-500"><%= transaction.source || 'N/A' %></p>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-5 px-6">
+                  <% if (transaction.metadata && transaction.metadata.reason) { %>
+                  <p class="text-sm text-gray-700"><%= transaction.metadata.reason %></p>
+                  <% } else { %>
+                  <p class="text-sm text-gray-400">No details</p>
+                  <% } %>
+                </td>
+                <td class="py-5 px-6 text-right">
+                  <span
+                    class="text-base font-bold <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>"
+                  >
+                    <%= transaction.type === 'credit' ? '+' : '-' %>₹<%=
+                    Math.abs(transaction.amount).toLocaleString('en-IN') %>
+                  </span>
+                </td>
+                <td class="py-5 px-6 text-right">
+                  <p class="text-sm font-medium text-gray-900">
+                    <%= new Date(transaction.createdAt).toLocaleDateString('en-IN', { day:
+                    'numeric', month: 'short', year: 'numeric' }) %>
+                  </p>
+                  <p class="text-xs text-gray-500">
+                    <%= new Date(transaction.createdAt).toLocaleTimeString('en-IN', { hour:
+                    '2-digit', minute: '2-digit' }) %>
+                  </p>
+                </td>
+              </tr>
+              <% }) %>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="md:hidden divide-y divide-gray-200">
+          <% transactions.forEach(transaction => { %>
+          <div class="p-5 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-start gap-3">
+                <div
+                  class="w-12 h-12 <%= transaction.type === 'credit' ? 'bg-green-100' : 'bg-red-100' %> rounded-xl flex items-center justify-center flex-shrink-0"
+                >
+                  <span
+                    class="material-icons text-xl <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>"
+                  >
+                    <%= transaction.type === 'credit' ? 'arrow_downward' : 'arrow_upward' %>
+                  </span>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 capitalize mb-1"><%= transaction.type %></p>
+                  <p class="text-sm text-gray-500"><%= transaction.source || 'N/A' %></p>
+                </div>
+              </div>
+              <p
+                class="text-lg font-bold <%= transaction.type === 'credit' ? 'text-green-600' : 'text-red-600' %>"
+              >
+                <%= transaction.type === 'credit' ? '+' : '-' %>₹<%=
+                Math.abs(transaction.amount).toLocaleString('en-IN') %>
+              </p>
+            </div>
+
+            <% if (transaction.metadata && transaction.metadata.reason) { %>
+            <div class="mb-3 p-3 bg-gray-100 rounded-lg">
+              <p class="text-sm text-gray-700"><%= transaction.metadata.reason %></p>
+            </div>
+            <% } %>
+
+            <div class="flex items-center justify-between text-sm text-gray-500">
+              <span>
+                <%= new Date(transaction.createdAt).toLocaleDateString('en-IN', { day: 'numeric',
+                month: 'short', year: 'numeric' }) %>
+              </span>
+              <span>
+                <%= new Date(transaction.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit',
+                minute: '2-digit' }) %>
+              </span>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <!-- Empty State -->
+        <div class="py-16 px-6 text-center">
+          <div
+            class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-5"
+          >
+            <span class="material-icons text-5xl text-gray-400">receipt_long</span>
+          </div>
+          <h3 class="text-xl font-bold text-gray-900 mb-2">No Transactions Yet</h3>
+          <p class="text-gray-600 mb-6 max-w-sm mx-auto">
+            Your wallet transaction history will appear here once you start participating in
+            auctions and tenders
+          </p>
+          <button
+            onclick="window.location.href = '/wallet/add-funds'"
+            class="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl"
+          >
+            Add Funds to Get Started
+          </button>
+        </div>
+        <% } %>
+
+        <!-- Footer -->
+        <% if (transactions && transactions.length > 0) { %>
+        <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+          <a
+            href="/wallet/transactions"
+            class="inline-flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors group"
+          >
+            <span>View All Transactions</span>
+            <span class="material-icons text-lg group-hover:translate-x-1 transition-transform"
+              >arrow_forward</span
+            >
+          </a>
+        </div>
+        <% } %>
+      </div>
+    </section>
+  </main>
+
+  <style>
     @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @keyframes fadeIn {
-        from { opacity: 0; }
-        to { opacity: 1; }
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
     }
 
     .animate-slideIn {
-        animation: slideIn 0.5s ease-out;
+      animation: slideIn 0.5s ease-out;
     }
 
     .animate-fadeIn {
-        animation: fadeIn 0.3s ease-in;
+      animation: fadeIn 0.3s ease-in;
     }
-</style>
-
+  </style>
 </body>

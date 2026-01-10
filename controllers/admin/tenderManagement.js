@@ -1,26 +1,29 @@
-const Tender = require('../../models/tender');
 const statusCode = require('../../utils/statusCode');
-const notificationService = require('../../services/notificationService');
 const {
   VIEWS,
   LAYOUTS,
   ERROR_MESSAGES,
   TENDER_STATUS,
   SUCCESS_MESSAGES,
-  NOTIFICATION_MESSAGES,
 } = require('../../utils/constants');
-
+const TenderService = require('../../services/admin/tenderManagement')
 exports.getAdminTenderPage = async (req, res) => {
   try {
-    const tenders = await Tender.find()
-      .populate('createdBy', 'name email')
-      .sort({ createdAt: -1 })
-      .lean();
+    const page = parseInt(req.query.page) || 1;
+    const filters = {
+      status: req.query.status || '',
+      search: req.query.search || '',
+    };
+
+    const { tenders, pagination } = await TenderService.getAllTenders(page, filters);
 
     return res.render(VIEWS.ADMIN_TENDER_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
+      title: 'Tender Management',
       tenders,
-      currentPage: 'tenders',
+      pagination,
+      applied: filters,
+      currentPage: 'tender-management',
     });
   } catch (err) {
     console.error('Admin Tender Management error:', err);
@@ -35,13 +38,10 @@ exports.getTenderDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const tender = await Tender.findById(id)
-      .populate('createdBy', 'name email phone')
-      .populate('files.fileId')
-      .lean();
+    const tender = await TenderService.getTenderById(id);
 
     if (!tender) {
-      return res.status(404).json({ success: false, message: 'Tender not found' });
+      return res.status(statusCode.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.TENDER_NOT_FOUND });
     }
     return res.json({
       success: true,
@@ -69,7 +69,8 @@ exports.updateTenderStatus = async (req, res) => {
       });
     }
 
-    const tender = await Tender.findById(id);
+    const io = req.app.get('io');
+    const tender = await TenderService.updateTenderStatus(id, status, comment, io);
 
     if (!tender) {
       return res.status(statusCode.NOT_FOUND).json({
@@ -78,40 +79,6 @@ exports.updateTenderStatus = async (req, res) => {
       });
     }
 
-    tender.status = status;
-    if (comment && comment.trim() !== '') {
-      tender.adminComment = comment.trim();
-    }
-
-    await tender.save();
-    const io = req.app.get('io');
-
-    if (status === TENDER_STATUS.PUBLISHED) {
-      await notificationService.sendNotification(
-        tender.createdBy,
-        NOTIFICATION_MESSAGES.TENDER_PUBLISHED,
-        `/tenders/${tender._id}`,
-        io
-      );
-    }
-
-    if (status === TENDER_STATUS.REJECTED) {
-      await notificationService.sendNotification(
-        tender.createdBy,
-        NOTIFICATION_MESSAGES.TENDER_REJECTED,
-        `/tenders/${tender._id}`,
-        io
-      );
-    }
-
-    if (status === TENDER_STATUS.CLOSED) {
-      await notificationService.sendNotification(
-        tender.createdBy,
-        NOTIFICATION_MESSAGES.TENDER_CLOSED,
-        `/tenders/${tender._id}`,
-        io
-      );
-    }
     return res.json({
       success: true,
       message: `${SUCCESS_MESSAGES.STATUS_UPDATED} to ${status}`,

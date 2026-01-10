@@ -1,42 +1,36 @@
 <div class="px-6 py-6">
-
   <!-- TITLE -->
   <h1 class="text-3xl font-black mb-2">Contract Management</h1>
-  <p class="text-gray-500 mb-6">
-    Manage and track the lifecycle of all awarded tenders.
-  </p>
+  <p class="text-gray-500 mb-6">Manage and track the lifecycle of all awarded tenders.</p>
 
   <!-- TABS -->
   <div class="border-b mb-6 flex gap-8">
     <a href="?tab=tender"
-       class="pb-2 border-b-2 text-sm font-bold
-       <%= activeTab === 'tender' ? 'border-primary text-primary' : 'border-transparent text-gray-500' %>">
+      class="pb-2 border-b-2 text-sm font-bold <%= activeTab === 'tender' ? 'border-primary text-primary' : 'border-transparent text-gray-500' %>">
       Tender Contracts
     </a>
 
     <a href="?tab=property"
-       class="pb-2 border-b-2 text-sm font-bold
-       <%= activeTab === 'property' ? 'border-primary text-primary' : 'border-transparent text-gray-500' %>">
+      class="pb-2 border-b-2 text-sm font-bold <%= activeTab === 'property' ? 'border-primary text-primary' : 'border-transparent text-gray-500' %>">
       Property Contracts
     </a>
   </div>
 
   <!-- SUMMARY CARDS -->
   <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-    <% const cards = [
-      { t:"Total Tenders", v:summary.totalTenders },
-      { t:"Total Bids", v:summary.totalBids },
-      { t:"Active Contracts", v:summary.active },
-      { t:"Pending Agreements", v:summary.pending },
-      { t:"Completed", v:summary.completed }
-    ]; %>
-
-    <% cards.forEach(c => { %>
-      <div class="bg-white rounded-xl p-5 border shadow">
-        <p class="text-sm text-gray-500"><%= c.t %></p>
-        <p class="text-2xl font-bold"><%= c.v %></p>
-      </div>
-    <% }) %>
+    <% const cards=[ { t: "Total Tenders" , v: summary.totalTenders }, { t: "Total Bids" , v: summary.totalBids }, {
+      t: "Active Contracts" , v: summary.active }, { t: "Pending Agreements" , v: summary.pending }, { t: "Completed" ,
+      v: summary.completed } ]; %>
+      <% cards.forEach(c=> { %>
+        <div class="bg-white rounded-xl p-5 border shadow">
+          <p class="text-sm text-gray-500">
+            <%= c.t %>
+          </p>
+          <p class="text-2xl font-bold">
+            <%= c.v %>
+          </p>
+        </div>
+        <% }) %>
   </div>
 
   <!-- DESKTOP TABLE -->
@@ -56,177 +50,195 @@
         </tr>
       </thead>
       <tbody class="divide-y">
-        <% contracts.forEach(c => { %>
+        <% contracts.forEach(c=> { %>
           <tr>
-            <td class="px-4 py-3 font-medium"><%= c.title %></td>
-            <td class="text-center"><%= c.totalBids %></td>
-            <td><%= c.winner?.name || "—" %></td>
-            <td>
-             <%= (c.winner && typeof c.winner.amount === 'number')
-      ? "₹" + c.winner.amount.toLocaleString("en-IN")
-      : "—"
-%>
+            <td class="px-4 py-3 font-medium">
+              <%= c.title %>
             </td>
-            <td><%= c.poStatus %></td>
-            <td><%= c.agreementStatus %></td>
-            <td><%= c.workOrderStatus %></td>
+            <td class="text-center">
+              <%= c.totalBids %>
+            </td>
+            <td>
+              <%= c.winner?.name || "—" %>
+            </td>
+            <td>
+              <%= (c.winner && typeof c.winner.amount==='number' ) ? "₹" + c.winner.amount.toLocaleString("en-IN") : "—"
+                %>
+            </td>
+            <td>
+              <% if (c.poStatus==='vendor_accepted' ) { %>
+                <span class="px-2 py-1 rounded bg-green-100 text-green-800 text-xs">Accepted</span>
+                <% } else if (c.poStatus==='vendor_rejected' ) { %>
+                  <span class="px-2 py-1 rounded bg-red-100 text-red-800 text-xs">Rejected</span>
+                  <% } else if (c.poStatus==='Not Generated' ) { %>
+                    <span class="text-gray-400 text-xs">Not Generated</span>
+                    <% } else { %>
+                      <span class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs">
+                        <%= c.poStatus %>
+                      </span>
+                      <% } %>
+            </td>
+            <td>
+              <%= c.agreementStatus %>
+            </td>
+            <td>
+              <%= c.workOrderStatus %>
+            </td>
             <td>
               <span class="px-2 py-1 rounded bg-blue-100 text-blue-800 text-xs">
                 <%= c.contractStatus %>
               </span>
             </td>
             <td class="text-right">
-              <button
-    class="text-primary font-bold hover:underline"
-    onclick="openContractModal('<%= c.tenderId %>')">
-    View →
-  </button>
+              <button class="text-primary font-bold hover:underline" onclick="openContractModal('<%= c.tenderId %>')">
+                View →
+              </button>
             </td>
           </tr>
-        <% }) %>
+          <% }) %>
       </tbody>
     </table>
   </div>
 
   <!-- MOBILE CARDS -->
   <div class="md:hidden flex flex-col gap-4">
-    <% contracts.forEach(c => { %>
+    <% contracts.forEach(c=> { %>
       <div class="bg-white p-4 rounded-xl border shadow">
-        <h3 class="font-bold mb-1"><%= c.title %></h3>
-        <p class="text-sm">Bids: <b><%= c.totalBids %></b></p>
-        <p class="text-sm">Winner: <b><%= c.winner?.name || "—" %></b></p>
+        <h3 class="font-bold mb-1">
+          <%= c.title %>
+        </h3>
+        <p class="text-sm">Bids: <b>
+            <%= c.totalBids %>
+          </b></p>
+        <p class="text-sm">Winner: <b>
+            <%= c.winner?.name || "—" %>
+          </b></p>
         <p class="text-sm">
           Amount:
-          <b><%= (c.winner && typeof c.winner.amount === 'number')
-      ? "₹" + c.winner.amount.toLocaleString("en-IN")
-      : "—"
-%></b>
+          <b>
+            <%= (c.winner && typeof c.winner.amount==='number' ) ? "₹" + c.winner.amount.toLocaleString("en-IN") : "—"
+              %>
+          </b>
         </p>
 
         <div class="flex justify-between items-center mt-3">
           <span class="px-3 py-1 rounded-full bg-blue-100 text-blue-800 text-xs">
             <%= c.contractStatus %>
           </span>
-          <button
-  class="text-primary font-semibold hover:underline"
-  onclick="openContractModal('<%= c.tenderId %>')">
-  View
-</button>
+          <button class="text-primary font-semibold hover:underline" onclick="openContractModal('<%= c.tenderId %>')">
+            View
+          </button>
         </div>
       </div>
-    <% }) %>
+      <% }) %>
   </div>
-  <div id="contractModal"
-     class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+  <div id="contractModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white w-full max-w-5xl rounded-lg shadow-lg overflow-hidden">
+      <!-- HEADER -->
+      <div class="flex justify-between items-center px-6 py-4 border-b">
+        <h2 class="text-xl font-bold">Contract Details</h2>
+        <button onclick="closeContractModal()">✕</button>
+      </div>
 
-  <div class="bg-white w-full max-w-5xl rounded-lg shadow-lg overflow-hidden">
+      <!-- BODY -->
+      <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+        <!-- Tender Snapshot -->
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <p><b>Title:</b> <span id="cd-title"></span></p>
+          <p><b>Department:</b> <span id="cd-dept"></span></p>
+          <p><b>Publisher:</b> <span id="cd-publisher"></span></p>
+          <p><b>Awarded On:</b> <span id="cd-awarded"></span></p>
+        </div>
 
-    <!-- HEADER -->
-    <div class="flex justify-between items-center px-6 py-4 border-b">
-      <h2 class="text-xl font-bold">Contract Details</h2>
-      <button onclick="closeContractModal()">✕</button>
+        <!-- Bidding Summary -->
+        <div class="border rounded p-4">
+          <p><b>Total Bids:</b> <span id="cd-bids"></span></p>
+          <p><b>Winner:</b> <span id="cd-winner"></span></p>
+          <p><b>Amount:</b> ₹<span id="cd-amount"></span></p>
+        </div>
+
+        <!-- Timeline -->
+        <div>
+          <h3 class="font-semibold mb-2">Contract Timeline</h3>
+          <ul class="space-y-2 text-sm" id="cd-timeline"></ul>
+        </div>
+
+        <!-- Documents -->
+        <div>
+          <h3 class="font-semibold mb-2">Documents</h3>
+          <div class="flex flex-wrap gap-3" id="cd-documents"></div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="flex justify-end px-6 py-4 border-t">
+        <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-600 text-white rounded">
+          Close
+        </button>
+      </div>
     </div>
-
-    <!-- BODY -->
-    <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-
-      <!-- Tender Snapshot -->
-      <div class="grid grid-cols-2 gap-4 text-sm">
-        <p><b>Title:</b> <span id="cd-title"></span></p>
-        <p><b>Department:</b> <span id="cd-dept"></span></p>
-        <p><b>Publisher:</b> <span id="cd-publisher"></span></p>
-        <p><b>Awarded On:</b> <span id="cd-awarded"></span></p>
-      </div>
-
-      <!-- Bidding Summary -->
-      <div class="border rounded p-4">
-        <p><b>Total Bids:</b> <span id="cd-bids"></span></p>
-        <p><b>Winner:</b> <span id="cd-winner"></span></p>
-        <p><b>Amount:</b> ₹<span id="cd-amount"></span></p>
-      </div>
-
-      <!-- Timeline -->
-      <div>
-        <h3 class="font-semibold mb-2">Contract Timeline</h3>
-        <ul class="space-y-2 text-sm" id="cd-timeline"></ul>
-      </div>
-
-      <!-- Documents -->
-      <div>
-        <h3 class="font-semibold mb-2">Documents</h3>
-        <div class="flex flex-wrap gap-3" id="cd-documents"></div>
-      </div>
-
-    </div>
-
-    <!-- FOOTER -->
-    <div class="flex justify-end px-6 py-4 border-t">
-      <button onclick="closeContractModal()"
-              class="px-4 py-2 bg-gray-600 text-white rounded">
-        Close
-      </button>
-    </div>
-
   </div>
-</div>
-
 </div>
 <script>
-async function openContractModal(tenderId) {
-  const res = await fetch(`/admin/contract-management/contracts/${tenderId}`);
-  if (!res.ok) {
-    alert("Failed to load contract details");
-    return;
-  }
+  async function openContractModal(tenderId) {
+    const res = await fetch(`/admin/contract-management/contracts/${tenderId}`);
+    if (!res.ok) {
+      alert('Failed to load contract details');
+      return;
+    }
 
-  const data = await res.json();
+    const data = await res.json();
 
-  document.getElementById("cd-title").innerText = data.title;
-  document.getElementById("cd-dept").innerText = data.dept;
-  document.getElementById("cd-publisher").innerText = data.publisher;
-  document.getElementById("cd-awarded").innerText = data.awardedOn;
+    document.getElementById('cd-title').innerText = data.title;
+    document.getElementById('cd-dept').innerText = data.dept;
+    document.getElementById('cd-publisher').innerText = data.publisher;
+    document.getElementById('cd-awarded').innerText = data.awardedOn;
 
-  document.getElementById("cd-bids").innerText = data.totalBids;
-  document.getElementById("cd-winner").innerText =
-    data.winner?.name || "—";
+    document.getElementById('cd-bids').innerText = data.totalBids;
+    document.getElementById('cd-winner').innerText = data.winner?.name || '—';
 
-  document.getElementById("cd-amount").innerText =
-    data.winner
-      ? data.winner.amount.toLocaleString("en-IN")
-      : "—";
+    document.getElementById('cd-amount').innerText = data.winner
+      ? data.winner.amount.toLocaleString('en-IN')
+      : '—';
 
-  document.getElementById("cd-timeline").innerHTML =
-    data.timeline.map(step => `
+    document.getElementById('cd-timeline').innerHTML = data.timeline
+      .map(
+        (step) => `
       <li class="${step.done ? 'text-green-600' : 'text-yellow-600'}">
         ${step.done ? '✔' : '⏳'} ${step.label}
       </li>
-    `).join("");
+    `
+      )
+      .join('');
 
-  document.getElementById("cd-documents").innerHTML =
-    data.documents.length
-      ? data.documents.map(d => `
+    document.getElementById('cd-documents').innerHTML = data.documents.length
+      ? data.documents
+        .map(
+          (d) => `
           <a href="/admin/contract-management/file/${d.fileId}"target="_blank"
              class="px-3 py-2 bg-blue-100 text-blue-700 rounded">
             ${d.label}
           </a>
-        `).join("")
+        `
+        )
+        .join('')
       : `<p class="text-gray-400 text-sm">No documents available</p>`;
 
-  const modal = document.getElementById("contractModal");
-  modal.classList.remove("hidden");
-  modal.classList.add("flex");
-}
-
-function closeContractModal() {
-  const modal = document.getElementById("contractModal");
-  modal.classList.add("hidden");
-  modal.classList.remove("flex");
-}
-
-/* Click outside to close */
-document.getElementById("contractModal").addEventListener("click", (e) => {
-  if (e.target.id === "contractModal") {
-    closeContractModal();
+    const modal = document.getElementById('contractModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
   }
-});
+
+  function closeContractModal() {
+    const modal = document.getElementById('contractModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  /* Click outside to close */
+  document.getElementById('contractModal').addEventListener('click', (e) => {
+    if (e.target.id === 'contractModal') {
+      closeContractModal();
+    }
+  });
 </script>

@@ -1,5 +1,3 @@
-
-
 const router = require('express').Router();
 const paymentController = require('../../controllers/vendor/paymentControler');
 const { protectRoute } = require('../../middlewares/authMiddleware');

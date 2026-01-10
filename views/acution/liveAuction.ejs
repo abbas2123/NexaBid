@@ -1,6 +1,6 @@
 <body
-  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans antialiased min-h-screen">
-
+  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans antialiased min-h-screen"
+>
   <!-- ================= AUCTION STATUS HEADER ================= -->
   <div class="max-w-7xl mx-auto px-4 py-6 text-center">
     <h1 class="text-3xl font-bold mb-2">Live Property Auction</h1>
@@ -29,7 +29,6 @@
 
   <!-- ================= LIVE BID SECTION ================= -->
   <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-10">
-
     <!-- LEFT -->
     <div class="lg:col-span-7 space-y-6">
       <div class="bg-white dark:bg-slate-900 rounded-xl p-6 border mb-4">
@@ -48,33 +47,45 @@
               ₹ <%= (currentHighestBid || 0).toLocaleString("en-IN") %>
             </span>
             <span id="highestBidderName" class="text-xs text-gray-500 font-medium">
-              <%= property.currentHighestBidder ? property.currentHighestBidder.name : 'No bids yet' %>
+              <%= property.currentHighestBidder ? property.currentHighestBidder.name : 'No bids yet'
+              %>
             </span>
           </div>
         </div>
         <p class="text-sm text-gray-500">
-          Next minimum bid:
-          ₹ <%= ((currentHighestBid || 0) + auctionStep).toLocaleString("en-IN") %>
+          Next minimum bid: ₹ <%= ((currentHighestBid || 0) + auctionStep).toLocaleString("en-IN")
+          %>
         </p>
       </div>
 
       <!-- BID FORM -->
       <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border">
-        <input id="bidAmount" type="number" class="w-full mb-4 px-4 py-3 rounded border text-lg"
-          placeholder="Enter your bid" disabled />
+        <input
+          id="bidAmount"
+          type="number"
+          class="w-full mb-4 px-4 py-3 rounded border text-lg"
+          placeholder="Enter your bid"
+          disabled
+        />
 
         <div class="flex gap-4">
-          <button id="autoBidBtn" class="flex-1 px-4 py-3 rounded bg-gray-200 cursor-not-allowed" disabled>
+          <button
+            id="autoBidBtn"
+            class="flex-1 px-4 py-3 rounded bg-gray-200 cursor-not-allowed"
+            disabled
+          >
             Auto Bid
           </button>
 
-          <button id="placeBidBtn" class="flex-1 px-4 py-3 rounded bg-primary text-white font-bold cursor-not-allowed"
-            disabled>
+          <button
+            id="placeBidBtn"
+            class="flex-1 px-4 py-3 rounded bg-primary text-white font-bold cursor-not-allowed"
+            disabled
+          >
             Place Bid
           </button>
         </div>
       </div>
-
     </div>
 
     <!-- RIGHT -->
@@ -82,41 +93,38 @@
       <h2 class="text-xl font-bold mb-4">Live Bid Feed</h2>
       <div id="bidFeed" class="space-y-3 max-h-[400px] overflow-y-auto"></div>
     </div>
-
   </div>
 
   <!-- ================= SCRIPT ================= -->
   <script>
-    document.getElementById("autoBidBtn").addEventListener("click", () => {
+    document.getElementById('autoBidBtn').addEventListener('click', () => {
       window.location.href = `/auctions/auto-bid/<%= propertyId %>`;
     });
   </script>
   <script>
-    const auctionStartsAt = new Date("<%= auctionStartsAt %>").getTime();
-    let auctionEndsAt = new Date("<%= auctionEndsAt %>").getTime();
+    const auctionStartsAt = new Date('<%= auctionStartsAt %>').getTime();
+    let auctionEndsAt = new Date('<%= auctionEndsAt %>').getTime();
 
-    const statusText = document.getElementById("auctionStatusText");
-    const bidInput = document.getElementById("bidAmount");
-    const placeBtn = document.getElementById("placeBidBtn");
-    const autoBtn = document.getElementById("autoBidBtn");
+    const statusText = document.getElementById('auctionStatusText');
+    const bidInput = document.getElementById('bidAmount');
+    const placeBtn = document.getElementById('placeBidBtn');
+    const autoBtn = document.getElementById('autoBidBtn');
 
     function updateCountdown() {
       const now = new Date().getTime();
       let diff;
-      let label = "";
+      let label = '';
 
       if (now < auctionStartsAt) {
         diff = auctionStartsAt - now;
-        label = "Auction not started";
+        label = 'Auction not started';
         disableBidding();
-      }
-      else if (now >= auctionStartsAt && now < auctionEndsAt) {
+      } else if (now >= auctionStartsAt && now < auctionEndsAt) {
         diff = auctionEndsAt - now;
-        label = "Auction is LIVE 🔴";
+        label = 'Auction is LIVE 🔴';
         enableBidding();
-      }
-      else {
-        statusText.innerText = "Auction ended";
+      } else {
+        statusText.innerText = 'Auction ended';
         disableBidding();
         return;
       }
@@ -128,26 +136,26 @@
       const minutes = Math.floor((diff / (1000 * 60)) % 60);
       const seconds = Math.floor((diff / 1000) % 60);
 
-      document.getElementById("days").innerText = days;
-      document.getElementById("hours").innerText = hours;
-      document.getElementById("minutes").innerText = minutes;
-      document.getElementById("seconds").innerText = seconds;
+      document.getElementById('days').innerText = days;
+      document.getElementById('hours').innerText = hours;
+      document.getElementById('minutes').innerText = minutes;
+      document.getElementById('seconds').innerText = seconds;
     }
 
     function enableBidding() {
       bidInput.disabled = false;
       placeBtn.disabled = false;
       autoBtn.disabled = false;
-      placeBtn.classList.remove("cursor-not-allowed");
-      autoBtn.classList.remove("cursor-not-allowed");
+      placeBtn.classList.remove('cursor-not-allowed');
+      autoBtn.classList.remove('cursor-not-allowed');
     }
 
     function disableBidding() {
       bidInput.disabled = true;
       placeBtn.disabled = true;
       autoBtn.disabled = true;
-      placeBtn.classList.add("cursor-not-allowed");
-      autoBtn.classList.add("cursor-not-allowed");
+      placeBtn.classList.add('cursor-not-allowed');
+      autoBtn.classList.add('cursor-not-allowed');
     }
 
     setInterval(updateCountdown, 1000);
@@ -250,23 +258,23 @@
     });
   </script>
   <script>
-    socket.on("bid_error", (data) => {
+    socket.on('bid_error', (data) => {
       Swal.fire({
-        icon: "error",
-        title: "Bid Too Low",
+        icon: 'error',
+        title: 'Bid Too Low',
         text: data.message,
-        confirmButtonColor: "#1d72d6"
+        confirmButtonColor: '#1d72d6',
       });
     });
   </script>
   <script>
-    socket.on("auction_extended", (data) => {
+    socket.on('auction_extended', (data) => {
       Swal.fire({
-        icon: "info",
-        title: "Auction Extended ⏰",
+        icon: 'info',
+        title: 'Auction Extended ⏰',
         text: `Auction extended by ${data.extendedBy} minutes`,
         timer: 2500,
-        showConfirmButton: false
+        showConfirmButton: false,
       });
 
       // Update countdown end time
@@ -274,21 +282,21 @@
     });
   </script>
   <script>
-    socket.on("newNotification", (data) => {
+    socket.on('newNotification', (data) => {
       Swal.fire({
-        icon: "success",
-        title: "🎉 You won the auction!",
-        text: `Winning bid: ₹${data.amount.toLocaleString("en-IN")}`,
+        icon: 'success',
+        title: '🎉 You won the auction!',
+        text: `Winning bid: ₹${data.amount.toLocaleString('en-IN')}`,
       }).then(() => {
         window.location.href = `/auctions/success/${data.propertyId}`;
       });
     });
 
-    socket.on("newNotification", (data) => {
+    socket.on('newNotification', (data) => {
       Swal.fire({
-        icon: "info",
-        title: "Auction Ended",
-        text: "You did not win this auction.",
+        icon: 'info',
+        title: 'Auction Ended',
+        text: 'You did not win this auction.',
       }).then(() => {
         window.location.href = `/auctions/failed/${data.propertyId}`;
       });

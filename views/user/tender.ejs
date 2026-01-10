@@ -1,5 +1,4 @@
 <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
   <!-- PAGE TITLE -->
   <h1 class="text-4xl font-bold mb-8">All Tenders</h1>
 
@@ -8,63 +7,48 @@
 
   <!-- LIST OF TENDERS -->
   <div class="space-y-8">
+    <% if (tenders && tenders.length> 0) { %> <% tenders.forEach(t=> { %>
 
-    <% if (tenders && tenders.length> 0) { %>
+    <div
+      class="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 flex flex-col md:flex-row items-center justify-between gap-6 transition hover:shadow-md"
+    >
+      <!-- LEFT CONTENT -->
+      <div class="flex-grow">
+        <!-- BID END DATE -->
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          Bid End Date: <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "Not Set" %>
+        </p>
 
-      <% tenders.forEach(t=> { %>
+        <!-- TITLE -->
+        <h3 class="text-xl font-bold mb-1 text-gray-900 dark:text-gray-100"><%= t.title %></h3>
 
-        <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm p-6 
-                    flex flex-col md:flex-row items-center justify-between gap-6
-                    transition hover:shadow-md">
+        <!-- DEPARTMENT -->
+        <p class="text-gray-500 dark:text-gray-300 mb-4"><%= t.dept || "General Department" %></p>
 
-          <!-- LEFT CONTENT -->
-          <div class="flex-grow">
+        <!-- VIEW DETAILS BUTTON -->
+        <a
+          href="/tenders/<%= t._id %>"
+          class="bg-gray-100 dark:bg-gray-700/50 text-gray-900 dark:text-gray-200 px-6 py-2 rounded-lg font-semibold hover:bg-gray-200 dark:hover:bg-gray-600 transition"
+        >
+          View Details
+        </a>
+      </div>
 
-            <!-- BID END DATE -->
-            <p class="text-sm text-gray-500 dark:text-gray-400 mb-2">
-              Bid End Date:
-              <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "Not Set" %>
-            </p>
+      <!-- IMAGE -->
+      <img
+        src="<%= t.image || 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=600' %>"
+        alt="<%= t.title %>"
+        class="w-full md:w-64 h-40 object-cover rounded-lg"
+      />
+    </div>
 
-            <!-- TITLE -->
-            <h3 class="text-xl font-bold mb-1 text-gray-900 dark:text-gray-100">
-              <%= t.title %>
-            </h3>
+    <% }) %> <% } else { %>
 
-            <!-- DEPARTMENT -->
-            <p class="text-gray-500 dark:text-gray-300 mb-4">
-              <%= t.dept || "General Department" %>
-            </p>
+    <p class="text-gray-600 dark:text-gray-300 text-lg text-center py-10">No tenders available.</p>
 
-            <!-- VIEW DETAILS BUTTON -->
-            <a href="/tenders/<%= t._id %>" class="bg-gray-100 dark:bg-gray-700/50 text-gray-900 dark:text-gray-200
-                      px-6 py-2 rounded-lg font-semibold hover:bg-gray-200 
-                      dark:hover:bg-gray-600 transition">
-              View Details
-            </a>
-
-          </div>
-
-          <!-- IMAGE -->
-          <img src="<%= t.image || 'https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=600' %>"
-            alt="<%= t.title %>" class="w-full md:w-64 h-40 object-cover rounded-lg" />
-
-        </div>
-
-        <% }) %>
-
-          <% } else { %>
-
-            <p class="text-gray-600 dark:text-gray-300 text-lg text-center py-10">
-              No tenders available.
-            </p>
-
-            <% } %>
-
+    <% } %>
   </div>
 
   <!-- PAGINATION -->
   <%- include('../partials/user/pagination') %>
-
-
 </div>

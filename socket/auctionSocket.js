@@ -48,13 +48,11 @@ module.exports = (io, socket) => {
         return socket.emit('bid_error', { message: ERROR_MESSAGES.INVALID_AUCTION });
       }
 
-      // FIX #3: Rate limit by USER ID (not socket.id)
       const now = Date.now();
       const last = lastBidMap.get(userId) || 0;
       if (now - last < 500) return;
       lastBidMap.set(userId, now);
 
-      // Perform checks requiring DB
       const property = await Property.findById(propertyId);
       if (!property || !property.isAuction) {
         return socket.emit('bid_error', {
@@ -62,9 +60,8 @@ module.exports = (io, socket) => {
         });
       }
 
-      // FIX #4: Premature Bidding Protection
       if (property.auctionStartsAt && new Date() < property.auctionStartsAt) {
-        return socket.emit('bid_error', { message: "Auction has not started yet" });
+        return socket.emit('bid_error', { message: 'Auction has not started yet' });
       }
 
       if (new Date() > property.auctionEndsAt) {
@@ -75,7 +72,6 @@ module.exports = (io, socket) => {
         return socket.emit('bid_error', { message: ERROR_MESSAGES.UNAUTHORIZED });
       }
 
-      // Check Payment
       const payment = await Payment.findOne({
         userId,
         contextId: propertyId,
@@ -89,35 +85,29 @@ module.exports = (io, socket) => {
           message: ERROR_MESSAGES.PAYMENT_REQUIRED,
         });
       }
-
-      // FIX #1: Race Condition - Atomic Update
-      // We try to update currentHighestBid ONLY if new amount > currentHighestBid
       const updatedProperty = await Property.findOneAndUpdate(
         {
           _id: propertyId,
-          currentHighestBid: { $lt: amount }
+          currentHighestBid: { $lt: amount },
         },
         {
           $set: {
             currentHighestBid: amount,
-            currentHighestBidder: userId
-          }
+            currentHighestBidder: userId,
+          },
         },
-        { new: true } // Return updated doc
+        { new: true }
       );
 
       if (!updatedProperty) {
-        return socket.emit('bid_error', { message: "Bid already beaten or invalid" });
+        return socket.emit('bid_error', { message: 'Bid already beaten or invalid' });
       }
-
-      // If we got here, WE ARE THE WINNER of this bid step.
-      // Now record the history
       await PropertyBid.findOneAndUpdate(
         { propertyId, bidderId: userId },
         {
           propertyId,
           bidderId: userId,
-          amount: amount, // Use raw amount
+          amount: amount,
           escrowPaymentId: payment._id,
           isAutoBid: false,
           bidStatus: 'active',
@@ -125,23 +115,20 @@ module.exports = (io, socket) => {
         { upsert: true }
       );
 
-      // FIX #2: Time Extension Bug (Limit infinite extension)
       const timeLeft = updatedProperty.auctionEndsAt - Date.now();
       let extended = false;
 
       if (!updatedProperty.extended && timeLeft <= LAST_MINUTE_WINDOW) {
-        // Extend ONCE
         const newEndTime = new Date(updatedProperty.auctionEndsAt.getTime() + EXTENSION_TIME);
         await Property.findByIdAndUpdate(propertyId, {
           auctionEndsAt: newEndTime,
-          extended: true
+          extended: true,
         });
         extended = true;
-        // Update local var for emission
+
         updatedProperty.auctionEndsAt = newEndTime;
       }
 
-      // Broadcast new bid
       const room = `auction_${propertyId}`;
       io.to(room).emit('new_bid', {
         amount,
@@ -160,7 +147,6 @@ module.exports = (io, socket) => {
         console.log(`⏰ Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`);
       }
 
-      // FIX #5: AutoBid Recursion Storm - Add Lock
       if (!updatedProperty.autoBidLock) {
         await Property.findByIdAndUpdate(propertyId, { autoBidLock: true });
 
@@ -168,12 +154,11 @@ module.exports = (io, socket) => {
           const AuctionService = require('../services/auction/auctionService');
           await AuctionService.handleAutoBids(propertyId, io);
         } catch (e) {
-          console.error("AutoBid Error:", e);
+          console.error('AutoBid Error:', e);
         } finally {
           await Property.findByIdAndUpdate(propertyId, { autoBidLock: false });
         }
       }
-
     } catch (err) {
       console.error('Bid Error:', err);
       socket.emit('bid_error', { message: 'Failed to place bid' });

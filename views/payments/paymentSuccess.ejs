@@ -1,41 +1,50 @@
 <div class="bg-green-50 min-h-screen flex flex-col items-center pb-5">
-
   <div class="text-center mt-4">
-
-    <dotlottie-wc 
+    <dotlottie-wc
       src="https://lottie.host/da752c78-438a-4984-8bcf-6334804e63f7/k3nc8Knjgi.lottie"
-      style="width: 300px; height: 300px; display:block; margin:0 auto 1.5rem;"
+      style="width: 300px; height: 300px; display: block; margin: 0 auto 1.5rem"
       autoplay
-      loop="false">
+      loop="false"
+    >
     </dotlottie-wc>
 
     <h1 class="text-3xl font-bold text-gray-800">Payment Successful!</h1>
-    <p class="text-gray-600 mt-2 text-lg">
-      Your payment has been received and is being processed.
-    </p>
+    <p class="text-gray-600 mt-2 text-lg">Your payment has been received and is being processed.</p>
 
     <div class="mt-6 flex justify-center space-x-4">
-      <a href="/auth/dashboard" 
-         class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-100 transition">
+      <a
+        href="/auth/dashboard"
+        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 bg-white hover:bg-gray-100 transition"
+      >
         Go to Dashboard
       </a>
-      <a href="/user/my-participation" 
-         class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition">
+      <a
+        href="/user/my-participation"
+        class="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+      >
         View Participation
       </a>
     </div>
   </div>
 
-  <div class="bg-white shadow-md rounded-lg p-8 mt-12 w-full max-w-3xl mx-auto text-left animate-fade-in">
-
+  <div
+    class="bg-white shadow-md rounded-lg p-8 mt-12 w-full max-w-3xl mx-auto text-left animate-fade-in"
+  >
     <h2 class="text-2xl font-semibold mb-6 text-gray-800">Payment Summary</h2>
 
     <div class="grid grid-cols-2 gap-y-4 text-gray-700 text-lg mb-6">
       <p><span class="font-medium">Payment ID:</span> <%= payment._id %></p>
       <p><span class="font-medium">Gateway Order ID:</span> <%= payment.gatewayPaymentId %></p>
-      <p><span class="font-medium">Transaction ID:</span> <%= payment.gatewayTransactionId || '-' %></p>
-      <p><span class="font-medium">Status:</span> <span class="text-green-700 font-semibold"><%= payment.status %></span></p>
-      <p><span class="font-medium">Amount Paid:</span> ₹<%= payment.amount.toLocaleString('en-IN') %></p>
+      <p>
+        <span class="font-medium">Transaction ID:</span> <%= payment.gatewayTransactionId || '-' %>
+      </p>
+      <p>
+        <span class="font-medium">Status:</span>
+        <span class="text-green-700 font-semibold"><%= payment.status %></span>
+      </p>
+      <p>
+        <span class="font-medium">Amount Paid:</span> ₹<%= payment.amount.toLocaleString('en-IN') %>
+      </p>
       <p><span class="font-medium">Context:</span> <%= payment.contextType %></p>
     </div>
   </div>
@@ -45,8 +54,14 @@
 
 <style>
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   .animate-fade-in {
     animation: fadeIn 0.8s ease-in-out forwards;
@@ -54,22 +69,25 @@
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const audio = document.getElementById("success-audio");
+  document.addEventListener('DOMContentLoaded', () => {
+    const audio = document.getElementById('success-audio');
 
-  audio.muted = true;
-  audio.volume = 1;
+    audio.muted = true;
+    audio.volume = 1;
 
-  audio.play().then(() => {
-    setTimeout(() => {
-      audio.muted = false;
-      audio.currentTime = 0;
-      audio.play();
-    }, 300);
-  }).catch(err => {
-    console.log("Muted autoplay failed:", err);
+    audio
+      .play()
+      .then(() => {
+        setTimeout(() => {
+          audio.muted = false;
+          audio.currentTime = 0;
+          audio.play();
+        }, 300);
+      })
+      .catch((err) => {
+        console.log('Muted autoplay failed:', err);
+      });
   });
-});
 </script>
 <!-- <dotlottie-wc 
   src="https://lottie.host/da752c78-438a-4984-8bcf-6334804e63f7/k3nc8Knjgi.lottie"
@@ -84,24 +102,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script
   type="module"
-  src="https://unpkg.com/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js">
-</script>
+  src="https://unpkg.com/@lottiefiles/dotlottie-wc@latest/dist/dotlottie-wc.js"
+></script>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const audio = document.getElementById("success-audio");
+  document.addEventListener('DOMContentLoaded', () => {
+    const audio = document.getElementById('success-audio');
 
     audio.muted = true;
     audio.volume = 1;
 
-    audio.play().then(() => {
-      setTimeout(() => {
-        audio.muted = false;
-        audio.currentTime = 0;
-        audio.play();
-      }, 300);
-    }).catch(err => {
-      console.log("Muted autoplay failed:", err);
-    });
+    audio
+      .play()
+      .then(() => {
+        setTimeout(() => {
+          audio.muted = false;
+          audio.currentTime = 0;
+          audio.play();
+        }, 300);
+      })
+      .catch((err) => {
+        console.log('Muted autoplay failed:', err);
+      });
   });
 </script>

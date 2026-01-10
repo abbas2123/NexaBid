@@ -1,5 +1,3 @@
-
-
 const myProfileService = require('../../services/profile/profileService');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');

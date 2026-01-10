@@ -1,6 +1,3 @@
-
-
-
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../../models/user');
@@ -53,7 +50,6 @@ exports.registerUser = async ({ name, email, phone, password }) => {
   };
 };
 
-
 exports.verifyOtpService = async ({ userId, otp }) => {
   const user = await User.findById(userId);
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
@@ -84,7 +80,6 @@ exports.verifyOtpService = async ({ userId, otp }) => {
 
   return { message: SUCCESS_MESSAGES.ACCOUNT_VERIFIED };
 };
-
 
 exports.LoginUser = async ({ email, password }) => {
   const user = await User.findOne({ email });
@@ -129,10 +124,9 @@ exports.LoginUser = async ({ email, password }) => {
   };
 };
 
-
 exports.forgotPasswordService = async (email) => {
   const user = await User.findOne({ email });
-  
+
   if (!user) {
     const err = new Error(ERROR_MESSAGES.EMAIL_NOT_FOUND);
     err.statusCode = statusCode.NOT_FOUND;
@@ -158,8 +152,6 @@ exports.forgotPasswordService = async (email) => {
   };
 };
 
-
-
 exports.verifyForgotOtService = async ({ userId, otp }) => {
   const otpRecord = await Otp.findOne({ userId });
 
@@ -184,8 +176,6 @@ exports.verifyForgotOtService = async ({ userId, otp }) => {
   };
 };
 
-
-
 exports.resetPasswordService = async ({ userId, password }) => {
   const user = await User.findById(userId);
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
@@ -201,7 +191,6 @@ exports.resetPasswordService = async ({ userId, password }) => {
   };
 };
 
-
 exports.getDashboard = async () => {
   const now = new Date();
 
@@ -209,10 +198,13 @@ exports.getDashboard = async () => {
     status: 'published',
     verificationStatus: 'approved',
   })
+    .sort({ createdAt: -1, _id: -1 })
     .limit(6)
     .lean();
 
-  const tender = await Tender.find({ status: 'published', bidEndAt: { $gt: now } }).limit(6);
+  const tender = await Tender.find({ status: 'published', bidEndAt: { $gt: now } })
+    .sort({ createdAt: -1, _id: -1 })
+    .limit(6);
   return { property, tender };
 };
 

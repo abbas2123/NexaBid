@@ -1,5 +1,3 @@
-
-
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid.js');
 const { ERROR_MESSAGES } = require('../../utils/constants');

@@ -1,117 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>
-        <%= title %>
-    </title>
+    <title><%= title %></title>
 
     <!-- Tailwind -->
     <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class', // Forces 'class' strategy instead of 'media'
-        }
+      tailwind.config = {
+        darkMode: 'class', // Forces 'class' strategy instead of 'media'
+      };
     </script>
 
     <!-- SweetAlert -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        // Disable BFCache on this page (Chrome, Firefox, Safari)
-        window.addEventListener("unload", function () { });
+      // Disable BFCache on this page (Chrome, Firefox, Safari)
+      window.addEventListener('unload', function () {});
     </script>
 
     <!-- Material Symbols -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    />
 
     <link rel="stylesheet" href="/css/admin.css" />
-</head>
+  </head>
 
-<body class="bg-[#f7f7f7]">
-
+  <body class="bg-[#f7f7f7]">
     <div class="flex min-h-screen w-full">
+      <!-- Sidebar -->
+      <%- include('../../partials/admin/sidebar') %>
 
-        <!-- Sidebar -->
-        <%- include('../../partials/admin/sidebar') %>
+      <!-- Main Content -->
+      <div class="flex flex-col flex-1">
+        <!-- Topbar -->
+        <%- include('../../partials/admin/header') %>
 
-            <!-- Main Content -->
-            <div class="flex flex-col flex-1">
+        <main class="p-6 overflow-y-auto flex-1"><%- body %></main>
 
-                <!-- Topbar -->
-                <%- include('../../partials/admin/header') %>
-
-                    <main class="p-6 overflow-y-auto flex-1">
-                        <%- body %>
-                    </main>
-
-                    <!-- Footer -->
-                    <%- include('../../partials/admin/footer') %>
-
-            </div>
-
+        <!-- Footer -->
+        <%- include('../../partials/admin/footer') %>
+      </div>
     </div>
     <script>
-        // Prevent back button on admin pages after login
-        history.pushState(null, null, location.href);
-        window.addEventListener("popstate", function () {
-            history.go(1);
-        });
+      // Prevent back button on admin pages after login
+      history.pushState(null, null, location.href);
+      window.addEventListener('popstate', function () {
+        history.go(1);
+      });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener('DOMContentLoaded', () => {
+        const logoutBtn = document.getElementById('logoutBtn');
 
-            const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener('click', function (e) {
+            e.preventDefault();
 
-            if (logoutBtn) {
-                logoutBtn.addEventListener("click", function (e) {
-                    e.preventDefault();
-
-                    Swal.fire({
-                        title: "Are you sure?",
-                        text: "You will be logged out.",
-                        icon: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#d33",
-                        cancelButtonColor: "#3085d6",
-                        confirmButtonText: "Yes, Logout"
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            window.location.href = "/admin/logout";
-                        }
-                    });
-                });
-            }
-        });
+            Swal.fire({
+              title: 'Are you sure?',
+              text: 'You will be logged out.',
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonColor: '#d33',
+              cancelButtonColor: '#3085d6',
+              confirmButtonText: 'Yes, Logout',
+            }).then((result) => {
+              if (result.isConfirmed) {
+                window.location.href = '/admin/logout';
+              }
+            });
+          });
+        }
+      });
     </script>
 
     <script>
-        const menuBtn = document.getElementById("menuToggle");
-        const sidebar = document.getElementById("sidebar");
+      const menuBtn = document.getElementById('menuToggle');
+      const sidebar = document.getElementById('sidebar');
 
-        // Toggle sidebar on hamburger click
-        menuBtn.addEventListener("click", (e) => {
-            e.stopPropagation(); // prevent triggering document click
-            sidebar.classList.toggle("-translate-x-full");
-        });
+      // Toggle sidebar on hamburger click
+      menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation(); // prevent triggering document click
+        sidebar.classList.toggle('-translate-x-full');
+      });
 
-        // Close sidebar when clicking outside on mobile
-        document.addEventListener("click", (e) => {
-            const isSidebarOpen = !sidebar.classList.contains("-translate-x-full");
-            const clickedOutside = !sidebar.contains(e.target) && e.target !== menuBtn;
+      // Close sidebar when clicking outside on mobile
+      document.addEventListener('click', (e) => {
+        const isSidebarOpen = !sidebar.classList.contains('-translate-x-full');
+        const clickedOutside = !sidebar.contains(e.target) && e.target !== menuBtn;
 
-            if (isSidebarOpen && clickedOutside) {
-                sidebar.classList.add("-translate-x-full");
-            }
-        });
+        if (isSidebarOpen && clickedOutside) {
+          sidebar.classList.add('-translate-x-full');
+        }
+      });
     </script>
-
-</body>
-
+  </body>
 </html>

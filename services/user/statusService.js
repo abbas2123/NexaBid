@@ -1,6 +1,3 @@
-
-
-
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
 const File = require('../../models/File');
@@ -20,7 +17,6 @@ exports.getPropertyStatus = async (userId) => {
   };
 };
 
-
 exports.getTenderStatus = async (userId) => {
   const tenders = await Tender.find({ createdBy: userId }).sort({ createdAt: -1 }).lean();
 
@@ -28,7 +24,6 @@ exports.getTenderStatus = async (userId) => {
     tenders,
   };
 };
-
 
 exports.deleteTender = async (tenderId, userId) => {
   const tender = await Tender.findOne({
@@ -42,11 +37,9 @@ exports.deleteTender = async (tenderId, userId) => {
     throw error;
   }
 
-
   const fileIds = tender.files.map((f) => f.fileId);
 
   if (fileIds.length > 0) {
-    
     await File.deleteMany({ _id: { $in: fileIds } });
   }
 

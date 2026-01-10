@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const landingController = require('../../controllers/user/landingController');
 const authMiddleware = require('../../middlewares/authMiddleware');

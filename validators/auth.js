@@ -1,5 +1,3 @@
-
-
 const { z } = require('zod');
 const { VALIDATION_MESSAGES } = require('../utils/constants');
 
@@ -15,12 +13,10 @@ exports.loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-
 exports.adminLoginSchema = z.object({
   email: z.string().email('Invalid admin email'),
   password: z.string().min(6, 'Password required'),
 });
-
 
 exports.resetPasswordSchema = z
   .object({
@@ -32,7 +28,6 @@ exports.resetPasswordSchema = z
     message: VALIDATION_MESSAGES.PASSWORDS_DO_NOT_MATCH,
     path: ['confirmPassword'],
   });
-
 
 exports.forgotPasswordSchema = z.object({
   email: z.string().email('Please enter a valid email'),

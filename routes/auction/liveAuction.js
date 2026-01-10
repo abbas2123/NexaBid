@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const auctionController = require('../../controllers/auction/PropertyAuction');
 const auctionResult = require('../../controllers/auction/result');

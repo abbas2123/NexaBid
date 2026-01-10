@@ -1,5 +1,3 @@
-
-
 const auctionResultService = require('../../services/auction/result');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS, TITLES } = require('../../utils/constants');
@@ -48,7 +46,6 @@ exports.loadBuyerAuctionResultPage = async (req, res) => {
   } catch (err) {
     console.error('Buyer Auction Result Error:', err.message);
 
-    
     if (
       err.message === ERROR_MESSAGES.NOT_WINNER ||
       err.message === ERROR_MESSAGES.AUCTION_NOT_ENDED

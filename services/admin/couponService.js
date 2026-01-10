@@ -1,5 +1,3 @@
-
-
 const Coupon = require('../../models/coupen');
 const CouponRedemption = require('../../models/coupenRedemption');
 const { COUPON_TYPES, COUPON_MESSAGES } = require('../../utils/constants');

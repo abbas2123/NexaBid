@@ -1,22 +1,17 @@
-
-
 const User = require('../../models/user');
 const vendorApplication = require('../../models/vendorApplication');
 const notificationService = require('../notificationService');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getAllVendorApplications = async (page, filter) => {
-  const limit = 10; 
+  const limit = 10;
   const query = {};
 
-  
   if (filter.status && filter.status.trim() !== '') {
     query.status = filter.status.trim();
   }
 
-  
   if (filter.search && filter.search.trim() !== '') {
-    
     const users = await User.find({
       $or: [
         { name: new RegExp(filter.search.trim(), 'i') },
@@ -38,7 +33,7 @@ exports.getAllVendorApplications = async (page, filter) => {
 
   const applications = await vendorApplication
     .find(query)
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate('userId', 'name email phone')

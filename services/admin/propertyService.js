@@ -1,5 +1,3 @@
-
-
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid');
 const notificationService = require('../notificationService');
@@ -26,17 +24,15 @@ exports.getAllProperties = async (page, filter) => {
     ];
   }
 
-
   const total = await Property.countDocuments(query);
 
   const property = await Property.find(query)
-    .sort({ createdAt: -1 })
+    .sort({ createdAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate('sellerId', 'name email phone')
     .lean();
 
-  
   const now = new Date();
   const liveAuctions = await Property.find({
     isAuction: true,

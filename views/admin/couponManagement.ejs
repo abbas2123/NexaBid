@@ -5,8 +5,11 @@
       <p class="text-gray-500 text-sm">Manage and create discount coupons</p>
     </div>
 
-    <button id="openCouponBtn" type="button"
-      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
+    <button
+      id="openCouponBtn"
+      type="button"
+      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700"
+    >
       Create Coupon
     </button>
   </div>
@@ -27,43 +30,42 @@
       </thead>
 
       <tbody class="divide-y">
-        <% if (coupons && coupons.length > 0) { %>
-          <% coupons.forEach(c => { %>
-            <tr class="hover:bg-gray-50">
-              <td class="px-4 py-3 font-semibold"><%= c.code %></td>
-              <td class="px-4 py-3 capitalize"><%= c.type %></td>
-              <td class="px-4 py-3"><%= c.type === 'percent' ? c.value + '%' : '₹' + c.value %></td>
-              <td class="px-4 py-3"><%= c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—' %></td>
-              <td class="px-4 py-3 text-center"><%= c.perUserLimit || '∞' %></td>
-              <td class="px-4 py-3 text-center"><%= c.usageLimit || '∞' %></td>
+        <% if (coupons && coupons.length > 0) { %> <% coupons.forEach(c => { %>
+        <tr class="hover:bg-gray-50">
+          <td class="px-4 py-3 font-semibold"><%= c.code %></td>
+          <td class="px-4 py-3 capitalize"><%= c.type %></td>
+          <td class="px-4 py-3"><%= c.type === 'percent' ? c.value + '%' : '₹' + c.value %></td>
+          <td class="px-4 py-3">
+            <%= c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—' %>
+          </td>
+          <td class="px-4 py-3 text-center"><%= c.perUserLimit || '∞' %></td>
+          <td class="px-4 py-3 text-center"><%= c.usageLimit || '∞' %></td>
 
-              <!-- ✅ REAL status based on isActive -->
-              <td class="px-4 py-3">
-               <% const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date(); %>
+          <!-- ✅ REAL status based on isActive -->
+          <td class="px-4 py-3">
+            <% const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date(); %> <% if
+            (isExpired) { %>
+            <span class="text-red-600 font-semibold">Expired</span>
+            <% } else if (c.isActive) { %>
+            <span class="text-green-600 font-semibold">Enabled</span>
+            <% } else { %>
+            <span class="text-gray-500 font-semibold">Disabled</span>
+            <% } %>
+          </td>
 
-<% if (isExpired) { %>
-  <span class="text-red-600 font-semibold">Expired</span>
-<% } else if (c.isActive) { %>
-  <span class="text-green-600 font-semibold">Enabled</span>
-<% } else { %>
-  <span class="text-gray-500 font-semibold">Disabled</span>
-<% } %>
-              </td>
-
-              <td class="px-4 py-3 text-right space-x-3">
-                <button type="button" class="text-amber-600 js-toggle" data-id="<%= c._id %>">
-                  Toggle
-                </button>
-                <button type="button" class="text-red-600 js-delete" data-id="<%= c._id %>">
-                  Delete
-                </button>
-              </td>
-            </tr>
-          <% }) %>
-        <% } else { %>
-          <tr>
-            <td colspan="8" class="text-center py-6 text-gray-500">No coupons available</td>
-          </tr>
+          <td class="px-4 py-3 text-right space-x-3">
+            <button type="button" class="text-amber-600 js-toggle" data-id="<%= c._id %>">
+              Toggle
+            </button>
+            <button type="button" class="text-red-600 js-delete" data-id="<%= c._id %>">
+              Delete
+            </button>
+          </td>
+        </tr>
+        <% }) %> <% } else { %>
+        <tr>
+          <td colspan="8" class="text-center py-6 text-gray-500">No coupons available</td>
+        </tr>
         <% } %>
       </tbody>
     </table>
@@ -81,7 +83,12 @@
     <form id="createCouponForm" class="p-6 space-y-6">
       <div>
         <label class="block text-sm font-medium mb-1">Coupon Code</label>
-        <input name="code" required class="w-full border rounded px-4 py-2 uppercase" placeholder="SUMMER2025" />
+        <input
+          name="code"
+          required
+          class="w-full border rounded px-4 py-2 uppercase"
+          placeholder="SUMMER2025"
+        />
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -128,8 +135,13 @@
       </div>
 
       <div class="flex justify-end gap-3 pt-4 border-t">
-        <button type="button" id="cancelCouponBtn" class="px-6 py-2 rounded bg-gray-200">Cancel</button>
-        <button type="submit" class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold">
+        <button type="button" id="cancelCouponBtn" class="px-6 py-2 rounded bg-gray-200">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+        >
           Create Coupon
         </button>
       </div>
@@ -148,13 +160,21 @@
     const cancelBtn = document.getElementById('cancelCouponBtn');
     const form = document.getElementById('createCouponForm');
 
-    const openModal = () => { modal.classList.remove('hidden'); modal.classList.add('flex'); };
-    const closeModal = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
+    const openModal = () => {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+    const closeModal = () => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    };
 
     openBtn.addEventListener('click', openModal);
     closeBtn.addEventListener('click', closeModal);
     cancelBtn.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal();
+    });
 
     // CREATE
     form.addEventListener('submit', async (e) => {
@@ -180,7 +200,7 @@
           title: 'Coupon Created',
           text: data.message || 'Created successfully',
           timer: 1400,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
 
         window.location.reload();
@@ -193,7 +213,7 @@
     });
 
     // DELETE
-    document.querySelectorAll('.js-delete').forEach(btn => {
+    document.querySelectorAll('.js-delete').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
 
@@ -211,16 +231,25 @@
         const data = await res.json();
 
         if (!data.success) {
-          return Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Delete failed' });
+          return Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message || 'Delete failed',
+          });
         }
 
-        await Swal.fire({ icon: 'success', title: 'Deleted', timer: 1000, showConfirmButton: false });
+        await Swal.fire({
+          icon: 'success',
+          title: 'Deleted',
+          timer: 1000,
+          showConfirmButton: false,
+        });
         window.location.reload();
       });
     });
 
     // TOGGLE
-    document.querySelectorAll('.js-toggle').forEach(btn => {
+    document.querySelectorAll('.js-toggle').forEach((btn) => {
       btn.addEventListener('click', async () => {
         const id = btn.dataset.id;
 
@@ -228,7 +257,11 @@
         const data = await res.json();
 
         if (!data.success) {
-          return Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Toggle failed' });
+          return Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message || 'Toggle failed',
+          });
         }
 
         await Swal.fire({
@@ -236,7 +269,7 @@
           title: 'Updated',
           text: data.isActive ? 'Enabled' : 'Disabled',
           timer: 1000,
-          showConfirmButton: false
+          showConfirmButton: false,
         });
 
         window.location.reload();

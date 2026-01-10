@@ -33,7 +33,9 @@ class AuctionService {
         bidderId: userId,
         isAutoBid: true,
         bidStatus: BID_STATUS.ACTIVE,
-      }).select('autoBidMax').lean();
+      })
+        .select('autoBidMax')
+        .lean();
 
       if (myBid) {
         myAutoBidMax = myBid.autoBidMax;
@@ -163,18 +165,13 @@ class AuctionService {
 
   static async handleAutoBids(propertyId, io) {
     let rounds = 0;
-    while (rounds < 50) { // Safety break
+    while (rounds < 50) {
       const property = await Property.findById(propertyId);
       if (!property || !property.isAuction || new Date() > property.auctionEndsAt) break;
 
-      // Find someone who can beat the current price
       const currentPrice = property.currentHighestBid || property.basePrice;
       const step = property.auctionStep || 1000;
       let nextBidAmount = currentPrice + step;
-
-      // Smart Logic:
-      // 1. Find candidates who can afford > currentPrice
-      // 2. If they can't afford nextBidAmount (full step), allow "All-in" (partial step)
 
       const candidate = await PropertyBid.findOne({
         propertyId,
@@ -182,26 +179,26 @@ class AuctionService {
         bidStatus: BID_STATUS.ACTIVE,
         bidderId: { $ne: property.currentHighestBidder },
         autoBidMax: { $gt: currentPrice },
-      }).populate('bidderId', 'name').sort({ autoBidMax: -1, updatedAt: 1 }); // Strongest bidder first
+      })
+        .populate('bidderId', 'name')
+        .sort({ autoBidMax: -1, updatedAt: 1 });
 
-      if (!candidate) break; // No one can beat current
+      if (!candidate) break;
 
-      // "All-in" check
       if (candidate.autoBidMax < nextBidAmount) {
         nextBidAmount = candidate.autoBidMax;
       }
 
-      // Execute Bid
       const updated = await Property.findOneAndUpdate(
         {
           _id: propertyId,
-          currentHighestBid: { $lt: nextBidAmount }
+          currentHighestBid: { $lt: nextBidAmount },
         },
         {
           $set: {
             currentHighestBid: nextBidAmount,
-            currentHighestBidder: candidate.bidderId._id
-          }
+            currentHighestBidder: candidate.bidderId._id,
+          },
         },
         { new: true }
       );
@@ -212,32 +209,28 @@ class AuctionService {
           {
             amount: nextBidAmount,
             isAutoBid: true,
-            // Keep other fields same
+
             escrowPaymentId: candidate.escrowPaymentId,
             autoBidMax: candidate.autoBidMax,
-            bidStatus: BID_STATUS.ACTIVE
+            bidStatus: BID_STATUS.ACTIVE,
           },
           { upsert: true }
         );
 
-        // Notify
         const room = `auction_${propertyId}`;
         io.to(room).emit('new_bid', {
           amount: nextBidAmount,
           bidderId: candidate.bidderId._id,
           bidderName: candidate.bidderId.name,
           time: new Date(),
-          isAutoBid: true
+          isAutoBid: true,
         });
 
         console.log(`🤖 AutoBid: ${candidate.bidderId.name} placed ${nextBidAmount}`);
         rounds++;
 
-        // UX Enhancement: Add delay to simulate "thinking" and make the bidding war visible
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } else {
-        // Race condition lost, retry loop
         continue;
       }
     }

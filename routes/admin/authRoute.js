@@ -8,7 +8,11 @@ const reportManagementController = require('../../controllers/user/reportManagem
 const router = express.Router();
 
 router.get('/report-management', adminProtect, reportManagementController.getReportManagement);
-router.get('/reports/property-auctions', adminProtect, reportManagementController.getPropertyAuctionReports);
+router.get(
+  '/reports/property-auctions',
+  adminProtect,
+  reportManagementController.getPropertyAuctionReports
+);
 router.get('/reports/balance', adminProtect, reportManagementController.getBalanceReport);
 router.get('/reports/view/:id', adminProtect, reportManagementController.getAuctionDetailReport);
 

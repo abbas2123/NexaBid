@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const authController = require('../../controllers/user/tender');
 const authMiddleware = require('../../middlewares/authMiddleware');
@@ -9,9 +7,9 @@ const tenderUpload = uploadFactory('nexabid/tenders');
 const Tender = require('../../models/tender');
 const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
+const { generateSignedUrl } = require('../../utils/cloudinaryHelper');
 
 const router = express.Router();
-
 
 router.get('/', authMiddleware.protectRoute, authController.getTenderListingPage);
 router.get('/create', authMiddleware.protectRoute, tenderContorller.getCreateTenderPage);
@@ -52,12 +50,21 @@ router.get('/doc/:fileId', authMiddleware.protectRoute, async (req, res) => {
     if (!file) return res.status(404).send('File not found');
 
     let viewUrl = file.fileUrl;
+    if (file.metadata && file.metadata.public_id) {
+      const resourceType =
+        file.metadata.resource_type || (file.mimeType === 'application/pdf' ? 'image' : 'raw');
 
-
-    if (file.mimeType === 'application/pdf') {
-      viewUrl = file.fileUrl.replace('/raw/upload/', '/raw/upload/fl_attachment:false/');
+      viewUrl = generateSignedUrl(
+        file.metadata.public_id,
+        file.version,
+        resourceType,
+        file.mimeType === 'application/pdf' ? 'pdf' : null
+      );
+    } else {
+      if (file.mimeType === 'application/pdf') {
+        viewUrl = file.fileUrl.replace('/raw/upload/', '/raw/upload/fl_attachment:false/');
+      }
     }
-
 
     return res.redirect(viewUrl);
   } catch (err) {

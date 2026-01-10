@@ -1,137 +1,115 @@
 <main class="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="max-w-7xl mx-auto">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-10">My Participation</h1>
 
-        <h1 class="text-4xl font-bold text-slate-900 dark:text-white mb-10">
-            My Participation
-        </h1>
+    <div class="space-y-12">
+      <!-- ====================================================== -->
+      <!-- MY PROPERTY BIDS -->
+      <!-- ====================================================== -->
+      <section>
+        <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">My Property Bids</h2>
 
-        <div class="space-y-12">
+        <div
+          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-6 py-4 text-left">Item Title</th>
+                  <th class="px-6 py-4 text-left">My Bid Amount</th>
+                  <th class="px-6 py-4 text-left">Current Status</th>
+                  <th class="px-6 py-4 text-left">Win/Loss</th>
+                  <th class="px-6 py-4 text-left">Project Status</th>
+                  <th class="px-6 py-4 text-left">Closing Date</th>
+                </tr>
+              </thead>
 
-            <!-- ====================================================== -->
-            <!-- MY PROPERTY BIDS -->
-            <!-- ====================================================== -->
-            <section>
-                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">
-                    My Property Bids
-                </h2>
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                <% properties.forEach(p => { %>
+                <tr
+                  class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                  onclick="window.location.href = '/auctions/live/<%= p._id %>'"
+                >
+                  <td class="px-6 py-5"><%= p.title %></td>
+                  <td class="px-6 py-5">₹<%= p.myBid.toLocaleString('en-IN') %></td>
 
-                <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="overflow-x-auto">
+                  <td class="px-6 py-5">
+                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.statusColor %>">
+                      <%= p.currentStatus %>
+                    </span>
+                  </td>
 
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 dark:bg-slate-800/50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left">Item Title</th>
-                                    <th class="px-6 py-4 text-left">My Bid Amount</th>
-                                    <th class="px-6 py-4 text-left">Current Status</th>
-                                    <th class="px-6 py-4 text-left">Win/Loss</th>
-                                    <th class="px-6 py-4 text-left">Project Status</th>
-                                    <th class="px-6 py-4 text-left">Closing Date</th>
-                                </tr>
-                            </thead>
+                  <td class="px-6 py-5">
+                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.winColor %>">
+                      <%= p.winStatus %>
+                    </span>
+                  </td>
 
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                  <td class="px-6 py-5"><%= p.projectStatus || "—" %></td>
 
-                                <% properties.forEach(p => { %>
-                                <tr 
-                                    class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
-                                    onclick="window.location.href='/auctions/live/<%= p._id %>'"
-                                >
-                                    <td class="px-6 py-5"><%= p.title %></td>
-                                    <td class="px-6 py-5">₹<%= p.myBid.toLocaleString('en-IN') %></td>
-
-                                    <td class="px-6 py-5">
-                                        <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.statusColor %>">
-                                            <%= p.currentStatus %>
-                                        </span>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.winColor %>">
-                                            <%= p.winStatus %>
-                                        </span>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <%= p.projectStatus || "—" %>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <%= p.closingDate %>
-                                    </td>
-                                </tr>
-                                <% }) %>
-
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-            </section>
-
-            <!-- ====================================================== -->
-            <!-- MY TENDER PARTICIPATION -->
-            <!-- ====================================================== -->
-            <section>
-                <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">
-                    My Tender Offers
-                </h2>
-
-                <div class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="overflow-x-auto">
-
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 dark:bg-slate-800/50">
-                                <tr>
-                                    <th class="px-6 py-4 text-left">Tender Title</th>
-                                    <th class="px-6 py-4 text-left">My Offer</th>
-                                    <th class="px-6 py-4 text-left">Current Status</th>
-                                    <th class="px-6 py-4 text-left">Win/Loss</th>
-                                    <th class="px-6 py-4 text-left">Project Status</th>
-                                    <th class="px-6 py-4 text-left">Submission Date</th>
-                                </tr>
-                            </thead>
-
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-
-                                <% tenders.forEach(t => { %>
-                                <tr 
-                                    class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
-                                    onclick="window.location.href='/user/my-participation/tender/<%= t._id %>'"
-                                >
-                                    <td class="px-6 py-5"><%= t.title %></td>
-                                    <td class="px-6 py-5">₹<%= t.myOffer.toLocaleString('en-IN') %></td>
-
-                                    <td class="px-6 py-5">
-                                        <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.statusColor %>">
-                                            <%= t.currentStatus %>
-                                        </span>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.winColor %>">
-                                            <%= t.winStatus %>
-                                        </span>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <%= t.projectStatus || "—" %>
-                                    </td>
-
-                                    <td class="px-6 py-5">
-                                        <%= t.submissionDate %>
-                                    </td>
-                                </tr>
-                                <% }) %>
-
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
-            </section>
-
+                  <td class="px-6 py-5"><%= p.closingDate %></td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
         </div>
+      </section>
 
+      <!-- ====================================================== -->
+      <!-- MY TENDER PARTICIPATION -->
+      <!-- ====================================================== -->
+      <section>
+        <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">My Tender Offers</h2>
+
+        <div
+          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
+        >
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 dark:bg-slate-800/50">
+                <tr>
+                  <th class="px-6 py-4 text-left">Tender Title</th>
+                  <th class="px-6 py-4 text-left">My Offer</th>
+                  <th class="px-6 py-4 text-left">Current Status</th>
+                  <th class="px-6 py-4 text-left">Win/Loss</th>
+                  <th class="px-6 py-4 text-left">Project Status</th>
+                  <th class="px-6 py-4 text-left">Submission Date</th>
+                </tr>
+              </thead>
+
+              <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                <% tenders.forEach(t => { %>
+                <tr
+                  class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                  onclick="window.location.href = '/user/my-participation/tender/<%= t._id %>'"
+                >
+                  <td class="px-6 py-5"><%= t.title %></td>
+                  <td class="px-6 py-5">₹<%= t.myOffer.toLocaleString('en-IN') %></td>
+
+                  <td class="px-6 py-5">
+                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.statusColor %>">
+                      <%= t.currentStatus %>
+                    </span>
+                  </td>
+
+                  <td class="px-6 py-5">
+                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.winColor %>">
+                      <%= t.winStatus %>
+                    </span>
+                  </td>
+
+                  <td class="px-6 py-5"><%= t.projectStatus || "—" %></td>
+
+                  <td class="px-6 py-5"><%= t.submissionDate %></td>
+                </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
+  </div>
 </main>

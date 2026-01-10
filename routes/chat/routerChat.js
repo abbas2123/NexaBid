@@ -1,5 +1,3 @@
-
-
 const router = require('express').Router();
 const chat = require('../../controllers/chat/chatController');
 const authModule = require('../../middlewares/authMiddleware');

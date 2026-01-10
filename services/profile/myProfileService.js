@@ -1,5 +1,3 @@
-
-
 const bcrypt = require('bcrypt');
 const User = require('../../models/user');
 const { ERROR_MESSAGES } = require('../../utils/constants');
@@ -42,8 +40,19 @@ exports.updateProfile = async (userId, data = {}, fileInput = null) => {
     }
   }
 
-  if (avatarFile && avatarFile.path) {
-    updateData.avatar = avatarFile.path;
+  if (avatarFile) {
+    if (avatarFile.path) {
+      updateData.avatar = avatarFile.path;
+    } else if (avatarFile.buffer) {
+      const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
+      const cld = await uploadToCloudinary(
+        avatarFile.buffer,
+        'nexabid/profiles',
+        avatarFile.originalname || 'avatar',
+        'image'
+      );
+      updateData.avatar = cld.secure_url;
+    }
   }
 
   if (Object.keys(updateData).length === 0) {

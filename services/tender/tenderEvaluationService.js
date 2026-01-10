@@ -97,7 +97,6 @@ module.exports = {
     bid.isWinner = true;
     await bid.save();
 
-    
     await Tender.findByIdAndUpdate(tenderId, {
       awardedTo: bid.vendorId._id,
       status: 'awarded',
@@ -123,7 +122,6 @@ module.exports = {
       io
     );
 
-    
     const losers = await TenderBid.find({
       tenderId,
       _id: { $ne: bidId },

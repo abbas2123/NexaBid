@@ -1,215 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %> - NexaBid</title>
 
-  <title>
-    <%= title %> - NexaBid
-  </title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700"
+    />
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
-
-  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            primary: "#007AFF",
-            "background-light": "#F7FAFC",
-            "background-dark": "#1A202C",
-          },
-          fontFamily: {
-            display: ["Inter", "sans-serif"],
-          },
-          borderRadius: {
-            DEFAULT: "0.75rem",
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#007AFF',
+              'background-light': '#F7FAFC',
+              'background-dark': '#1A202C',
+            },
+            fontFamily: {
+              display: ['Inter', 'sans-serif'],
+            },
+            borderRadius: {
+              DEFAULT: '0.75rem',
+            },
           },
         },
-      },
-    };
-  </script>
+      };
+    </script>
 
-  <style>
-    .material-icons {
-      font-family: 'Material Icons';
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      -webkit-font-feature-settings: 'liga';
-      -webkit-font-smoothing: antialiased;
-    }
-  </style>
-  <!-- your meta, tailwind, fonts -->
-
-  <style>
-    @layer utilities {
-      .grid-cols-auto-fit {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    <style>
+      .material-icons {
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
       }
-    }
-  </style>
-</head>
+    </style>
+    <!-- your meta, tailwind, fonts -->
 
-<body class="bg-background-light dark:bg-background-dark font-display">
-  <div class="min-h-screen flex flex-col">
+    <style>
+      @layer utilities {
+        .grid-cols-auto-fit {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+      }
+    </style>
+  </head>
 
-    <!-- Header -->
-    <%- include("../../partials/user/header.ejs", { user }) %>
+  <body class="bg-background-light dark:bg-background-dark font-display">
+    <div class="min-h-screen flex flex-col">
+      <!-- Header -->
+      <%- include("../../partials/user/header.ejs", { user }) %>
 
       <!-- Main Content -->
       <main class="w-full flex justify-center px-4 sm:px-6 lg:px-10 xl:px-16 py-10">
         <div class="w-full max-w-[1800px] grid grid-cols-1 lg:grid-cols-3 gap-10 xl:gap-14">
-
           <!-- Center content: page body -->
-          <div class="lg:col-span-2 space-y-10">
-            <%- body %>
-          </div>
+          <div class="lg:col-span-2 space-y-10"><%- body %></div>
 
           <aside class="space-y-6 lg:pt-10">
             <%- include("../../partials/user/quickActions.ejs", { user }) %>
           </aside>
-
-
         </div>
       </main>
 
       <!-- Footer -->
       <%- include("../../partials/user/footer.ejs") %>
-  </div>
-  <script>
-    window.alert = function (message) {
-      Swal.fire({
-        icon: "info",
-        title: "Notice",
-        text: message
-      });
-    };
-  </script>
-
-  <script src="/socket.io/socket.io.js"></script>
-
-  <script>
-    // Initialize Socket.IO
-    const socket = io();
-
-  <% if (user) { %>
-      socket.emit("joinUser", "<%= user._id.toString() %>");
-  <% } %>
-
-      // Load notifications from DB
-      async function loadNotifications() {
-        const list = document.getElementById("notificationsList");
-        const emptyMsg = document.getElementById("noNotifications");
-        const badge = document.getElementById("notificationBadge");
-
-        const res = await fetch("/notifications");
-        const data = await res.json();
-
-        list.innerHTML = ""; // clear old items
-
-        if (data.length === 0) {
-          emptyMsg.classList.remove("hidden");
-          badge.classList.add("hidden");
-          return;
-        }
-
-        emptyMsg.classList.add("hidden");
-
-        // Count unread notifications
-        const unread = data.filter(n => !n.isRead).length;
-
-        if (unread > 0) {
-          badge.classList.remove("hidden");
-          badge.innerText = unread;
-        } else {
-          badge.classList.add("hidden");
-        }
-
-        // Render ONLY unread notifications
-        data.filter(n => !n.isRead).forEach(n => {
-          const item = document.createElement("div");
-          item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
-          item.innerHTML = `
-    <p class="text-sm text-gray-800 dark:text-gray-200">${n.message}</p>
-    <span class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</span>
-  `;
-          list.append(item);
+    </div>
+    <script>
+      window.alert = function (message) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Notice',
+          text: message,
         });
-      }
+      };
+    </script>
 
-    loadNotifications();
+    <script src="/socket.io/socket.io.js"></script>
 
-    // Listen for realtime notifications
-    socket.on("newNotification", (data) => {
-      console.log("📩 NEW notification:", data);
+    <script>
+        // Initialize Socket.IO
+        const socket = io();
 
-      const list = document.getElementById("notificationsList");
-      const badge = document.getElementById("notificationBadge");
-      const emptyMsg = document.getElementById("noNotifications");
+      <% if (user) { %>
+          socket.emit("joinUser", "<%= user._id.toString() %>");
+      <% } %>
 
-      emptyMsg.classList.add("hidden");
+          // Load notifications from DB
+          async function loadNotifications() {
+            const list = document.getElementById("notificationsList");
+            const emptyMsg = document.getElementById("noNotifications");
+            const badge = document.getElementById("notificationBadge");
 
-      badge.classList.remove("hidden");
-      badge.innerText = Number(badge.innerText || 0) + 1;
+            const res = await fetch("/notifications");
+            const data = await res.json();
 
-      const item = document.createElement("div");
-      item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700 animate-slide-down";
-      item.innerHTML = `
-      <p class="text-sm text-gray-800 dark:text-gray-200">${data.message}</p>
-      <span class="text-xs text-gray-500">Just now</span>
-    `;
+            list.innerHTML = ""; // clear old items
 
-      list.prepend(item);
+            if (data.length === 0) {
+              emptyMsg.classList.remove("hidden");
+              badge.classList.add("hidden");
+              return;
+            }
 
-      // SWEETALERT TOAST
-      const Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener('mouseenter', Swal.stopTimer)
-          toast.addEventListener('mouseleave', Swal.resumeTimer)
-        }
-      });
+            emptyMsg.classList.add("hidden");
 
-      Toast.fire({
-        icon: 'info',
-        title: data.message
-      });
-    });
+            // Count unread notifications
+            const unread = data.filter(n => !n.isRead).length;
 
-    socket.on("forceLogout", (data) => {
+            if (unread > 0) {
+              badge.classList.remove("hidden");
+              badge.innerText = unread;
+            } else {
+              badge.classList.add("hidden");
+            }
 
-      Swal.fire({
-        icon: "warning",
-        title: "Access Restricted",
-        text: data.message || "You have been blocked by admin",
-        confirmButtonText: "OK",
-        allowOutsideClick: false
-      }).then(() => {
-        window.location.href = "/user/logout";
-      });
+            // Render ONLY unread notifications
+            data.filter(n => !n.isRead).forEach(n => {
+              const item = document.createElement("div");
+              item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
+              item.innerHTML = `
+        <p class="text-sm text-gray-800 dark:text-gray-200">${n.message}</p>
+        <span class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</span>
+      `;
+              list.append(item);
+            });
+          }
 
-    });
-  </script>
+        loadNotifications();
 
-</body>
+        // Listen for realtime notifications
+        socket.on("newNotification", (data) => {
+          console.log("📩 NEW notification:", data);
 
+          const list = document.getElementById("notificationsList");
+          const badge = document.getElementById("notificationBadge");
+          const emptyMsg = document.getElementById("noNotifications");
+
+          emptyMsg.classList.add("hidden");
+
+          badge.classList.remove("hidden");
+          badge.innerText = Number(badge.innerText || 0) + 1;
+
+          const item = document.createElement("div");
+          item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700 animate-slide-down";
+          item.innerHTML = `
+          <p class="text-sm text-gray-800 dark:text-gray-200">${data.message}</p>
+          <span class="text-xs text-gray-500">Just now</span>
+        `;
+
+          list.prepend(item);
+
+          // SWEETALERT TOAST
+          const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.addEventListener('mouseenter', Swal.stopTimer)
+              toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+          });
+
+          Toast.fire({
+            icon: 'info',
+            title: data.message
+          });
+        });
+
+        socket.on("forceLogout", (data) => {
+
+          Swal.fire({
+            icon: "warning",
+            title: "Access Restricted",
+            text: data.message || "You have been blocked by admin",
+            confirmButtonText: "OK",
+            allowOutsideClick: false
+          }).then(() => {
+            window.location.href = "/user/logout";
+          });
+
+        });
+    </script>
+  </body>
 </html>

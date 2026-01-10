@@ -28,7 +28,7 @@ const razorpay = new Razorpay({
 
 console.log('🔑 Razorpay Config:', {
   keyIdLength: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 0,
-  keySecretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0
+  keySecretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
 });
 
 const _handlePostPaymentActions = async (payment, userId) => {
@@ -47,7 +47,6 @@ const _handlePostPaymentActions = async (payment, userId) => {
     );
     console.log('✅ Bid created/updated with escrowPaymentId');
   }
-
 
   if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
@@ -122,7 +121,7 @@ exports.startInitiatePayment = async (userId, type, id) => {
 exports.createRazorpayOrder = async (paymentId, amount) => {
   const payment = await Payment.findOne({
     _id: paymentId,
-    status: PAYMENT_STATUS.PENDING, // FIX #2: Only allow PENDING
+    status: PAYMENT_STATUS.PENDING,
   });
   console.log('payment', payment);
   if (!payment) {
@@ -135,7 +134,6 @@ exports.createRazorpayOrder = async (paymentId, amount) => {
     };
   }
 
-  // FIX #5: Always calculate from DB/Metadata, ignore frontend amount
   const payable = payment.metadata?.payableAmount || payment.amount;
 
   let razorOrder;
@@ -148,7 +146,9 @@ exports.createRazorpayOrder = async (paymentId, amount) => {
     console.log('✅ Razorpay order created via SDK:', razorOrder.id);
   } catch (sdkError) {
     console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
-    const auth = Buffer.from(`${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`).toString('base64');
+    const auth = Buffer.from(
+      `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
+    ).toString('base64');
     const response = await axios.post(
       'https://api.razorpay.com/v1/orders',
       {
@@ -166,9 +166,6 @@ exports.createRazorpayOrder = async (paymentId, amount) => {
     razorOrder = response.data;
     console.log('✅ Razorpay order created via Axios Fallback:', razorOrder.id);
   }
-
-  // FIX #1: Do NOT overwrite payment.amount here
-  // payment.amount = amount; 
 
   payment.gatewayPaymentId = razorOrder.id;
   await payment.save();
@@ -259,7 +256,7 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
     userId,
     type: 'debit',
     source: 'payment',
-    amount: payable, // FIX #3: Use correct payable amount
+    amount: payable,
     balanceAfter: userWallet.balance,
     metadata: {
       paymentId: payment._id,
@@ -273,7 +270,6 @@ exports.processWalletPayment = async (userId, paymentId, amount) => {
   payment.gateway = GATEWAYS.WALLET;
   payment.gatewayTransactionId = `WALLET_${Date.now()}`;
 
-  // Finalize amount on success
   payment.amount = payable;
 
   await payment.save();
@@ -309,7 +305,7 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
     sentSignature: razorpay_signature,
     generatedSignature: generatedSignature,
     stringToSign: stringToSign,
-    secretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0
+    secretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
   });
 
   if (generatedSignature !== razorpay_signature) {
@@ -327,11 +323,9 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gatewayTransactionId = razorpay_payment_id;
 
-  // Finalize the amount to what was actually paid
   payment.amount = payment.metadata?.payableAmount || payment.amount;
 
   await payment.save();
-
 
   await _handlePostPaymentActions(payment, payment.userId);
 
@@ -453,7 +447,7 @@ exports.removeCoupon = async (intentId) => {
   const originalAmount = payment.amount;
   const removedCouponCode = payment.metadata.coupon.code;
 
-  payment.metadata = {}; // FIX #4: Use empty object instead of null
+  payment.metadata = {};
   await payment.save();
 
   return { amount: originalAmount, removedCouponCode };

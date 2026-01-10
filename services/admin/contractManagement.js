@@ -7,7 +7,7 @@ const { ERROR_MESSAGES } = require('../../utils/constants');
 
 exports.getContractManagementData = async (publisherId, tab, isAdmin = false) => {
   const tenderQuery = {
-    status: { $in: ['published', 'awarded'] },
+    status: 'awarded',
   };
 
   if (!isAdmin) {
@@ -52,6 +52,10 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false) =>
       completed++;
     }
 
+    if (workOrder?.status === 'completed') {
+      contractStatus = 'Work Completed';
+    }
+
     if (po && !agreement?.approvedByPublisher) pending++;
 
     contracts.push({
@@ -60,9 +64,9 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false) =>
       totalBids: bidsCount,
       winner: winnerBid
         ? {
-            name: winnerBid.vendorId.name,
-            amount: winnerBid.quotes.amount,
-          }
+          name: winnerBid.vendorId?.name || 'Unknown Vendor',
+          amount: winnerBid.quotes.amount,
+        }
         : null,
       poStatus: po ? po.status : 'Not Generated',
       agreementStatus: agreement
@@ -70,7 +74,7 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false) =>
           ? 'Approved'
           : 'Pending'
         : 'Not Uploaded',
-      workOrderStatus: workOrder ? 'Issued' : 'Not Issued',
+      workOrderStatus: workOrder ? (workOrder.status === 'completed' ? 'Completed' : 'Issued') : 'Not Issued',
       contractStatus,
     });
   }
@@ -102,7 +106,9 @@ exports.getContractDetails = async (adminId, tenderId) => {
     tenderId,
     isWinner: true,
   }).populate('vendorId', 'name email');
-  const po = await PurchaseOrder.findOne({ tenderId }).select('pdfFile status');
+  const po = await PurchaseOrder.findOne({ tenderId })
+    .sort({ createdAt: -1 })
+    .select('pdfFile status');
   const agreement = await Agreement.findOne({ tenderId });
   const workOrder = await WorkOrder.findOne({ tenderId });
   const documents = [];
@@ -131,25 +137,25 @@ exports.getContractDetails = async (adminId, tenderId) => {
     });
   }
 
-  if (workOrder?.file) {
+  if (workOrder?.pdfFile) {
     documents.push({
       label: 'Work Order',
-      fileId: workOrder.file,
-      url: `/admin/contract-management/file/${workOrder.file}`,
+      fileId: workOrder.pdfFile,
+      url: `/admin/contract-management/file/${workOrder.pdfFile}`,
     });
   }
   return {
     title: tender.title,
     dept: tender.dept,
-    publisher: tender.createdBy.name,
+    publisher: tender.createdBy?.name || 'Unknown Publisher',
     awardedOn: tender.updatedAt.toDateString(),
 
     totalBids: bids.length,
     winner: winnerBid
       ? {
-          name: winnerBid.vendorId?.name || 'Vendor',
-          amount: typeof winnerBid.quotes?.amount === 'number' ? winnerBid.quotes.amount : 0,
-        }
+        name: winnerBid.vendorId?.name || 'Vendor',
+        amount: typeof winnerBid.quotes?.amount === 'number' ? winnerBid.quotes.amount : 0,
+      }
       : null,
 
     timeline: [
@@ -159,6 +165,7 @@ exports.getContractDetails = async (adminId, tenderId) => {
       { label: 'Agreement Uploaded', done: !!agreement?.uploadedByVendor },
       { label: 'Agreement Approved', done: !!agreement?.approvedByPublisher },
       { label: 'Work Order Issued', done: !!workOrder },
+      { label: 'Work Completed', done: workOrder?.status === 'completed' },
     ],
     documents,
   };

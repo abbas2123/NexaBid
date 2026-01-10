@@ -73,9 +73,9 @@ exports.getTenderFin = async (req, res) => {
     const tenderId = req.params.id;
 
     const { tender, bid } = await tenderBidService.getFinancialBidData(tenderId, req.user._id);
-if(bid&&bid.finReviewStatus==='accepted'){
-  return res.redirect(`/user/my-participation/tender/${tenderId}`);
-}
+    if (bid && bid.finReviewStatus === 'accepted') {
+      return res.redirect(`/user/my-participation/tender/${tenderId}`);
+    }
     return res.render('vendor/tenderFin', {
       layout: LAYOUTS.USER_LAYOUT,
       tender,

@@ -1,5 +1,3 @@
-
-
 const Property = require('../models/property');
 
 exports.getLandingPageData = async () => {
@@ -11,7 +9,7 @@ exports.getLandingPageData = async () => {
     auctionEndsAt: { $gte: now },
     status: 'published',
   })
-    .sort({ auctionEndsAt: 1 })
+    .sort({ auctionEndsAt: 1, _id: 1 })
     .limit(6);
 
   const upcomingAuctions = await Property.find({
@@ -19,13 +17,15 @@ exports.getLandingPageData = async () => {
     auctionStartsAt: { $gt: now },
     status: 'published',
   })
-    .sort({ auctionStartsAt: 1 })
+    .sort({ auctionStartsAt: 1, _id: 1 })
     .limit(6);
 
   const featuredProperties = await Property.find({
     deletedAt: null,
     verificationStatus: 'approved',
-  }).limit(6);
+  })
+    .sort({ _id: -1 })
+    .limit(6);
 
   return {
     liveAuctions,

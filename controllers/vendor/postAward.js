@@ -1,5 +1,3 @@
-
-
 const postAwardService = require('../../services/vendor/postAward');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
@@ -11,11 +9,11 @@ exports.getPublisherPostAwardPage = async (req, res) => {
 
     const result = await postAwardService.getPublisherPostAwardService(tenderId, userId);
     if (result.redirectToTracking) {
-      return res.redirect(`/vendor/work-order/tracking/${result.workOrderId}`);
+      return res.redirect(`/publisher/work-orders/${result.workOrderId}/tracking`);
     }
 
     if (result.redirectToEvaluation) return res.redirect(result.url);
-console.log('status',result.po);
+    console.log('status', result.po);
     res.render(VIEWS.PROFILE_POST_AWARD, {
       layout: LAYOUTS.USER_LAYOUT,
       ...result,

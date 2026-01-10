@@ -8,7 +8,6 @@ const { vendorVerificationSchema } = require('../../validators/vendor.js');
 
 console.log('🔥 vendor router LOADED');
 
-
 const router = express.Router();
 
 router.get(
@@ -24,6 +23,14 @@ router.post(
   vendorUploads.array('documents', 5),
   validate(vendorVerificationSchema),
   vendorApplication.submitVendorApplication
+);
+
+const workOrderController = require('../../controllers/vendor/workOrderController');
+router.get(
+  '/work-order/completed/:id',
+  authMiddleware.isAuthenticated,
+  authMiddleware.protectRoute,
+  workOrderController.workOrderCompletionPage
 );
 
 module.exports = router;

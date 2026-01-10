@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const tenderContorller = require('../../controllers/admin/tenderManagement');
 

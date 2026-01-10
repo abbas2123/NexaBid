@@ -50,13 +50,11 @@ exports.getAllTransactions = async (req, res) => {
     console.log('📄 Loading all transactions for user:', userId);
     console.log('📋 Query params:', req.query);
 
-
     const wallet = await Wallet.findOne({ userId });
 
     if (!wallet) {
       return res.redirect('/wallet');
     }
-
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -67,19 +65,15 @@ exports.getAllTransactions = async (req, res) => {
     const { fromDate } = req.query;
     const { toDate } = req.query;
 
-
     const query = { userId };
-
 
     if (transactionType && ['credit', 'debit'].includes(transactionType)) {
       query.type = transactionType;
     }
 
-
     if (source) {
       query.source = source;
     }
-
 
     if (fromDate || toDate) {
       query.createdAt = {};
@@ -99,7 +93,6 @@ exports.getAllTransactions = async (req, res) => {
 
     console.log('🔍 Filter query:', query);
 
-
     const transactions = await WalletTransaction.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -110,7 +103,6 @@ exports.getAllTransactions = async (req, res) => {
     const totalPages = Math.ceil(totalTransactions / limit);
 
     console.log(`📊 Found ${transactions.length} transactions (Page ${page}/${totalPages})`);
-
 
     const allSources = await WalletTransaction.distinct('source', { userId });
 
@@ -195,7 +187,6 @@ exports.createAddFundsOrder = async (req, res) => {
 
     console.log('📝 Creating order request:', { amount, userId });
 
-
     if (!amount || amount < 100) {
       console.log('❌ Invalid amount:', amount);
       return res.json({
@@ -203,7 +194,6 @@ exports.createAddFundsOrder = async (req, res) => {
         message: ERROR_MESSAGES.MINIMUM_AMOUNT_REQUIRED,
       });
     }
-
 
     const razorpayKeyId = process.env.RAZORPAY_KEY_ID;
     const razorpayKeySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -222,7 +212,6 @@ exports.createAddFundsOrder = async (req, res) => {
       key_id: razorpayKeyId,
       key_secret: razorpayKeySecret,
     });
-
 
     const timestamp = Date.now().toString().slice(-10);
     const userIdShort = userId.toString().slice(-8);
@@ -251,18 +240,13 @@ exports.createAddFundsOrder = async (req, res) => {
     } catch (sdkError) {
       console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
 
-      // Fallback using Axios
       const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString('base64');
-      const response = await axios.post(
-        'https://api.razorpay.com/v1/orders',
-        orderOptions,
-        {
-          headers: {
-            'Authorization': `Basic ${auth}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const response = await axios.post('https://api.razorpay.com/v1/orders', orderOptions, {
+        headers: {
+          Authorization: `Basic ${auth}`,
+          'Content-Type': 'application/json',
+        },
+      });
       razorOrder = response.data;
       console.log('✅ Razorpay order created via Axios Fallback:', razorOrder.id);
     }
@@ -304,8 +288,6 @@ exports.verifyAddFundsPayment = async (req, res) => {
       userId,
     });
 
-
-
     const generatedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
@@ -321,13 +303,11 @@ exports.verifyAddFundsPayment = async (req, res) => {
 
     console.log('✅ Signature verified successfully');
 
-
     let wallet = await Wallet.findOne({ userId });
     if (!wallet) {
       console.log('⚠️ Creating new wallet for user');
       wallet = await Wallet.create({ userId, balance: 0 });
     }
-
 
     const previousBalance = wallet.balance;
     wallet.balance += amount;
@@ -339,7 +319,6 @@ exports.verifyAddFundsPayment = async (req, res) => {
       amountAdded: amount,
       newBalance: wallet.balance,
     });
-
 
     await WalletTransaction.create({
       walletId: wallet._id,

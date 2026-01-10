@@ -10,7 +10,7 @@ const routerSearch = require('./user/search');
 const notification = require('./user/notification');
 const adminPropertyRoutes = require('./admin/propertyRoute');
 const adminTenderRoutes = require('./admin/tenderRoute');
-const adminContractRoutes = require('./admin/contractManagemet');
+const adminContractRoutes = require('./admin/contractManagement');
 const adminCouponRoutes = require('./admin/couponManagement');
 const userStatusRoutes = require('./user/status');
 const userProfileRoutes = require('./user/myProfile');
@@ -24,9 +24,16 @@ const chatRoute = require('./chat/routerChat');
 const workOrder = require('./vendor/workOrders');
 
 module.exports = function registerRoutes(app) {
-  // Split routes to avoid 'Unexpected ?' PathError in strict express routers
-  app.get('/secure-files/:fileId/:filename', require('../middlewares/authMiddleware').protectRoute, require('../controllers/common/fileProxy').downloadSecureFile);
-  app.get('/secure-files/:fileId', require('../middlewares/authMiddleware').protectRoute, require('../controllers/common/fileProxy').downloadSecureFile);
+  app.get(
+    '/secure-files/:fileId/:filename',
+    require('../middlewares/authMiddleware').protectRoute,
+    require('../controllers/common/fileProxy').downloadSecureFile
+  );
+  app.get(
+    '/secure-files/:fileId',
+    require('../middlewares/authMiddleware').protectRoute,
+    require('../controllers/common/fileProxy').downloadSecureFile
+  );
 
   app.use('/', landingRoute);
   app.use('/auth', authRoute);

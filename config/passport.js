@@ -1,6 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const User = require('../models/user'); // Capital U for model
+const User = require('../models/user');
 
 passport.use(
   new GoogleStrategy(
@@ -16,30 +16,24 @@ passport.use(
 
         if (!email) return done(new Error('Google did not return email'), null);
 
-        // Step 1: Find user by Google Id first
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
           return done(null, user);
         }
 
-        // Step 2: Find user by email
         user = await User.findOne({ email });
 
         if (user) {
-          // If existing NORMAL user (local auth)
           if (!user.googleId) {
-            // ❌ Block login via Google
             return done(null, false, {
               message: 'email_exists_password_login_required',
             });
           }
 
-          // Should not reach here normally
           return done(null, user);
         }
 
-        // Step 3: Create a NEW GOOGLE user
         const newUser = await User.create({
           name: profile.displayName,
           email,

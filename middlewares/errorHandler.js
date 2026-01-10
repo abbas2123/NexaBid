@@ -1,6 +1,3 @@
-
-
-
 const multer = require('multer');
 const statusCode = require('../utils/statusCode');
 const { LAYOUTS, TITLES } = require('../utils/constants');
@@ -24,7 +21,6 @@ module.exports = (err, req, res, _next) => {
     });
   }
 
-  
   if (err instanceof multer.MulterError) {
     return res.status(statusCode.BAD_REQUEST).json({
       success: false,

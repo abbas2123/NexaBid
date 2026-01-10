@@ -9,8 +9,8 @@ const seedTenders = async () => {
 
     const vendor = await User.findOne({ role: 'vendor' });
     if (!vendor) throw new Error('No admin user found');
-const admin = await User.findOne({role:'admin'})
-    Tender.deleteMany({createdBy:admin._d})// optional – remove old seed
+    const admin = await User.findOne({ role: 'admin' });
+    Tender.deleteMany({ createdBy: admin._d }); // optional – remove old seed
 
     const now = new Date();
 

@@ -6,7 +6,6 @@ exports.getPropertyPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
 
-    
     const filters = {
       type: req.query.type || '',
       district: req.query.district || '',
@@ -15,13 +14,13 @@ exports.getPropertyPage = async (req, res) => {
     };
 
     const { properties, pagination } = await propertyService.getProperties(page, filters);
-console.log(properties);
+    console.log(properties);
     res.render('user/property', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       pagination,
-      applied: filters, 
+      applied: filters,
     });
   } catch (error) {
     console.error('Property page error:', error);
@@ -129,7 +128,7 @@ exports.postCreateProperty = async (req, res) => {
     });
   } catch (err) {
     console.error('Create Property Error:', err);
-    err.statusCode = statusCode.INTERNAL_ERROR
+    err.statusCode = statusCode.INTERNAL_ERROR;
     return res
       .status(err.statusCode)
       .json({ success: false, message: err.message || 'Something went wrong' });

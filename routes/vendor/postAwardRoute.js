@@ -8,7 +8,6 @@ const upload = require('../../middlewares/upload');
 
 const router = express.Router();
 
-
 router.get(
   '/tender/:id/post-award',
   auth.protectRoute,
@@ -46,7 +45,7 @@ router.post(
   agreementController.rejectAgreement
 );
 
-router.get('/tender/:tenderId/workorder/issue', auth.protectRoute, poController.issuePage);
+router.get('/tender/:id/workorder/issue', auth.protectRoute, poController.issuePage);
 
 router.post(
   '/tender/:tenderId/workorder',
@@ -61,7 +60,7 @@ router.get(
   auth.protectRoute,
   workOrderController.trackingPage
 );
-router.post('/work-orders/:workOrderId/note', auth.protectRoute, workOrderController.addNote);
+router.post('/work-orders/:workOrderId/notes', auth.protectRoute, workOrderController.addNote);
 router.post(
   '/work-orders/:id/milestones/:mid/review',
   auth.protectRoute,

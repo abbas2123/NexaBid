@@ -1,5 +1,3 @@
-
-
 const Notification = require('../models/notification');
 
 exports.sendNotification = async (userId, message, link = '#', io) => {

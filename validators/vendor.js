@@ -1,12 +1,9 @@
-
-
 const { z } = require('zod');
 const { VALIDATION_MESSAGES } = require('../utils/constants');
 
 const vendorVerificationSchema = z
   .object({
     actionType: z.enum(['scan', 'submit']),
-
 
     businessName: z.preprocess((v) => {
       if (!v) return undefined;
@@ -46,9 +43,7 @@ const vendorVerificationSchema = z
     terms: z.preprocess((v) => v === 'on', z.boolean()).optional(),
   })
   .superRefine((data, ctx) => {
-
     if (data.actionType === 'scan') return;
-
 
     if (data.actionType === 'submit' && data.isConfirmed !== 'true') {
       ctx.addIssue({
@@ -57,7 +52,6 @@ const vendorVerificationSchema = z
         path: ['isConfirmed'],
       });
     }
-
 
     if (data.actionType === 'submit' && data.terms !== true) {
       ctx.addIssue({

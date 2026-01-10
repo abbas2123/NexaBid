@@ -5,7 +5,6 @@ module.exports = (io) => {
     console.log('🔌 Socket connected:', socket.user?.name || socket.user?._id || 'Unknown User');
 
     socket.on('joinUser', (userId) => {
-      // BUG #3 FIX: Security - Prevent spying
       if (userId.toString() !== socket.user?._id.toString()) {
         console.warn(`Security: User ${socket.user?._id} tried to join room ${userId}`);
         return;

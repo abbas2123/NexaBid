@@ -1,5 +1,3 @@
-
-
 const crypto = require('crypto');
 const cloudinary = require('../../config/cloudinary');
 const File = require('../../models/File');
@@ -16,7 +14,6 @@ exports.creatTenderService = async (user, body, files) => {
   if (!body.category) throw new Error(ERROR_MESSAGES.CATEGORY_REQUIRED);
   if (!body.bidEndAt) throw new Error(ERROR_MESSAGES.BID_END_DATE_REQUIRED);
 
-  
   const existingChecksums = await File.find({ relatedType: 'tender' }).then((f) =>
     f.map((x) => x.checksum)
   );
@@ -55,7 +52,6 @@ exports.creatTenderService = async (user, body, files) => {
           .end(file.buffer);
       });
 
-      
       const fileDoc = await File.create({
         ownerId: user._id,
         relatedType: 'tender',
@@ -80,7 +76,6 @@ exports.creatTenderService = async (user, body, files) => {
     }
   }
 
-  
   const tender = await Tender.create({
     title: body.title,
     dept: body.dept,
@@ -103,7 +98,6 @@ exports.creatTenderService = async (user, body, files) => {
     files: fileRefsTosave,
   });
 
-  
   await File.updateMany(
     { _id: { $in: fileRefsTosave.map((f) => f.fileId) } },
     { $set: { relatedId: tender._id } }

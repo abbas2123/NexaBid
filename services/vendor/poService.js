@@ -8,17 +8,17 @@ const generatePONumber = require('../../utils/poNumber');
 const notificationService = require('../notificationService');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 
-
 const uploadPDF = (buffer, filename) =>
   new Promise((resolve, reject) => {
     cloudinary.uploader
-      .upload_stream({
-        resource_type: 'raw',
-        folder: 'post_award/po_pdfs',
-        public_id: filename, // FIX: No extension for RAW resources signature match
-        type: 'authenticated',
-      }, (e, r) =>
-        e ? reject(e) : resolve(r)
+      .upload_stream(
+        {
+          resource_type: 'raw',
+          folder: 'post_award/po_pdfs',
+          public_id: filename,
+          type: 'authenticated',
+        },
+        (e, r) => (e ? reject(e) : resolve(r))
       )
       .end(buffer);
   });
@@ -33,212 +33,192 @@ exports.createPO = async ({ tenderId, publisher, form, io }) => {
   const vendor = winnerBid.vendorId;
   const poNumber = generatePONumber();
 
+  const colors = {
+    primary: '#1e3a8a',
+    secondary: '#0ea5e9',
+    accent: '#10b981',
+    danger: '#ef4444',
+    text: '#1f2937',
+    lightText: '#6b7280',
+    lightBg: '#f3f4f6',
+    border: '#d1d5db',
+    white: '#ffffff',
+  };
+  const doc = new PDFDocument({
+    margin: 40,
+    bufferPages: true,
+  });
+  const buffers = [];
+  doc.on('data', (d) => buffers.push(d));
 
-  
-const colors = {
-  primary: '#1e3a8a', // Deep Blue
-  secondary: '#0ea5e9', // Sky Blue
-  accent: '#10b981', // Green
-  danger: '#ef4444', // Red
-  text: '#1f2937', // Dark Gray
-  lightText: '#6b7280', // Medium Gray
-  lightBg: '#f3f4f6', // Light Gray
-  border: '#d1d5db', // Border Gray
-  white: '#ffffff',
-};
-const doc = new PDFDocument({
-  margin: 40,
-  bufferPages: true,
-});
-const buffers = [];
-doc.on('data', (d) => buffers.push(d));
+  const pdfBuffer = await new Promise((resolve) => {
+    doc.on('end', () => resolve(Buffer.concat(buffers)));
 
- const pdfBuffer = await new Promise((resolve) => {
-   doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.rect(0, 0, doc.page.width, 100).fill(colors.primary);
 
-   // ============ HEADER SECTION ============
-   // Background Rectangle for Header
-   doc.rect(0, 0, doc.page.width, 100).fill(colors.primary);
+    doc.fontSize(28).font('Helvetica-Bold').fillColor(colors.white).text('PURCHASE ORDER', 50, 20);
 
-   // Company Name / Title
-   doc.fontSize(28).font('Helvetica-Bold').fillColor(colors.white).text('PURCHASE ORDER', 50, 20);
+    doc
+      .fontSize(12)
+      .font('Helvetica')
+      .fillColor(colors.secondary)
+      .text(`PO #${poNumber}`, 50, 55, {
+        align: 'right',
+        width: doc.page.width - 100,
+      });
 
-   // PO Number on Right Side
-   doc
-     .fontSize(12)
-     .font('Helvetica')
-     .fillColor(colors.secondary)
-     .text(`PO #${poNumber}`, 50, 55, {
-       align: 'right',
-       width: doc.page.width - 100,
-     });
+    doc.moveDown(0.5);
 
-   doc.moveDown(0.5);
+    doc
+      .strokeColor(colors.secondary)
+      .lineWidth(2)
+      .moveTo(40, doc.y)
+      .lineTo(doc.page.width - 40, doc.y)
+      .stroke();
 
-   // ============ DIVIDER ============
-   doc
-     .strokeColor(colors.secondary)
-     .lineWidth(2)
-     .moveTo(40, doc.y)
-     .lineTo(doc.page.width - 40, doc.y)
-     .stroke();
+    doc.moveDown(1);
 
-   doc.moveDown(1);
+    doc
+      .fontSize(11)
+      .font('Helvetica-Bold')
+      .fillColor(colors.primary)
+      .text('ORDER DETAILS', { underline: true });
 
-   // ============ ORDER DETAILS SECTION ============
-   doc
-     .fontSize(11)
-     .font('Helvetica-Bold')
-     .fillColor(colors.primary)
-     .text('ORDER DETAILS', { underline: true });
+    doc.moveDown(0.4);
 
-   doc.moveDown(0.4);
+    const details = [
+      { label: 'Tender Title', value: tender.title, width: 250 },
+      { label: 'Vendor Name', value: vendor.name || vendor.companyName, width: 250 },
+      { label: 'Contract Amount', value: `â‚¹${form.amount.toLocaleString('en-IN')}`, width: 250 },
+      {
+        label: 'Start Date',
+        value: new Date(form.startDate).toLocaleDateString('en-IN'),
+        width: 250,
+      },
+      { label: 'End Date', value: new Date(form.endDate).toLocaleDateString('en-IN'), width: 250 },
+      { label: 'Issue Date', value: new Date().toLocaleDateString('en-IN'), width: 250 },
+    ];
 
-   // Create a table-like structure for order details
-   const details = [
-     { label: 'Tender Title', value: tender.title, width: 250 },
-     { label: 'Vendor Name', value: vendor.name || vendor.companyName, width: 250 },
-     { label: 'Contract Amount', value: `â‚¹${form.amount.toLocaleString('en-IN')}`, width: 250 },
-     {
-       label: 'Start Date',
-       value: new Date(form.startDate).toLocaleDateString('en-IN'),
-       width: 250,
-     },
-     { label: 'End Date', value: new Date(form.endDate).toLocaleDateString('en-IN'), width: 250 },
-     { label: 'Issue Date', value: new Date().toLocaleDateString('en-IN'), width: 250 },
-   ];
+    const detailStartY = doc.y;
+    const columnWidth = (doc.page.width - 80) / 2;
 
-   const detailStartY = doc.y;
-   const columnWidth = (doc.page.width - 80) / 2;
+    details.forEach((detail, index) => {
+      const row = Math.floor(index / 2);
+      const col = index % 2;
+      const x = 50 + col * (columnWidth + 20);
+      const y = detailStartY + row * 45;
 
-   details.forEach((detail, index) => {
-     const row = Math.floor(index / 2);
-     const col = index % 2;
-     const x = 50 + col * (columnWidth + 20);
-     const y = detailStartY + row * 45;
+      doc.rect(x - 10, y - 5, columnWidth, 35).fillAndStroke(colors.lightBg, colors.border);
 
-     // Background for each detail box
-     doc.rect(x - 10, y - 5, columnWidth, 35).fillAndStroke(colors.lightBg, colors.border);
+      doc
+        .fontSize(9)
+        .font('Helvetica-Bold')
+        .fillColor(colors.lightText)
+        .text(detail.label, x, y, { width: columnWidth - 10 });
 
-     // Label
-     doc
-       .fontSize(9)
-       .font('Helvetica-Bold')
-       .fillColor(colors.lightText)
-       .text(detail.label, x, y, { width: columnWidth - 10 });
+      doc
+        .fontSize(11)
+        .font('Helvetica-Bold')
+        .fillColor(colors.primary)
+        .text(detail.value, x, y + 14, { width: columnWidth - 10 });
+    });
 
-     // Value
-     doc
-       .fontSize(11)
-       .font('Helvetica-Bold')
-       .fillColor(colors.primary)
-       .text(detail.value, x, y + 14, { width: columnWidth - 10 });
-   });
+    doc.y = detailStartY + 135;
+    doc.moveDown(0.5);
 
-   doc.y = detailStartY + 135;
-   doc.moveDown(0.5);
+    doc.rect(40, doc.y, doc.page.width - 80, 1).fill(colors.secondary);
 
-   // ============ TERMS & CONDITIONS SECTION ============
-   // Background for Terms Section
-   doc.rect(40, doc.y, doc.page.width - 80, 1).fill(colors.secondary);
+    doc.moveDown(0.5);
 
-   doc.moveDown(0.5);
+    doc
+      .fontSize(11)
+      .font('Helvetica-Bold')
+      .fillColor(colors.primary)
+      .text('TERMS & CONDITIONS', { underline: true });
 
-   doc
-     .fontSize(11)
-     .font('Helvetica-Bold')
-     .fillColor(colors.primary)
-     .text('TERMS & CONDITIONS', { underline: true });
+    doc.moveDown(0.3);
 
-   doc.moveDown(0.3);
+    const termsStartY = doc.y;
+    const termsText = form.terms || 'No specific terms provided for this purchase order.';
 
-   // Terms box with background
-   const termsStartY = doc.y;
-   const termsText = form.terms || 'No specific terms provided for this purchase order.';
+    doc
+      .rect(40, termsStartY - 5, doc.page.width - 80, 100)
+      .fillAndStroke(colors.lightBg, colors.border);
 
-   doc
-     .rect(40, termsStartY - 5, doc.page.width - 80, 100)
-     .fillAndStroke(colors.lightBg, colors.border);
+    doc
+      .fontSize(10)
+      .font('Helvetica')
+      .fillColor(colors.text)
+      .text(termsText, 50, termsStartY + 5, {
+        width: doc.page.width - 100,
+        align: 'left',
+      });
 
-   doc
-     .fontSize(10)
-     .font('Helvetica')
-     .fillColor(colors.text)
-     .text(termsText, 50, termsStartY + 5, {
-       width: doc.page.width - 100,
-       align: 'left',
-     });
+    doc.moveDown(8);
 
-   doc.moveDown(8);
+    doc.moveDown(0.5);
 
-   // ============ IMPORTANT NOTES SECTION ============
-   doc.moveDown(0.5);
+    doc
+      .fontSize(10)
+      .font('Helvetica-Bold')
+      .fillColor(colors.danger)
+      .text('âš  IMPORTANT NOTES:', { underline: true });
 
-   doc
-     .fontSize(10)
-     .font('Helvetica-Bold')
-     .fillColor(colors.danger)
-     .text('âš  IMPORTANT NOTES:', { underline: true });
+    doc.moveDown(0.2);
 
-   doc.moveDown(0.2);
+    const notes = [
+      'Payment must be completed within 30 days of invoice date.',
+      'All deliverables must meet agreed quality standards.',
+      'Delayed delivery may result in contract penalty.',
+    ];
 
-   const notes = [
-     'Payment must be completed within 30 days of invoice date.',
-     'All deliverables must meet agreed quality standards.',
-     'Delayed delivery may result in contract penalty.',
-   ];
+    notes.forEach((note) => {
+      doc
+        .fontSize(9)
+        .font('Helvetica')
+        .fillColor(colors.text)
+        .text(`â€¢ ${note}`, 50, doc.y, { width: doc.page.width - 100 });
+      doc.moveDown(0.25);
+    });
 
-   notes.forEach((note) => {
-     doc
-       .fontSize(9)
-       .font('Helvetica')
-       .fillColor(colors.text)
-       .text(`â€¢ ${note}`, 50, doc.y, { width: doc.page.width - 100 });
-     doc.moveDown(0.25);
-   });
+    doc.moveDown(1);
 
-   doc.moveDown(1);
+    const footerY = doc.page.height - 80;
 
-   // ============ FOOTER SECTION ============
-   const footerY = doc.page.height - 80;
+    doc
+      .strokeColor(colors.secondary)
+      .lineWidth(1)
+      .moveTo(40, footerY)
+      .lineTo(doc.page.width - 40, footerY)
+      .stroke();
 
-   // Divider before footer
-   doc
-     .strokeColor(colors.secondary)
-     .lineWidth(1)
-     .moveTo(40, footerY)
-     .lineTo(doc.page.width - 40, footerY)
-     .stroke();
+    doc
+      .fontSize(9)
+      .font('Helvetica')
+      .fillColor(colors.lightText)
+      .text(
+        'This is an electronically generated Purchase Order. No signature is required.',
+        50,
+        footerY + 10,
+        {
+          width: doc.page.width - 100,
+          align: 'center',
+        }
+      );
 
-   // Footer content
-   doc
-     .fontSize(9)
-     .font('Helvetica')
-     .fillColor(colors.lightText)
-     .text(
-       'This is an electronically generated Purchase Order. No signature is required.',
-       50,
-       footerY + 10,
-       {
-         width: doc.page.width - 100,
-         align: 'center',
-       }
-     );
+    doc
+      .fontSize(8)
+      .fillColor(colors.lightText)
+      .text(`Generated on: ${new Date().toLocaleString('en-IN')}`, {
+        align: 'center',
+      });
 
-   doc
-     .fontSize(8)
-     .fillColor(colors.lightText)
-     .text(`Generated on: ${new Date().toLocaleString('en-IN')}`, {
-       align: 'center',
-     });
+    doc.fontSize(8).fillColor(colors.lightText).text(`Tender ID: ${tenderId}`, {
+      align: 'center',
+    });
 
-   doc.fontSize(8).fillColor(colors.lightText).text(`Tender ID: ${tenderId}`, {
-     align: 'center',
-   });
-
-   doc.end();
- });
-
+    doc.end();
+  });
 
   const cld = await uploadPDF(pdfBuffer, poNumber);
 
@@ -254,7 +234,7 @@ doc.on('data', (d) => buffers.push(d));
       public_id: cld.public_id,
       resource_type: cld.resource_type,
       type: cld.type,
-      version: cld.version
+      version: cld.version,
     },
   });
   await PO.updateMany(
@@ -275,7 +255,6 @@ doc.on('data', (d) => buffers.push(d));
     status: 'generated',
   });
 
-
   if (io) {
     io.to(vendor._id.toString()).emit('newNotification', {
       title: 'Purchase Order Generated',
@@ -295,12 +274,12 @@ doc.on('data', (d) => buffers.push(d));
 };
 
 exports.getPOData = async (tenderId) => {
-  // DEBUG: Check all POs for this tender
   const allPos = await PO.find({ tenderId }).select('poNumber status createdAt pdfFile');
   console.log(`[PO Debug] Found ${allPos.length} POs for tender ${tenderId}:`);
-  allPos.forEach(p => console.log(` - ID: ${p._id}, Status: ${p.status}, Created: ${p.createdAt}, PO#: ${p.poNumber}`));
+  allPos.forEach((p) =>
+    console.log(` - ID: ${p._id}, Status: ${p.status}, Created: ${p.createdAt}, PO#: ${p.poNumber}`)
+  );
 
-  // Force fetch latest PO regardless of status to fix persistence of old files
   const po = await PO.findOne({ tenderId })
     .sort({ createdAt: -1 })
     .populate('vendorId')

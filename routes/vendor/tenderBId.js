@@ -1,5 +1,3 @@
-
-
 const express = require('express');
 const authControler = require('../../controllers/vendor/tenderBid');
 const authMiddleware = require('../../middlewares/authMiddleware');

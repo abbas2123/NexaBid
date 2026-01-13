@@ -1,0 +1,62 @@
+<% if (pagination && pagination.totalPages> 1) { %>
+<div class="flex justify-center mt-12">
+  <nav class="flex items-center gap-2">
+    <!-- PREVIOUS BUTTON -->
+    <a
+      href="?page=<%= pagination.currentPage - 1 %><%= typeof queryParams !== 'undefined' ? queryParams : '' %>"
+      class="flex items-center justify-center size-10 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors <%= !pagination.hasPrevPage ? 'opacity-40 pointer-events-none' : '' %>"
+    >
+      <span class="material-symbols-outlined text-[20px]">chevron_left</span>
+    </a>
+
+    <!-- PAGE NUMBERS WITH SMART DISPLAY -->
+    <% const currentPage=pagination.currentPage; const totalPages=pagination.totalPages; let
+    startPage, endPage; if (totalPages <=7) { startPage=1; endPage=totalPages; } else { if
+    (currentPage <=3) { startPage=1; endPage=5; } else if (currentPage>= totalPages - 2) { startPage
+    = totalPages - 4; endPage = totalPages; } else { startPage = currentPage - 2; endPage =
+    currentPage + 2; } } %>
+
+    <!-- First Page (if not in range) -->
+    <% if (startPage> 1) { %>
+    <a
+      href="?page=1<%= typeof queryParams !== 'undefined' ? queryParams : '' %>"
+      class="flex items-center justify-center size-10 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium"
+    >
+      1
+    </a>
+    <% if (startPage> 2) { %>
+    <span class="flex items-center justify-center size-10 text-slate-400">...</span>
+    <% } %> <% } %>
+
+    <!-- Page Number Range -->
+    <% for (let i=startPage; i <=endPage; i++) { %>
+    <a
+      href="?page=<%= i %><%= typeof queryParams !== 'undefined' ? queryParams : '' %>"
+      class="flex items-center justify-center size-10 rounded-lg text-sm font-medium transition-colors <%= i === currentPage ? 'bg-primary text-white shadow-md shadow-primary/30' : 'border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800' %>"
+    >
+      <%= i %>
+    </a>
+    <% } %>
+
+    <!-- Last Page (if not in range) -->
+    <% if (endPage < totalPages) { %> <% if (endPage < totalPages - 1) { %>
+    <span class="flex items-center justify-center size-10 text-slate-400">...</span>
+    <% } %>
+    <a
+      href="?page=<%= totalPages %><%= typeof queryParams !== 'undefined' ? queryParams : '' %>"
+      class="flex items-center justify-center size-10 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium"
+    >
+      <%= totalPages %>
+    </a>
+    <% } %>
+
+    <!-- NEXT BUTTON -->
+    <a
+      href="?page=<%= pagination.currentPage + 1 %><%= typeof queryParams !== 'undefined' ? queryParams : '' %>"
+      class="flex items-center justify-center size-10 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors <%= !pagination.hasNextPage ? 'opacity-40 pointer-events-none' : '' %>"
+    >
+      <span class="material-symbols-outlined text-[20px]">chevron_right</span>
+    </a>
+  </nav>
+</div>
+<% } %>

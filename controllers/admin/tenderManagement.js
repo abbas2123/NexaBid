@@ -1,143 +1,85 @@
-// controllers/admin/tenderManagement.js
-const Tender = require("../../models/tender");
-const File = require("../../models/File");
-const notificationService= require('../../services/notificationService');
+const statusCode = require('../../utils/statusCode');
+const {
+  VIEWS,
+  LAYOUTS,
+  ERROR_MESSAGES,
+  TENDER_STATUS,
+  SUCCESS_MESSAGES,
+} = require('../../utils/constants');
+const TenderService = require('../../services/admin/tenderManagement');
 exports.getAdminTenderPage = async (req, res) => {
   try {
-    const tenders = await Tender.find()
-      .populate("createdBy", "name email")
-      .sort({ createdAt: -1 })
-      .lean();
-
-    return res.render("admin/tenderManagement", {
-      layout: "layouts/admin/adminLayout",
+    const page = parseInt(req.query.page) || 1;
+    const filters = {
+      status: req.query.status || '',
+      search: req.query.search || '',
+    };
+    const { tenders, pagination } = await TenderService.getAllTenders(page, filters);
+    return res.render(VIEWS.ADMIN_TENDER_MANAGEMENT, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      title: 'Tender Management',
       tenders,
-      currentPage: "tenders",
+      pagination,
+      applied: filters,
+      currentPage: 'tender-management',
     });
   } catch (err) {
-    console.error("Admin Tender Management error:", err);
-    return res.status(500).render("error", {
-      layout: "layouts/admin/adminLayout",
-      message: "Failed to load tenders",
+    console.error('Admin Tender Management error:', err);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.ADMIN_LAYOUT,
+      message: ERROR_MESSAGES.LOAD_TENDERS_FAILED,
     });
   }
 };
-
 exports.getTenderDetails = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const tender = await Tender.findById(id)
-      .populate("createdBy", "name email")
-      .lean();
-
+    const tender = await TenderService.getTenderById(id);
     if (!tender) {
-      return res.status(404).json({
-        success: false,
-        message: "Tender not found",
-      });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ success: false, message: ERROR_MESSAGES.TENDER_NOT_FOUND });
     }
-
-    const files = await File.find({
-      relatedType: "tender",
-      relatedId: id,
-    }).lean();
-
     return res.json({
       success: true,
-      tender: {
-        ...tender,
-        files: files.map((f) => ({
-          fileId: f._id,
-          originalName: f.fileName,
-          url: f.fileUrl,
-          size: f.size,
-        })),
-      },
+      tender,
     });
   } catch (error) {
-    console.error("Tender fetch error", error);
-    return res.status(500).json({
+    console.error('Tender fetch error', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: "Server error fetching tender",
+      message: ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };
-
 exports.updateTenderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment } = req.body;
-
-    console.log(" UpdateTenderStatus ->", { id, status, comment });
-
-    const allowedStatuses = ["draft", "submitted", "published", "rejected", "closed"];
-
+    const allowedStatuses = Object.values(TENDER_STATUS);
     if (!allowedStatuses.includes(status)) {
-      console.log(" Invalid status:", status);
-      return res.status(400).json({
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: `Invalid status value: ${status}`,
+        message: `${ERROR_MESSAGES.INVALID_STATUS}: ${status}`,
       });
     }
-
-    const tender = await Tender.findById(id);
-
+    const io = req.app.get('io');
+    const tender = await TenderService.updateTenderStatus(id, status, comment, io);
     if (!tender) {
-      console.log(" Tender not found for id:", id);
-      return res.status(404).json({
+      return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: "Tender not found",
+        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
       });
     }
-
-    tender.status = status;
-   if (comment && comment.trim() !== "") {
-      tender.adminComment = comment.trim();  // VERY IMPORTANT!
-    }
-
-    await tender.save();
-
-    console.log("Tender status updated:", tender._id, tender.status);
-const io = req.app.get("io");
-
-if (status === "published") {
-  await notificationService.sendNotification(
-    tender.createdBy,  // CORRECT USER
-    "Your tender has been approved & published 🎉",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
-
-// REJECTED EVENT
-if (status === "rejected") {
-  await notificationService.sendNotification(
-    tender.createdBy,
-    "Your tender has been rejected ❌",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
-
-// CLOSED EVENT
-if (status === "closed") {
-  await notificationService.sendNotification(
-    tender.createdBy,
-    "Your tender has been closed 🚫",
-    `/tenders/${tender._id}`,
-    io
-  );
-}
     return res.json({
       success: true,
-      message: `Tender status updated to ${status}`,
+      message: `${SUCCESS_MESSAGES.STATUS_UPDATED} to ${status}`,
     });
   } catch (error) {
-    console.error("Tender status update error:", error);
-    return res.status(500).json({
+    console.error('Tender status update error:', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: error.message || "Server error updating status",
+      message: error.message || ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };

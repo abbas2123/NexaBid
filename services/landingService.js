@@ -1,35 +1,36 @@
-const Property = require("../models/property");
-
+const Property = require('../models/property');
 exports.getLandingPageData = async () => {
-  try {
-    const now = new Date();
-
-    const liveAuctions = await Property.find({
+  const now = new Date();
+  // Run queries in parallel for better performance
+  const [liveAuctions, upcomingAuctions, featuredProperties] = await Promise.all([
+    Property.find({
       isAuction: true,
       auctionStartsAt: { $lte: now },
       auctionEndsAt: { $gte: now },
-      status: "published",
+      status: 'published',
     })
-      .sort({ auctionEndsAt: 1 })
-      .limit(6);
+      .sort({ auctionEndsAt: 1, _id: 1 })
+      .limit(6),
 
-    const upcomingAuctions = await Property.find({
+    Property.find({
       isAuction: true,
       auctionStartsAt: { $gt: now },
-      status: "published",
+      status: 'published',
     })
-      .sort({ auctionStartsAt: 1 })
-      .limit(6);
+      .sort({ auctionStartsAt: 1, _id: 1 })
+      .limit(6),
 
-const featuredProperties = await Property.find({ deletedAt: null,
-    verificationStatus: "approved"}).limit(6);
+    Property.find({
+      deletedAt: null,
+      verificationStatus: 'approved',
+    })
+      .sort({ _id: -1 })
+      .limit(6)
+  ]);
 
-    return {
-      liveAuctions,
-      upcomingAuctions,
-      featuredProperties,
-    };
-  } catch (err) {
-    throw err;
-  }
+  return {
+    liveAuctions,
+    upcomingAuctions,
+    featuredProperties,
+  };
 };

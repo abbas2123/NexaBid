@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-
+const mongoose = require('mongoose');
 const couponSchema = new mongoose.Schema({
   code: {
     type: String,
@@ -29,10 +28,10 @@ const couponSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   },
+  isActive: { type: Boolean, default: true },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
-
 module.exports = mongoose.model('Coupon', couponSchema);

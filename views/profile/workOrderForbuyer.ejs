@@ -1,0 +1,711 @@
+<main
+  class="layout-container flex h-full grow flex-col bg-[#f8f9fa] dark:bg-background-dark py-6 md:py-8"
+>
+  <!-- CHANGED: Reduced side padding and increased max-width -->
+  <div class="px-4 md:px-6 lg:px-12 xl:px-16 flex flex-1 justify-center">
+    <div class="layout-content-container flex flex-col max-w-[1600px] flex-1 w-full gap-6">
+      <!-- Breadcrumbs -->
+      <nav
+        class="flex flex-wrap items-center gap-2 text-xs md:text-sm text-[#637588] dark:text-gray-400"
+      >
+        <a class="hover:text-primary hover:underline" href="/user/dashboard">Home</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <a class="hover:text-primary hover:underline" href="/user/work-orders">My Work Orders</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-[#111318] dark:text-white font-medium">Details</span>
+      </nav>
+
+      <!-- Main Card -->
+      <div
+        class="bg-white dark:bg-[#111318] rounded-xl border border-[#e5e7eb] dark:border-[#2a2e3b] shadow-sm overflow-hidden"
+      >
+        <!-- Header Section -->
+        <div class="p-5 md:p-8 border-b border-[#f0f2f4] dark:border-[#2a2e3b]">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
+            <div class="flex flex-col gap-2">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                <h1
+                  class="text-[#111318] dark:text-white text-xl md:text-2xl lg:text-3xl font-bold leading-tight tracking-[-0.015em]"
+                >
+                  Work Order: #<%= workOrder?.contractRef || 'N/A' %>
+                </h1>
+                <span
+                  class="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold w-fit <%= workOrder?.status === 'active' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300' : workOrder?.status === 'completed' ? 'bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-50 text-gray-600 dark:bg-gray-900/30 dark:text-gray-300' %>"
+                >
+                  <span
+                    class="h-1.5 w-1.5 rounded-full <%= workOrder?.status === 'active' ? 'bg-blue-600 dark:bg-blue-400' : workOrder?.status === 'completed' ? 'bg-green-600 dark:bg-green-400' : 'bg-gray-600 dark:bg-gray-400' %>"
+                  ></span>
+                  <%= workOrder?.status==='active' ? 'In Progress' : workOrder?.status==='completed'
+                  ? 'Completed' : workOrder?.status || 'Unknown' %>
+                </span>
+              </div>
+              <p class="text-[#637588] dark:text-gray-400 text-xs md:text-sm font-normal">
+                Associated Tender:
+                <span class="font-medium text-[#111318] dark:text-white">
+                  <%= workOrder?.tenderId?.title || 'N/A' %>
+                </span>
+              </p>
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+              <button
+                onclick="window.print()"
+                class="flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-[#1c212e] border border-[#e5e7eb] dark:border-[#2a2e3b] px-4 py-2 text-xs md:text-sm font-bold text-[#111318] dark:text-white hover:bg-[#f8faff] dark:hover:bg-[#2a2e3b] transition-colors"
+              >
+                <span class="material-symbols-outlined text-[18px]">print</span>
+                Print
+              </button>
+              <a
+                href="/chat/start/<%= workOrder.issuedBy._id %>/work_order/<%= workOrder._id %>"
+                class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-xs md:text-sm font-bold text-white hover:bg-blue-600 transition-colors shadow-sm"
+              >
+                <span class="material-symbols-outlined text-[18px]">chat</span>
+                Contact Publisher
+              </a>
+            </div>
+          </div>
+
+          <!-- Info Grid - WIDER: Now uses 5 columns on large screens -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6 pt-4">
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+              >
+                Issued By
+              </p>
+              <div class="flex items-center gap-2">
+                <div
+                  class="size-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs shrink-0"
+                >
+                  <%= (workOrder?.publisherId?.name || 'P' ).charAt(0).toUpperCase() %>
+                </div>
+                <p class="text-xs md:text-sm font-semibold text-[#111318] dark:text-white truncate">
+                  <%= workOrder?.publisherId?.name || 'N/A' %>
+                </p>
+              </div>
+            </div>
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+              >
+                Issue Date
+              </p>
+              <p class="text-xs md:text-sm font-semibold text-[#111318] dark:text-white">
+                <%= workOrder?.createdAt ? new Date(workOrder.createdAt).toLocaleDateString('en-IN',
+                { month: 'short' , day: 'numeric' , year: 'numeric' }) : 'N/A' %>
+              </p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+              >
+                Start Date
+              </p>
+              <p class="text-xs md:text-sm font-semibold text-[#111318] dark:text-white">
+                <%= workOrder?.startDate ? new Date(workOrder.startDate).toLocaleDateString('en-IN',
+                { month: 'short' , day: 'numeric' , year: 'numeric' }) : 'Not set' %>
+              </p>
+            </div>
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+              >
+                Completion Date
+              </p>
+              <p class="text-xs md:text-sm font-semibold text-[#111318] dark:text-white">
+                <%= workOrder?.completionDate ? new
+                Date(workOrder.completionDate).toLocaleDateString('en-IN', { month: 'short' , day:
+                'numeric' , year: 'numeric' }) : 'Not set' %>
+              </p>
+            </div>
+
+            <!-- RUPEES FORMAT - CHANGED FROM DOLLAR -->
+            <div class="flex flex-col gap-1">
+              <p
+                class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+              >
+                Contract Amount
+              </p>
+              <p class="text-lg md:text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                ₹<%= workOrder?.value?.toLocaleString('en-IN', {minimumFractionDigits: 2,
+                maximumFractionDigits: 2}) || '0.00' %>
+              </p>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="mt-6 md:mt-8 pt-6 border-t border-[#f0f2f4] dark:border-[#2a2e3b]">
+            <div
+              class="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-2 mb-2"
+            >
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-[20px]">analytics</span>
+                <span class="text-xs md:text-sm font-bold text-[#111318] dark:text-white"
+                  >Overall Completion</span
+                >
+              </div>
+              <span class="text-xs md:text-sm font-bold text-primary">
+                <% const completedMilestones=workOrder?.milestones?.filter(m=> m.status ===
+                'completed').length || 0; const totalMilestones = workOrder?.milestones?.length ||
+                1; const completionPercentage = Math.round((completedMilestones / totalMilestones) *
+                100); %> <%= completionPercentage %>%
+              </span>
+            </div>
+            <div
+              class="w-full bg-[#f0f2f4] dark:bg-[#2a2e3b] rounded-full h-2.5 md:h-3 overflow-hidden"
+            >
+              <div
+                class="bg-primary h-2.5 md:h-3 rounded-full relative transition-all duration-300"
+                style="width: <%= completionPercentage %>%"
+              >
+                <div class="absolute inset-0 bg-white/20"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Grid - WIDER: Now 70/30 split instead of 66/33 -->
+        <div
+          class="grid grid-cols-1 xl:grid-cols-[1fr_400px] gap-0 xl:divide-x divide-[#e5e7eb] dark:divide-[#2a2e3b]"
+        >
+          <!-- Left Column - Main Content (Expanded) -->
+          <div class="p-5 md:p-8 flex flex-col gap-6 md:gap-8">
+            <!-- Description -->
+            <div>
+              <h3
+                class="text-base md:text-lg font-bold text-[#111318] dark:text-white mb-4 flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-primary">description</span>
+                Description of Work
+              </h3>
+              <div
+                class="prose prose-sm prose-slate dark:prose-invert max-w-none text-[#637588] dark:text-gray-300 text-xs md:text-sm"
+              >
+                <%= workOrder?.description || 'No description provided.' %>
+              </div>
+            </div>
+
+            <div class="h-px bg-[#e5e7eb] dark:bg-[#2a2e3b] w-full"></div>
+
+            <!-- Attached Documents - Now 3 columns -->
+            <div class="flex flex-col gap-3">
+              <h3 class="text-[#111418] dark:text-white text-base md:text-lg font-bold">
+                Work Order Document
+              </h3>
+
+              <div
+                class="bg-white dark:bg-[#1a2632] rounded-xl border border-[#dce0e5] dark:border-gray-700 shadow-sm"
+              >
+                <% if (workOrder?.pdfFile) { %>
+                <div
+                  class="flex items-center justify-between p-4 md:p-5 hover:bg-[#f6f8fa] dark:hover:bg-gray-800 transition-colors"
+                >
+                  <!-- Left -->
+                  <div class="flex items-center gap-4 min-w-0">
+                    <div
+                      class="size-10 rounded-lg bg-red-50 dark:bg-red-900/20 flex items-center justify-center text-red-600 dark:text-red-400 shrink-0"
+                    >
+                      <span class="material-symbols-outlined text-[22px]">picture_as_pdf</span>
+                    </div>
+
+                    <div class="flex flex-col min-w-0">
+                      <p class="text-sm font-bold text-[#111418] dark:text-white truncate">
+                        <%= workOrder.pdfFile.fileName %>
+                      </p>
+                      <p class="text-xs text-[#637588]">
+                        <%= (workOrder.pdfFile.size / 1024 / 1024).toFixed(2) %> MB
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Right -->
+                  <a
+                    href="<%= workOrder.pdfFile.fileUrl %>"
+                    target="_blank"
+                    class="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-semibold text-sm"
+                  >
+                    View File
+                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                  </a>
+                </div>
+                <% } else { %>
+                <p class="p-5 text-center text-sm text-[#637588]">
+                  No work order document uploaded
+                </p>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="h-px bg-[#e5e7eb] dark:bg-[#2a2e3b] w-full"></div>
+
+            <!-- Updates & Notes -->
+            <div class="mt-8">
+              <h3 class="text-lg font-bold mb-4">Publisher & Vendor Notes</h3>
+
+              <% if(workOrder.notes.length){ %> <% workOrder.notes.forEach(n=> { %>
+              <div class="flex gap-3 mb-4">
+                <div
+                  class="size-9 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs"
+                >
+                  <%= n.author?.name?.charAt(0) %>
+                </div>
+                <div>
+                  <p class="font-bold text-sm">
+                    <%= n.author?.name %>
+                    <span class="text-xs text-gray-400">
+                      • <%= new Date(n.createdAt).toLocaleString() %>
+                    </span>
+                  </p>
+                  <p class="text-sm text-gray-700"><%= n.content %></p>
+                </div>
+              </div>
+              <% }) %> <% } else { %>
+              <p class="text-gray-400 text-sm">No notes yet</p>
+              <% } %>
+
+              <form id="vendorNoteForm">
+                <textarea
+                  id="vendorNote"
+                  class="w-full border p-2 rounded mt-3"
+                  placeholder="Write a note…"
+                ></textarea>
+                <button class="mt-2 bg-primary text-white px-4 py-2 rounded">Send</button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Right Column - Milestones (Fixed width sidebar) -->
+          <div class="lg:col-span-1 p-6 md:p-8 bg-[#fafafa] dark:bg-[#161b26]/50">
+            <h3
+              class="text-lg font-bold text-[#111318] dark:text-white mb-6 flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-primary">flag</span>
+              Milestones
+            </h3>
+
+            <div
+              class="relative pl-4 border-l-2 border-[#e5e7eb] dark:border-[#2a2e3b] space-y-6 ml-3"
+            >
+              <% if (workOrder.milestones && workOrder.milestones.length> 0) { %> <%
+              workOrder.milestones.forEach((milestone, index)=> { %> <% const
+              proofs=(workOrder.vendorProofs || []).filter(p=> p.milestoneId?.toString() ===
+              milestone._id.toString()); %>
+
+              <div class="relative">
+                <!-- Status-based dot indicator -->
+                <% if (milestone.status==='completed' ) { %>
+                <div
+                  class="absolute -left-[23px] top-1 h-3.5 w-3.5 rounded-full bg-green-500 border-2 border-white dark:border-[#1c212e] ring-2 ring-green-100 dark:ring-green-900"
+                ></div>
+                <% } else if (milestone.status==='in_progress' ) { %>
+                <div
+                  class="absolute -left-[23px] top-1 h-3.5 w-3.5 rounded-full bg-blue-500 border-2 border-white dark:border-[#1c212e] ring-2 ring-blue-100 dark:ring-blue-900 animate-pulse"
+                ></div>
+                <% } else if (milestone.status==='scheduled' ) { %>
+                <div
+                  class="absolute -left-[23px] top-1 h-3.5 w-3.5 rounded-full bg-yellow-500 border-2 border-white dark:border-[#1c212e] ring-2 ring-yellow-100 dark:ring-yellow-900"
+                ></div>
+                <% } else { %>
+                <div
+                  class="absolute -left-[23px] top-1 h-3.5 w-3.5 rounded-full bg-gray-300 dark:bg-gray-600 border-2 border-white dark:border-[#1c212e]"
+                ></div>
+                <% } %>
+
+                <div
+                  class="flex flex-col gap-2 <%= milestone.status === 'pending' ? 'opacity-60' : '' %>"
+                >
+                  <!-- Milestone Header -->
+                  <div class="flex flex-col gap-1">
+                    <!-- Status badge -->
+                    <% if (milestone.status==='completed' ) { %>
+                    <span
+                      class="text-xs font-bold uppercase tracking-wide text-green-600 dark:text-green-400"
+                      >Completed</span
+                    >
+                    <% } else if (milestone.status==='in_progress' ) { %>
+                    <span
+                      class="text-xs font-bold uppercase tracking-wide text-blue-600 dark:text-blue-400"
+                      >In Progress</span
+                    >
+                    <% } else if (milestone.status==='scheduled' ) { %>
+                    <span
+                      class="text-xs font-bold uppercase tracking-wide text-yellow-600 dark:text-yellow-400"
+                      >Scheduled</span
+                    >
+                    <% } else { %>
+                    <span
+                      class="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                      >Pending</span
+                    >
+                    <% } %>
+
+                    <h4 class="text-sm font-bold text-[#111318] dark:text-white">
+                      <%= milestone.description || milestone.title %>
+                    </h4>
+                    <p class="text-xs text-[#637588] dark:text-gray-400">
+                      Due: <%= new Date(milestone.dueDate).toLocaleDateString('en-US', { year:
+                      'numeric' , month: 'short' , day: 'numeric' }) %>
+                    </p>
+                  </div>
+
+                  <!-- Vendor Proof Status Section (Iterate ALL proofs) -->
+                  <% if (proofs && proofs.length> 0) { %> <% proofs.forEach(function(proof) { %>
+                  <div
+                    class="mb-2 pb-2 border-b border-gray-100 dark:border-gray-800 last:border-0 last:pb-0 last:mb-0"
+                  >
+                    <% if (proof.status==='submitted' ) { %>
+                    <div
+                      class="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-md bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-900/30 w-fit"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[16px] text-yellow-600 dark:text-yellow-400"
+                        >pending</span
+                      >
+                      <span class="text-xs font-medium text-yellow-700 dark:text-yellow-300"
+                        >Proof Under Review</span
+                      >
+                    </div>
+                    <% } %> <% if (proof.status==='approved' ) { %>
+                    <div
+                      class="mt-1 flex items-center gap-2 px-3 py-1.5 rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/30 w-fit"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[16px] text-green-600 dark:text-green-400"
+                        >check_circle</span
+                      >
+                      <span class="text-xs font-medium text-green-700 dark:text-green-300"
+                        >Proof Approved</span
+                      >
+                    </div>
+                    <% } %> <% if (proof.status==='rejected' ) { %>
+                    <div class="mt-1 flex flex-col gap-2">
+                      <div
+                        class="flex items-center gap-2 px-3 py-1.5 rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/30 w-fit"
+                      >
+                        <span
+                          class="material-symbols-outlined text-[16px] text-red-600 dark:text-red-400"
+                          >cancel</span
+                        >
+                        <span class="text-xs font-medium text-red-700 dark:text-red-300"
+                          >Proof Rejected</span
+                        >
+                      </div>
+
+                      <% if (proof.reason) { %>
+                      <div
+                        class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800/30 rounded-lg p-3"
+                      >
+                        <p class="text-xs font-semibold text-red-900 dark:text-red-200 mb-1">
+                          Rejection Reason:
+                        </p>
+                        <p class="text-xs text-red-700 dark:text-red-300"><%= proof.reason %></p>
+                      </div>
+                      <% } %>
+
+                      <!-- Show Re-upload only if milestone is still in_progress -->
+                      <% if (milestone.status==='in_progress' ) { %>
+                      <button
+                        onclick="uploadProof('<%= workOrder._id %>', '<%= milestone._id %>')"
+                        class="inline-flex items-center gap-1 justify-center rounded-md bg-red-600 hover:bg-red-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition w-fit"
+                      >
+                        <span class="material-symbols-outlined text-[14px]">upload_file</span>
+                        Re-Upload Proof
+                      </button>
+                      <% } %>
+                    </div>
+                    <% } %>
+                  </div>
+                  <% }); %> <% } %>
+
+                  <!-- Action Buttons -->
+                  <% if (milestone.status==='scheduled' ) { %>
+                  <button
+                    type="button"
+                    onclick="startMilestone('<%= workOrder._id %>', '<%= milestone._id %>')"
+                    class="mt-1 inline-flex items-center gap-1 justify-center rounded-md bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition w-fit"
+                  >
+                    <span class="material-symbols-outlined text-[14px]">play_arrow</span>
+                    Start Work
+                  </button>
+                  <% } %>
+
+                  <!-- Action buttons for in-progress milestones -->
+                  <% if (milestone.status==='in_progress' ) { %>
+                  <div class="flex gap-2 mt-1">
+                    <button
+                      onclick="uploadProof('<%= workOrder._id %>', '<%= milestone._id %>')"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-white dark:bg-[#1c212e] border border-gray-300 dark:border-gray-600 hover:border-primary hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-xs font-semibold text-[#637588] dark:text-gray-400 hover:text-primary group"
+                    >
+                      <span
+                        class="material-symbols-outlined text-[14px] group-hover:text-primary transition-colors"
+                        >upload_file</span
+                      >
+                      Upload Proof
+                    </button>
+                    <button
+                      onclick="markComplete('<%= workOrder._id %>', '<%= milestone._id %>')"
+                      class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md bg-primary text-white hover:bg-blue-600 transition-colors text-xs font-semibold shadow-sm"
+                    >
+                      <span class="material-symbols-outlined text-[14px]">done</span>
+                      Mark Complete
+                    </button>
+                  </div>
+                  <% } %>
+                </div>
+              </div>
+              <% }) %> <% } else { %>
+              <p class="text-sm text-[#637588] dark:text-gray-400">
+                No milestones defined for this work order.
+              </p>
+              <% } %>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-[#e5e7eb] dark:border-[#2a2e3b]">
+              <button
+                onclick="toggleFullTimeline()"
+                id="timelineToggleBtn"
+                class="w-full py-2.5 px-4 bg-white dark:bg-[#2a2e3b] border border-[#e5e7eb] dark:border-[#374151] rounded-lg text-sm font-medium text-[#111318] dark:text-white hover:bg-[#f0f2f4] dark:hover:bg-[#374151] transition-colors flex items-center justify-center gap-2"
+              >
+                <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                <span id="timelineToggleText">View Full Timeline</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<!-- SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Upload Proof
+  async function uploadProof(workOrderId, milestoneId) {
+    const { value: file } = await Swal.fire({
+      title: 'Upload Proof of Completion',
+      input: 'file',
+      inputAttributes: {
+        accept: 'image/*,application/pdf',
+        'aria-label': 'Upload your proof',
+      },
+      showCancelButton: true,
+      confirmButtonText: 'Upload',
+      showLoaderOnConfirm: true,
+      preConfirm: (file) => {
+        if (!file) {
+          Swal.showValidationMessage('Please select a file');
+          return false;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          Swal.showValidationMessage('File size must be less than 10MB');
+          return false;
+        }
+        return file;
+      },
+    });
+
+    if (file) {
+      const formData = new FormData();
+      formData.append('proof', file);
+
+      try {
+        const response = await fetch(
+          `/user/work-orders/${workOrderId}/milestones/${milestoneId}/upload-proof`,
+          {
+            method: 'POST',
+            body: formData,
+            credentials: 'include',
+          }
+        );
+
+        const result = await response.json();
+        if (result.success) {
+          Swal.fire('Uploaded!', 'Proof uploaded successfully', 'success').then(() =>
+            location.reload()
+          );
+        } else {
+          Swal.fire('Error', result.message, 'error');
+        }
+      } catch (error) {
+        Swal.fire('Error', 'Failed to upload proof', 'error');
+      }
+    }
+  }
+
+  // Mark Milestone Complete
+  async function markComplete(workOrderId, milestoneId) {
+    const result = await Swal.fire({
+      title: 'Mark Milestone Complete?',
+      text: 'This will notify the publisher for review',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Mark Complete',
+      confirmButtonColor: '#10b981',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(
+        `/user/work-orders/${workOrderId}/milestones/${milestoneId}/complete`,
+        {
+          method: 'POST',
+          credentials: 'include',
+        }
+      );
+
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire('Success!', 'Milestone marked as complete', 'success').then(() =>
+          location.reload()
+        );
+      } else {
+        Swal.fire('Error', data.message, 'error');
+      }
+    } catch (error) {
+      Swal.fire('Error', 'Failed to mark milestone complete', 'error');
+    }
+  }
+
+  // Complete Work Order
+  async function completeWorkOrder(workOrderId) {
+    const result = await Swal.fire({
+      title: 'Complete Work Order?',
+      text: 'This will submit the project for final review',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Complete',
+      confirmButtonColor: '#10b981',
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await fetch(`/user/work-orders/${workOrderId}/complete`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire('Completed!', 'Work order submitted for review', 'success').then(() => {
+          window.location.href = '/user/work-orders';
+        });
+      } else {
+        Swal.fire('Error', data.message, 'error');
+      }
+    } catch (error) {
+      Swal.fire('Error', 'Failed to complete work order', 'error');
+    }
+  }
+</script>
+<script>
+  document.getElementById('vendorNoteForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const content = document.getElementById('vendorNote').value.trim();
+    if (!content) return;
+
+    await fetch('/user/work-orders/<%= workOrder._id %>/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ content }),
+    });
+
+    location.reload();
+  });
+</script>
+
+<script>
+  function toggleFullTimeline() {
+    const timelineContainer = document.querySelector('.relative.pl-4.border-l-2.space-y-6');
+    const toggleText = document.getElementById('timelineToggleText');
+    const icon = document.querySelector('#timelineToggleBtn .material-symbols-outlined');
+
+    // Add transition for smooth animation
+    timelineContainer.style.transition = 'max-height 0.3s ease-in-out';
+
+    if (timelineContainer.style.maxHeight === 'none' || !timelineContainer.style.maxHeight) {
+      // Collapse
+      timelineContainer.style.maxHeight = '24rem'; // 96 = 24rem
+      timelineContainer.style.overflow = 'hidden';
+      toggleText.textContent = 'View Full Timeline';
+      icon.textContent = 'calendar_month';
+    } else {
+      // Expand
+      timelineContainer.style.maxHeight = 'none';
+      timelineContainer.style.overflow = 'visible';
+      toggleText.textContent = 'Collapse Timeline';
+      icon.textContent = 'expand_less';
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', function () {
+    const timelineContainer = document.querySelector('.relative.pl-4.border-l-2.space-y-6');
+    if (!timelineContainer) return;
+
+    const milestoneCount = timelineContainer.children.length;
+
+    if (milestoneCount > 4) {
+      timelineContainer.style.maxHeight = '24rem';
+      timelineContainer.style.overflow = 'hidden';
+    } else {
+      document.getElementById('timelineToggleBtn')?.parentElement.classList.add('hidden');
+    }
+  });
+</script>
+<script>
+  // Toast notification helper
+  function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-white transition-all transform translate-x-0
+    ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`;
+    toast.textContent = message;
+
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.style.transform = 'translateX(400px)';
+      toast.style.opacity = '0';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  async function startMilestone(workOrderId, milestoneId) {
+    try {
+      const button = event.target;
+      const originalText = button.innerHTML;
+      button.disabled = true;
+      button.innerHTML =
+        '<span class="material-symbols-outlined text-[14px] animate-spin">refresh</span>';
+
+      const response = await fetch(
+        `/user/work-orders/${workOrderId}/milestones/${milestoneId}/start`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        showToast('Milestone started successfully!', 'success');
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        showToast(data.message || 'Failed to start milestone', 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      showToast('Error starting milestone. Please try again.', 'error');
+      button.disabled = false;
+      button.innerHTML = originalText;
+    }
+  }
+</script>

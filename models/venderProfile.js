@@ -1,8 +1,7 @@
-const mongoose = require("mongoose");
-
+const mongoose = require('mongoose');
 const vendorProfileSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
     businessName: { type: String, required: true },
     address: { type: String },
     contacts: [
@@ -13,9 +12,7 @@ const vendorProfileSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true },
+  { timestamps: true }
 );
-
 vendorProfileSchema.index({ userId: 1 }, { unique: true });
-
-module.exports = mongoose.model("VendorProfile", vendorProfileSchema);
+module.exports = mongoose.model('VendorProfile', vendorProfileSchema);

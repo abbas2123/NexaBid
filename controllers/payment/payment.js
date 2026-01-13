@@ -1,395 +1,197 @@
-const Property = require('../../models/property');
-const Payment = require('../../models/payment');
-const Tender = require('../../models/tender');
-const Coupon = require('../../models/coupen');
-const CouponRedemption = require('../../models/coupenRedemption');
-const Razorpay = require('razorpay');
-const crypto = require('crypto');
-const TenderParticipants = require('../../models/tenderParticipants');
-const PropertyParticipant = require('../../models/propertyParticipant');
-const { success } = require('zod');
-
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
-
+const paymentService = require('../../services/payment/paymentService');
+const statusCode = require('../../utils/statusCode');
+const {
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  VIEWS,
+  LAYOUTS,
+  REDIRECTS,
+  ROUTES,
+} = require('../../utils/constants');
 exports.initiatePayment = async (req, res) => {
   try {
     const { type, id } = req.query;
     const userId = req.user._id;
-
     console.log('type', type);
     console.log('id', id);
-
-    if (!type || !id) return res.redirect('/dashboard');
-
-    let amount = 0;
-
-    if (type === 'property') {
-      const property = await Property.findById(id);
-      if (!property) return res.redirect('/properties');
-      amount = 5000;
-    }
-
-    if (type === 'tender') {
-      const tender = await Tender.findById(id);
-      if (!tender) return res.redirect('/user/my-participation');
-      amount = 5000 + tender.emdAmount;
-    }
-
-    const payment = await Payment.create({
-      userId,
-      contextType: type,
-      contextId: id,
-      type: 'participation_fee',
-      amount,
-      gateway: 'razorpay',
-      status: 'pending',
-    });
-
-    res.redirect(`/payments/escrow/${payment._id}`);
+    if (!type || !id) return res.redirect(REDIRECTS.DASHBOARD);
+    const payment = await paymentService.startInitiatePayment(userId, type, id);
+    res.redirect(`${ROUTES.PAYMENT_ESCROW}/${payment._id}`);
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    if (err.message === ERROR_MESSAGES.PROPERTY_NOT_FOUND)
+      return res.redirect(REDIRECTS.PROPERTIES);
+    if (err.message === ERROR_MESSAGES.TENDER_NOT_FOUND)
+      return res.redirect(REDIRECTS.MY_PARTICIPATION);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
-
 exports.createOrder = async (req, res) => {
   try {
     const { paymentId, amount } = req.body;
-
-    const payment = await Payment.findById(paymentId);
-    if (!payment || payment.status !== 'pending') {
-      return res.json({ success: false, message: 'Invalid payment' });
-    }
-
-    // amount is in rupees from frontend (currentPayAmount)
-    const razorOrder = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // paise
-      currency: 'INR',
-      receipt: `rcpt_${Date.now()}`,
-    });
-
-    // store final amount & order id on payment
-    payment.amount = amount;
-    payment.gatewayPaymentId = razorOrder.id;
-    await payment.save();
-
-    return res.json({
+    const result = await paymentService.createRazorpayOrder(paymentId, amount);
+    console.log('payment order creating......');
+    return res.status(statusCode.OK).json({
       success: true,
-      amount: razorOrder.amount, // paise
-      orderId: razorOrder.id,
+      ...result,
     });
   } catch (err) {
     console.error('Create order error:', err);
-    return res.json({ success: false, message: 'Server error' });
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: err.message || ERROR_MESSAGES.SERVER_ERROR,
+    });
   }
 };
-
 exports.loadEscrowPage = async (req, res) => {
   try {
-    const payment = await Payment.findById(req.params.paymentId);
-    if (!payment || payment.status !== 'pending') {
-      return res.redirect('/dashboard');
-    }
-
-    let product;
-    let breakdown = [];
-
-    if (payment.contextType === 'property') {
-      product = await Property.findById(payment.contextId);
-      breakdown.push({ label: 'Participation Fee', amount: payment.amount });
-    } else {
-      product = await Tender.findById(payment.contextId);
-      breakdown.push(
-        { label: 'Participation Fee', amount: 5000 },
-        { label: 'EMD', amount: product.emdAmount }
-      );
-    }
-    const now = new Date();
-    const coupons = await Coupon.find({
-      $or: [
-        { applicableTo: 'all' },
-        { applicableTo: payment.contextType + 's' }, // properties / tenders
-      ],
-      $and: [
-        { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
-        { $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }] },
-      ],
-    }).lean();
-    res.render('payments/escrowPayment', {
-      layout: 'layouts/user/userLayout',
-      productType: payment.contextType,
-      product,
-      breakdown,
-      totalAmount: payment.amount,
-      walletBalance: req.user.walletBalance || 0,
-      intentId: payment._id,
+    const { paymentId } = req.params;
+    const userId = req.user._id;
+    const data = await paymentService.getEscrowPageDetails(paymentId, userId);
+    res.status(statusCode.OK).render(VIEWS.ESCROW_PAYMENT, {
+      layout: LAYOUTS.USER_LAYOUT,
+      productType: data.payment.contextType,
+      product: data.product,
+      breakdown: data.breakdown,
+      totalAmount: data.payment.amount,
+      walletBalance: data.walletBalance,
+      intentId: data.payment._id,
       razorpayKey: process.env.RAZORPAY_KEY_ID,
-      payment,
-      coupons,
+      payment: data.payment,
+      coupons: data.coupons,
+      user: req.user,
+    });
+  } catch (err) {
+    console.error('Load escrow error:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+    });
+  }
+};
+exports.processWalletPayment = async (req, res) => {
+  try {
+    const { paymentId, amount } = req.body;
+    const userId = req.user._id;
+    console.log('💳 Wallet payment:', { paymentId, amount, userId });
+    const result = await paymentService.processWalletPayment(userId, paymentId, amount);
+    console.log('✅ Wallet payment successful');
+    return res.status(statusCode.OK).json({
+      success: true,
+      message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
+      redirect: `${ROUTES.PAYMENT_SUCCESS}/${result.paymentId}`,
+      newBalance: result.newBalance,
+    });
+  } catch (err) {
+    console.error('❌ Wallet payment error:', err);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: ERROR_MESSAGES.PAYMENT_FAILED + err.message,
+    });
+  }
+};
+exports.verifyPayment = async (req, res) => {
+  try {
+    const { paymentId } = req.body;
+    const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
+    console.log('');
+    return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
+  } catch (err) {
+    console.error(err);
+    return res.json({ success: false, redirect: `/payments/failure/${req.body.paymentId}` });
+  }
+};
+exports.paymentSuccessPage = async (req, res) => {
+  try {
+    console.log('sdddvd');
+    const payment = await paymentService.getSuccessPageData(req.params.paymentId);
+    if (!payment) {
+      return res.redirect(REDIRECTS.DASHBOARD);
+    }
+    console.log('succ', payment);
+    res.status(statusCode.OK).render(VIEWS.PAYMENT_SUCCESS, {
+      layout: LAYOUTS.USER_LAYOUT,
+      ...payment,
       user: req.user,
     });
   } catch (err) {
     console.error(err);
-    res.status(500).send('Server error');
+    res.redirect(REDIRECTS.DASHBOARD);
   }
 };
-
-exports.verifyPayment = async (req, res) => {
+exports.paymentFailurePage = async (req, res) => {
   try {
-    const {
-      paymentId,
-      razorpay_payment_id,
-      razorpay_order_id,
-      razorpay_signature,
-    } = req.body;
-
-    const payment = await Payment.findById(paymentId);
-    console.log('payment found:', payment);
-    if (!payment) {
-      return res.json({
-        success: false,
-        redirect: '/payments/failure',
-      });
-    }
-
-    const generatedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest('hex');
-
-    if (generatedSignature !== razorpay_signature) {
-      payment.status = 'failed';
-      await payment.save();
-
-      return res.json({
-        success: false,
-        redirect: `/payments/failure/${payment._id}`,
-      });
-    }
-
-    payment.status = 'success';
-    payment.gatewayTransactionId = razorpay_payment_id;
-    await payment.save();
-    // pseudo-code inside confirm controller
-    if (payment.status === 'success' && payment.metadata?.coupon) {
-      const { coupon } = payment.metadata;
-
-      await CouponRedemption.create({
-        couponId: coupon.id || coupon._id, // store the coupon._id in metadata too if needed
-        userId: payment.userId,
-        orderReference: payment._id,
-        amountSaved: payment.metadata.discount,
-      });
-    }
-
-    if (payment.contextType === 'property') {
-      await PropertyParticipant.create({
-        userId: payment.userId,
-        propertyId: payment.contextId,
-        participationPaymentId: payment._id,
-        status: 'active',
-      });
-      console.log('Property participant created ✅');
-    }
-
-    if (payment.contextType === 'tender') {
-      await TenderParticipants.create({
-        userId: payment.userId,
-        tenderId: payment.contextId,
-        participationPaymentId: payment._id,
-        status: 'active',
-      });
-      console.log('Tender participant created ✅');
-    }
-
-    return res.json({
-      success: true,
-      redirect: `/payments/success/${payment._id}`,
+    console.log('❌ Payment failure route hit');
+    const payment = await paymentService.getFailurePageData(req.params.paymentId);
+    if (!payment) return res.redirect(REDIRECTS.DASHBOARD);
+    console.log('failed', payment);
+    res.status(statusCode.OK).render(VIEWS.PAYMENT_FAILS, {
+      layout: LAYOUTS.USER_LAYOUT,
+      ...payment,
+      errorReason: req.query.reason || payment.errorReason,
     });
   } catch (err) {
     console.error(err);
-    return res.json({
-      success: false,
-      redirect: '/payments/failure',
-    });
+    res.redirect(REDIRECTS.DASHBOARD);
   }
 };
-
-exports.paymentSuccessPage = async (req, res) => {
-  const payment = await Payment.findById(req.params.paymentId);
-  if (!payment || payment.status !== 'success') {
-    return res.redirect('/dashboard');
-  }
-
-  res.render('payments/paymentSuccess', {
-    layout: 'layouts/user/userLayout',
-    payment,
-    user: req.user,
-  });
-};
-
-exports.paymentFailurePage = async (req, res) => {
-  const payment = await Payment.findById(req.params.paymentId);
-  if (!payment) return res.redirect('/dashboard');
-
-  res.render('payments/paymentFails', {
-    layout: 'layouts/user/userLayout',
-    payment,
-  });
-};
-
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode, intentId } = req.body;
     const userId = req.user._id;
-
     if (!couponCode || !intentId) {
-      return res.json({ success: false, message: 'Invalid request' });
+      return res
+        .status(statusCode.BAD_REQUEST)
+        .json({ success: false, message: ERROR_MESSAGES.INVALID_REQUEST });
     }
-
-    const payment = await Payment.findById(intentId);
-    if (!payment || payment.status !== 'pending') {
-      return res.json({ success: false, message: 'Invalid payment' });
-    }
-
-    const coupon = await Coupon.findOne({
-      code: couponCode.toUpperCase(),
-    }).lean();
-
-    if (!coupon) {
-      return res.json({ success: false, message: 'Invalid coupon' });
-    }
-
-    const now = new Date();
-
-    if (
-      (coupon.startsAt && now < coupon.startsAt) ||
-      (coupon.expiresAt && now > coupon.expiresAt)
-    ) {
-      return res.json({ success: false, message: 'Coupon expired' });
-    }
-
-    if (coupon.minPurchaseAmount && payment.amount < coupon.minPurchaseAmount) {
-      return res.json({
-        success: false,
-        message: 'Minimum purchase not met',
-      });
-    }
-
-    const alreadyUsed = await CouponRedemption.findOne({
-      couponId: coupon._id,
-      userId,
-    });
-
-    if (alreadyUsed) {
-      return res.json({
-        success: false,
-        message: 'Coupon already used',
-      });
-    }
-
-    let discount = 0;
-
-    if (coupon.type === 'flat') {
-      discount = coupon.value;
-    }
-
-    if (coupon.type === 'percent') {
-      discount = (payment.amount * coupon.value) / 100;
-      if (coupon.maxDiscount) {
-        discount = Math.min(discount, coupon.maxDiscount);
-      }
-    }
-
-    discount = Math.min(discount, payment.amount);
-
-    payment.metadata = {
-      coupon: {
-        id: coupon._id,
-        code: coupon.code,
-        type: coupon.type,
-        value: coupon.value,
-      },
-      discount,
-      originalAmount: payment.amount,
-      finalAmount: payment.amount - discount,
-    };
-
-    payment.amount -= discount;
-    await payment.save();
-    console.log('💾 Saved payment amount:', payment.amount);
-console.log('creatingg.......');
-console.log('coupon doc:', {
-  id: coupon._id,
-  code: coupon.code,
-  type: coupon.type,
-});
-
-console.log('created.......')
-    return res.json({
+    const result = await paymentService.applyCoupon(userId, intentId, couponCode);
+    console.log('✅ Coupon applied:', couponCode);
+    return res.status(statusCode.OK).json({
       success: true,
-      discount,
-      newAmount: payment.amount,
+      ...result,
     });
   } catch (err) {
     console.error('Apply coupon error:', err);
-    return res.json({
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
-      message: 'Server error',
+      message: err.message || ERROR_MESSAGES.SERVER_ERROR,
     });
   }
 };
-
 exports.removeCoupon = async (req, res) => {
   try {
     const { intentId } = req.body;
-
     console.log('🗑️ Removing coupon for payment:', intentId);
-
-    // Find the payment - USE Payment MODEL, not PaymentIntent
-    const payment = await Payment.findById(intentId);
-
-    if (!payment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Payment not found',
-      });
-    }
-
-    // Check if payment has metadata with coupon info
-    if (!payment.metadata || !payment.metadata.coupon) {
-      return res.json({
-        success: false,
-        message: 'No coupon applied to this payment',
-      });
-    }
-
-    // Get original amount from metadata
-    const originalAmount = payment.metadata.originalAmount || payment.amount;
-    const removedCoupon = payment.metadata.coupon.code;
-
-    // Reset payment to original amount
-    payment.amount = originalAmount;
-    payment.metadata = null; // Clear metadata
-
-    await payment.save();
-
-    console.log('✅ Coupon removed:', removedCoupon);
-    console.log('💰 Amount reset to:', payment.amount);
-
-    return res.json({
+    const result = await paymentService.removeCoupon(intentId);
+    console.log('✅ Coupon removed:', result.removedCouponCode);
+    return res.status(statusCode.OK).json({
       success: true,
-      message: 'Coupon removed successfully',
-      amount: payment.amount,
+      message: SUCCESS_MESSAGES.COUPON_REMOVED,
+      amount: result.amount,
     });
-  } catch (error) {
-    console.error('❌ Error removing coupon:', error);
-    return res.status(500).json({
+  } catch (err) {
+    console.error('❌ Error removing coupon:', err);
+    const status =
+      err.message === ERROR_MESSAGES.PAYMENT_NOT_FOUND
+        ? statusCode.NOT_FOUND
+        : statusCode.INTERNAL_SERVER_ERROR;
+    return res.status(status).json({
       success: false,
-      message: 'Failed to remove coupon: ' + error.message,
+      message: ERROR_MESSAGES.COUPON_REMOVE_FAILED + err.message,
     });
+  }
+};
+exports.markFailed = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { reason } = req.body;
+    await paymentService.markPaymentFailed(paymentId, reason);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
   }
 };

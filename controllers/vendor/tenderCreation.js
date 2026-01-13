@@ -1,23 +1,29 @@
 const tenderCreationService = require('../../services/tender/tenderCreation');
-const statusCode = require('../../utils/statusCode')
-
-exports.getCreateTenderPage = async(req,res)=>{
-    try {
-        res.render('vendor/tenderCreate',{
-            layout:'layouts/user/userLayout',
-            title: "Create Tender",
-            user:req.user,
-             tender: null, // IMPORTANT!
-      files: [], 
-        })
-    } catch (error) {
-console.log("Create Tender Page Error:", error);
-    return res.status(500).render("error", {
-      layout: "layouts/user/userLayout",
-      message: "Error loading tender page",
+const statusCode = require('../../utils/statusCode');
+const {
+  LAYOUTS,
+  VIEWS,
+  ERROR_MESSAGES,
+  SUCCESS_MESSAGES,
+  TITLES,
+} = require('../../utils/constants');
+exports.getCreateTenderPage = async (req, res) => {
+  try {
+    res.render(VIEWS.TENDER_CREATE, {
+      layout: LAYOUTS.USER_LAYOUT,
+      title: TITLES.CREATE_TENDER,
+      user: req.user,
+      tender: null,
+      files: [],
     });
-    }
-}
+  } catch (error) {
+    console.error('Create Tender Page Error:', error);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.ERROR_LOADING_TENDER_PAGE,
+    });
+  }
+};
 exports.createTenderController = async (req, res) => {
   try {
     const tender = await tenderCreationService.creatTenderService(
@@ -25,15 +31,13 @@ exports.createTenderController = async (req, res) => {
       req.body,
       req.files || []
     );
-
-    return res.status(201).json({
+    return res.status(statusCode.CREATED).json({
       success: true,
-      message: "Tender created successfully",
+      message: SUCCESS_MESSAGES.TENDER_CREATED,
       tenderId: tender._id,
     });
-
   } catch (err) {
-    console.error("Tender creation error:", err);
+    console.error('Tender creation error:', err);
     return res.status(statusCode.BAD_REQUEST).json({
       success: false,
       message: err.message,

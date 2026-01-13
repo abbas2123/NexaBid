@@ -1,34 +1,36 @@
-const vendorService = require("../../services/vendor/applicationService");
-const statusCode = require("../../utils/statusCode");
-const OCRResult = require("../../models/OCR_Result");
-const { application } = require("express");
-const vendorApplication = require("../../models/vendorApplication");
-
+const vendorService = require('../../services/vendor/applicationService');
+const statusCode = require('../../utils/statusCode');
+const OCRResult = require('../../models/OCR_Result');
+const vendorApplication = require('../../models/vendorApplication');
+const {
+  LAYOUTS,
+  ERROR_MESSAGES,
+  ROLES,
+  REDIRECTS,
+  VIEWS,
+  ACTION_TYPES,
+  SUCCESS_MESSAGES,
+  APPLICATION_STATUS,
+  TITLES,
+} = require('../../utils/constants');
 exports.getVendorApplicationPage = async (req, res) => {
   try {
-    console.log("Auth: JWT user");
-
     if (!req.user) {
-      console.log("❌ No user — redirecting to login");
-      return res.redirect("/auth/login");
+      return res.redirect(REDIRECTS.LOGIN);
     }
-    const user = req.user;
-
-    console.log("user.......", user.role);
-    if (user.role === "vendor") {
-      console.log("klndjafnladjfad");
-      return res.redirect("/auth/dashboard");
+    const { user } = req;
+    if (user.role === ROLES.VENDOR) {
+      return res.redirect(REDIRECTS.AUTH_DASHBOARD);
     }
     const existingApp = await vendorService.getApplicationStatus(user._id);
     let ocrResult = null;
-
     if (existingApp?.ocrResultId) {
       const ocrDoc = await OCRResult.findById(existingApp.ocrResultId);
       ocrResult = ocrDoc?.extracted || null;
     }
-    res.render("vendor/vendorApplication.ejs", {
-      layout: "layouts/user/userLayout",
-      title: "Vendor Application",
+    res.render(VIEWS.VENDOR_APPLICATION, {
+      layout: LAYOUTS.USER_LAYOUT,
+      title: TITLES.VENDOR_APPLICATION,
       vendor: req.user,
       user,
       application: existingApp || null,
@@ -37,89 +39,77 @@ exports.getVendorApplicationPage = async (req, res) => {
       success: null,
     });
   } catch (err) {
-    console.error("error loading vender page:", err);
-    res.status(statusCode.INTERNAL_ERROR).send("server Error");
+    console.error('error loading vender page:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user,
+    });
   }
 };
-
 exports.submitVendorApplication = async (req, res) => {
   let existingApp = null;
   let updatedApp = null;
-  let result = { extracted: null, fraud: null };
-
   try {
-    const actionType = req.body.actionType;
-    const isConfirmed = req.body.isConfirmed === "true";
+    const { actionType } = req.body;
+    const isConfirmed = req.body.isConfirmed === 'true';
     const userId = req.user._id;
-
     existingApp = await vendorService.getApplicationStatus(userId);
-
-    // Security check
     if (existingApp && existingApp.userId.toString() !== userId.toString()) {
-      return res.status(statusCode.FORBIDDEN).send("Forbidden: Access Denied");
+      return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.FORBIDDEN_ACCESS);
     }
-
-    // ---- 1) OCR SCAN FLOW ----
-    if (actionType === "scan") {
+    if (actionType === ACTION_TYPES.SCAN) {
       if (!req.files || req.files.length === 0) {
         return res.json({
           success: false,
-          message: "Please upload at least one document",
+          message: ERROR_MESSAGES.UPLOAD_REQUIRED,
         });
       }
       try {
-        result = await vendorService.submitApplicationService(
-          req.user,
-          req.files,
-          "scan"
-        );
+        await vendorService.submitApplicationService(req.user, req.files, ACTION_TYPES.SCAN);
       } catch (err) {
         return res.json({ success: false, message: err.message });
       }
-      // updatedApp = await vendorService.getApplicationStatus(userId);
-
       return res.json({
         success: true,
-        message: "OCR scan completed! Please confirm & submit",
-        redirectUrl: "/vendor/apply",
+        message: SUCCESS_MESSAGES.OCR_COMPLETED,
+        redirectUrl: REDIRECTS.VENDOR_APPLY,
       });
     }
-
-    // ---- 2) CONFIRMATION REQUIRED ----
     updatedApp = await vendorService.getApplicationStatus(userId);
-
+    if (!updatedApp) {
+      return res.json({
+        success: false,
+        message: ERROR_MESSAGES.PLEASE_SCAN_DOCUMENTS_FIRST,
+      });
+    }
     if (!isConfirmed) {
       return res.json({
         success: false,
-        message: "Please confirm your details first",
+        message: ERROR_MESSAGES.CONFIRMATION_REQUIRED,
       });
     }
-
-    // ---- 3) TERMS REQUIRED ----
     if (!req.body.terms) {
       return res.json({
         success: false,
-        message: "You must agree to the terms",
+        message: ERROR_MESSAGES.TERMS_REQUIRED,
       });
     }
-
-    // ---- 4) SUBMIT APPLICATION ----
     await vendorApplication.findOneAndUpdate(
       { userId },
-      { $set: { status: "submitted" } },
+      { $set: { status: APPLICATION_STATUS.SUBMITTED } },
       { new: true }
     );
-
     return res.status(statusCode.OK).json({
       success: true,
-      message: "Application submitted successfullt!",
-      redirectUrl: "/auth/dashboard",
+      message: SUCCESS_MESSAGES.APPLICATION_SUBMITTED,
+      redirectUrl: REDIRECTS.AUTH_DASHBOARD,
     });
   } catch (err) {
-    console.error("Submit Vendor Error:", err);
+    console.error('Submit Vendor Error:', err);
     return res.json({
       success: false,
-      message: err.message || "Something went wrong",
+      message: err.message || ERROR_MESSAGES.GENERIC_ERROR,
     });
   }
 };

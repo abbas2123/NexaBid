@@ -1,0 +1,426 @@
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+  <main
+    class="layout-container flex h-full grow flex-col bg-background-light dark:bg-background-dark py-8"
+  >
+    <div class="px-4 md:px-10 lg:px-40 flex flex-1 justify-center">
+      <div class="layout-content-container flex flex-col max-w-[1000px] flex-1 w-full gap-6">
+        <!-- Breadcrumb -->
+        <!-- <div class="flex items-center gap-2 text-sm text-[#637588] dark:text-gray-400 flex-wrap">
+          <a class="hover:text-primary hover:underline transition-colors" href="/admin/work-orders">Work Orders</a>
+          <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+          <span class="text-[#111318] dark:text-white font-medium">Completion Summary</span>
+        </div> -->
+
+        <!-- Main Card -->
+        <div
+          class="bg-white dark:bg-[#111318] rounded-xl border border-[#e5e7eb] dark:border-[#2a2e3b] shadow-sm overflow-hidden"
+        >
+          <!-- Header Section -->
+          <div class="p-6 md:p-10 border-b border-[#f0f2f4] dark:border-[#2a2e3b]">
+            <div class="flex flex-col gap-6">
+              <!-- Title and Actions -->
+              <div
+                class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+              >
+                <h1
+                  class="text-[#111318] dark:text-white text-2xl md:text-3xl font-bold leading-tight tracking-[-0.015em]"
+                >
+                  Work Order Completed: #<%= workOrder.woNumber ||
+                  workOrder._id.toString().slice(-8) %>
+                </h1>
+                <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <!-- <button onclick="window.open('/admin/work-orders/view/<%= workOrder._id %>', '_blank')" 
+                    class="flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-[#1c212e] border border-[#e5e7eb] dark:border-[#2a2e3b] px-4 py-2 text-sm font-bold text-[#111318] dark:text-white hover:bg-[#f8faff] dark:hover:bg-[#2a2e3b] transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">visibility</span>
+                    View Final WO
+                  </button> -->
+                  <button
+                    onclick="downloadReport('<%= workOrder._id %>')"
+                    class="flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white hover:bg-blue-600 transition-colors shadow-sm"
+                  >
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+                    Download Report
+                  </button>
+                </div>
+              </div>
+
+              <!-- Success Alert -->
+              <div
+                class="flex items-start gap-3 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800/30 p-4 rounded-lg"
+              >
+                <div
+                  class="size-6 rounded-full bg-green-100 dark:bg-green-800 flex items-center justify-center shrink-0"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-green-600 dark:text-green-300 font-bold"
+                    >check</span
+                  >
+                </div>
+                <p class="text-green-800 dark:text-green-200 font-medium text-sm md:text-base">
+                  Project successfully marked as complete! All milestones have been verified.
+                </p>
+              </div>
+
+              <!-- Invoice Alert -->
+              <div
+                class="flex items-start gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30 p-4 rounded-lg"
+              >
+                <div
+                  class="size-6 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center shrink-0"
+                >
+                  <span
+                    class="material-symbols-outlined text-[16px] text-blue-600 dark:text-blue-300 font-bold"
+                    >receipt_long</span
+                  >
+                </div>
+                <p class="text-blue-800 dark:text-blue-200 font-medium text-sm md:text-base">
+                  An invoice for this completed Work Order has been automatically generated and sent
+                  to the vendor.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Grid Section -->
+          <div
+            class="bg-[#fcfcfd] dark:bg-[#1a202c]/30 px-6 py-8 md:px-10 border-b border-[#f0f2f4] dark:border-[#2a2e3b]"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-12">
+              <!-- Associated Tender -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Associated Tender
+                </p>
+                <p class="text-sm font-semibold text-[#111318] dark:text-white leading-relaxed">
+                  <%= workOrder.tenderId?.title || 'N/A' %>
+                </p>
+              </div>
+
+              <!-- Vendor -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Vendor
+                </p>
+                <div class="flex items-center gap-3">
+                  <div
+                    class="size-8 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center text-white font-bold text-sm"
+                  >
+                    <%= workOrder.vendorName?.charAt(0).toUpperCase() || 'V' %>
+                  </div>
+                  <div>
+                    <p class="text-sm font-bold text-[#111318] dark:text-white">
+                      <%= workOrder.vendorName || 'Unknown Vendor' %>
+                    </p>
+                    <p class="text-xs text-[#637588] dark:text-gray-500">
+                      ID: <%= workOrder.vendorId?._id.toString().slice(-6).toUpperCase() || 'N/A' %>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Contract Amount -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Contract Amount
+                </p>
+                <p class="text-xl font-bold text-[#111318] dark:text-white">
+                  ₹<%= (workOrder.contractAmount || 0).toLocaleString('en-IN', {
+                  minimumFractionDigits: 2 }) %>
+                </p>
+              </div>
+
+              <!-- Issued On -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Issued On
+                </p>
+                <p class="text-sm font-semibold text-[#111318] dark:text-white">
+                  <%= workOrder.issuedAt ? new Date(workOrder.issuedAt).toLocaleDateString('en-US',
+                  { year: 'numeric' , month: 'short' , day: 'numeric' }) : 'N/A' %>
+                </p>
+              </div>
+
+              <!-- Completed On -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Completed On
+                </p>
+                <p class="text-sm font-semibold text-[#111318] dark:text-white">
+                  <%= workOrder.completedAt ? new
+                  Date(workOrder.completedAt).toLocaleDateString('en-US', { year: 'numeric' , month:
+                  'short' , day: 'numeric' }) : 'N/A' %>
+                </p>
+              </div>
+
+              <!-- Project Timeline -->
+              <div class="flex flex-col gap-1.5">
+                <p
+                  class="text-xs font-bold uppercase tracking-wider text-[#637588] dark:text-gray-400"
+                >
+                  Project Timeline
+                </p>
+                <p class="text-sm font-semibold text-[#111318] dark:text-white">
+                  <%= workOrder.startDate ? new
+                  Date(workOrder.startDate).toLocaleDateString('en-US', { year: 'numeric' , month:
+                  'short' , day: 'numeric' }) : 'N/A' %> — <%= workOrder.endDate ? new
+                  Date(workOrder.endDate).toLocaleDateString('en-US', { year: 'numeric' , month:
+                  'short' , day: 'numeric' }) : 'N/A' %>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description and Milestones Section -->
+          <div
+            class="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-[#e5e7eb] dark:divide-[#2a2e3b]"
+          >
+            <!-- Description Column -->
+            <div class="lg:col-span-2 p-6 md:p-10">
+              <h3
+                class="text-lg font-bold text-[#111318] dark:text-white mb-4 flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-primary">description</span>
+                Description of Work Summary
+              </h3>
+              <div
+                class="prose prose-sm prose-slate dark:prose-invert max-w-none text-[#637588] dark:text-gray-300"
+              >
+                <p class="mb-3 whitespace-pre-wrap">
+                  <%= workOrder.description || 'No description provided.' %>
+                </p>
+
+                <% if (workOrder.deliverables && workOrder.deliverables.length> 0) { %>
+                <h4 class="font-semibold text-[#111318] dark:text-white mt-4 mb-2">
+                  Deliverables:
+                </h4>
+                <ul class="list-disc pl-5 space-y-1 mb-3">
+                  <% workOrder.deliverables.forEach(deliverable=> { %>
+                  <li><%= deliverable %></li>
+                  <% }) %>
+                </ul>
+                <% } %>
+              </div>
+            </div>
+
+            <!-- Milestones Column -->
+            <div class="lg:col-span-1 bg-[#fafafa] dark:bg-[#161b26]/50 p-6 md:p-10">
+              <h3
+                class="text-lg font-bold text-[#111318] dark:text-white mb-6 flex items-center gap-2"
+              >
+                <span class="material-symbols-outlined text-green-600">flag</span>
+                Key Milestones
+              </h3>
+
+              <div class="space-y-4">
+                <% if (workOrder.milestones && workOrder.milestones.length> 0) { %> <%
+                workOrder.milestones.forEach(milestone=> { %>
+                <div class="flex items-start gap-3">
+                  <div
+                    class="mt-0.5 size-5 rounded-full <%= milestone.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' : 'bg-gray-200 dark:bg-gray-700 text-gray-400' %> flex items-center justify-center shrink-0"
+                  >
+                    <span class="material-symbols-outlined text-[14px] font-bold">
+                      <%= milestone.status==='completed' ? 'check' : 'radio_button_unchecked' %>
+                    </span>
+                  </div>
+                  <div class="flex-1">
+                    <h4 class="text-sm font-bold text-[#111318] dark:text-white">
+                      <%= milestone.name %>
+                    </h4>
+                    <p class="text-xs text-[#637588] dark:text-gray-500">
+                      <%= milestone.completedAt ? 'Completed ' + new
+                      Date(milestone.completedAt).toLocaleDateString('en-US', { year: 'numeric' ,
+                      month: 'short' , day: 'numeric' }) : 'Pending' %>
+                    </p>
+                  </div>
+                </div>
+                <% }) %> <% } else { %>
+                <p class="text-sm text-[#637588] dark:text-gray-400">No milestones defined</p>
+                <% } %>
+              </div>
+
+              <!-- Progress Bar -->
+              <div class="mt-6 pt-6 border-t border-[#e5e7eb] dark:border-[#2a2e3b]">
+                <div class="flex items-center justify-between text-sm">
+                  <span class="font-medium text-[#637588] dark:text-gray-400">Total Progress</span>
+                  <span class="font-bold text-green-600 dark:text-green-400">
+                    <%= workOrder.progress || 100 %>%
+                  </span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-[#2a2e3b] rounded-full h-2 mt-2">
+                  <div
+                    class="bg-green-500 h-2 rounded-full transition-all duration-300"
+                    style="width: <%= workOrder.progress || 100 %>%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <!-- <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
+          <a href="/admin/work-orders"
+            class="w-full sm:w-auto flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-[#1c212e] border border-[#e5e7eb] dark:border-[#2a2e3b] px-6 py-3 text-sm font-bold text-[#637588] dark:text-gray-300 hover:text-[#111318] dark:hover:text-white hover:bg-[#f8faff] dark:hover:bg-[#2a2e3b] transition-colors shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back to Work Order Tracking
+          </a>
+
+          <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <a href="/admin/vendor/profile/<%= workOrder.vendorId?._id %>"
+              class="flex items-center justify-center gap-2 rounded-lg bg-white dark:bg-[#1c212e] border border-[#e5e7eb] dark:border-[#2a2e3b] px-6 py-3 text-sm font-bold text-[#111318] dark:text-white hover:bg-[#f8faff] dark:hover:bg-[#2a2e3b] transition-colors shadow-sm">
+              <span class="material-symbols-outlined text-[18px]">person</span>
+              View Vendor Profile
+            </a>
+            <button onclick="archiveWorkOrder('<%= workOrder._id %>')"
+              class="flex items-center justify-center gap-2 rounded-lg bg-[#f0f2f4] dark:bg-[#2a2e3b] border border-transparent px-6 py-3 text-sm font-bold text-[#111318] dark:text-white hover:bg-[#e5e7eb] dark:hover:bg-[#374151] transition-colors">
+              <span class="material-symbols-outlined text-[18px]">archive</span>
+              Archive Work Order
+            </button>
+          </div>
+        </div> -->
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Tailwind & Material Icons CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link
+  href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Noto+Sans:wght@400;500;700&display=swap"
+  rel="stylesheet"
+/>
+<link
+  href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+  rel="stylesheet"
+/>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+  // Tailwind Config
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          primary: '#135bec',
+          'background-light': '#f6f6f8',
+          'background-dark': '#101622',
+        },
+        fontFamily: {
+          display: ['Manrope', 'sans-serif'],
+          body: ['Noto Sans', 'sans-serif'],
+        },
+      },
+    },
+  };
+
+  // Download Report Function
+  async function downloadReport(workOrderId) {
+    try {
+      const res = await fetch(`/user/work-orders/download-report/${workOrderId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `work-order-${workOrderId}-report.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        Swal.fire('Error', 'Failed to download report', 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Failed to download report', 'error');
+    }
+  }
+
+  // Archive Work Order Function
+  async function archiveWorkOrder(workOrderId) {
+    const result = await Swal.fire({
+      title: 'Archive Work Order?',
+      text: 'This will move the work order to the archive.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#135bec',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, Archive',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/admin/work-orders/archive/${workOrderId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire('Archived!', 'Work order has been archived.', 'success').then(
+            () => (window.location.href = '/admin/work-orders')
+          );
+        } else {
+          Swal.fire('Error', data.message || 'Failed to archive', 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Failed to archive work order', 'error');
+      }
+    }
+  }
+
+  // Material Icons Style
+  document.querySelectorAll('.material-symbols-outlined').forEach((icon) => {
+    icon.style.fontVariationSettings = "'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24";
+  });
+</script>
+
+<style>
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+
+  /* Ensure responsive table on small screens */
+  @media (max-width: 768px) {
+    .grid {
+      gap: 1rem;
+    }
+  }
+
+  /* Custom scrollbar for dark mode */
+  .dark ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .dark ::-webkit-scrollbar-track {
+    background: #1a202c;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 4px;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #4b5563;
+  }
+</style>

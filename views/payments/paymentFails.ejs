@@ -1,0 +1,185 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+  <div class="max-w-md w-full">
+    <!-- Failure Icon -->
+    <div class="bg-white rounded-lg shadow-lg p-8 text-center">
+      <!-- Red X Icon -->
+      <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+        <svg class="h-10 w-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          ></path>
+        </svg>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Payment Failed</h1>
+
+      <!-- Error Message -->
+      <p class="text-gray-600 mb-6">
+        <%= errorReason || 'We could not process your payment. Please try again.' %>
+      </p>
+
+      <!-- Payment Details Card -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6 text-left">
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Payment Details</h3>
+
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Payment ID:</span>
+            <span class="font-mono text-gray-800">
+              <%= payment._id.toString().slice(-8).toUpperCase() %>
+            </span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Amount:</span>
+            <span class="font-semibold text-gray-900">
+              ₹<%= (payment.metadata?.payableAmount || payment.amount).toLocaleString("en-IN") %>
+            </span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Property:</span>
+            <span class="text-gray-800 truncate ml-2"> <%= product?.title || 'N/A' %> </span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Status:</span>
+            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"> Failed </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Wallet Balance (if available) -->
+      <% if (walletBalance > 0) { %>
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-left">
+        <div class="flex items-start">
+          <svg class="h-5 w-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"
+            ></path>
+            <path
+              fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z"
+              clip-rule="evenodd"
+            ></path>
+          </svg>
+          <div class="text-sm">
+            <p class="text-blue-800 font-medium">Wallet Balance Available</p>
+            <p class="text-blue-600">
+              You have ₹<%= walletBalance.toLocaleString('en-IN') %> in your wallet
+            </p>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Action Buttons -->
+      <div class="space-y-3">
+        <% if (canRetry) { %>
+        <!-- Retry Payment Button -->
+        <a
+          href="/payments/escrow/<%= payment._id %>"
+          class="w-full inline-block bg-primary text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition"
+        >
+          Try Again
+        </a>
+        <% } %>
+
+        <!-- View Property/Tender -->
+        <% if (productType === 'property') { %>
+        <a
+          href="/properties/<%= payment.contextId %>"
+          class="w-full inline-block border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition"
+        >
+          View Property
+        </a>
+        <% } else { %>
+        <a
+          href="/tenders/<%= payment.contextId %>"
+          class="w-full inline-block border border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg hover:bg-gray-50 transition"
+        >
+          View Tender
+        </a>
+        <% } %>
+
+        <!-- Back to Listings -->
+        <% if (productType === 'property') { %>
+        <a
+          href="/properties"
+          class="w-full inline-block text-gray-600 font-medium py-2 hover:text-gray-800 transition"
+        >
+          ← Back to Listings
+        </a>
+        <% } else { %>
+        <a
+          href="/tenders"
+          class="w-full inline-block text-gray-600 font-medium py-2 hover:text-gray-800 transition"
+        >
+          ← Back to Listings
+        </a>
+        <% } %>
+      </div>
+
+      <!-- Help Section -->
+      <div class="mt-6 pt-6 border-t border-gray-200">
+        <p class="text-xs text-gray-500 mb-2">Need help?</p>
+        <div class="flex justify-center space-x-4 text-xs">
+          <a href="/support" class="text-primary hover:underline"> Contact Support </a>
+          <span class="text-gray-300">|</span>
+          <a href="/faq" class="text-primary hover:underline"> View FAQs </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common Issues Card -->
+    <div class="mt-6 bg-white rounded-lg shadow p-6">
+      <h3 class="text-sm font-semibold text-gray-900 mb-3">Common Issues</h3>
+      <ul class="space-y-2 text-sm text-gray-600">
+        <li class="flex items-start">
+          <svg
+            class="h-5 w-5 text-gray-400 mr-2 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <circle cx="10" cy="10" r="2"></circle>
+          </svg>
+          <span>Insufficient funds in your account</span>
+        </li>
+        <li class="flex items-start">
+          <svg
+            class="h-5 w-5 text-gray-400 mr-2 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <circle cx="10" cy="10" r="2"></circle>
+          </svg>
+          <span>Card details entered incorrectly</span>
+        </li>
+        <li class="flex items-start">
+          <svg
+            class="h-5 w-5 text-gray-400 mr-2 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <circle cx="10" cy="10" r="2"></circle>
+          </svg>
+          <span>Bank declined the transaction</span>
+        </li>
+        <li class="flex items-start">
+          <svg
+            class="h-5 w-5 text-gray-400 mr-2 flex-shrink-0"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <circle cx="10" cy="10" r="2"></circle>
+          </svg>
+          <span>Network connectivity issues</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>

@@ -1,9 +1,9 @@
-const nodemailer = require("nodemailer");
-require("dotenv").config();
+const nodemailer = require('nodemailer');
+const { withTimeout } = require('./promiseUtils');
+require('dotenv').config();
 
-// console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -11,31 +11,38 @@ const transporter = nodemailer.createTransport({
 });
 
 exports.sendOtpEmail = async (email, otp) => {
-  await transporter.sendMail({
-    from: `"NexaBid" <${process.env.EMAIL_USER}>`,
-    to: email,
-    subject: "NexaBid OTP Verification",
-    html: `<center>
-          <h2>Your OTP Code 🔐</h2>
-          <h1 style="letter-spacing: 5px;">${otp}</h1>
-          <p>This OTP is valid for 4 minutes.</p>
-        </center>`,
-  });
+  await withTimeout(
+    transporter.sendMail({
+      from: `"NexaBid" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: 'NexaBid OTP Verification',
+      html: `<center>
+            <h2>Your OTP Code 🔐</h2>
+            <h1 style="letter-spacing: 5px;">${otp}</h1>
+            <p>This OTP is valid for 4 minutes.</p>
+          </center>`,
+    }),
+    10000,
+    'Email Timeout'
+  );
 };
 
 exports.sendMailUser = async (to, subject, html) => {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
       pass: process.env.EMAIL_PASS,
     },
   });
-
-  await transporter.sendMail({
-    from: `NexaBid <${process.env.EMAIL_USER}`,
-    to,
-    subject,
-    html,
-  });
+  await withTimeout(
+    transporter.sendMail({
+      from: `NexaBid <${process.env.EMAIL_USER}`,
+      to,
+      subject,
+      html,
+    }),
+    10000,
+    'Email Timeout'
+  );
 };

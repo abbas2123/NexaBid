@@ -1,17 +1,11 @@
 <div class="max-w-2xl">
-
   <!-- PAGE TITLE -->
   <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-10 tracking-tight">
     Enable Auto-Bid
   </h1>
 
   <!-- AUTO BID FORM -->
-  <form
-    id="autoBidForm"
-    class="space-y-8"
-    method="post"
-  >
-
+  <form id="autoBidForm" class="space-y-8" method="post">
     <!-- CURRENT HIGHEST BID -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -23,10 +17,7 @@
         value="₹ <%= currentHighestBid.toLocaleString('en-IN') %>"
         disabled
         readonly
-        class="w-full rounded-md border-gray-300 dark:border-gray-600
-               bg-gray-100 dark:bg-gray-800
-               text-gray-500 dark:text-gray-400
-               py-3 px-4 text-sm cursor-not-allowed"
+        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed"
       />
     </div>
 
@@ -41,19 +32,13 @@
         value="₹ <%= auctionStep.toLocaleString('en-IN') %>"
         disabled
         readonly
-        class="w-full rounded-md border-gray-300 dark:border-gray-600
-               bg-gray-100 dark:bg-gray-800
-               text-gray-500 dark:text-gray-400
-               py-3 px-4 text-sm cursor-not-allowed"
+        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed"
       />
     </div>
 
     <!-- MAX AUTO BID -->
     <div class="space-y-2 pt-4">
-      <label
-        for="maxBid"
-        class="block text-sm font-semibold text-primary"
-      >
+      <label for="maxBid" class="block text-sm font-semibold text-primary">
         Enter Maximum Auto-Bid Amount
       </label>
 
@@ -63,10 +48,7 @@
         type="number"
         min="<%= currentHighestBid + 1 %>"
         placeholder="Enter max amount"
-        class="w-full rounded-md border-gray-300 dark:border-gray-600
-               bg-white dark:bg-slate-800
-               py-4 px-4 text-lg
-               focus:ring-primary focus:border-primary"
+        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 py-4 px-4 text-lg focus:ring-primary focus:border-primary"
         required
       />
 
@@ -80,47 +62,46 @@
     <div class="flex justify-between pt-8">
       <a
         href="/auctions/live/<%= propertyId %>"
-        class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700
-               text-gray-800 dark:text-gray-200
-               font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
+        class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
       >
         Cancel
       </a>
 
       <button
         type="submit"
-        class="px-8 py-2.5 bg-primary text-white font-semibold
-               rounded-md shadow hover:bg-blue-600 transition"
+        class="px-8 py-2.5 bg-primary text-white font-semibold rounded-md shadow hover:bg-blue-600 transition"
       >
         Enable Auto-Bid
       </button>
     </div>
-
   </form>
-
 </div>
 
 <script>
-  const socket = io();
+  const socket = io('http://localhost:3000', {
+    auth: {
+      token: localStorage.getItem('token'), // or cookie value
+    },
+  });
 
-  document.getElementById("autoBidForm").addEventListener("submit", (e) => {
+  document.getElementById('autoBidForm').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    const maxBid = Number(document.getElementById("maxBid").value);
+    const maxBid = Number(document.getElementById('maxBid').value);
 
-    socket.emit("enable_auto_bid", {
-      propertyId: "<%= propertyId %>",
-      maxBid
+    socket.emit('enable_auto_bid', {
+      propertyId: '<%= propertyId %>',
+      maxBid,
     });
 
     Swal.fire({
-      icon: "success",
-      title: "Auto-Bid Enabled",
-      text: "System will now bid on your behalf.",
+      icon: 'success',
+      title: 'Auto-Bid Enabled',
+      text: 'System will now bid on your behalf.',
       timer: 2000,
-      showConfirmButton: false
+      showConfirmButton: false,
     }).then(() => {
-      window.location.href = "/auctions/live/<%= propertyId %>";
+      window.location.href = '/auctions/live/<%= propertyId %>';
     });
   });
 </script>

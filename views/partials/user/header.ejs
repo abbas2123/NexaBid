@@ -1,127 +1,168 @@
 <header class="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
   <div class="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-16">
-
     <div class="flex items-center justify-between h-16 sm:h-20">
       <div class="flex items-center space-x-8">
+        <!-- Updated Logo -->
+        <a href="/" class="flex items-center gap-2">
+          <link rel="icon" type="image/x-icon" href="image/x-icon;base64," />
+          <span class="text-[#111518] text-lg sm:text-xl font-bold leading-tight"> NexaBid </span>
+        </a>
 
-  <!-- Updated Logo -->
-  <a href="/" class="flex items-center gap-2">
-    <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64," />
-    <span class="text-[#111518] text-lg sm:text-xl font-bold leading-tight">
-      NexaBid
-    </span>
-  </a>
-
-  <!-- Desktop Nav -->
-  <nav class="hidden md:flex items-center space-x-6 lg:space-x-8">
-    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/">Home</a>
-    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/tenders">Tenders</a>
-    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/properties">Properties</a>
-    <a class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium" href="/user/contact">Contact Us</a>
-  </nav>
-
-</div>
+        <!-- Desktop Nav -->
+        <nav class="hidden md:flex items-center space-x-6 lg:space-x-8">
+          <a
+            class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium"
+            href="/"
+            >Home</a
+          >
+          <a
+            class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium"
+            href="/tenders"
+            >Tenders</a
+          >
+          <a
+            class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium"
+            href="/properties"
+            >Properties</a
+          >
+          <a
+            class="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors font-medium"
+            href="/user/contact"
+            >Contact Us</a
+          >
+        </nav>
+      </div>
 
       <!-- RIGHT: Search + Icons + Avatar + Mobile menu -->
       <div class="flex items-center space-x-3 sm:space-x-4">
         <!-- Search (hidden on very small screens) -->
         <div class="relative hidden sm:block">
-          <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">
+          <span
+            class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
+          >
             search
           </span>
           <input
-           id="globalSearchInput"
+            id="globalSearchInput"
             type="text"
             placeholder="Search"
             class="bg-gray-100 dark:bg-gray-800 border-none rounded-lg pl-10 pr-4 py-2 w-44 md:w-64 text-gray-700 dark:text-gray-300 focus:ring-2 focus:ring-primary focus:outline-none"
           />
-          <div id="searchResultsBox"
-       class="absolute left-0 top-12 w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg 
-              hidden max-h-80 overflow-y-auto z-50">
-               </div>
+          <div
+            id="searchResultsBox"
+            class="absolute left-0 top-12 w-full bg-white dark:bg-slate-800 shadow-lg rounded-lg hidden max-h-80 overflow-y-auto z-50"
+          ></div>
         </div>
-<script src="/js/search.js"></script>
-        <!-- Chat Icon -->
-        <button class="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
-          <span class="material-icons text-gray-600 dark:text-gray-400">chat_bubble_outline</span>
+        <script src="/js/search.js"></script>
+
+        <!-- Chat Icon with Unread Badge -->
+        <button
+          onclick="openChatInbox()"
+          class="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span class="material-icons text-gray-600 dark:text-gray-400"> chat_bubble_outline </span>
+
+          <!-- Unread Message Count Badge -->
+          <span
+            id="chatBadge"
+            class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full hidden"
+          >
+          </span>
         </button>
 
         <!-- Notifications Icon -->
-       <!-- Notification Button -->
-<button id="notificationBtn"
-  class="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
->
-  <span class="material-icons text-gray-600 dark:text-gray-400">notifications_none</span>
+        <!-- Notification Button -->
+        <button
+          id="notificationBtn"
+          class="relative p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
+          <span class="material-icons text-gray-600 dark:text-gray-400">notifications_none</span>
 
-  <!-- Unread Count Badge -->
-  <span id="notificationBadge"
-      class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full hidden">
-</span>
-</button>
-
-<!-- Notification Modal -->
-<div id="notificationModal"
-     class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex items-start justify-end p-4">
-
-  <div class="w-full sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 mt-16 animate-slide-down">
-
-    <div class="flex justify-between items-center mb-3">
-
-      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-        Notifications
-      </h2>
-
-      <div class="flex items-center gap-3">
-
-        <!-- Clear All (Mark as Read) -->
-        <button id="markAllRead"
-                class="text-xs px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition">
-          Clear
+          <!-- Unread Count Badge -->
+          <span
+            id="notificationBadge"
+            class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-1.5 py-0.5 rounded-full hidden"
+          >
+          </span>
         </button>
 
-        <!-- Close Modal -->
-        <button id="closeNotification"
-                class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-          <span class="material-icons">close</span>
-        </button>
-      </div>
+        <!-- Notification Modal -->
+        <div
+          id="notificationModal"
+          class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden z-50 flex items-start justify-end p-4"
+        >
+          <div
+            class="w-full sm:w-96 bg-white dark:bg-gray-800 rounded-xl shadow-xl p-4 mt-16 animate-slide-down"
+          >
+            <div class="flex justify-between items-center mb-3">
+              <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Notifications</h2>
 
-    </div>
+              <div class="flex items-center gap-3">
+                <!-- Clear All (Mark as Read) -->
+                <button
+                  id="markAllRead"
+                  class="text-xs px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-600 transition"
+                >
+                  Clear
+                </button>
 
-    <!-- Notifications List -->
-    <div id="notificationsList"
-         class="space-y-3 max-h-64 overflow-y-auto"></div>
+                <!-- Close Modal -->
+                <button
+                  id="closeNotification"
+                  class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  <span class="material-icons">close</span>
+                </button>
+              </div>
+            </div>
 
-    <!-- Empty State -->
-    <div id="noNotifications"
-         class="py-6 text-center text-gray-500 dark:text-gray-400 hidden">
-      No notifications yet.
-    </div>
+            <!-- Notifications List -->
+            <div id="notificationsList" class="space-y-3 max-h-64 overflow-y-auto"></div>
 
-  </div>
-</div>
+            <!-- Empty State -->
+            <div
+              id="noNotifications"
+              class="py-6 text-center text-gray-500 dark:text-gray-400 hidden"
+            >
+              No notifications yet.
+            </div>
+          </div>
+        </div>
 
-<style>
-  @keyframes slideDown {
-    0% { transform: translateY(-10px); opacity: 0; }
-    100% { transform: translateY(0); opacity: 1; }
-  }
-  .animate-slide-down { animation: slideDown 0.25s ease-out; }
-</style>
+        <style>
+          @keyframes slideDown {
+            0% {
+              transform: translateY(-10px);
+              opacity: 0;
+            }
+
+            100% {
+              transform: translateY(0);
+              opacity: 1;
+            }
+          }
+
+          .animate-slide-down {
+            animation: slideDown 0.25s ease-out;
+          }
+        </style>
         <!-- User Avatar or Login -->
         <% if (user) { %>
-  <a href="/user/profile" 
-   class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
-  <span class="material-icons text-lg">person</span>
-</a>
-<% } else { %>
-  <a href="/auth/login" class="text-sm sm:text-base font-semibold text-primary">
-    Login
-  </a>
-<% } %>
+        <a
+          href="/user/profile"
+          class="flex items-center justify-center h-10 w-10 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition"
+        >
+          <span class="material-icons text-lg">person</span>
+        </a>
+        <% } else { %>
+        <a href="/auth/login" class="text-sm sm:text-base font-semibold text-primary"> Login </a>
+        <% } %>
 
         <!-- Mobile Menu Button -->
-        <button id="menu-btn" class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700">
+        <button
+          id="menu-btn"
+          class="md:hidden p-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700"
+        >
           <span class="material-icons text-gray-600 dark:text-gray-300">menu</span>
         </button>
       </div>
@@ -131,109 +172,195 @@
     <div id="mobile-menu" class="md:hidden hidden pb-4 space-y-2">
       <a href="/" class="block text-gray-700 dark:text-gray-200 font-medium">Home</a>
       <a href="/tenders" class="block text-gray-700 dark:text-gray-200 font-medium">Tenders</a>
-      <a href="/properties" class="block text-gray-700 dark:text-gray-200 font-medium">Properties</a>
+      <a href="/properties" class="block text-gray-700 dark:text-gray-200 font-medium"
+        >Properties</a
+      >
       <a href="/contact" class="block text-gray-700 dark:text-gray-200 font-medium">Contact Us</a>
     </div>
   </div>
 </header>
 
+<!-- Mobile Menu Toggle Script -->
 <script>
-  document.getElementById("menu-btn")?.addEventListener("click", () => {
-    const menu = document.getElementById("mobile-menu");
-    if (menu) menu.classList.toggle("hidden");
+  document.getElementById('menu-btn')?.addEventListener('click', () => {
+    const menu = document.getElementById('mobile-menu');
+    if (menu) menu.classList.toggle('hidden');
   });
 </script>
 
+<!-- Notification Modal Scripts -->
 <script>
-  const btn = document.getElementById("notificationBtn");
-  const modal = document.getElementById("notificationModal");
-  const closeBtn = document.getElementById("closeNotification");
+  const btn = document.getElementById('notificationBtn');
+  const modal = document.getElementById('notificationModal');
+  const closeBtn = document.getElementById('closeNotification');
 
-  btn.addEventListener("click", () => {
-    modal.classList.remove("hidden");
+  btn.addEventListener('click', () => {
+    modal.classList.remove('hidden');
   });
 
-  closeBtn.addEventListener("click", () => {
-    modal.classList.add("hidden");
+  closeBtn.addEventListener('click', () => {
+    modal.classList.add('hidden');
   });
 
   // Click Outside Close
-  modal.addEventListener("click", (e) => {
+  modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.classList.add("hidden");
+      modal.classList.add('hidden');
     }
   });
 </script>
+
+<!-- Clear All Notifications Script -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener('DOMContentLoaded', () => {
+    const clearBtn = document.getElementById('markAllRead');
+    const list = document.getElementById('notificationsList');
+    const emptyMsg = document.getElementById('noNotifications');
+    const badge = document.getElementById('notificationBadge');
 
-  const clearBtn = document.getElementById("markAllRead");
-  const list = document.getElementById("notificationsList");
-  const emptyMsg = document.getElementById("noNotifications");
-  const badge = document.getElementById("notificationBadge");
+    if (clearBtn) {
+      clearBtn.addEventListener('click', async () => {
+        try {
+          const res = await fetch('/notifications/mark-read', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
 
-  if (clearBtn) {
-    clearBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch("/notifications/mark-read", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" }
-        });
+          if (res.ok) {
+            // Clear UI instantly
+            list.innerHTML = '';
+            emptyMsg.classList.remove('hidden');
+            badge.classList.add('hidden');
 
-        if (res.ok) {
-          // Clear UI instantly
-          list.innerHTML = "";
-          emptyMsg.classList.remove("hidden");
-          badge.classList.add("hidden");
-
-          console.log("Notifications cleared");
+            console.log('Notifications cleared');
+          }
+        } catch (err) {
+          console.error('Clear notifications failed', err);
         }
-      } catch (err) {
-        console.error("Clear notifications failed", err);
-      }
-    });
-  }
-
-});
+      });
+    }
+  });
 </script>
+
+<!-- Load Notifications Script -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const list = document.getElementById("notificationsList");
-  const emptyMsg = document.getElementById("noNotifications");
-  const badge = document.getElementById("notificationBadge");
+  document.addEventListener('DOMContentLoaded', () => {
+    const list = document.getElementById('notificationsList');
+    const emptyMsg = document.getElementById('noNotifications');
+    const badge = document.getElementById('notificationBadge');
 
-  async function loadNotifications() {
-    try {
-      const res = await fetch("/notifications");
-      const data = await res.json();
+    async function loadNotifications() {
+      try {
+        const res = await fetch('/notifications');
+        const data = await res.json();
 
-      if (!data.success) return;
+        if (!data.success) return;
 
-      const items = data.notifications;
+        const items = data.notifications;
 
-      if (items.length === 0) {
-        emptyMsg.classList.remove("hidden");
-        badge.classList.add("hidden");
-        return;
-      }
+        if (items.length === 0) {
+          emptyMsg.classList.remove('hidden');
+          badge.classList.add('hidden');
+          return;
+        }
 
-      emptyMsg.classList.add("hidden");
-      badge.classList.remove("hidden");
-      badge.textContent = items.length;
+        emptyMsg.classList.add('hidden');
+        badge.classList.remove('hidden');
+        badge.textContent = items.length;
 
-      list.innerHTML = items
-        .map(n => `
+        list.innerHTML = items
+          .map(
+            (n) => `
           <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
             <a href="${n.link || '#'}" class="font-medium">${n.message}</a>
             <p class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</p>
           </div>
-        `)
-        .join("");
-    } catch (err) {
-      console.error("Notification load failed", err);
+        `
+          )
+          .join('');
+      } catch (err) {
+        console.error('Notification load failed', err);
+      }
     }
-  }
 
-  loadNotifications(); // load once
-});
+    loadNotifications(); // load once
+  });
 </script>
+
+<!-- Load Unread Message Count Script -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const chatBadge = document.getElementById('chatBadge');
+
+    async function loadUnreadMessageCount() {
+      try {
+        const res = await fetch('/chat/unread-count');
+        const data = await res.json();
+
+        if (!data.success) return;
+
+        const count = data.count;
+
+        if (count === 0) {
+          chatBadge.classList.add('hidden');
+          return;
+        }
+
+        chatBadge.classList.remove('hidden');
+        chatBadge.textContent = count > 99 ? '99+' : count;
+      } catch (err) {
+        console.error('Unread message count load failed', err);
+      }
+    }
+
+    loadUnreadMessageCount(); // Load on page load
+
+    // Optional: Refresh every 30 seconds
+    setInterval(loadUnreadMessageCount, 30000);
+
+    // Make function globally accessible for updates
+    window.loadUnreadMessageCount = loadUnreadMessageCount;
+  });
+</script>
+
+<!-- Chat Navigation Function -->
+<script>
+  function openChatInbox() {
+    window.location.href = '/chat';
+  }
+</script>
+
+<!-- Socket.io Real-Time Chat Badge Updates -->
+<% if (user) { %>
+<script>
+  // Wait for socket to be initialized
+  if (typeof io !== 'undefined') {
+    const socket = io();
+    const currentUserId = '<%= user._id %>';
+
+    // Join user's personal room
+    socket.emit('joinUser', currentUserId);
+
+    // Listen for notification (including chat messages)
+    socket.on('newNotification', (data) => {
+      // Update chat badge when new message arrives
+      if (data.type === 'message' && typeof window.loadUnreadMessageCount === 'function') {
+        window.loadUnreadMessageCount();
+      }
+    });
+
+    // Listen for messages_seen event (when thread is read)
+    socket.on('messages_seen', (data) => {
+      // Update badge when messages are marked as read
+      if (data.seenBy === currentUserId) {
+        // User read their own messages, no change needed
+      } else {
+        // Someone else read messages in a thread, refresh badge
+        if (typeof window.loadUnreadMessageCount === 'function') {
+          window.loadUnreadMessageCount();
+        }
+      }
+    });
+  }
+</script>
+<% } %>

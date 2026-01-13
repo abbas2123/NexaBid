@@ -1,519 +1,344 @@
-<%
-// Safely normalize data coming from controller
-const app = (typeof application !== "undefined" && application) ||
-            (typeof data !== "undefined" && data) || {};
+<% const app=(typeof application !=="undefined" && application) || (typeof data !=="undefined" && data) || {}; const
+  ocr=(ocrResult && typeof ocrResult==="object" ) ? ocrResult : {}; %>
 
-const ocr = (ocrResult && typeof ocrResult === "object") ? ocrResult : {};
-%>
-
-<div class="w-full">
-
-  <!-- ERROR / SUCCESS MESSAGES -->
-  <% if (typeof error !== "undefined" && error) { %>
-    <div class="max-w-4xl mx-auto px-4 sm:px-0 mt-4">
-      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-        <%= error %>
-      </div>
-    </div>
-  <% } %>
-
-  <% if (typeof success !== "undefined" && success) { %>
-    <div class="max-w-4xl mx-auto px-4 sm:px-0 mt-4">
-      <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-        <%= success %>
-      </div>
-    </div>
-  <% } %>
-
-  <!-- FORM WRAPPER -->
-  <form
-    id="vendorForm"
-    action="/vendor/apply"
-    method="POST"
-    enctype="multipart/form-data"
-    class="mt-8"
-  >
-    <!-- tells backend what we’re doing (scan vs final submit if you need it) -->
-    <input type="hidden" name="actionType" id="actionType" value="scan" />
-    <input type="hidden" name="isConfirmed" id="isConfirmed" value="false" />
-
-    <!-- Top Section -->
-    <section class="max-w-4xl mx-auto px-4 sm:px-0 space-y-4">
-      <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-        Vendor Application
-      </h1>
-      <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
-        Please review the information below to ensure accuracy before submitting your application.
-      </p>
-    </section>
-
-    <!-- Content Sections -->
-    <section class="max-w-4xl mx-auto mt-8 px-4 sm:px-0 space-y-10">
-
-      <!-- Basic Business Details -->
-      <div class="space-y-6">
-        <div class="grid grid-cols-1 gap-y-4 gap-x-8 sm:grid-cols-2">
-
-          <!-- Business Name -->
-          <div>
-            <label
-              for="businessName"
-              class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-              Business Name
-            </label>
-            <div class="mt-2">
-              <input
-                id="businessName"
-                name="businessName"
-                type="text"
-                value="<%= app.businessName || ocr.businessName || '' %>"
-                class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800
-                       text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset
-                       ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400
-                       dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset
-                       focus:ring-primary sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <!-- PAN Number -->
-          <div>
-            <label
-              for="panNumber"
-              class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-              PAN Number
-            </label>
-            <div class="mt-2">
-              <input
-                id="panNumber"
-                name="panNumber"
-                type="text"
-                value="<%= app.panNumber || ocr.panNumber || '' %>"
-                class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800
-                       text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset
-                       ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400
-                       dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset
-                       focus:ring-primary sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
-          <!-- GST Number -->
-          <div class="sm:col-span-2">
-            <label
-              for="gstNumber"
-              class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
-              GST Number
-            </label>
-            <div class="mt-2">
-              <input
-                id="gstNumber"
-                name="gstNumber"
-                type="text"
-                value="<%= app.gstNumber || ocr.gstNumber || '' %>"
-                class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800
-                       text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset
-                       ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400
-                       dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset
-                       focus:ring-primary sm:text-sm sm:leading-6"
-              />
-            </div>
-          </div>
-
+  <div class="w-full">
+    <!-- ERROR / SUCCESS MESSAGES -->
+    <% if (typeof error !=="undefined" && error) { %>
+      <div class="max-w-4xl mx-auto px-4 sm:px-0 mt-4">
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+          <%= error %>
         </div>
       </div>
-
-      <!-- Upload Section (OCR) -->
-      <div class="space-y-4">
-        <div>
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-            Upload Documents for OCR Verification
-          </h2>
-          <p class="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-400">
-            Our OCR system will automatically read and extract details from your uploaded documents.
-            Please ensure you upload a clear, readable copy.
-          </p>
-        </div>
-
-        <!-- Dropzone / Upload -->
-        <div
-          class="mt-4 flex justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600
-                 px-4 sm:px-6 py-8 sm:py-10">
-          <div class="w-full max-w-md text-center">
-
-            <!-- DOCUMENTS ALREADY SAVED IN DATABASE -->
-<!-- Preview of documents already saved in DB -->
-<div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4" id="existingDocs">
-  <% if (application && application.documents && application.documents.length > 0) { %>
-
-    <% application.documents.forEach(doc => { %>
-      <div class="relative w-full h-24 sm:h-32 bg-gray-300 rounded-lg overflow-hidden">
-
-        <% if (doc.type && doc.type.startsWith("image/")) { %>
-          <img 
-            src="<%= doc.fileId?.fileUrl %>" 
-            class="object-cover w-full h-full"
-          />
-        <% } else { %>
-          <span class="text-xs text-center block pt-4">📄 Document</span>
-        <% } %>
-
-      </div>
-    <% }) %>
-
-  <% } else { %>
-    <p class="col-span-full text-gray-500 text-sm text-center">No documents uploaded</p>
-  <% } %>
-</div>
-
-<!-- Preview New Uploads Before Scan -->
-<div id="previewNewFiles" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4">
-</div>
-
-            <!-- Client-side file chooser -->
-            <div class="mt-6 text-center text-sm leading-6 text-gray-600 dark:text-gray-400 space-y-1">
-              <p class="font-semibold">Drag &amp; Drop your document here</p>
-              <p class="text-gray-500 dark:text-gray-500">or</p>
-
-              <label
-                for="documents"
-                class="relative cursor-pointer rounded-md font-semibold text-primary
-                       focus-within:outline-none focus-within:ring-2 focus-within:ring-primary
-                       focus-within:ring-offset-2 dark:focus-within:ring-offset-background-dark
-                       hover:text-blue-600 dark:hover:text-blue-400">
-                <span>Click to Upload</span>
-                <input
-                  id="documents"
-                  name="documents"
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  class="sr-only"
-                  multiple
-                />
-              </label>
-
-              <p class="text-xs leading-5 text-gray-500 dark:text-gray-500 mt-2">
-                (Recommended: JPG, PNG, PDF — Clear &amp; Straight Images Only)
-              </p>
+      <% } %>
+        <% if (typeof success !=="undefined" && success) { %>
+          <div class="max-w-4xl mx-auto px-4 sm:px-0 mt-4">
+            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
+              <%= success %>
             </div>
           </div>
-        </div>
-      </div>
+          <% } %>
 
-      <!-- Document Preview & OCR Meta -->
-      <div class="space-y-6">
+            <!-- FORM WRAPPER -->
+            <form id="vendorForm" action="/vendor/apply" method="POST" enctype="multipart/form-data" class="mt-8">
+              <!-- tells backend what we’re doing (scan vs final submit if you need it) -->
+              <input type="hidden" name="actionType" id="actionType" value="scan" />
+              <input type="hidden" name="isConfirmed" id="confirm" value="false" />
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <!-- Top Section -->
+              <section class="max-w-4xl mx-auto px-4 sm:px-0 space-y-4">
+                <h1 class="text-3xl sm:text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  Vendor Application
+                </h1>
+                <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                  Please review the information below to ensure accuracy before submitting your application.
+                </p>
+              </section>
 
-        <div>
-          <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
-            Document &amp; OCR Status
-          </h2>
+              <!-- Content Sections -->
+              <section class="max-w-4xl mx-auto mt-8 px-4 sm:px-0 space-y-10">
+                <!-- Basic Business Details -->
+                <div class="space-y-6">
+                  <div class="grid grid-cols-1 gap-y-4 gap-x-8 sm:grid-cols-2">
+                    <!-- Business Name -->
+                    <div>
+                      <label for="businessName"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        Business Name
+                      </label>
+                      <div class="mt-2">
+                        <input id="businessName" name="businessName" type="text"
+                          value="<%= app.businessName || ocr.businessName || '' %>"
+                          class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6" />
+                      </div>
+                    </div>
 
-          <div
-            class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
+                    <!-- PAN Number -->
+                    <div>
+                      <label for="panNumber"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        PAN Number
+                      </label>
+                      <div class="mt-2">
+                        <input id="panNumber" name="panNumber" type="text"
+                          value="<%= app.panNumber || ocr.panNumber || '' %>"
+                          class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6" />
+                      </div>
+                    </div>
 
-              <!-- Replace chooses file again -->
-              <button
-                type="button"
-                id="btnReplace"
-                class="rounded-md bg-gray-200 dark:bg-gray-700 px-4 py-2 text-sm font-semibold
-                       text-gray-900 dark:text-white shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600">
-                Replace Document
-              </button>
+                    <!-- GST Number -->
+                    <div class="sm:col-span-2">
+                      <label for="gstNumber"
+                        class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">
+                        GST Number
+                      </label>
+                      <div class="mt-2">
+                        <input id="gstNumber" name="gstNumber" type="text"
+                          value="<%= app.gstNumber || ocr.gstNumber || '' %>"
+                          class="block w-full rounded-md border-0 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-700 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-inset focus:ring-primary sm:text-sm sm:leading-6" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-              <!-- Start OCR Scan submits form with actionType=scan -->
-              <button
-                type="button"
-                id="btnStartOCR"
-                class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm
-                       hover:bg-blue-700 focus-visible:outline focus-visible:outline-2
-                       focus-visible:outline-offset-2 focus-visible:outline-primary">
-                Start OCR Scan
-              </button>
-            </div>
-          </div>
+                <!-- Upload Section (OCR) -->
+                <div class="space-y-4">
+                  <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      Upload Documents for OCR Verification
+                    </h2>
+                    <p class="mt-1 text-sm sm:text-base text-gray-600 dark:text-gray-400">
+                      Our OCR system will automatically read and extract details from your uploaded documents.
+                      Please ensure you upload a clear, readable copy.
+                    </p>
+                  </div>
 
-          <div class="mt-4 text-sm text-gray-600 dark:text-gray-300 space-y-1">
-            <p id="ocrStatusText">
-              Status:
-              <%= ocr && ocr.text ? "OCR completed" : "Ready for OCR" %>
-            </p>
-            <p class="flex items-center gap-1">
-              Resolution check:
-              <span class="material-icons text-green-600 dark:text-green-400 text-base">check</span>
-              High Resolution
-            </p>
-          </div>
-        </div>
+                  <!-- Dropzone / Upload -->
+                  <div
+                    class="mt-4 flex justify-center rounded-lg border border-dashed border-gray-300 dark:border-gray-600 px-4 sm:px-6 py-8 sm:py-10">
+                    <div class="w-full max-w-md text-center">
+                      <!-- DOCUMENTS ALREADY SAVED IN DATABASE -->
+                      <!-- Preview of documents already saved in DB -->
+                      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4" id="existingDocs">
+                        <% if (application && application.documents && application.documents.length> 0) { %>
+                          <% application.documents.forEach(doc=> { %>
+                            <div class="relative w-full h-24 sm:h-32 bg-gray-300 rounded-lg overflow-hidden">
+                              <% if (doc.type && doc.type.startsWith("image/")) { %>
+                                <img src="<%= doc.fileId?.fileUrl %>" class="object-cover w-full h-full" />
+                                <% } else { %>
+                                  <span class="text-xs text-center block pt-4">📄 Document</span>
+                                  <% } %>
+                            </div>
+                            <% }) %>
+                              <% } else { %>
+                                <p class="col-span-full text-gray-500 text-sm text-center">No documents uploaded</p>
+                                <% } %>
+                      </div>
 
-        <!-- Extracted Details -->
-        <div class="space-y-4">
-  <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
-    Extracted Details:
-  </h3>
-  <ul class="mt-2 space-y-2 list-disc list-inside text-gray-700 dark:text-gray-300 text-sm">
-    
-    <li>
-      Business Name:
-      <span class="text-gray-500 dark:text-gray-400" id="extractedBusinessName">
-        <%= ocrResult?.businessName || "__________" %>
-      </span>
-    </li>
+                      <!-- Preview New Uploads Before Scan -->
+                      <div id="previewNewFiles" class="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-4"></div>
 
-    <li>
-      PAN Number:
-      <span class="text-gray-500 dark:text-gray-400" id="extractedPanNumber">
-        <%= ocrResult?.panNumber || "__________" %>
-      </span>
-    </li>
+                      <!-- Client-side file chooser -->
+                      <div class="mt-6 text-center text-sm leading-6 text-gray-600 dark:text-gray-400 space-y-1">
+                        <p class="font-semibold">Drag &amp; Drop your document here</p>
+                        <p class="text-gray-500 dark:text-gray-500">or</p>
 
-    <li>
-      GST Number:
-      <span class="text-gray-500 dark:text-gray-400" id="extractedGstNumber">
-        <%= ocrResult?.gstNumber || "__________" %>
-      </span>
-    </li>
+                        <label for="documents"
+                          class="relative cursor-pointer rounded-md font-semibold text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 dark:focus-within:ring-offset-background-dark hover:text-blue-600 dark:hover:text-blue-400">
+                          <span>Click to Upload</span>
+                          <input id="documents" name="documents" type="file" accept=".jpg,.jpeg,.png,.pdf"
+                            class="sr-only" multiple />
+                        </label>
 
-  </ul>
+                        <p class="text-xs leading-5 text-gray-500 dark:text-gray-500 mt-2">
+                          (Recommended: JPG, PNG, PDF — Clear &amp; Straight Images Only)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-  <div class="mt-4">
-    <button
-      type="button"
-      id="btnConfirm"
-      class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
-      Confirm & Continue
-    </button>
+                <!-- Document Preview & OCR Meta -->
+                <div class="space-y-6">
+                  <div>
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">
+                      Document &amp; OCR Status
+                    </h2>
+
+                    <div class="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                      <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-3 sm:space-y-0">
+                        <!-- Replace chooses file again -->
+                        <button type="button" id="btnReplace"
+                          class="rounded-md bg-gray-200 dark:bg-gray-700 px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600">
+                          Replace Document
+                        </button>
+
+                        <!-- Start OCR Scan submits form with actionType=scan -->
+                        <button type="button" id="btnStartOCR"
+                          class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                          Start OCR Scan
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="mt-4 text-sm text-gray-600 dark:text-gray-300 space-y-1">
+                      <p id="ocrStatusText">
+                        Status: <%= ocr && ocr.text ? "OCR completed" : "Ready for OCR" %>
+                      </p>
+                      <p class="flex items-center gap-1">
+                        Resolution check:
+                        <span class="material-icons text-green-600 dark:text-green-400 text-base">check</span>
+                        High Resolution
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Extracted Details -->
+                  <div class="space-y-4">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 dark:text-white">
+                      Extracted Details:
+                    </h3>
+                    <ul class="mt-2 space-y-2 list-disc list-inside text-gray-700 dark:text-gray-300 text-sm">
+                      <li>
+                        Business Name:
+                        <span class="text-gray-500 dark:text-gray-400" id="extractedBusinessName">
+                          <%= ocrResult?.businessName || "__________" %>
+                        </span>
+                      </li>
+
+                      <li>
+                        PAN Number:
+                        <span class="text-gray-500 dark:text-gray-400" id="extractedPanNumber">
+                          <%= ocrResult?.panNumber || "__________" %>
+                        </span>
+                      </li>
+
+                      <li>
+                        GST Number:
+                        <span class="text-gray-500 dark:text-gray-400" id="extractedGstNumber">
+                          <%= ocrResult?.gstNumber || "__________" %>
+                        </span>
+                      </li>
+                    </ul>
+
+                    <div class="mt-4">
+                      <button type="button" id="btnConfirm"
+                        class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+                        Confirm & Continue
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Terms + Final Submit -->
+                  <div class="border-t border-gray-200 dark:border-gray-700 pt-6 sm:pt-8">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <!-- Terms Checkbox -->
+                      <div class="relative flex items-start">
+                        <div class="flex h-6 items-center">
+                          <input id="terms" name="terms" type="checkbox"
+                            class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary focus:ring-primary bg-gray-100 dark:bg-gray-900" />
+                        </div>
+                        <div class="ml-3 text-sm leading-6">
+                          <label for="terms" class="font-medium text-gray-700 dark:text-gray-300">
+                            I agree to the terms and conditions of vendor registration
+                          </label>
+                        </div>
+                      </div>
+
+                      <!-- Buttons -->
+                      <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:gap-4">
+                        <!-- Edit (only visible after confirm) -->
+                        <button type="button" id="btnEdit"
+                          class="hidden rounded-md bg-gray-200 dark:bg-gray-700 px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600">
+                          Edit Application
+                        </button>
+
+                        <!-- Submit -->
+                        <button type="submit" id="btnSubmit" disabled
+                          class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                          Submit Application
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </form>
   </div>
-</div>
 
-        <!-- Terms + Final Submit -->
-        <div class="border-t border-gray-200 dark:border-gray-700 pt-6 sm:pt-8">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+  <script>
+    (function () {
+      const vendorForm = document.getElementById('vendorForm');
 
-            <!-- Terms Checkbox -->
-            <div class="relative flex items-start">
-              <div class="flex h-6 items-center">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 dark:border-gray-600 text-primary
-                         focus:ring-primary bg-gray-100 dark:bg-gray-900"
-                />
-              </div>
-              <div class="ml-3 text-sm leading-6">
-                <label
-                  for="terms"
-                  class="font-medium text-gray-700 dark:text-gray-300">
-                  I agree to the terms and conditions of vendor registration
-                </label>
-              </div>
-            </div>
+      const fileInput = document.getElementById('documents');
+      const btnReplace = document.getElementById('btnReplace');
+      const btnStartOCR = document.getElementById('btnStartOCR');
+      const btnConfirm = document.getElementById('btnConfirm');
+      const btnEdit = document.getElementById('btnEdit');
+      const btnSubmit = document.getElementById('btnSubmit');
+      const termsCheckbox = document.getElementById('terms');
+      const confirmInput = document.getElementById('confirm');
+      const actionTypeInput = document.getElementById('actionType');
 
-            <!-- Buttons -->
-            <div class="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <!-- Edit (only visible after confirm) -->
-              <button
-                type="button"
-                id="btnEdit"
-                class="hidden rounded-md bg-gray-200 dark:bg-gray-700 px-4 py-2 text-sm font-semibold
-                       text-gray-900 dark:text-white shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600">
-                Edit Application
-              </button>
+      const businessInput = document.getElementById('businessName');
+      const panInput = document.getElementById('panNumber');
+      const gstInput = document.getElementById('gstNumber');
 
-              <!-- Submit -->
-              <button
-                type="submit"
-                id="btnSubmit"
-                disabled
-                class="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-sm
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       hover:bg-blue-700 focus-visible:outline focus-visible:outline-2
-                       focus-visible:outline-offset-2 focus-visible:outline-primary">
-                Submit Application
-              </button>
-            </div>
+      const ocrStatusText = document.getElementById('ocrStatusText');
+      const previewNewFiles = document.getElementById('previewNewFiles');
 
-          </div>
-        </div>
-
-      </div>
-
-    </section>
-  </form>
-</div>
-
-<script>
-(function () {
-
-  const fileInput = document.getElementById("documents");
-  const btnReplace = document.getElementById("btnReplace");
-  const btnStartOCR = document.getElementById("btnStartOCR");
-  const btnConfirm = document.getElementById("btnConfirm");
-  const btnEdit = document.getElementById("btnEdit");
-  const btnSubmit = document.getElementById("btnSubmit");
-  const termsCheckbox = document.getElementById("terms");
-
-  const actionTypeInput = document.getElementById("actionType");
-  const isConfirmedInput = document.getElementById("isConfirmed");
-
-  const businessInput = document.getElementById("businessName");
-  const panInput = document.getElementById("panNumber");
-  const gstInput = document.getElementById("gstNumber");
-
-  const ocrStatusText = document.getElementById("ocrStatusText");
-  const previewNewFiles = document.getElementById("previewNewFiles");
-
-
-  /* ------------------------------
-        ENABLE SUBMIT BUTTON
-  ------------------------------ */
-  function updateSubmitState() {
-    btnSubmit.disabled = !(isConfirmedInput.value === "true" && termsCheckbox.checked);
-  }
-  termsCheckbox.addEventListener("change", updateSubmitState);
-
-
-  /* ------------------------------
-        PREVIEW NEW UPLOADED FILES
-  ------------------------------ */
-  fileInput.addEventListener("change", () => {
-    previewNewFiles.innerHTML = "";
-
-    Array.from(fileInput.files).forEach(file => {
-      const box = document.createElement("div");
-      box.className = "w-full h-24 bg-gray-200 rounded-lg overflow-hidden";
-
-      if (file.type.startsWith("image/")) {
-        box.innerHTML = `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">`;
-      } else {
-        box.innerHTML = `<p class='text-center text-xs p-2'>📄 ${file.name}</p>`;
+      function normalize() {
+        panInput.value = panInput.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+        gstInput.value = gstInput.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
       }
 
-      previewNewFiles.appendChild(box);
-    });
+      function updateSubmitState() {
+        btnSubmit.disabled = !(confirmInput.value === 'true' && termsCheckbox.checked);
+      }
 
-    ocrStatusText.textContent = "Status: Ready for OCR (file selected)";
-  });
+      termsCheckbox.addEventListener('change', updateSubmitState);
 
+      fileInput.addEventListener('change', () => {
+        previewNewFiles.innerHTML = '';
+        [...fileInput.files].forEach((file) => {
+          const box = document.createElement('div');
+          box.className = 'w-full h-24 bg-gray-200 rounded-lg overflow-hidden';
+          box.innerHTML = file.type.startsWith('image/')
+            ? `<img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover">`
+            : `<p class="text-xs text-center p-2">📄 ${file.name}</p>`;
+          previewNewFiles.appendChild(box);
+        });
+        ocrStatusText.textContent = 'Status: Ready for OCR';
+      });
 
-  /* ------------------------------
-        REPLACE BUTTON
-  ------------------------------ */
-  btnReplace?.addEventListener("click", () => fileInput.click());
+      btnReplace?.addEventListener('click', () => fileInput.click());
 
+      btnStartOCR?.addEventListener('click', async () => {
+        if (!fileInput.files.length) return Swal.fire('Error', 'Upload at least 1 document', 'error');
 
-  /* ------------------------------
-        OCR SCAN BUTTON (AJAX)
-  ------------------------------ */
- btnStartOCR?.addEventListener("click", async () => {
+        Swal.fire({
+          title: 'Scanning...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading(),
+        });
 
-  if (!fileInput.files.length) {
-    return Swal.fire("Error", "Please upload at least 1 document", "error");
-  }
+        actionTypeInput.value = 'scan';
+        const res = await fetch('/vendor/apply', { method: 'POST', body: new FormData(vendorForm) });
+        const data = await res.json();
+        if (!data.success) return Swal.fire('Error', data.message, 'error');
 
-  // Show alert immediately (no delay)
-  Swal.fire({
-    title: "Scanning...",
-    text: "OCR is processing your document.",
-    allowOutsideClick: false,
-    allowEscapeKey: false,
-    didOpen: () => Swal.showLoading()
-  });
+        Swal.fire('Success', 'OCR Completed', 'success');
+        setTimeout(() => (location.href = data.redirectUrl), 1200);
+      });
 
-  // tiny delay to allow UI to render the modal
-  setTimeout(async () => {
+      btnConfirm?.addEventListener('click', () => {
+        [businessInput, panInput, gstInput, fileInput].forEach((i) => (i.disabled = true));
+        btnConfirm.classList.add('hidden');
+        btnEdit.classList.remove('hidden');
+        confirmInput.value = 'true';
+        updateSubmitState();
+      });
 
-    actionTypeInput.value = "scan";
-    const form = document.getElementById("vendorForm");
-    const formData = new FormData(form);
+      btnEdit?.addEventListener('click', () => {
+        [businessInput, panInput, gstInput, fileInput].forEach((i) => (i.disabled = false));
+        btnConfirm.classList.remove('hidden');
+        btnEdit.classList.add('hidden');
+        confirmInput.value = 'false';
+        updateSubmitState();
+      });
 
-    const res = await fetch("/vendor/apply", {
-      method: "POST",
-      body: formData
-    });
+      btnSubmit?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        normalize();
+        actionTypeInput.value = 'submit';
 
-    const data = await res.json();
+        const res = await fetch('/vendor/apply', { method: 'POST', body: new FormData(vendorForm) });
+        const data = await res.json();
+        if (!data.success) return Swal.fire('Error', data.message, 'error');
 
-    if (!data.success) {
-      return Swal.fire("Error", data.message, "error");
-    }
+        Swal.fire('Success', data.message, 'success');
+        setTimeout(() => (location.href = data.redirectUrl), 1200);
+      });
 
-    Swal.fire("OCR Completed!", data.message, "success");
-
-    setTimeout(() => {
-      window.location.href = data.redirectUrl;
-    }, 1200);
-
-  }, 10);  // 👈 Very small delay makes modal instant
-});
-
-  /* ------------------------------
-        CONFIRM BUTTON
-  ------------------------------ */
-  btnConfirm?.addEventListener("click", () => {
-
-    [businessInput, panInput, gstInput, fileInput].forEach(input => input.disabled = true);
-
-    btnConfirm.classList.add("hidden");
-    btnStartOCR.disabled = true;
-    btnReplace.disabled = true;
-    btnEdit.classList.remove("hidden");
-
-    isConfirmedInput.value = "true";
-    updateSubmitState();
-  });
-
-
-  /* ------------------------------
-        EDIT BUTTON
-  ------------------------------ */
-  btnEdit?.addEventListener("click", () => {
-
-    [businessInput, panInput, gstInput, fileInput].forEach(input => input.disabled = false);
-
-    btnConfirm.classList.remove("hidden");
-    btnStartOCR.disabled = false;
-    btnReplace.disabled = false;
-    btnEdit.classList.add("hidden");
-
-    isConfirmedInput.value = "false";
-    updateSubmitState();
-  });
-
-
-  /* ------------------------------
-        FINAL SUBMIT (AJAX)
-  ------------------------------ */
-  btnSubmit?.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Submit clicked!");
-
-  actionTypeInput.value = "submit";
-    const form = document.getElementById("vendorForm");
-    const formData = new FormData(form);
-
-    const res = await fetch("/vendor/apply", {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-    console.log("SUBMIT RESPONSE:", data);
-
-    if (!data.success) {
-      return Swal.fire("Error", data.message, "error");
-    }
-
-    Swal.fire("Success!", data.message, "success");
-
-    setTimeout(() => {
-      window.location.href = data.redirectUrl;
-    }, 1500);
-  });
-
-
-  updateSubmitState();
-
-})();
-</script>
+      updateSubmitState();
+    })();
+  </script>

@@ -1,6 +1,5 @@
 <main class="px-4 sm:px-6 lg:px-8 py-5 w-full flex justify-center">
   <div x-data="{ tab:'technical', modal:false, currentBid:{} }" class="max-w-7xl w-full space-y-10">
-
     <!-- TITLE -->
     <div>
       <h1 class="text-3xl sm:text-4xl font-black text-gray-900 dark:text-white">
@@ -21,14 +20,14 @@
       <div class="p-5 bg-white dark:bg-gray-800 border rounded-xl">
         <p class="text-gray-600 text-sm">Highest Bid</p>
         <p class="text-3xl font-bold text-green-600">
-          ₹<%= (Math.max(...bids.map(b => b.offeredAmount || 0))).toLocaleString('en-IN') %>
+          ₹<%= (Math.max(...bids.map(b=> b.offeredAmount || 0))).toLocaleString('en-IN') %>
         </p>
       </div>
 
       <div class="p-5 bg-white dark:bg-gray-800 border rounded-xl">
         <p class="text-gray-600 text-sm">Lowest Bid</p>
         <p class="text-3xl font-bold text-red-600">
-          ₹<%= (Math.min(...bids.map(b => b.offeredAmount || 0))).toLocaleString('en-IN') %>
+          ₹<%= (Math.min(...bids.map(b=> b.offeredAmount || 0))).toLocaleString('en-IN') %>
         </p>
       </div>
 
@@ -42,17 +41,28 @@
 
     <!-- TABS -->
     <nav class="flex gap-8 border-b">
-      <button @click="tab='technical'"
-              :class="tab==='technical' ? 'text-primary border-b-2 border-primary font-bold' : 'text-gray-500'"
-              class="pb-3 text-sm">Technical Evaluation</button>
+      <button
+        @click="tab='technical'"
+        :class="tab==='technical' ? 'text-primary border-b-2 border-primary font-bold' : 'text-gray-500'"
+        class="pb-3 text-sm"
+      >
+        Technical Evaluation
+      </button>
 
-      <button @click="tab='financial'"
-              :class="tab==='financial' ? 'text-primary border-b-2 border-primary font-bold' : 'text-gray-500'"
-              class="pb-3 text-sm">Financial Evaluation</button>
+      <button
+        @click="tab='financial'"
+        :class="tab==='financial' ? 'text-primary border-b-2 border-primary font-bold' : 'text-gray-500'"
+        class="pb-3 text-sm"
+      >
+        Financial Evaluation
+      </button>
     </nav>
 
     <!-- TECHNICAL TAB -->
-    <div x-show="tab==='technical'" class="overflow-x-auto border rounded-xl bg-white dark:bg-gray-800">
+    <div
+      x-show="tab==='technical'"
+      class="overflow-x-auto border rounded-xl bg-white dark:bg-gray-800"
+    >
       <table class="w-full border-collapse">
         <thead class="bg-gray-100 text-left text-sm font-semibold">
           <tr>
@@ -64,7 +74,7 @@
         </thead>
 
         <tbody>
-        <% bids.forEach(b => { %>
+          <% bids.forEach(b=> { %>
 
           <!-- SAFE JSON FOR THIS BID -->
           <script type="application/json" id="bid-<%= b._id %>">
@@ -79,12 +89,18 @@
           <tr class="border-b">
             <td class="p-4 font-semibold"><%= b.vendor.name %></td>
             <td class="p-4">
-              <% if (b.techStatus === 'accepted') { %>
-                <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-xs font-semibold">Accepted</span>
-              <% } else if (b.techStatus === 'rejected') { %>
-                <span class="px-3 py-1 bg-red-200 text-red-900 rounded-full text-xs font-semibold">Rejected</span>
+              <% if (b.techStatus==='accepted' ) { %>
+              <span class="px-3 py-1 bg-green-200 text-green-900 rounded-full text-xs font-semibold"
+                >Accepted</span
+              >
+              <% } else if (b.techStatus==='rejected' ) { %>
+              <span class="px-3 py-1 bg-red-200 text-red-900 rounded-full text-xs font-semibold"
+                >Rejected</span
+              >
               <% } else { %>
-                <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold">Pending</span>
+              <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs font-semibold"
+                >Pending</span
+              >
               <% } %>
             </td>
 
@@ -95,25 +111,37 @@
                   currentBid = JSON.parse(document.getElementById('bid-<%= b._id %>').textContent);
                   currentBid.tab = 'technical';
                 "
-                class="underline text-primary font-semibold">View Files</button>
+                class="underline text-primary font-semibold"
+              >
+                View Files
+              </button>
             </td>
 
             <td class="p-4 text-right space-x-3">
-              <a href="/user/status/my-listing/evaluation/accept-tech/<%= b._id %>"
-                 class="px-4 py-1 bg-primary text-white rounded-lg text-xs">Accept</a>
+              <a
+                href="/user/manage/my-listing/evaluation/accept-tech/<%= b._id %>"
+                class="px-4 py-1 bg-primary text-white rounded-lg text-xs"
+                >Accept</a
+              >
 
-              <a href="/user/status/my-listing/evaluation/reject-tech/<%= b._id %>"
-                 class="px-4 py-1 bg-red-600 text-white rounded-lg text-xs">Reject</a>
+              <a
+                href="/user/manage/my-listing/evaluation/reject-tech/<%= b._id %>"
+                class="px-4 py-1 bg-red-600 text-white rounded-lg text-xs"
+                >Reject</a
+              >
             </td>
           </tr>
 
-        <% }) %>
+          <% }) %>
         </tbody>
       </table>
     </div>
 
     <!-- FINANCIAL TAB -->
-    <div x-show="tab==='financial'" class="overflow-x-auto border rounded-xl bg-white dark:bg-gray-800">
+    <div
+      x-show="tab==='financial'"
+      class="overflow-x-auto border rounded-xl bg-white dark:bg-gray-800"
+    >
       <table class="w-full text-sm">
         <thead class="bg-gray-100 font-semibold">
           <tr>
@@ -126,7 +154,7 @@
         </thead>
 
         <tbody>
-        <% bids.filter(b => b.techStatus === 'accepted').forEach(b => { %>
+          <% bids.filter(b=> b.techStatus === 'accepted').forEach(b => { %>
 
           <tr class="border-b">
             <td class="p-4 font-semibold"><%= b.vendor.name %></td>
@@ -136,7 +164,9 @@
             </td>
 
             <td class="p-4 text-center">
-              <span class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">Qualified</span>
+              <span class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs"
+                >Qualified</span
+              >
             </td>
 
             <td class="p-4 text-center">
@@ -146,26 +176,37 @@
                   currentBid = JSON.parse(document.getElementById('bid-<%= b._id %>').textContent);
                   currentBid.tab = 'financial';
                 "
-                class="underline text-primary font-semibold">View Files</button>
+                class="underline text-primary font-semibold"
+              >
+                View Files
+              </button>
             </td>
 
             <td class="p-4 text-right">
               <% if (!b.isWinner) { %>
-                <a href="/user/status/my-listing/evaluation/select-winner/<%= b._id %>"
-                   class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-xs">Select Winner</a>
+              <a
+                href="/user/manage/my-listing/evaluation/select-winner/<%= b._id %>"
+                class="px-4 py-1.5 bg-green-600 text-white rounded-lg text-xs"
+                >Select Winner</a
+              >
               <% } else { %>
-                <span class="px-4 py-1.5 bg-gray-300 text-gray-800 rounded-lg text-xs">Winner Selected</span>
+              <span class="px-4 py-1.5 bg-gray-300 text-gray-800 rounded-lg text-xs"
+                >Winner Selected</span
+              >
               <% } %>
             </td>
           </tr>
 
-        <% }) %>
+          <% }) %>
         </tbody>
       </table>
     </div>
 
     <!-- DOCUMENT MODAL -->
-    <div x-show="modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div
+      x-show="modal"
+      class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+    >
       <div class="bg-white dark:bg-gray-900 p-6 rounded-xl w-full max-w-md space-y-4">
         <div class="flex justify-between">
           <h2 class="text-xl font-bold">Documents</h2>
@@ -213,10 +254,8 @@
             </template>
           </div>
         </template>
-
       </div>
     </div>
-
   </div>
 </main>
 

@@ -1,0 +1,328 @@
+<div
+  class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark"
+>
+  <main class="flex-1 w-full max-w-[1024px] mx-auto px-4 md:px-8 py-8 md:py-12">
+    <!-- Breadcrumbs -->
+    <nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
+      <a
+        href="<%= userRole === 'vendor' ? '/vendor/dashboard' : userRole === 'admin' ? '/admin/dashboard' : '/user/dashboard' %>"
+        class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors"
+      >
+        Home
+      </a>
+      <span class="text-[#616f89] dark:text-gray-500">/</span>
+      <span class="font-medium text-[#111318] dark:text-white">Reports</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+      <div>
+        <h1
+          class="text-3xl md:text-4xl font-black tracking-tight text-[#111318] dark:text-white mb-2"
+        >
+          Report Management
+        </h1>
+        <p class="text-[#616f89] dark:text-gray-400">
+          Access and manage all your property and bidding reports in one place.
+        </p>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div
+      class="bg-white dark:bg-[#1A2230] p-4 rounded-xl shadow-sm border border-[#e2e8f0] dark:border-gray-700 mb-8"
+    >
+      <div class="relative w-full">
+        <span
+          class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-primary"
+          >search</span
+        >
+        <input
+          id="reportSearch"
+          class="w-full pl-12 pr-4 py-3 bg-[#f8f9fa] dark:bg-gray-900 border-none rounded-lg text-[#111318] dark:text-white placeholder-[#616f89] focus:ring-2 focus:ring-primary/20 focus:bg-white dark:focus:bg-gray-800 transition-all"
+          placeholder="Search report categories (e.g., 'financial', 'auction')..."
+          type="text"
+        />
+      </div>
+    </div>
+
+    <!-- Report Categories Grid -->
+    <div id="reportGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Card 1: My Bid Reports -->
+      <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="bid tender auction bidding"
+      >
+        <div
+          class="size-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-primary mb-4 group-hover:scale-110 transition-transform"
+        >
+          <span class="material-symbols-outlined text-[28px]">gavel</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">My Bid Reports</h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          Track status, history and final outcome of all your submitted bids.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a
+            href="<%= userRole === 'admin' ? '/admin/reports/my-bids' : '/user/reports/my-bids' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1"
+          >
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 2: Tender Evaluation -->
+      <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="tender evaluation analytics performance"
+      >
+        <div
+          class="size-12 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 mb-4 group-hover:scale-110 transition-transform"
+        >
+          <span class="material-symbols-outlined text-[28px]">analytics</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">Tender Evaluation</h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          Deep dive analytics on tender performance and competitive analysis.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a
+            href="<%= userRole === 'vendor' ? '/vendor/reports/tender-evaluation' : '/admin/reports/tender-evaluation' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1"
+          >
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 3: Property Auction Reports -->
+      <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="property auction real estate sale"
+      >
+        <div
+          class="size-12 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400 mb-4 group-hover:scale-110 transition-transform"
+        >
+          <span class="material-symbols-outlined text-[28px]">real_estate_agent</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">
+          Property Auction Reports
+        </h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          Summary of auction results, final sale prices, and property metrics.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a
+            href="<%= userRole === 'admin' ? '/admin/reports/property-auctions' : '/user/reports/property-auctions' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1"
+          >
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Card 4: Financial Reports -->
+      <!-- <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="financial invoice transaction payment revenue">
+        <div
+          class="size-12 rounded-lg bg-green-50 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[28px]">receipt_long</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">Financial Reports</h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          Invoices, revenue statements, and tax summaries.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a href="<%= userRole === 'vendor' ? '/vendor/reports/financial' : userRole === 'admin' ? '/admin/reports/financial' : '/user/reports/financial' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1">
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Card 5: Balance Reports -->
+      <!-- <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="balance wallet money funds">
+        <div
+          class="size-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-[28px]">account_balance_wallet</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">Balance Reports</h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          View wallet balance, transaction history, and fund details.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a href="<%= userRole === 'vendor' ? '/vendor/reports/balance' : userRole === 'admin' ? '/admin/reports/balance' : '/user/reports/balance' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1">
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div> -->
+
+      <!-- Card 5: Work Order Reports -->
+      <% if (userRole==='vendor' || userRole==='admin' ) { %>
+      <div
+        class="report-card group flex flex-col bg-white dark:bg-[#1A2230] border border-[#e2e8f0] dark:border-gray-700 rounded-xl p-6 hover:shadow-lg hover:border-primary/30 transition-all duration-300"
+        data-search-terms="work order maintenance vendor service"
+      >
+        <div
+          class="size-12 rounded-lg bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400 mb-4 group-hover:scale-110 transition-transform"
+        >
+          <span class="material-symbols-outlined text-[28px]">engineering</span>
+        </div>
+        <h3 class="text-lg font-bold text-[#111318] dark:text-white mb-2">Work Order Reports</h3>
+        <p class="text-[#616f89] dark:text-gray-400 text-sm leading-relaxed mb-6">
+          Status updates on maintenance and vendor work orders.
+        </p>
+        <div class="mt-auto pt-4 border-t border-dashed border-[#e2e8f0] dark:border-gray-700">
+          <a
+            href="<%= userRole === 'vendor' ? '/vendor/reports/work-orders' : '/admin/reports/work-orders' %>"
+            class="inline-flex items-center text-sm font-bold text-primary hover:text-blue-700 dark:hover:text-blue-400 gap-1"
+          >
+            View Reports
+            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Card 6: Compliance Documents -->
+    </div>
+
+    <!-- Empty State (Hidden by Default) -->
+    <div id="emptyState" class="hidden text-center py-16">
+      <span class="material-symbols-outlined text-7xl text-slate-300 dark:text-slate-600 mb-4"
+        >search_off</span
+      >
+      <p class="text-slate-500 dark:text-slate-400 text-lg">
+        No report categories found matching your search.
+      </p>
+      <button onclick="clearSearch()" class="mt-4 text-primary font-semibold hover:underline">
+        Clear search
+      </button>
+    </div>
+  </main>
+</div>
+
+<!-- Required CDN Links (specific to this page) -->
+<link
+  href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+  rel="stylesheet"
+/>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Live Search Functionality
+    const searchInput = document.getElementById('reportSearch');
+    const reportCards = document.querySelectorAll('.report-card');
+    const reportGrid = document.getElementById('reportGrid');
+    const emptyState = document.getElementById('emptyState');
+
+    if (!searchInput) return;
+
+    searchInput.addEventListener('input', function () {
+      const searchTerm = this.value.toLowerCase().trim();
+      let visibleCount = 0;
+
+      reportCards.forEach((card) => {
+        const searchTerms = card.getAttribute('data-search-terms') || '';
+        const title = card.querySelector('h3')
+          ? card.querySelector('h3').textContent.toLowerCase()
+          : '';
+        const description = card.querySelector('p')
+          ? card.querySelector('p').textContent.toLowerCase()
+          : '';
+
+        const matches =
+          searchTerms.toLowerCase().includes(searchTerm) ||
+          title.includes(searchTerm) ||
+          description.includes(searchTerm);
+
+        if (matches || searchTerm === '') {
+          card.classList.remove('hidden');
+          card.classList.add('flex');
+          visibleCount++;
+        } else {
+          card.classList.remove('flex');
+          card.classList.add('hidden');
+        }
+      });
+
+      // Show/hide empty state
+      if (visibleCount === 0 && searchTerm !== '') {
+        reportGrid.classList.add('hidden');
+        emptyState.classList.remove('hidden');
+      } else {
+        reportGrid.classList.remove('hidden');
+        reportGrid.classList.add('grid');
+        emptyState.classList.add('hidden');
+      }
+    });
+
+    // Keyboard shortcut (Ctrl/Cmd + K to focus search)
+    document.addEventListener('keydown', function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+  });
+
+  // Clear search function
+  function clearSearch() {
+    const searchInput = document.getElementById('reportSearch');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.dispatchEvent(new Event('input'));
+      searchInput.focus();
+    }
+  }
+</script>
+
+<style>
+  body {
+    font-family: 'Manrope', sans-serif;
+  }
+
+  /* Smooth transitions */
+  .report-card {
+    transition: all 0.3s ease;
+  }
+
+  /* Search input focus effect */
+  #reportSearch:focus {
+    transform: translateY(-2px);
+  }
+
+  /* Responsive grid adjustments */
+  @media (max-width: 768px) {
+    .report-card {
+      padding: 1.25rem;
+    }
+  }
+
+  /* Empty state animation */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  #emptyState:not(.hidden) {
+    animation: fadeIn 0.3s ease;
+  }
+</style>

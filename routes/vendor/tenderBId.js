@@ -1,36 +1,31 @@
-const express = require("express");
+const express = require('express');
+const authControler = require('../../controllers/vendor/tenderBid');
+const { protectRoute, vendorProtect } = require('../../middlewares/authMiddleware');
+const uploads = require('../../middlewares/upload');
 const router = express.Router();
-const authControler = require("../../controllers/vendor/tenderBid");
-const authMiddleware = require("../../middlewares/authMiddleware");
-const tenderUpload = require("../../middlewares/tenderTechForm");
-const tenderUploads= require("../../middlewares/tenderFin");
 
-router.get(
-  "/:id/bid",
-  authMiddleware.protectRoute,
-  authControler.getTenderTechBidForm
-);
+router.get('/:id/bid', protectRoute, vendorProtect, authControler.getTenderTechBidForm);
 
 router.post(
-  "/upload/all/:id",
-  authMiddleware.protectRoute,
-  tenderUpload.fields([
-    { name: "proposalFiles", maxCount: 20 },
-    { name: "techFiles", maxCount: 20 },
+  '/upload/all/:id',
+  protectRoute,
+  vendorProtect,
+  uploads('nexabid/tender_bids').fields([
+    { name: 'proposalFiles', maxCount: 20 },
+    { name: 'techFiles', maxCount: 20 },
   ]),
   authControler.uploadTechnicalPhase
 );
-router.get(
-  "/:id/financial",
-  authMiddleware.protectRoute,
-  authControler.getTenderFin
-);
+
+router.get('/:id/financial', protectRoute, vendorProtect, authControler.getTenderFin);
+
 router.post(
-  "/uploads/:id/financial",
-  authMiddleware.protectRoute,
-  tenderUploads.fields([
-    { name: "finForms", maxCount: 20 },
-    { name: "quotationFiles", maxCount: 20 },
+  '/uploads/:id/financial',
+  protectRoute,
+  vendorProtect,
+  uploads('nexabid/tender_bids').fields([
+    { name: 'finForms', maxCount: 20 },
+    { name: 'quotationFiles', maxCount: 20 },
   ]),
   authControler.uploadFinancialPhase
 );

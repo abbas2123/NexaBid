@@ -1,168 +1,192 @@
-const vendorApplication = require("../../models/vendorApplication");
-const OCRResult = require("../../models/OCR_Result");
-const FraudFlag = require("../../models/fraudFlag");
-const fileModel = require("../../models/File");
-const ocrService = require("../../utils/ocr");
-const fraudService = require("../../utils/fraudFlag");
-const path = require("path");
-const fs = require("fs");
-const crypto = require("crypto");
+const mongoose = require('mongoose');
+const crypto = require('crypto');
+const cloudinary = require('../../config/cloudinary');
+const vendorApplication = require('../../models/vendorApplication');
+const OCRResult = require('../../models/OCR_Result');
+const FraudFlag = require('../../models/fraudFlag');
+const File = require('../../models/File');
+const ocrService = require('../../utils/ocr');
+const fraudService = require('../../utils/fraudFlag');
+const { ERROR_MESSAGES } = require('../../utils/constants');
 
-exports.checkExistingApplication = async (userId) => {
-  return vendorApplication.findOne({ userId }).populate("documents.fileId");
-};
-exports.getApplicationStatus = async (userId) => {
-  return await vendorApplication
-    .findOne({ userId })
-    .populate("documents.fileId")
-    .populate("ocrResultId");
-};
+exports.getApplicationStatus = async (userId) =>
+  vendorApplication.findOne({ userId }).populate('documents.fileId').populate('ocrResultId');
+
+exports.checkExistingApplication = async (userId) =>
+  vendorApplication.findOne({ userId }).populate('documents.fileId');
 
 exports.submitApplicationService = async (user, files, actionType) => {
-  if (actionType !== "scan") {
+  if (actionType !== 'scan') {
     return {
-      updatedApp: await vendorApplication
-        .findOne({ userId: user._id })
-        .populate("documents.fileId"),
+      updatedApp: await vendorApplication.findOne({ userId: user._id }).populate('documents.fileId'),
       extracted: null,
       fraud: null,
     };
   }
-  if (actionType === "scan") {
-    if (!files || files.length === 0) {
-      throw new Error("Upload at least 1 document");
-    }
+
+  if (!files || files.length === 0) {
+    throw new Error(ERROR_MESSAGES.UPLOAD_AT_LEAST_ONE_DOC);
   }
-  const existingApp =
-    (await vendorApplication.findOne({ userId: user._id })) || {};
-  
-  const golobalChecksums = await fileModel
-    .find({ relatedType: "vendor_application" })
-    .then((files) => files.map((f) => f.checksum));
-  
-  const existingFileChecksums = await fileModel
-    .find({
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const existingApp = (await vendorApplication.findOne({ userId: user._id }).session(session)) || {};
+
+    const globalChecksums = await File.find({ relatedType: 'vendor_application' })
+      .session(session)
+      .then((files) => files.map((f) => f.checksum));
+
+    const existingFileChecksums = await File.find({
       _id: { $in: existingApp.documents?.map((d) => d.fileId) || [] },
     })
-    .then((docs) => docs.map((f) => f.checksum));
+      .session(session)
+      .then((docs) => docs.map((f) => f.checksum));
 
-  const existingFilesums = [...golobalChecksums, ...existingFileChecksums];
+    const existingChecksums = [...globalChecksums, ...existingFileChecksums];
+    const newDocs = [];
+    const extractedData = {
+      businessName: null,
+      panNumber: null,
+      gstNumber: null,
+      text: '',
+    };
 
-  let newDocs = [];
+    for (const file of files) {
+      if (!file.buffer) {
+        throw new Error(ERROR_MESSAGES.FILE_BUFFER_MISSING);
+      }
 
-  let extractedData = {
-    businessName: null,
-    panNumber: null,
-    gstNumber: null,
-    text: "",
-  };
+      const checksum = crypto.createHash('md5').update(file.buffer).digest('hex');
+      if (existingChecksums.includes(checksum)) {
+        throw new Error(ERROR_MESSAGES.DUPLICATE_DOCUMENT);
+      }
+      existingChecksums.push(checksum);
 
-  for (let file of files) {
-    const filePath = path.join(
-      __dirname,
-      "../../uploads/vendor-docs",
-      file.filename
-    );
+      const cldResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'auto',
+            folder: 'vendor_docs',
+          },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        uploadStream.end(file.buffer);
+      });
 
-    const fileBuffer = fs.readFileSync(filePath);
-    const checksum = crypto.createHash("md5").update(fileBuffer).digest("hex");
+      const fileData = await File.create(
+        [
+          {
+            ownerId: user._id,
+            relatedType: 'vendor_application',
+            relatedId: existingApp?._id || null,
+            fileName: file.originalname,
+            fileUrl: cldResult.secure_url,
+            checksum,
+            mimeType: file.mimetype,
+            size: file.size || file.buffer.length,
+            version: 1,
+            metadata: {
+              cloudinary_public_id: cldResult.public_id,
+              cloudinary_version: cldResult.version,
+            },
+          },
+        ],
+        { session }
+      );
 
-    
-    if (existingFilesums.includes(checksum)) {
-      console.log("⛔ Duplicate prevented:", file.filename);
-      fs.unlinkSync(filePath);
-      throw new Error(
-        "Duplicate document detected! Please upload a different file."
+      newDocs.push({
+        fileId: fileData[0]._id,
+        type: file.mimetype,
+        uploadedAt: new Date(),
+      });
+
+      const ocrResult = await ocrService.extractTextFromImage(cldResult.secure_url);
+      extractedData.text += `\n${ocrResult.text || ''}`;
+      if (!extractedData.businessName && ocrResult.businessName) {
+        extractedData.businessName = ocrResult.businessName;
+      }
+      if (!extractedData.panNumber && ocrResult.panNumber) {
+        extractedData.panNumber = ocrResult.panNumber.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      }
+      if (!extractedData.gstNumber && ocrResult.gstNumber) {
+        extractedData.gstNumber = ocrResult.gstNumber;
+      }
+    }
+
+    if (newDocs.length > 0) {
+      await vendorApplication.findOneAndUpdate(
+        { userId: user._id },
+        { $push: { documents: { $each: newDocs } } },
+        { upsert: true, session }
       );
     }
 
-    
-    existingFilesums.push(checksum);
+    let ocrFileId = newDocs[0]?.fileId;
+    if (!ocrFileId && existingApp?.documents?.length > 0) {
+      ocrFileId = existingApp.documents[existingApp.documents.length - 1].fileId;
+    }
 
-   
-    const fileData = await fileModel.create({
-      ownerId: user._id,
-      relatedType: "vendor_application",
-      relatedId: existingApp?._id || null,
-      fileName: file.filename,
-      fileUrl: `/uploads/vendor-docs/${file.filename}`,
-      mimeType: file.mimetype,
-      checksum,
-    });
+    if (!ocrFileId) {
+      throw new Error(ERROR_MESSAGES.CANNOT_RUN_OCR);
+    }
 
-    newDocs.push({
-      fileId: fileData._id,
-      type: file.mimetype,
-      uploadedAt: new Date(),
-    });
+    const latestOCR_DB = await OCRResult.create(
+      [
+        {
+          fileId: ocrFileId,
+          ownerId: user._id,
+          extracted: extractedData,
+          status: 'processed',
+        },
+      ],
+      { session }
+    );
 
-    const ocrResult = await ocrService.extractTextFromImage(filePath);
-    extractedData.text += "\n" + (ocrResult.text || "");
+    const fraudResult = (await fraudService.detectFraud(extractedData)) || {};
+    fraudResult.flags = fraudResult.flags || [];
+    fraudResult.severity = fraudResult.severity || 'low';
 
-    
-    if (!extractedData.businessName && ocrResult.businessName)
-      extractedData.businessName = ocrResult.businessName;
+    await FraudFlag.create(
+      [
+        {
+          entityType: 'vendor_application',
+          entityId: latestOCR_DB[0]._id,
+          flags: fraudResult.flags,
+          severity: fraudResult.severity,
+        },
+      ],
+      { session }
+    );
 
-    if (!extractedData.panNumber && ocrResult.panNumber)
-      extractedData.panNumber = ocrResult.panNumber;
-
-    if (!extractedData.gstNumber && ocrResult.gstNumber)
-      extractedData.gstNumber = ocrResult.gstNumber;
-  }
-  if (newDocs.length > 0) {
     await vendorApplication.findOneAndUpdate(
       { userId: user._id },
-      { $push: { documents: { $each: newDocs } } },
-      { upsert: true }
-    );
-  }
-
-  let ocrFileId = newDocs[0]?.fileId;
-
-  
-  if (!ocrFileId && existingApp?.documents?.length > 0) {
-    ocrFileId = existingApp.documents[existingApp.documents.length - 1].fileId;
-  }
-
-  
-  if (!ocrFileId) {
-    throw new Error("Cannot run OCR — no valid document uploaded.");
-  }
-
-  const latestOCR_DB = await OCRResult.create({
-    fileId: ocrFileId,
-    ownerId: user._id,
-    extracted: extractedData,
-    status: "processed",
-  });
-
-  const fraudResult = (await fraudService.detectFraud(extractedData)) || {};
-  fraudResult.flags = fraudResult.flags || [];
-  fraudResult.severity = fraudResult.severity || "low";
-
-  await FraudFlag.create({
-    entityType: "vendor_application",
-    entityId: latestOCR_DB._id,
-    flags: fraudResult.flags,
-    severity: fraudResult.severity,
-  });
-
-  await vendorApplication.findOneAndUpdate(
-    { userId: user._id },
-    {
-      $set: {
-        businessName:
-          existingApp.businessName || extractedData.businessName || null,
-        panNumber: existingApp.panNumber || extractedData.panNumber || null,
-        gstNumber: existingApp.gstNumber || extractedData.gstNumber || null,
-        ocrResultId: latestOCR_DB._id,
+      {
+        $set: {
+          businessName: existingApp.businessName || extractedData.businessName || null,
+          panNumber: existingApp.panNumber || extractedData.panNumber || null,
+          gstNumber: existingApp.gstNumber || extractedData.gstNumber || null,
+          ocrResultId: latestOCR_DB[0]._id,
+        },
       },
-    },
-    { upsert: true }
-  );
-  const updatedApp = await vendorApplication
-    .findOne({ userId: user._id })
-    .populate("documents.fileId");
+      { upsert: true, session }
+    );
 
-  return { updatedApp, extracted: extractedData, fraud: fraudResult };
+    await session.commitTransaction();
+
+    const updatedApp = await vendorApplication
+      .findOne({ userId: user._id })
+      .populate('documents.fileId');
+
+    return { updatedApp, extracted: extractedData, fraud: fraudResult };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };

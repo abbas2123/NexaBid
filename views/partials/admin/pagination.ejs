@@ -1,0 +1,31 @@
+<% if (pagination.totalPages> 1) { %>
+<div class="flex justify-center mt-10">
+  <nav class="inline-flex items-center gap-1 bg-white rounded-lg shadow-sm border px-3 py-2">
+    <!-- PREVIOUS -->
+    <a
+      href="?page=<%= pagination.currentPage - 1 %>&search=<%= applied.search || '' %>&status=<%= applied.status || '' %>"
+      class="px-3 py-2 rounded <%= pagination.hasPrevPage ? 'hover:bg-gray-200' : 'opacity-40 pointer-events-none' %>"
+    >
+      Prev
+    </a>
+
+    <!-- PAGE NUMBERS -->
+    <% for (let i=1; i <=pagination.totalPages; i++) { %>
+    <a
+      href="?page=<%= i %>&search=<%= applied.search || '' %>&status=<%= applied.status || '' %>"
+      class="px-3 py-2 rounded <%= i === pagination.currentPage ? 'bg-blue-600 text-white' : 'hover:bg-gray-200' %>"
+    >
+      <%= i %>
+    </a>
+    <% } %>
+
+    <!-- NEXT -->
+    <a
+      href="?page=<%= pagination.currentPage + 1 %>&search=<%= applied.search || '' %>&status=<%= applied.status || '' %>"
+      class="px-3 py-2 rounded <%= pagination.hasNextPage ? 'hover:bg-gray-200' : 'opacity-40 pointer-events-none' %>"
+    >
+      Next
+    </a>
+  </nav>
+</div>
+<% } %>

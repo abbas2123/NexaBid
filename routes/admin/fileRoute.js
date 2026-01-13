@@ -1,44 +1,19 @@
-// routes/admin/fileRoute.js
-const express = require("express");
-const mongoose = require("mongoose");
-const path = require("path");
-const fs = require("fs");
-const File = require("../../models/File");
-
+const express = require('express');
+const fs = require('fs');
+const File = require('../../models/File');
+const statusCode = require('../../utils/statusCode');
 const router = express.Router();
-
-// GET /admin/file/:id  -> serves file saved on disk (File doc must exist)
-router.get("/:id", async (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const id = req.params.id;
-    if (!mongoose.isValidObjectId(id))
-      return res.status(400).send("Invalid file id");
-
-    const fileDoc = await File.findById(id).lean();
-    if (!fileDoc) return res.status(404).send("File not found");
-
-    // fileUrl should be like "/uploads/vendor-docs/<filename>"
-    const fileUrl = fileDoc.fileUrl;
-    if (!fileUrl) return res.status(404).send("File path not stored");
-
-    // Resolve absolute path from project root
-    const absPath = path.join(__dirname, "../../", fileUrl);
-
-    if (!fs.existsSync(absPath)) {
-      console.error("File missing on disk:", absPath);
-      return res.status(404).send("File not found on server");
-    }
-
-    // Set content-type header if available
-    if (fileDoc.mimeType) res.setHeader("Content-Type", fileDoc.mimeType);
-    // Optional: set Content-Disposition to force download
-    // res.setHeader("Content-Disposition", `attachment; filename="${fileDoc.fileName || path.basename(absPath)}"`);
-
-    return res.sendFile(absPath);
+    const fileDoc = await File.findById(req.params.id);
+    if (!fileDoc) return res.status(statusCode.NOT_FOUND).send('File not found');
+    const absPath = fileDoc.fileUrl;
+    if (!fs.existsSync(absPath))
+      return res.status(statusCode.NOT_FOUND).send('File not found on server');
+    return res.download(absPath, fileDoc.fileName);
   } catch (err) {
-    console.error("Error serving file:", err);
-    return res.status(500).send("Server error");
+    console.error('Download error:', err);
+    return res.status(statusCode.INTERNAL_SERVER_ERROR).send('Server error');
   }
 });
-
 module.exports = router;

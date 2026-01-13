@@ -4,113 +4,91 @@
 
 <!-- Featured Properties -->
 <section class="mt-8">
-  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-    Featured Properties
-  </h2>
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Featured Properties</h2>
 
   <% if (properties && properties.length > 0) { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+    <% properties.forEach(p => { %>
 
-      <% properties.forEach(p => { %>
+    <a
+      href="/properties/<%= p._id %>"
+      class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition"
+    >
+      <!-- Property Image -->
+      <img
+        src="<%= p.media && p.media.length > 0 ? p.media[0].url : 'https://via.placeholder.com/400x250' %>"
+        onerror="
+          this.onerror = null;
+          this.src = '/images/default-property.jpg';
+        "
+        alt="<%= p.title %>"
+        loading="lazy"
+        class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105"
+      />
 
-        <a href="/properties/<%= p._id %>" 
-           class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition">
+      <!-- Content -->
+      <div class="p-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><%= p.title %></h3>
 
-          <!-- Property Image -->
-        <img
-src="<%=
-  p.media && p.media.length > 0
-    ? p.media[0].url.startsWith('/')
-      ? p.media[0].url
-      : '/' + p.media[0].url
-    : 'https://via.placeholder.com/400x250'
-%>"
-  alt="<%= p.title %>"
-  class="w-full h-48 object-cover rounded-md"
-/>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          <%= p.description ? p.description.substring(0, 60) + '...' : 'No details available.' %>
+        </p>
 
-          <!-- Content -->
-          <div class="p-5">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              <%= p.title %>
-            </h3>
+        <p class="text-primary font-semibold mt-2">
+          ₹ <% if (p.isAuction) { %> <%= p.basePrice ? p.basePrice.toLocaleString() : 'N/A' %>
+          <span class="text-sm text-gray-500">(Auction)</span>
+          <% } else { %> <%= p.buyNowPrice ? p.buyNowPrice.toLocaleString() : 'N/A' %>
+          <span class="text-sm text-gray-500">(Buy Now)</span>
+          <% } %>
+        </p>
+      </div>
+    </a>
 
-            <p class="text-gray-500 dark:text-gray-400 mt-1">
-              <%= p.description ? p.description.substring(0, 60) + '...' : 'No details available.' %>
-            </p>
-
-            <p class="text-primary font-semibold mt-2">
-  ₹ 
-  <% if (p.isAuction) { %>
-     <%= p.basePrice ? p.basePrice.toLocaleString() : 'N/A' %> 
-     <span class="text-sm text-gray-500">(Auction)</span>
-  <% } else { %>
-     <%= p.buyNowPrice ? p.buyNowPrice.toLocaleString() : 'N/A' %>
-     <span class="text-sm text-gray-500">(Buy Now)</span>
-  <% } %>
-</p>
-          </div>
-
-        </a>
-
-      <% }) %>
-
-    </div>
+    <% }) %>
+  </div>
 
   <% } else { %>
-    <p class="text-gray-500 dark:text-gray-400 text-sm">
-      No featured properties available.
-    </p>
+  <p class="text-gray-500 dark:text-gray-400 text-sm">No featured properties available.</p>
   <% } %>
 </section>
 
 <!-- Active Tenders -->
 <section class="mt-12">
-  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-    Active Tenders
-  </h2>
+  <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Active Tenders</h2>
 
   <% if (tenders && tenders.length > 0) { %>
-    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+    <% tenders.forEach(t => { %>
 
-      <% tenders.forEach(t => { %>
+    <a
+      href="/tenders/<%= t._id %>"
+      class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition"
+    >
+      <!-- Tender Image -->
+      <img
+        alt="<%= t.title %>"
+        class="w-full h-48 object-cover"
+        src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1200"
+      />
 
-        <a href="/tenders/<%= t._id %>" 
-           class="block bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden group hover:shadow-md transition">
+      <!-- Content -->
+      <div class="p-5">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><%= t.title %></h3>
 
-          <!-- Tender Image -->
-          <img
-            alt="<%= t.title %>"
-            class="w-full h-48 object-cover"
-            src="https://images.unsplash.com/photo-1503387762-592deb58ef4e?q=80&w=1200"
-          />
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          <b>Dept:</b> <%= t.dept %> | <b>Category:</b> <%= t.category %>
+        </p>
 
-          <!-- Content -->
-          <div class="p-5">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-              <%= t.title %>
-            </h3>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">
+          Deadline: <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "N/A" %>
+        </p>
+      </div>
+    </a>
 
-            <p class="text-gray-500 dark:text-gray-400 mt-1">
-              <b>Dept:</b> <%= t.dept %> |
-              <b>Category:</b> <%= t.category %>
-            </p>
-
-            <p class="text-gray-500 dark:text-gray-400 mt-1">
-              Deadline:
-              <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "N/A" %>
-            </p>
-          </div>
-
-        </a>
-
-      <% }) %>
-
-    </div>
+    <% }) %>
+  </div>
 
   <% } else { %>
-    <p class="text-gray-500 dark:text-gray-400 text-sm">
-      No active tenders available.
-    </p>
+  <p class="text-gray-500 dark:text-gray-400 text-sm">No active tenders available.</p>
   <% } %>
 </section>

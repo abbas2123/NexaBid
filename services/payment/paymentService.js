@@ -11,6 +11,7 @@ const PropertyParticipant = require('../../models/propertyParticipant');
 const PropertyBid = require('../../models/propertyBid');
 const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
+const Notification = require('../../models/notification');
 const {
   PAYMENT_STATUS,
   CONTEXT_TYPES,
@@ -88,10 +89,12 @@ exports.startInitiatePayment = async (userId, type, id) => {
   if (type === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(id);
     if (!property) throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
+    if (property.isBlocked) throw new Error('This property is blocked and cannot be paid for.');
     currentAmount = 5000;
   } else if (type === CONTEXT_TYPES.TENDER) {
     const tender = await Tender.findById(id);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
+    if (tender.isBlocked) throw new Error('This tender is blocked and cannot be paid for.');
     currentAmount = 5000 + (tender.emdAmount || 0);
   } else {
     throw new Error(ERROR_MESSAGES.INVALID_CONTEXT_TYPE);
@@ -140,6 +143,15 @@ exports.createRazorpayOrder = async (paymentId) => {
   if (payment.status === PAYMENT_STATUS.FAILED) {
     payment.status = PAYMENT_STATUS.PENDING;
     await payment.save();
+  }
+
+  // Double check if product is blocked
+  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
+    ? await Property.findById(payment.contextId)
+    : await Tender.findById(payment.contextId);
+
+  if (product?.isBlocked) {
+    throw new Error('This item has been blocked by administration. Payment cannot proceed.');
   }
   if (payment.gatewayPaymentId) {
     try {
@@ -266,6 +278,18 @@ exports.processWalletPayment = async (userId, paymentId) => {
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
+
+  // Check if product is blocked
+  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
+    ? await Property.findById(payment.contextId)
+    : await Tender.findById(payment.contextId);
+
+  if (product?.isBlocked) {
+    // Revert status to pending
+    payment.status = PAYMENT_STATUS.PENDING;
+    await payment.save();
+    throw new Error('This item has been blocked by administration. Payment cannot proceed.');
+  }
   let userWallet = await Wallet.findOne({ userId });
   if (!userWallet) {
     userWallet = await Wallet.create({ userId, balance: 0 });
@@ -335,9 +359,19 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   }
   payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gatewayTransactionId = razorpay_payment_id;
-  console.log('failed', payment.metadata.payableAmount);
   payment.amount = payment.metadata?.payableAmount || payment.amount;
   await payment.save();
+
+
+  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
+    ? await Property.findById(payment.contextId)
+    : await Tender.findById(payment.contextId);
+
+  if (product?.isBlocked) {
+    console.log(`⚠️ Payment ${payment._id} successful for BLOCKED item ${payment.contextId}`);
+
+  }
+
   await _handlePostPaymentActions(payment, payment.userId);
   return payment;
 };
@@ -450,4 +484,118 @@ exports.markPaymentFailed = async (paymentId, reason) => {
     failureReason: reason || ERROR_MESSAGES.USER_CANCELLED_OR_DECLINED,
   };
   await payment.save();
+};
+
+exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
+  console.log(`💸 Starting automatic refunds for ${contextType} ${contextId}. Reason: ${reason}`);
+
+  const successfulPayments = await Payment.find({
+    contextId,
+    contextType,
+    status: PAYMENT_STATUS.SUCCESS,
+  });
+
+  if (!successfulPayments.length) {
+    console.log('ℹ️ No successful payments found to refund.');
+    return;
+  }
+
+  // Use Promise.all to process refunds in parallel for efficiency
+  await Promise.all(
+    successfulPayments.map((payment) => _processSingleRefund(payment, contextId, contextType, reason))
+  );
+
+  console.log(`🏁 Automatic refunds completed for ${contextType} ${contextId}`);
+};
+
+/**
+ * Helper to process a single refund within a transaction
+ * @private
+ */
+const _processSingleRefund = async (payment, contextId, contextType, reason) => {
+  const mongoose = require('mongoose');
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  // 1. Credit User Wallet
+  let userWallet = await Wallet.findOne({ userId: payment.userId }).session(session);
+  if (!userWallet) {
+    userWallet = new Wallet({ userId: payment.userId, balance: 0 });
+  }
+
+  const refundAmount = payment.amount;
+  userWallet.balance += refundAmount;
+  userWallet.updatedAt = new Date();
+  await userWallet.save({ session });
+
+  // 2. Create Wallet Transaction
+  await WalletTransaction.create(
+    [
+      {
+        walletId: userWallet._id,
+        userId: payment.userId,
+        type: 'credit',
+        source: 'refund',
+        amount: refundAmount,
+        balanceAfter: userWallet.balance,
+        metadata: {
+          paymentId: payment._id,
+          contextType,
+          contextId,
+          reason: `Auto-refund (Item Blocked): ${reason}`,
+        },
+      },
+    ],
+    { session }
+  );
+
+  // 3. Update Payment Status
+  await Payment.updateOne(
+    { _id: payment._id },
+    {
+      $set: {
+        status: 'refunded',
+        refundAmount,
+        refundStatus: 'completed',
+        'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
+      },
+    },
+    { session }
+  );
+
+  // 4. Update Participant Status & Bids
+  if (contextType === CONTEXT_TYPES.PROPERTY) {
+    await PropertyParticipant.updateOne(
+      { propertyId: contextId, userId: payment.userId },
+      { $set: { status: 'cancelled' } },
+      { session }
+    );
+    await PropertyBid.updateMany(
+      { propertyId: contextId, bidderId: payment.userId },
+      { $set: { bidStatus: 'cancelled' } },
+      { session }
+    );
+  } else if (contextType === CONTEXT_TYPES.TENDER) {
+    await TenderParticipants.updateOne(
+      { tenderId: contextId, userId: payment.userId },
+      { $set: { status: 'cancelled' } },
+      { session }
+    );
+  }
+
+  // 5. Create Notification Record
+  await Notification.create(
+    [
+      {
+        userId: payment.userId,
+        message: `Your fee of ₹${refundAmount} for ${contextType} #${contextId} has been refunded. Reason: ${reason}`,
+        link: contextType === 'property' ? `/properties/${contextId}` : `/tenders/${contextId}`,
+      },
+    ],
+    { session }
+  );
+
+  await session.commitTransaction();
+  session.endSession();
+  console.log(`✅ Refunded ₹${refundAmount} to User ${payment.userId}`);
 };

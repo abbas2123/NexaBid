@@ -86,10 +86,11 @@ exports.resubmitTender = async (req, res) => {
 
 exports.getTenderStatus = async (req, res) => {
   try {
-    const status = await tenderService.getTenderStatus(req.params.id);
+    const data = await tenderService.getTenderStatus(req.params.id);
     return res.status(statusCode.OK).json({
       success: true,
-      status,
+      status: data.status,
+      isBlocked: data.isBlocked,
     });
   } catch (err) {
     return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({

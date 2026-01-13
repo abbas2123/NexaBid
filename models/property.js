@@ -71,6 +71,8 @@ const propertySchema = new mongoose.Schema(
       default: null,
     },
     soldAt: Date,
+    isBlocked: { type: Boolean, default: false },
+    blockingReason: { type: String, default: '' },
     deletedAt: Date,
   },
   { timestamps: true }

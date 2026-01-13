@@ -131,6 +131,12 @@
                         data-id="<%= t._id %>">
                         Review
                       </button>
+
+                      <button
+                        class="tender-block-btn font-semibold text-xs hover:underline <%= t.isBlocked ? 'text-green-600' : 'text-red-600' %>"
+                        data-id="<%= t._id %>" data-blocked="<%= t.isBlocked %>">
+                        <%= t.isBlocked ? 'Unblock' : 'Block' %>
+                      </button>
                     </td>
 
                   </tr>
@@ -369,5 +375,62 @@
 
   document.getElementById("tenderCloseBtn").addEventListener("click", () => {
     updateTenderStatus("closed");
+  });
+
+  // ----------------- BLOCK/UNBLOCK logic ------------------
+  document.querySelectorAll('.tender-block-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const isBlocked = btn.dataset.blocked === 'true';
+
+      const {
+        value: reason,
+        isConfirmed
+      } = await Swal.fire({
+        title: `Are you sure you want to ${isBlocked ? 'unblock' : 'block'} this tender?`,
+        text: isBlocked ? "This will make the tender visible to everyone again." : "Please provide a reason for blocking this tender:",
+        icon: 'warning',
+        input: isBlocked ? null : 'text',
+        inputPlaceholder: 'Reason for blocking...',
+        showCancelButton: true,
+        confirmButtonColor: isBlocked ? '#28a745' : '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: `Yes, ${isBlocked ? 'Unblock' : 'Block'} it!`,
+        inputValidator: (value) => {
+          if (!isBlocked && !value) {
+            return 'You need to provide a reason!'
+          }
+        }
+      });
+
+      if (!isConfirmed) return;
+
+      // If blocking and no reason was provided (should be caught by inputValidator, but as a fallback)
+      if (!isBlocked && !reason) {
+        Swal.fire('Error!', 'A reason is required to block the tender.', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/admin/tender-management/toggle-block/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            isBlocked: !isBlocked,
+            blockingReason: isBlocked ? undefined : reason // Only send reason if blocking
+          })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire('Success!', data.message, 'success').then(() => location.reload());
+        } else {
+          Swal.fire('Error!', data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error!', 'Something went wrong', 'error');
+      }
+    });
   });
 </script>

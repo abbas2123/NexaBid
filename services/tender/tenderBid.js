@@ -10,6 +10,7 @@ module.exports = {
       throw new Error(ERROR_MESSAGES.NOT_VENDOR);
     const tender = await Tender.findById(tenderId);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
+    if (tender.isBlocked) throw new Error('This tender has been blocked by admin');
     const bid = await TenderBid.findOne({ tenderId, vendorId: user._id })
       .populate('proposal.files')
       .populate('techForms.files');
@@ -154,6 +155,7 @@ module.exports = {
   async getFinancialBidData(tenderId, userId) {
     const tender = await Tender.findById(tenderId);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
+    if (tender.isBlocked) throw new Error('This tender has been blocked by admin');
     const bid = await TenderBid.findOne({ tenderId, vendorId: userId })
       .populate('finForms.files')
       .populate('quotes.files');

@@ -18,7 +18,7 @@ class AuctionService {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     const now = new Date();
@@ -58,7 +58,7 @@ class AuctionService {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     if (property.sellerId.toString() !== sellerId.toString()) {
@@ -99,7 +99,7 @@ class AuctionService {
 
   static async enableAutoBid({ propertyId, userId, maxBid }) {
     const property = await Property.findByIdAndUpdate(propertyId);
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     if (Number(maxBid) <= property.currentHighestBid) {
@@ -133,7 +133,7 @@ class AuctionService {
 
   static async getAutoBidPageData(propertyId, userId) {
     const property = await Property.findById(propertyId).lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     const existingAutoBid = await PropertyBid.findOne({

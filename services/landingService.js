@@ -8,6 +8,7 @@ exports.getLandingPageData = async () => {
       auctionStartsAt: { $lte: now },
       auctionEndsAt: { $gte: now },
       status: 'published',
+      isBlocked: { $ne: true },
     })
       .sort({ auctionEndsAt: 1, _id: 1 })
       .limit(6),
@@ -16,6 +17,7 @@ exports.getLandingPageData = async () => {
       isAuction: true,
       auctionStartsAt: { $gt: now },
       status: 'published',
+      isBlocked: { $ne: true },
     })
       .sort({ auctionStartsAt: 1, _id: 1 })
       .limit(6),
@@ -23,6 +25,7 @@ exports.getLandingPageData = async () => {
     Property.find({
       deletedAt: null,
       verificationStatus: 'approved',
+      isBlocked: { $ne: true },
     })
       .sort({ _id: -1 })
       .limit(6)

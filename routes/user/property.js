@@ -15,6 +15,7 @@ router.post(
   authController.postCreateProperty
 );
 router.get('/', authMiddleware.protectRoute, authController.getPropertyPage);
+router.get('/status/:id', authMiddleware.protectRoute, authController.getPropertyStatus);
 router.get('/:id', authMiddleware.protectRoute, authController.getPropertyDetails);
 router.patch(
   '/update/:id',

@@ -94,6 +94,8 @@ const tenderSchema = new mongoose.Schema(
       default: null,
     },
     adminComment: { type: String, default: null },
+    isBlocked: { type: Boolean, default: false },
+    blockingReason: { type: String, default: '' },
   },
   { timestamps: true }
 );

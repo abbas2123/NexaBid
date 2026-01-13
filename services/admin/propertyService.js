@@ -133,3 +133,19 @@ exports.getAdminLiveAuctionData = async (propertyId) => {
     propertyId: property._id,
   };
 };
+exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
+  const update = { isBlocked };
+  if (isBlocked) {
+    update.blockingReason = reason;
+  }
+  const property = await Property.findByIdAndUpdate(id, update, { new: true });
+
+  if (isBlocked && property) {
+    const paymentService = require('../payment/paymentService');
+    // We don't await to avoid blocking the admin's response, 
+    // but the process will run in the background.
+    paymentService.processAutomaticRefunds(id, 'property', reason);
+  }
+
+  return property;
+};

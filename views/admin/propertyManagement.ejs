@@ -196,6 +196,12 @@
                                   Auction Report
                                 </button>
                                 <% } %>
+
+                                  <button
+                                    class="block-btn font-semibold text-xs underline <%= p.isBlocked ? 'text-green-600' : 'text-red-600' %>"
+                                    data-id="<%= p._id %>" data-blocked="<%= p.isBlocked %>">
+                                    <%= p.isBlocked ? 'Unblock' : 'Block' %>
+                                  </button>
                             </div>
                           </td>
 
@@ -525,5 +531,59 @@
   closeAuctionReportModal.addEventListener('click', () => {
     auctionReportModal.classList.add('hidden');
     auctionReportModal.classList.remove('flex');
+  });
+
+  // ----------------- BLOCK/UNBLOCK LOGIC ------------------
+  document.querySelectorAll('.block-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const isBlocked = btn.dataset.blocked === 'true';
+
+      const {
+        value: reason,
+        isConfirmed
+      } = await Swal.fire({
+        title: `Are you sure you want to ${isBlocked ? 'unblock' : 'block'} this property?`,
+        text: isBlocked ? "This will make the property visible to everyone again." : "Please provide a reason for blocking this property:",
+        icon: 'warning',
+        input: isBlocked ? null : 'text',
+        inputPlaceholder: 'Reason for blocking...',
+        showCancelButton: true,
+        confirmButtonColor: isBlocked ? '#28a745' : '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: `Yes, ${isBlocked ? 'Unblock' : 'Block'} it!`,
+        inputValidator: (value) => {
+          if (!isBlocked && !value) {
+            return 'You need to provide a reason!'
+          }
+        }
+      });
+
+      if (!isConfirmed) return;
+
+      try {
+        const response = await fetch(`/admin/property-management/toggle-block/${id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': '<%= csrfToken %>'
+          },
+          body: JSON.stringify({
+            isBlocked: !isBlocked,
+            blockingReason: reason
+          })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          Swal.fire('Success!', data.message, 'success').then(() => location.reload());
+        } else {
+          Swal.fire('Error!', data.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error!', 'Something went wrong', 'error');
+      }
+    });
   });
 </script>

@@ -140,3 +140,17 @@ exports.updatePropertyController = async (req, res) => {
     });
   }
 };
+exports.getPropertyStatus = async (req, res) => {
+  try {
+    const data = await propertyService.getPropertyStatus(req.params.id);
+    return res.status(statusCode.OK).json({
+      success: true,
+      status: data.status,
+      isBlocked: data.isBlocked,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || statusCode.INTERNAL_ERROR).json({
+      success: false,
+    });
+  }
+};

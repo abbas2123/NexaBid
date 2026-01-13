@@ -163,9 +163,8 @@ exports.getAuctionReport = async (req, res) => {
                 </div>
             </div>
             <!-- Highest Bidder Section -->
-            ${
-              data.winningBid
-                ? `
+            ${data.winningBid
+        ? `
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold uppercase text-green-800">Use this User as Winner</p>
@@ -176,8 +175,8 @@ exports.getAuctionReport = async (req, res) => {
                     <span class="material-symbols-outlined text-green-600">emoji_events</span>
                 </div>
             </div>`
-                : ''
-            }
+        : ''
+      }
             <!-- Bid History Table -->
             <div>
                 <h3 class="font-bold text-lg text-slate-800 mb-3 border-b pb-2">Bid History</h3>
@@ -217,5 +216,20 @@ exports.getAuctionReport = async (req, res) => {
     res
       .status(statusCode.INTERNAL_SERVER_ERROR)
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
+  }
+};
+exports.toggleBlockProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBlocked, blockingReason } = req.body;
+
+    const property = await propertyService.toggleIsBlocked(id, isBlocked, blockingReason);
+    res.json({
+      success: true,
+      message: `Property ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
+    });
+  } catch (err) {
+    console.error('Property block error:', err);
+    res.json({ success: false, message: err.message });
   }
 };

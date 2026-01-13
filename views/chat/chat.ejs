@@ -1,177 +1,148 @@
 <main class="flex h-[calc(100vh-80px)] bg-[#f6f8ff]">
   <!-- CHAT LIST -->
   <aside
-    class="w-full md:w-96 border-r border-[#e4e8ff] bg-white flex flex-col <% if (thread) { %>hidden md:flex<% } else { %>flex<% } %>"
-  >
+    class="w-full md:w-96 border-r border-[#e4e8ff] bg-white flex flex-col <% if (thread) { %>hidden md:flex<% } else { %>flex<% } %>">
     <div class="p-4 border-b border-[#e4e8ff] flex items-center justify-between">
       <h2 class="font-bold text-lg text-slate-900">Messages</h2>
     </div>
     <div>
       <div class="flex-1 overflow-y-auto">
         <% threads.forEach(t=> { %>
-        <a
-          href="/chat/thread/<%= t._id %>"
-          class="thread-row flex items-center gap-3 p-3 hover:bg-[#f6f8ff] <% if (thread && thread._id.toString() === t._id.toString()) { %>bg-[#f6f8ff]<% } %>"
-          data-thread-id="<%= t._id %>"
-          data-other-id="<%= t.other?._id %>"
-        >
-          <img
-            src="<%= t.other?.avatar || '/images/default-user.png' %>"
-            class="w-10 h-10 rounded-full object-cover border border-[#e4e8ff]"
-          />
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-sm text-slate-900 truncate">
-              <%= t.other?.name || 'User' %>
-            </p>
-            <% if (t.lastMessage) { %>
-            <p class="last-message text-xs text-slate-500 truncate"><%= t.lastMessage %></p>
-            <% } else { %>
-            <p class="last-message text-xs text-slate-500 truncate"></p>
-            <% } %>
-          </div>
-          <% if (t.unread && t.unread> 0) { %>
-          <span
-            class="unread-badge ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-[#2b59ff] text-white text-xs"
-          >
-            <%= t.unread %>
-          </span>
-          <% } else { %>
-          <span
-            class="unread-badge hidden ml-2 min-w-[20px] h-5 px-1 rounded-full bg-[#2b59ff] text-white text-xs"
-          ></span>
-          <% } %>
-        </a>
-        <% }); %>
+          <a href="/chat/thread/<%= t._id %>"
+            class="thread-row flex items-center gap-3 p-3 hover:bg-[#f6f8ff] <% if (thread && thread._id.toString() === t._id.toString()) { %>bg-[#f6f8ff]<% } %>"
+            data-thread-id="<%= t._id %>" data-other-id="<%= t.other?._id %>">
+            <img src="<%= t.other?.avatar || '/images/default-user.png' %>"
+              class="w-10 h-10 rounded-full object-cover border border-[#e4e8ff]" />
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-sm text-slate-900 truncate">
+                <%= t.other?.name || 'User' %>
+              </p>
+              <% if (t.lastMessage) { %>
+                <p class="last-message text-xs text-slate-500 truncate">
+                  <%= t.lastMessage %>
+                </p>
+                <% } else { %>
+                  <p class="last-message text-xs text-slate-500 truncate"></p>
+                  <% } %>
+            </div>
+            <% if (t.unread && t.unread> 0) { %>
+              <span
+                class="unread-badge ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1 rounded-full bg-[#2b59ff] text-white text-xs">
+                <%= t.unread %>
+              </span>
+              <% } else { %>
+                <span
+                  class="unread-badge hidden ml-2 min-w-[20px] h-5 px-1 rounded-full bg-[#2b59ff] text-white text-xs"></span>
+                <% } %>
+          </a>
+          <% }); %>
       </div>
     </div>
   </aside>
 
   <!-- CHAT WINDOW -->
   <% if (thread) { %>
-  <section
-    class="flex-1 flex flex-col bg-[#f6f8ff] text-slate-900 <% if (thread) { %>flex<% } else { %>hidden md:flex<% } %>"
-  >
-    <!-- mobile header -->
-    <header class="md:hidden flex items-center gap-3 px-3 py-2 bg-white border-b border-[#e4e8ff]">
-      <button
-        type="button"
-        onclick="window.location.href = '/chat'"
-        class="p-2 rounded-full hover:bg-[#f6f8ff] border border-[#e4e8ff]"
-      >
-        ←
-      </button>
-      <img
-        src="<%= otherUser.avatar || '/images/default-user.png' %>"
-        class="w-8 h-8 rounded-full object-cover border border-[#e4e8ff]"
-      />
-      <div class="min-w-0">
-        <p class="font-semibold text-sm truncate"><%= otherUser.name %></p>
-        <p class="text-[11px] text-slate-500 truncate">
-          <span id="typing-status-mobile" class="text-blue-500 font-medium hidden"></span>
-          <span class="default-status-mobile">Chat</span>
-        </p>
-      </div>
-    </header>
-
-    <!-- desktop header -->
-    <header class="hidden md:flex items-center gap-3 px-4 py-3 bg-white border-b border-[#e4e8ff]">
-      <img
-        src="<%= otherUser.avatar || '/images/default-user.png' %>"
-        class="w-9 h-9 rounded-full object-cover border border-[#e4e8ff]"
-      />
-      <div class="min-w-0">
-        <p class="font-bold text-sm truncate"><%= otherUser.name %></p>
-        <p class="text-[11px] text-slate-500 truncate">
-          <span id="typing-status" class="text-blue-500 font-medium hidden"></span>
-          <span class="default-status">Chat</span>
-        </p>
-      </div>
-    </header>
-
-    <!-- messages -->
-    <div id="messages" class="flex-1 overflow-y-auto px-3 py-4 space-y-2">
-      <% messages.forEach(m=> { %> <% const mine=m.senderId._id.toString()===user._id.toString();
-      const otherId=otherUser?._id?.toString(); const delivered=otherId && m.deliveredTo?.some(x=>
-      x.toString() === otherId); const seen = otherId && m.readBy?.some(x => x.toString() ===
-      otherId); %>
-      <div class="flex <%= mine ? 'justify-end' : 'justify-start' %>">
-        <div
-          class="max-w-[78%] px-3 py-2 rounded-2xl text-sm shadow-sm <%= mine ? 'bg-gradient-to-br from-[#2b59ff] to-[#7c3aed] text-white rounded-br-md' : 'bg-white text-slate-800 border border-[#e4e8ff] rounded-bl-md' %>"
-        >
-          <% if (m.fileUrl) { %>
-          <div class="flex items-center gap-2 mb-1">
-            <span
-              class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#eef2ff] text-xs border border-[#e4e8ff]"
-            >
-              📎
-            </span>
-            <a
-              href="<%= m.fileUrl %>"
-              target="_blank"
-              class="<%= mine ? 'text-white' : 'text-[#2b59ff]' %> underline text-xs break-all"
-            >
-              <%= m.fileName || 'Document' %>
-            </a>
-          </div>
-          <% } %> <% if (m.message) { %>
-          <div class="break-words"><%= m.message %></div>
-          <% } %> <% if (mine) { %>
-          <div class="flex items-center justify-end gap-1 mt-1 text-[12px]">
-            <% if (seen) { %>
-            <span class="tick-status font-bold" style="color: #10b981" data-msg-id="<%= m._id %>"
-              >✓✓</span
-            >
-            <% } else if (delivered) { %>
-            <span
-              class="tick-status font-semibold"
-              style="color: #e5e7eb"
-              data-msg-id="<%= m._id %>"
-              >✓✓</span
-            >
-            <% } else { %>
-            <span class="tick-status" style="color: #d1d5db" data-msg-id="<%= m._id %>">✓</span>
-            <% } %>
-          </div>
-          <% } %>
+    <section
+      class="flex-1 flex flex-col bg-[#f6f8ff] text-slate-900 <% if (thread) { %>flex<% } else { %>hidden md:flex<% } %>">
+      <!-- mobile header -->
+      <header class="md:hidden flex items-center gap-3 px-3 py-2 bg-white border-b border-[#e4e8ff]">
+        <button type="button" onclick="window.location.href = '/chat'"
+          class="p-2 rounded-full hover:bg-[#f6f8ff] border border-[#e4e8ff]">
+          ←
+        </button>
+        <img src="<%= otherUser.avatar || '/images/default-user.png' %>"
+          class="w-8 h-8 rounded-full object-cover border border-[#e4e8ff]" />
+        <div class="min-w-0">
+          <p class="font-semibold text-sm truncate">
+            <%= otherUser.name %>
+          </p>
+          <p class="text-[11px] text-slate-500 truncate">
+            <span id="typing-status-mobile" class="text-blue-500 font-medium hidden"></span>
+            <span class="default-status-mobile">Chat</span>
+          </p>
         </div>
-      </div>
-      <% }); %>
-    </div>
+      </header>
 
-    <!-- input row -->
-    <form
-      id="chat-form"
-      action="/chat/thread/<%= thread._id %>/send"
-      method="POST"
-      enctype="multipart/form-data"
-      class="flex items-center gap-2 px-3 py-2 bg-white border-t border-[#e4e8ff]"
-    >
-      <input id="file-input" type="file" name="file" class="hidden" />
-      <button
-        type="button"
-        id="attach-btn"
-        class="p-2 rounded-full bg-[#f6f8ff] border border-[#e4e8ff] text-lg leading-none hover:bg-white"
-      >
-        📎
-      </button>
-      <input
-        name="message"
-        autocomplete="off"
-        placeholder="Type a message"
-        class="flex-1 px-4 py-2 rounded-full text-sm bg-[#f6f8ff] border border-[#e4e8ff] text-slate-800 outline-none focus:ring-2 focus:ring-[#2b59ff30]"
-      />
-      <button
-        class="px-4 py-2 rounded-full bg-[#2b59ff] text-white text-sm font-semibold hover:bg-[#2349d6]"
-      >
-        Send
-      </button>
-    </form>
-  </section>
-  <% } else { %>
-  <section class="flex-1 hidden md:flex items-center justify-center text-slate-400">
-    Select a chat to start messaging
-  </section>
-  <% } %>
+      <!-- desktop header -->
+      <header class="hidden md:flex items-center gap-3 px-4 py-3 bg-white border-b border-[#e4e8ff]">
+        <img src="<%= otherUser.avatar || '/images/default-user.png' %>"
+          class="w-9 h-9 rounded-full object-cover border border-[#e4e8ff]" />
+        <div class="min-w-0">
+          <p class="font-bold text-sm truncate">
+            <%= otherUser.name %>
+          </p>
+          <p class="text-[11px] text-slate-500 truncate">
+            <span id="typing-status" class="text-blue-500 font-medium hidden"></span>
+            <span class="default-status">Chat</span>
+          </p>
+        </div>
+      </header>
+
+      <!-- messages -->
+      <div id="messages" class="flex-1 overflow-y-auto px-3 py-4 space-y-2">
+        <% messages.forEach(m=> { %> <% const mine=m.senderId._id.toString()===user._id.toString(); const
+            otherId=otherUser?._id?.toString(); const delivered=otherId && m.deliveredTo?.some(x=>
+            x.toString() === otherId); const seen = otherId && m.readBy?.some(x => x.toString() ===
+            otherId); %>
+            <div class="flex <%= mine ? 'justify-end' : 'justify-start' %>">
+              <div
+                class="max-w-[78%] px-3 py-2 rounded-2xl text-sm shadow-sm <%= mine ? 'bg-gradient-to-br from-[#2b59ff] to-[#7c3aed] text-white rounded-br-md' : 'bg-white text-slate-800 border border-[#e4e8ff] rounded-bl-md' %>">
+                <% if (m.fileUrl) { %>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span
+                      class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#eef2ff] text-xs border border-[#e4e8ff]">
+                      📎
+                    </span>
+                    <a href="<%= m.fileUrl %>" target="_blank"
+                      class="<%= mine ? 'text-white' : 'text-[#2b59ff]' %> underline text-xs break-all">
+                      <%= m.fileName || 'Document' %>
+                    </a>
+                  </div>
+                  <% } %>
+                    <% if (m.message) { %>
+                      <div class="break-words">
+                        <%= m.message %>
+                      </div>
+                      <% } %>
+                        <% if (mine) { %>
+                          <div class="flex items-center justify-end gap-1 mt-1 text-[12px]">
+                            <% if (seen) { %>
+                              <span class="tick-status font-bold" style="color: #10b981"
+                                data-msg-id="<%= m._id %>">✓✓</span>
+                              <% } else if (delivered) { %>
+                                <span class="tick-status font-semibold" style="color: #e5e7eb"
+                                  data-msg-id="<%= m._id %>">✓✓</span>
+                                <% } else { %>
+                                  <span class="tick-status" style="color: #d1d5db" data-msg-id="<%= m._id %>">✓</span>
+                                  <% } %>
+                          </div>
+                          <% } %>
+              </div>
+            </div>
+            <% }); %>
+      </div>
+
+      <!-- input row -->
+      <form id="chat-form" action="/chat/thread/<%= thread._id %>/send" method="POST" enctype="multipart/form-data"
+        class="flex items-center gap-2 px-3 py-2 bg-white border-t border-[#e4e8ff]">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input id="file-input" type="file" name="file" class="hidden" />
+        <button type="button" id="attach-btn"
+          class="p-2 rounded-full bg-[#f6f8ff] border border-[#e4e8ff] text-lg leading-none hover:bg-white">
+          📎
+        </button>
+        <input name="message" autocomplete="off" placeholder="Type a message"
+          class="flex-1 px-4 py-2 rounded-full text-sm bg-[#f6f8ff] border border-[#e4e8ff] text-slate-800 outline-none focus:ring-2 focus:ring-[#2b59ff30]" />
+        <button class="px-4 py-2 rounded-full bg-[#2b59ff] text-white text-sm font-semibold hover:bg-[#2349d6]">
+          Send
+        </button>
+      </form>
+    </section>
+    <% } else { %>
+      <section class="flex-1 hidden md:flex items-center justify-center text-slate-400">
+        Select a chat to start messaging
+      </section>
+      <% } %>
 </main>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -414,13 +385,13 @@
 
 <!-- Update chat badge when thread is opened -->
 <% if (thread) { %>
-<script>
-  // Wait for backend to process markThreadRead, then update badge
-  setTimeout(() => {
-    if (typeof window.loadUnreadMessageCount === 'function') {
-      window.loadUnreadMessageCount();
-      console.log('🔄 Chat badge refreshed after opening thread');
-    }
-  }, 500);
-</script>
-<% } %>
+  <script>
+    // Wait for backend to process markThreadRead, then update badge
+    setTimeout(() => {
+      if (typeof window.loadUnreadMessageCount === 'function') {
+        window.loadUnreadMessageCount();
+        console.log('🔄 Chat badge refreshed after opening thread');
+      }
+    }, 500);
+  </script>
+  <% } %>

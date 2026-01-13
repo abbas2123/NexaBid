@@ -3,6 +3,7 @@ const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS, TITLES } = require('../../utils/constants');
 const Property = require('../../models/property');
 const Bid = require('../../models/propertyBid');
+
 exports.loadAuctionResultPage = async (req, res) => {
   try {
     const { propertyId } = req.params;

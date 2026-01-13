@@ -10,6 +10,7 @@ const setLocals = require('../middlewares/setLocals');
 const helmet = require('helmet');
 const csrf = require('csurf');
 const authUser = require('../middlewares/authUser');
+const adminUser = require('../middlewares/adminUser');
 
 module.exports = (app) => {
   app.set('view engine', 'ejs');
@@ -23,7 +24,7 @@ module.exports = (app) => {
   app.use(express.json());
   app.use(cookieParser());
 
- 
+
   app.use(
     session({
       secret: process.env.SECRET,
@@ -38,24 +39,18 @@ module.exports = (app) => {
     })
   );
 
- 
+
   app.use(passport.initialize());
   app.use(passport.session());
   app.use(authUser);
+  app.use(adminUser);
 
 
   const csrfProtection = csrf();
+  app.use(csrfProtection);
 
   app.use((req, res, next) => {
-    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
-      return csrfProtection(req, res, next);
-    }
-    next();
-  });
-
- 
-  app.use((req, res, next) => {
-    if (req.csrfToken) res.locals.csrfToken = req.csrfToken();
+    res.locals.csrfToken = req.csrfToken();
     next();
   });
 

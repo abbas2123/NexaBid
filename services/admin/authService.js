@@ -5,6 +5,9 @@ const vendorApplication = require('../../models/vendorApplication');
 const Property = require('../../models/property');
 const Tender = require('../../models/tender');
 const ERROR_MESSAGES = require('../../utils/constants').ERROR_MESSAGES;
+
+
+
 exports.adminLogin = async (email, password) => {
   const admin = await User.findOne({ email, role: 'admin' });
   if (!admin) throw new Error(ERROR_MESSAGES.ADMIN_NOT_FOUND);
@@ -18,6 +21,7 @@ exports.adminLogin = async (email, password) => {
     admin,
   };
 };
+
 exports.getDashboardStats = async (filters = {}) => {
   try {
     const { timeframe = 'weekly', year, month, category = 'all' } = filters;

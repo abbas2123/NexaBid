@@ -150,12 +150,14 @@
                   </a>
 
                   <form method="POST" action="/publisher/agreement/<%= agreement._id %>/approve">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button class="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold">
                       Accept Agreement
                     </button>
                   </form>
 
                   <form method="POST" action="/publisher/agreement/<%= agreement._id %>/reject" class="space-y-2">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <textarea name="remarks" placeholder="Reason (optional)"
                       class="w-full border rounded-md p-2 text-sm"></textarea>
 

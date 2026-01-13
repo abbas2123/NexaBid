@@ -2,6 +2,10 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { ERROR_MESSAGES } = require('../utils/constants');
 exports.adminProtect = async (req, res, next) => {
+  if (req.admin && req.admin.role === 'admin') {
+    return next();
+  }
+
   const token = req.cookies.adminToken;
   if (!token) return res.redirect('/admin/login');
   try {

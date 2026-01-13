@@ -203,6 +203,26 @@
       });
 
     });
+
+    // CSRF Global Fetch Interceptor
+    (function () {
+      const originalFetch = window.fetch;
+      window.fetch = function (url, options) {
+        options = options || {};
+        const method = (options.method || 'GET').toUpperCase();
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+          options.headers = options.headers || {};
+          if (options.headers instanceof Headers) {
+            options.headers.set('X-CSRF-Token', csrfToken);
+          } else {
+            options.headers['X-CSRF-Token'] = csrfToken;
+          }
+        }
+        return originalFetch(url, options);
+      };
+    })();
   </script>
 </body>
 

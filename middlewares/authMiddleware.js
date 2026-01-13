@@ -32,28 +32,33 @@ const protectRoute = async (req, res, next) => {
   }
 };
 const preventAuthPages = (req, res, next) => {
-  console.log('➡️ preventAuthPages triggered');
-  const { token } = req.cookies;
-  const { adminToken } = req.cookies;
-  console.log('Token from cookies:', token);
-  if (adminToken) {
-    try {
-      const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
-      if (decoded.role === 'admin') {
-        return res.redirect('/admin/dashboard');
+  console.log('➡️ preventAuthPages triggered for path:', req.path);
+  const { token, adminToken } = req.cookies;
+
+  // If on admin login page, only redirect if already logged in as admin
+  if (req.path.startsWith('/admin')) {
+    if (adminToken) {
+      try {
+        const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
+        if (decoded.role === 'admin') {
+          return res.redirect('/admin/dashboard');
+        }
+      } catch (err) {
+        res.clearCookie('adminToken');
       }
-    } catch (err) {
-      res.clearCookie(adminToken);
     }
   }
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.role === 'user' || decoded.role === 'vendor') {
-        return res.redirect('/auth/dashboard');
+  // If on user login/signup page, only redirect if already logged in as user/vendor
+  else {
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role === 'user' || decoded.role === 'vendor') {
+          return res.redirect('/auth/dashboard');
+        }
+      } catch (err) {
+        res.clearCookie('token');
       }
-    } catch (err) {
-      res.clearCookie('token');
     }
   }
   next();

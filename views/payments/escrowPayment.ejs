@@ -12,25 +12,13 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="lg:col-span-2 space-y-6">
-        <div
-          class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-        >
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
           <div class="flex items-center gap-3 mb-4">
-            <div
-              class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0"
-            >
-              <svg
-                class="w-5 h-5 text-primary"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                ></path>
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
+                </path>
               </svg>
             </div>
             <h2 class="text-xl font-semibold text-gray-900">
@@ -47,70 +35,42 @@
             </div>
 
             <% if (productType==="tender" ) { %>
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-              <span class="text-gray-600 font-medium">Tender No</span>
-              <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded-lg inline-block">
-                <%= product.referenceNo %>
-              </span>
-            </div>
-            <% } %> <% if (product.winningBid) { %>
-            <div
-              class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-3 border-t"
-            >
-              <span class="text-gray-600 font-medium">Winning Bid</span>
-              <span class="text-2xl font-bold text-green-600">
-                ₹ <%= product.winningBid.toLocaleString("en-IN") %>
-              </span>
-            </div>
-            <% } %>
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <span class="text-gray-600 font-medium">Tender No</span>
+                <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded-lg inline-block">
+                  <%= product.referenceNo %>
+                </span>
+              </div>
+              <% } %>
+                <% if (product.winningBid) { %>
+                  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-3 border-t">
+                    <span class="text-gray-600 font-medium">Winning Bid</span>
+                    <span class="text-2xl font-bold text-green-600">
+                      ₹ <%= product.winningBid.toLocaleString("en-IN") %>
+                    </span>
+                  </div>
+                  <% } %>
           </div>
         </div>
 
         <!-- COUPON SECTION -->
-        <div
-          class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl shadow-sm border border-purple-100"
-        >
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl shadow-sm border border-purple-100">
           <div class="flex items-center gap-2 mb-4">
-            <svg
-              class="w-5 h-5 text-purple-600 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-              ></path>
+            <svg class="w-5 h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+              </path>
             </svg>
             <h2 class="text-xl font-semibold text-gray-900">Apply Discount Coupon</h2>
           </div>
 
           <!-- Applied Coupon Badge (Initially Hidden) -->
-          <div
-            id="appliedCouponBadge"
-            class="hidden mb-4 bg-green-50 border-2 border-green-500 rounded-xl p-4"
-          >
-            <div
-              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
-            >
+          <div id="appliedCouponBadge" class="hidden mb-4 bg-green-50 border-2 border-green-500 rounded-xl p-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div class="flex items-center gap-3 flex-1">
-                <div
-                  class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
+                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                   </svg>
                 </div>
                 <div>
@@ -120,19 +80,11 @@
                   <p class="text-sm text-green-600">Coupon applied successfully</p>
                 </div>
               </div>
-              <button
-                type="button"
-                id="removeCouponBtn"
+              <button type="button" id="removeCouponBtn"
                 class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-all flex-shrink-0"
-                title="Remove coupon"
-              >
+                title="Remove coupon">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
               </button>
             </div>
@@ -142,18 +94,11 @@
           <div id="couponInputSection">
             <div class="flex flex-col sm:flex-row gap-3">
               <div class="flex-1">
-                <input
-                  id="couponCode"
-                  type="text"
-                  placeholder="Enter coupon code"
-                  class="w-full border-2 border-purple-200 rounded-xl px-5 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none uppercase"
-                />
+                <input id="couponCode" type="text" placeholder="Enter coupon code"
+                  class="w-full border-2 border-purple-200 rounded-xl px-5 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none uppercase" />
               </div>
-              <button
-                type="button"
-                id="applyCouponBtn"
-                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap"
-              >
+              <button type="button" id="applyCouponBtn"
+                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap">
                 Apply
               </button>
             </div>
@@ -163,70 +108,51 @@
         </div>
 
         <!-- AVAILABLE COUPONS -->
-        <div
-          id="availableCouponsSection"
-          class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100"
-        >
+        <div id="availableCouponsSection" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
           <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <svg
-              class="w-5 h-5 text-green-600 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"
-              ></path>
+            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+              </path>
             </svg>
             Available Coupons
           </h3>
 
           <% if (coupons && coupons.length> 0) { %>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <% coupons.forEach(c=> { %>
-            <div
-              class="relative border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
-              onclick="selectCoupon('<%= c.code %>')"
-            >
-              <div
-                class="absolute -right-2 -top-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10"
-              >
-                <% if (c.discountType==="flat" ) { %> ₹<%= c.discountValue %> <% } else { %> <%=
-                c.discountValue %>% <% } %>
-              </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <% coupons.forEach(c=> { %>
+                <div
+                  class="relative border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
+                  onclick="selectCoupon('<%= c.code %>')">
+                  <div
+                    class="absolute -right-2 -top-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                    <% if (c.discountType==="flat" ) { %> ₹<%= c.discountValue %>
+                        <% } else { %>
+                          <%= c.discountValue %>% <% } %>
+                  </div>
 
-              <div class="flex items-center justify-between gap-3">
-                <div class="flex-1">
-                  <p class="font-bold text-gray-900 text-lg font-mono break-all"><%= c.code %></p>
-                  <p class="text-sm text-gray-600 mt-1">
-                    <% if (c.discountType==="flat" ) { %> Save ₹<%= c.discountValue %> on this order
-                    <% } else { %> Get <%= c.discountValue %>% discount <% } %>
-                  </p>
+                  <div class="flex items-center justify-between gap-3">
+                    <div class="flex-1">
+                      <p class="font-bold text-gray-900 text-lg font-mono break-all">
+                        <%= c.code %>
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">
+                        <% if (c.discountType==="flat" ) { %> Save ₹<%= c.discountValue %> on this order
+                            <% } else { %> Get <%= c.discountValue %>% discount <% } %>
+                      </p>
+                    </div>
+
+                    <svg class="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                  </div>
                 </div>
-
-                <svg
-                  class="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 5l7 7-7 7"
-                  ></path>
-                </svg>
-              </div>
+                <% }) %>
             </div>
-            <% }) %>
-          </div>
-          <% } else { %>
-          <p class="text-gray-500 text-sm">No coupons available for this payment.</p>
-          <% } %>
+            <% } else { %>
+              <p class="text-gray-500 text-sm">No coupons available for this payment.</p>
+              <% } %>
         </div>
 
         <!-- PAYMENT METHOD -->
@@ -235,30 +161,15 @@
 
           <div class="space-y-3">
             <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
-            >
-              <input
-                type="radio"
-                name="payment_method"
-                value="wallet"
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0"
-              />
+              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+              <input type="radio" name="payment_method" value="wallet"
+                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
               <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div
-                  class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    ></path>
+                  class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                   </svg>
                 </div>
                 <div class="flex-1">
@@ -271,31 +182,15 @@
             </label>
 
             <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
-            >
-              <input
-                type="radio"
-                name="payment_method"
-                value="card"
-                checked
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0"
-              />
+              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+              <input type="radio" name="payment_method" value="card" checked
+                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
               <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div
-                  class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                    ></path>
+                  class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                   </svg>
                 </div>
                 <div class="flex-1">
@@ -306,30 +201,16 @@
             </label>
 
             <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
-            >
-              <input
-                type="radio"
-                name="payment_method"
-                value="upi"
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0"
-              />
+              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+              <input type="radio" name="payment_method" value="upi"
+                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
               <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                 <div
-                  class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0"
-                >
-                  <svg
-                    class="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
+                  class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                    </path>
                   </svg>
                 </div>
                 <div class="flex-1">
@@ -340,39 +221,17 @@
             </label>
           </div>
 
-          <div
-            id="wallet-form"
-            class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl"
-          >
+          <div id="wallet-form" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
             <p class="text-green-700 font-semibold flex items-center gap-2">
-              <svg
-                class="w-5 h-5 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 13l4 4L19 7"
-                ></path>
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
               </svg>
               Wallet payment selected
             </p>
             <p id="wallet-error" class="hidden text-red-600 mt-2 flex items-center gap-2">
-              <svg
-                class="w-5 h-5 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
+              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
               </svg>
               Insufficient wallet balance
             </p>
@@ -387,87 +246,57 @@
 
           <div class="space-y-3 mb-6" id="breakdownContainer">
             <% breakdown.forEach(item=> { %>
-            <div class="flex justify-between items-center text-gray-700">
-              <span class="text-sm"> <%= item.label %> </span>
-              <span class="font-medium whitespace-nowrap"
-                >₹ <%= item.amount.toLocaleString("en-IN") %></span
-              >
-            </div>
-            <% }) %>
-
-            <!-- Discount row (initially hidden) -->
-            <div
-              id="discountRow"
-              class="hidden flex justify-between items-center text-green-600 animate-fadeIn"
-            >
-              <div class="flex items-center gap-2 flex-1 min-w-0">
-                <svg
-                  class="w-4 h-4 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                  ></path>
-                </svg>
-                <span class="text-sm font-medium truncate">
-                  Discount (<span id="appliedCouponCodeSummary" class="font-mono"></span>)
+              <div class="flex justify-between items-center text-gray-700">
+                <span class="text-sm">
+                  <%= item.label %>
                 </span>
+                <span class="font-medium whitespace-nowrap">₹ <%= item.amount.toLocaleString("en-IN") %></span>
               </div>
-              <span class="font-semibold whitespace-nowrap ml-2"
-                >- ₹ <span id="discountAmount">0</span></span
-              >
-            </div>
+              <% }) %>
+
+                <!-- Discount row (initially hidden) -->
+                <div id="discountRow" class="hidden flex justify-between items-center text-green-600 animate-fadeIn">
+                  <div class="flex items-center gap-2 flex-1 min-w-0">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                      </path>
+                    </svg>
+                    <span class="text-sm font-medium truncate">
+                      Discount (<span id="appliedCouponCodeSummary" class="font-mono"></span>)
+                    </span>
+                  </div>
+                  <span class="font-semibold whitespace-nowrap ml-2">- ₹ <span id="discountAmount">0</span></span>
+                </div>
           </div>
 
           <div class="border-t-2 border-dashed pt-4 mb-6">
             <!-- Subtotal (shown when discount is applied) -->
-            <div
-              id="subtotalRow"
-              class="hidden flex justify-between items-center mb-3 text-gray-600"
-            >
+            <div id="subtotalRow" class="hidden flex justify-between items-center mb-3 text-gray-600">
               <span class="text-sm">Subtotal</span>
-              <span class="font-medium line-through whitespace-nowrap"
-                >₹
-                <span id="originalAmount"> <%= totalAmount.toLocaleString("en-IN") %> </span></span
-              >
+              <span class="font-medium line-through whitespace-nowrap">₹
+                <span id="originalAmount">
+                  <%= totalAmount.toLocaleString("en-IN") %>
+                </span></span>
             </div>
 
             <!-- Final Total -->
             <div class="flex justify-between items-center gap-3">
               <span class="text-lg font-semibold text-gray-900">Total Amount</span>
-              <span
-                class="text-3xl font-bold text-primary transition-all duration-300 whitespace-nowrap"
-                id="finalTotal"
-              >
+              <span class="text-3xl font-bold text-primary transition-all duration-300 whitespace-nowrap"
+                id="finalTotal">
                 ₹ <%= totalAmount.toLocaleString("en-IN") %>
               </span>
             </div>
 
             <!-- Savings badge (shown when discount is applied) -->
-            <div
-              id="savingsBadge"
-              class="hidden mt-3 bg-green-50 border border-green-200 rounded-lg p-3 text-center animate-fadeIn"
-            >
-              <p
-                class="text-green-700 font-semibold text-sm flex items-center justify-center gap-2"
-              >
-                <svg
-                  class="w-5 h-5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
-                  ></path>
+            <div id="savingsBadge"
+              class="hidden mt-3 bg-green-50 border border-green-200 rounded-lg p-3 text-center animate-fadeIn">
+              <p class="text-green-700 font-semibold text-sm flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
+                  </path>
                 </svg>
                 <span>You're saving ₹ <span id="totalSavings">0</span></span>
               </p>
@@ -476,25 +305,16 @@
 
           <!-- PAYMENT FORM -->
           <form method="POST" action="/payments/confirm">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="intentId" value="<%= intentId %>" />
 
-            <button
-              id="payBtn"
-              type="button"
-              class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-2 group"
-            >
-              <svg
-                class="w-6 h-6 group-hover:rotate-12 transition-transform flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                ></path>
+            <button id="payBtn" type="button"
+              class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-2 group">
+              <svg class="w-6 h-6 group-hover:rotate-12 transition-transform flex-shrink-0" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                </path>
               </svg>
               Proceed to Pay
             </button>
@@ -504,50 +324,25 @@
           <div class="mt-6 pt-6 border-t">
             <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
               <div class="flex items-center gap-1">
-                <svg
-                  class="w-4 h-4 text-green-600 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  ></path>
+                <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                  </path>
                 </svg>
                 <span>Secure</span>
               </div>
               <div class="flex items-center gap-1">
-                <svg
-                  class="w-4 h-4 text-blue-600 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  ></path>
+                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                  </path>
                 </svg>
                 <span>Encrypted</span>
               </div>
               <div class="flex items-center gap-1">
-                <svg
-                  class="w-4 h-4 text-purple-600 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M5 13l4 4L19 7"
-                  ></path>
+                <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
                 <span>Verified</span>
               </div>

@@ -1,15 +1,12 @@
 const statusCode = require('../../utils/statusCode');
-
 const {
   VIEWS,
   LAYOUTS,
   ERROR_MESSAGES,
   SUCCESS_MESSAGES,
-
   COUPON_MESSAGES,
   TITLES,
 } = require('../../utils/constants');
-
 const {
   getCouponManagementData,
   createCouponService,
@@ -17,11 +14,9 @@ const {
   deleteCouponService,
   applyCouponService,
 } = require('../../services/admin/couponService');
-
 exports.couponManagementPage = async (req, res) => {
   try {
     const { coupons } = await getCouponManagementData();
-
     res.render(VIEWS.ADMIN_COUPON_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
       title: TITLES.COUPON_MANAGEMENT,
@@ -37,11 +32,9 @@ exports.couponManagementPage = async (req, res) => {
     });
   }
 };
-
 exports.createCoupon = async (req, res) => {
   try {
     const result = await createCouponService(req.body, req.admin._id);
-
     if (!result.ok) {
       if (result.reason === COUPON_MESSAGES.MISSING_FIELDS) {
         return res.status(statusCode.BAD_REQUEST).json({
@@ -49,14 +42,12 @@ exports.createCoupon = async (req, res) => {
           message: ERROR_MESSAGES.COUPON_REQUIRED_FIELDS,
         });
       }
-
       if (result.reason === COUPON_MESSAGES.COUPON_EXISTS) {
         return res.status(statusCode.CONFLICT).json({
           success: false,
           message: ERROR_MESSAGES.COUPON_EXISTS,
         });
       }
-
       if (result.reason === COUPON_MESSAGES.INVALID_DATE_RANGE) {
         return res.status(statusCode.BAD_REQUEST).json({
           success: false,
@@ -64,7 +55,6 @@ exports.createCoupon = async (req, res) => {
         });
       }
     }
-
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.COUPON_CREATED,
@@ -78,15 +68,12 @@ exports.createCoupon = async (req, res) => {
     });
   }
 };
-
 exports.toggleCouponStatus = async (req, res) => {
   try {
     const result = await toggleCouponStatusService(req.params.id);
-
     if (!result.ok && result.reason === COUPON_MESSAGES.NOT_FOUND) {
       return res.status(statusCode.NOT_FOUND).json({ success: false });
     }
-
     res.json({
       success: true,
       isActive: result.isActive,
@@ -96,7 +83,6 @@ exports.toggleCouponStatus = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
-
 exports.deleteCoupon = async (req, res) => {
   try {
     await deleteCouponService(req.params.id);
@@ -106,22 +92,18 @@ exports.deleteCoupon = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false });
   }
 };
-
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode, intentId } = req.body;
     const userId = req.user._id;
-
     const result = await applyCouponService({
       couponCode,
       intentId,
       userId,
       orderAmount: 5000,
     });
-
     if (!result.ok) {
       let message = ERROR_MESSAGES.INVALID_COUPON;
-
       if (result.reason === COUPON_MESSAGES.COUPON_EXPIRED) {
         message = ERROR_MESSAGES.COUPON_EXPIRED;
       } else if (result.reason === COUPON_MESSAGES.COUPON_LIMIT_REACHED) {
@@ -129,13 +111,11 @@ exports.applyCoupon = async (req, res) => {
       } else if (result.reason === COUPON_MESSAGES.COUPON_FULLY_REDEEMED) {
         message = ERROR_MESSAGES.COUPON_FULLY_REDEEMED;
       }
-
       return res.json({
         success: false,
         message,
       });
     }
-
     return res.json({
       success: true,
       discount: result.discount,

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const couponSchema = new mongoose.Schema({
   code: {
     type: String,
@@ -35,5 +34,4 @@ const couponSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-
 module.exports = mongoose.model('Coupon', couponSchema);

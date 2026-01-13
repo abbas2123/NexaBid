@@ -4,10 +4,11 @@ const session = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 const cookieParser = require('cookie-parser');
 const passport = require('./passport');
-
 const nocache = require('../middlewares/noCache');
 const rateLimiter = require('../middlewares/rateLimiter');
 const setLocals = require('../middlewares/setLocals');
+const helmet = require('helmet');
+const csrf = require('csurf');
 const authUser = require('../middlewares/authUser');
 
 module.exports = (app) => {
@@ -15,29 +16,52 @@ module.exports = (app) => {
   app.set('views', path.join(__dirname, '../views'));
   app.use(expressLayouts);
 
+
+  app.use(helmet({ contentSecurityPolicy: false }));
+
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(cookieParser());
 
+ 
   app.use(
     session({
       secret: process.env.SECRET,
       resave: false,
       saveUninitialized: false,
-      cookie: { maxAge: 1000 * 60 * 60 * 24 },
-    }),
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    })
   );
 
+ 
   app.use(passport.initialize());
   app.use(passport.session());
-
   app.use(authUser);
 
-  app.use(setLocals);
 
+  const csrfProtection = csrf();
+
+  app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+      return csrfProtection(req, res, next);
+    }
+    next();
+  });
+
+ 
+  app.use((req, res, next) => {
+    if (req.csrfToken) res.locals.csrfToken = req.csrfToken();
+    next();
+  });
+
+  app.use(setLocals);
   app.use(nocache);
   app.use(rateLimiter);
-
   app.use(express.static(path.join(__dirname, '../public')));
   app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 };

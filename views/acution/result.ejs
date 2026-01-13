@@ -16,10 +16,10 @@
           <h1 class="text-3xl md:text-4xl font-black">Auction Result</h1>
 
           <% if (property.status==='sold' ) { %>
-          <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
-            Sold
-          </span>
-          <% } %>
+            <span class="px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 text-sm font-bold">
+              Sold
+            </span>
+            <% } %>
         </div>
 
         <p class="text-gray-500 mt-1">
@@ -31,7 +31,9 @@
 
       <div class="hidden md:block text-right">
         <p class="text-sm text-gray-500">Auction Ended</p>
-        <p class="font-bold"><%= new Date(property.auctionEndsAt).toLocaleString() %></p>
+        <p class="font-bold">
+          <%= new Date(property.auctionEndsAt).toLocaleString() %>
+        </p>
       </div>
     </div>
 
@@ -41,20 +43,16 @@
       <div class="lg:col-span-2 flex flex-col gap-6">
         <!-- Property Card -->
         <div class="bg-white rounded-xl border overflow-hidden">
-          <div
-            class="h-64 md:h-80 bg-cover bg-center"
-            style="
-              background-image: url('<%= property.media && property.media.length 
-  ? property.media[0].url 
-  : '/images/no-image.png' %>');
-            "
-          ></div>
+          <div class="h-64 md:h-80 bg-cover bg-center" style="
+              background-image: url('<%= (property.media && property.media.length > 0) ? property.media[0].url : '/images/no-image.png' %>');
+            "></div>
 
           <div class="p-6">
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6 border-b pb-6 mb-6">
               <div>
                 <p class="text-xs text-gray-500">Base Price</p>
-                <p class="font-bold text-lg">₹ <%= property.basePrice.toLocaleString('en-IN') %></p>
+                <p class="font-bold text-lg">₹ <%= property.basePrice.toLocaleString('en-IN') %>
+                </p>
               </div>
 
               <div>
@@ -66,12 +64,16 @@
 
               <div>
                 <p class="text-xs text-gray-500">Total Bids</p>
-                <p class="font-bold text-lg"><%= totalBids %></p>
+                <p class="font-bold text-lg">
+                  <%= totalBids %>
+                </p>
               </div>
 
               <div>
                 <p class="text-xs text-gray-500">Views</p>
-                <p class="font-bold text-lg"><%= property.views || 0 %></p>
+                <p class="font-bold text-lg">
+                  <%= property.views || 0 %>
+                </p>
               </div>
             </div>
 
@@ -101,31 +103,29 @@
 
             <div class="flex items-center gap-4 mb-6">
               <% if (winner) { %>
-              <img
-                src="<%= winner.avatar ? winner.avatar : '/images/default-user.png' %>"
-                class="w-16 h-16 rounded-full border object-cover"
-              />
-              <% } else { %>
-              <img
-                src="/images/default-user.png"
-                class="w-16 h-16 rounded-full border object-cover"
-              />
-              <% } %>
+                <img src="<%= winner.avatar ? winner.avatar : '/images/default-user.png' %>"
+                  class="w-16 h-16 rounded-full border object-cover" />
+                <% } else { %>
+                  <img src="/images/default-user.png" class="w-16 h-16 rounded-full border object-cover" />
+                  <% } %>
 
-              <div>
-                <p class="font-bold text-lg"><%= winner ? winner.name : 'No Winner' %></p>
-                <p class="text-sm text-gray-500">Verified Buyer</p>
-              </div>
+                    <div>
+                      <p class="font-bold text-lg">
+                        <%= winner ? winner.name : 'No Winner' %>
+                      </p>
+                      <p class="text-sm text-gray-500">Verified Buyer</p>
+                    </div>
             </div>
 
             <div class="space-y-3 text-sm text-gray-600">
               <% if (winner && winner.phone) { %>
-              <div>📞 <%= winner.phone %></div>
-              <% } else { %>
-              <div class="text-gray-400">📞 Phone not available</div>
-              <% } %>
+                <div>📞 <%= winner.phone %>
+                </div>
+                <% } else { %>
+                  <div class="text-gray-400">📞 Phone not available</div>
+                  <% } %>
 
-              <div>Email not available</div>
+                    <div>Email not available</div>
             </div>
           </div>
 
@@ -136,21 +136,19 @@
             </p>
 
             <% if (winner && winner._id) { %>
-            <a
-              href="/chat/start/<%= winner._id %>/property/<%= property._id %>"
-              class="mt-4 block text-center bg-primary text-white font-bold py-3 rounded-lg"
-            >
-              Start Chat with Buyer
-            </a>
-            <% } else { %>
-            <div class="mt-4 text-center text-gray-400 bg-gray-100 py-3 rounded-lg">
-              No buyer available
-            </div>
-            <% } %>
+              <a href="/chat/start/<%= winner._id %>/property/<%= property._id %>"
+                class="mt-4 block text-center bg-primary text-white font-bold py-3 rounded-lg">
+                Start Chat with Buyer
+              </a>
+              <% } else { %>
+                <div class="mt-4 text-center text-gray-400 bg-gray-100 py-3 rounded-lg">
+                  No buyer available
+                </div>
+                <% } %>
 
-            <p class="text-xs text-center text-gray-500 mt-2">
-              Discuss payment & handover directly
-            </p>
+                  <p class="text-xs text-center text-gray-500 mt-2">
+                    Discuss payment & handover directly
+                  </p>
           </div>
         </div>
 

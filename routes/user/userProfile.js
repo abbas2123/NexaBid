@@ -7,20 +7,15 @@ const uploads = require('../../middlewares/upload');
 const reportManagementController = require('../../controllers/user/reportManagement');
 const userController = require('../../controllers/vendor/agreementController');
 const router = express.Router();
-
 router.get('/profile', authMiddleware.protectRoute, profileController.userProfile);
 router.get('/status', authMiddleware.protectRoute, profileController.getUserStatuspage);
 router.get('/logout', profileController.logOut);
-
 router.get('/my-profile', authMiddleware.protectRoute, profileController.getMyProfile);
-
 router.get('/my-listings', authMiddleware.protectRoute, vendorOpController.getMyListingPage);
-
 router.get('/about-us', authMiddleware.protectRoute, profileController.getAboutUs);
-
 router.get('/contact', authMiddleware.protectRoute, profileController.getContact);
 router.get('/my-participation', authMiddleware.protectRoute, vendorOpController.getMyParticipation);
-router.get('/tender-reports', authMiddleware.protectRoute, vendorOpController.getTenderReports);
+// router.get('/tender-reports', authMiddleware.protectRoute, vendorOpController.getTenderReports);
 router.get(
   '/my-participation/tender/:id',
   authMiddleware.protectRoute,
@@ -31,7 +26,6 @@ router.post(
   authMiddleware.protectRoute,
   vendorOpController.vendorRespondPO
 );
-
 router.get('/:tenderId/upload', authMiddleware.protectRoute, vendorOpController.getUploadPage);
 router.post(
   '/:tenderId/upload',
@@ -52,16 +46,10 @@ router.get(
   reportManagementController.getPropertyAuctionReports
 );
 router.get(
-  '/reports/balance',
-  authMiddleware.protectRoute,
-  reportManagementController.getBalanceReport
-);
-router.get(
   '/reports/view/:id',
   authMiddleware.protectRoute,
   reportManagementController.getAuctionDetailReport
 );
-
 router.get('/work-orders/:id', authMiddleware.protectRoute, vendorOpController.getWorkOrderDetails);
 router.post(
   '/work-orders/:woId/milestones/:mid/start',
@@ -84,5 +72,4 @@ router.post(
   authMiddleware.protectRoute,
   vendorOpController.completeWorkOrder
 );
-
 module.exports = router;

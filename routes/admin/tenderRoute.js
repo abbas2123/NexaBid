@@ -1,10 +1,9 @@
 const express = require('express');
 const tenderContorller = require('../../controllers/admin/tenderManagement');
-
+const { adminProtect } = require('../../middlewares/adminAuth');
 const router = express.Router();
 
-router.get('/', tenderContorller.getAdminTenderPage);
-router.get('/:id', tenderContorller.getTenderDetails);
-router.patch('/status/:id', tenderContorller.updateTenderStatus);
-
+router.get('/', adminProtect, tenderContorller.getAdminTenderPage);
+router.get('/:id', adminProtect, tenderContorller.getTenderDetails);
+router.patch('/status/:id', adminProtect, tenderContorller.updateTenderStatus);
 module.exports = router;

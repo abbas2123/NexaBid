@@ -37,7 +37,7 @@
           <div class="flex justify-between">
             <span class="text-gray-600">Amount:</span>
             <span class="font-semibold text-gray-900">
-              ₹<%= payment.amount.toLocaleString('en-IN') %>
+              ₹<%= (payment.metadata?.payableAmount || payment.amount).toLocaleString("en-IN") %>
             </span>
           </div>
 

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const walletTransactionSchema = new mongoose.Schema({
   walletId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -29,5 +28,4 @@ const walletTransactionSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-
 module.exports = mongoose.model('WalletTransaction', walletTransactionSchema);

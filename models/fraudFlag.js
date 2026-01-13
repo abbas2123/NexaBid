@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const fraudFlagSchema = new mongoose.Schema(
   {
     entityType: { type: String, required: true },
@@ -9,5 +8,4 @@ const fraudFlagSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model('FraudFlag', fraudFlagSchema);

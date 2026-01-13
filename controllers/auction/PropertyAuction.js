@@ -9,11 +9,9 @@ const {
   REDIRECTS,
   ROUTES,
 } = require('../../utils/constants');
-
 exports.liveAuctionPage = async (req, res) => {
   try {
     const data = await AuctionService.getAuctionPageData(req.params.propertyId, req.user?._id);
-
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
       return res.redirect(`${ROUTES.AUCTION_WON}/${req.params.propertyId}`);
     }
@@ -27,7 +25,6 @@ exports.liveAuctionPage = async (req, res) => {
     if (err.message === ERROR_MESSAGES.INVALID_AUCTION) {
       return res.redirect(REDIRECTS.PROPERTIES);
     }
-
     console.error(err);
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -36,11 +33,9 @@ exports.liveAuctionPage = async (req, res) => {
     });
   }
 };
-
 exports.publisherLiveAuctionPage = async (req, res) => {
   try {
     const data = await AuctionService.getPublisherAuctionData(req.params.propertyId, req.user._id);
-
     if (data.auctionStatus === AUCTION_STATUS.ENDED) {
       return res.redirect(`${ROUTES.AUCTION_RESULT}/${req.params.propertyId}`);
     }
@@ -57,7 +52,6 @@ exports.publisherLiveAuctionPage = async (req, res) => {
     if (err.message === ERROR_MESSAGES.UNAUTHORIZED) {
       return res.status(statusCode.FORBIDDEN).send(ERROR_MESSAGES.UNAUTHORIZED);
     }
-
     console.error(err);
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -66,11 +60,9 @@ exports.publisherLiveAuctionPage = async (req, res) => {
     });
   }
 };
-
 exports.getAuctionResult = async (req, res) => {
   try {
     const result = await AuctionService.getAuctionResult(req.params.propertyId, req.user._id);
-
     res.json({ success: true, result });
   } catch (err) {
     res
@@ -78,7 +70,6 @@ exports.getAuctionResult = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.GENERIC_ERROR });
   }
 };
-
 exports.enableAutoBid = async (req, res) => {
   try {
     await AuctionService.enableAutoBid({
@@ -86,16 +77,18 @@ exports.enableAutoBid = async (req, res) => {
       userId: req.user._id,
       maxBid: req.body.maxBid,
     });
-
+    const io = req.app.get('io');
+    AuctionService.handleAutoBids(req.params.propertyId, io).catch((err) =>
+      console.error('Initial AutoBid Trigger Error:', err)
+    );
     res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
   } catch (err) {
     if (err.message === ERROR_MESSAGES.PAYMENT_REQUIRED) {
       return res.redirect(`${ROUTES.PAYMENT_INITIATE}?type=property&id=${req.params.propertyId}`);
     }
     if (err.message === ERROR_MESSAGES.BID_TOO_LOW) {
-      return res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}`);
+      return res.redirect(`${ROUTES.AUCTION_LIVE}/${req.params.propertyId}?error=auto_bid_too_low`);
     }
-
     console.error(err);
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -104,11 +97,9 @@ exports.enableAutoBid = async (req, res) => {
     });
   }
 };
-
 exports.getAutoBidPage = async (req, res) => {
   try {
     const data = await AuctionService.getAutoBidPageData(req.params.propertyId, req.user._id);
-
     res.render(VIEWS.ENABLE_AUTO_BID, {
       layout: LAYOUTS.USER_LAYOUT,
       propertyId: req.params.propertyId,
@@ -119,22 +110,17 @@ exports.getAutoBidPage = async (req, res) => {
     return res.redirect(REDIRECTS.PROPERTIES);
   }
 };
-
 exports.success = async (req, res) => {
   try {
     const { propertyId } = req.params;
     const userId = req.user._id;
-
     const property = await Property.findById(propertyId).populate('soldTo', 'name email').lean();
-
     if (!property) {
       return res.redirect('/properties');
     }
-
     if (property.soldTo && property.soldTo._id.toString() !== userId.toString()) {
       return res.redirect('/properties');
     }
-
     res.render('acution/success', {
       layout: LAYOUTS.USER_LAYOUT,
       property,

@@ -2,7 +2,6 @@ const myProfileService = require('../../services/profile/profileService');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 const vendorService = require('../../services/vendor/applicationService');
-
 exports.userProfile = async (req, res) => {
   try {
     if (!req.user) {
@@ -10,7 +9,6 @@ exports.userProfile = async (req, res) => {
     }
     const { user } = req;
     const application = await vendorService.getApplicationStatus(user._id);
-
     res.render('profile/profile', {
       layout: LAYOUTS.USER_LAYOUT,
       title: 'My profile - NexaBid',
@@ -26,19 +24,15 @@ exports.userProfile = async (req, res) => {
     });
   }
 };
-
 exports.getUserStatuspage = async (req, res) => {
   try {
     if (!req.user) {
       return res.redirect('/auth/login');
     }
-
     const { user } = req;
     const userId = user._id;
-
     const { vendorApp, propertyStatus, tenderStatus, latestTender, userProperties, userTenders } =
       await myProfileService.userStatus(userId);
-
     return res.render('profile/status', {
       layout: LAYOUTS.USER_LAYOUT,
       title: 'Account Status',
@@ -55,7 +49,6 @@ exports.getUserStatuspage = async (req, res) => {
     return res.redirect('/auth/login');
   }
 };
-
 exports.logOut = (req, res) => {
   try {
     res.clearCookie('token');
@@ -65,15 +58,12 @@ exports.logOut = (req, res) => {
     return res.redirect('/');
   }
 };
-
 exports.getMyProfile = async (req, res) => {
   try {
     if (!req.user) {
       return res.redirect('/auth/login');
     }
-
     const { user } = await myProfileService.getMyProfileData(req.user._id);
-
     return res.render('profile/myProfile.ejs', {
       layout: LAYOUTS.USER_LAYOUT,
       title: 'My Profile',
@@ -85,14 +75,12 @@ exports.getMyProfile = async (req, res) => {
     return res.redirect('/auth/dashboard');
   }
 };
-
 exports.getAboutUs = (req, res) => {
   res.render('profile/aboutUs', {
     layout: LAYOUTS.USER_LAYOUT,
     user: req.user,
   });
 };
-
 exports.getContact = (req, res) => {
   res.render('user/contact', {
     layout: LAYOUTS.USER_LAYOUT,

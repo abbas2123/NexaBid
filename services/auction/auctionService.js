@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Property = require('../../models/property');
 const PropertyBid = require('../../models/propertyBid');
 const Payment = require('../../models/payment');
@@ -7,7 +8,10 @@ const {
   PAYMENT_STATUS,
   PAYMENT_TYPES,
   BID_STATUS,
+  AUCTION_TIMING,
 } = require('../../utils/constants');
+
+const { LAST_MINUTE_WINDOW, EXTENSION_TIME } = AUCTION_TIMING;
 
 class AuctionService {
   static async getAuctionPageData(propertyId, userId) {
@@ -17,7 +21,6 @@ class AuctionService {
     if (!property || !property.isAuction) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
-
     const now = new Date();
     const auctionStatus =
       now < property.auctionStartsAt
@@ -25,7 +28,6 @@ class AuctionService {
         : now > property.auctionEndsAt
           ? AUCTION_STATUS.ENDED
           : AUCTION_STATUS.LIVE;
-
     let myAutoBidMax = 0;
     if (userId) {
       const myBid = await PropertyBid.findOne({
@@ -36,12 +38,10 @@ class AuctionService {
       })
         .select('autoBidMax')
         .lean();
-
       if (myBid) {
         myAutoBidMax = myBid.autoBidMax;
       }
     }
-
     return {
       property,
       auctionStatus,
@@ -58,14 +58,12 @@ class AuctionService {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
-
     if (!property || !property.isAuction) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     if (property.sellerId.toString() !== sellerId.toString()) {
       throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
     }
-
     const now = new Date();
     let auctionStatus = AUCTION_STATUS.NOT_STARTED;
     if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
@@ -73,12 +71,10 @@ class AuctionService {
     } else if (now > property.auctionEndsAt) {
       auctionStatus = AUCTION_STATUS.ENDED;
     }
-
     const bids = await PropertyBid.find({ propertyId })
       .populate('bidderId', 'name')
       .sort({ createdAt: -1 })
       .lean();
-
     return {
       property,
       bids,
@@ -92,11 +88,9 @@ class AuctionService {
 
   static async getAuctionResult(propertyId, userId) {
     const property = await Property.findById(propertyId).populate('soldTo', 'name email');
-
     if (!property) {
       throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
     }
-
     if (property.soldTo && property.soldTo._id.toString() === userId.toString()) {
       return 'won';
     }
@@ -105,15 +99,12 @@ class AuctionService {
 
   static async enableAutoBid({ propertyId, userId, maxBid }) {
     const property = await Property.findByIdAndUpdate(propertyId);
-
     if (!property || !property.isAuction) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
-
     if (Number(maxBid) <= property.currentHighestBid) {
       throw new Error(ERROR_MESSAGES.BID_TOO_LOW);
     }
-
     const participationPayment = await Payment.findOne({
       userId,
       contextId: propertyId,
@@ -121,11 +112,9 @@ class AuctionService {
       type: PAYMENT_TYPES.PARTICIPATION_FEE,
       status: PAYMENT_STATUS.SUCCESS,
     });
-
     if (!participationPayment) {
       throw new Error(ERROR_MESSAGES.PAYMENT_REQUIRED);
     }
-
     await PropertyBid.findOneAndUpdate(
       { propertyId, bidderId: userId },
       {
@@ -144,17 +133,14 @@ class AuctionService {
 
   static async getAutoBidPageData(propertyId, userId) {
     const property = await Property.findById(propertyId).lean();
-
     if (!property || !property.isAuction) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
-
     const existingAutoBid = await PropertyBid.findOne({
       propertyId,
       bidderId: userId,
       isAutoBid: true,
     }).lean();
-
     return {
       property,
       autoBid: existingAutoBid || null,
@@ -189,52 +175,83 @@ class AuctionService {
         nextBidAmount = candidate.autoBidMax;
       }
 
-      const updated = await Property.findOneAndUpdate(
-        {
-          _id: propertyId,
-          currentHighestBid: { $lt: nextBidAmount },
-        },
-        {
-          $set: {
-            currentHighestBid: nextBidAmount,
-            currentHighestBidder: candidate.bidderId._id,
-          },
-        },
-        { new: true }
-      );
+      const session = await mongoose.startSession();
+      session.startTransaction();
 
-      if (updated) {
-        await PropertyBid.findOneAndUpdate(
-          { propertyId, bidderId: candidate.bidderId._id },
+      try {
+        const updated = await Property.findOneAndUpdate(
           {
-            amount: nextBidAmount,
-            isAutoBid: true,
-
-            escrowPaymentId: candidate.escrowPaymentId,
-            autoBidMax: candidate.autoBidMax,
-            bidStatus: BID_STATUS.ACTIVE,
+            _id: propertyId,
+            currentHighestBid: { $lt: nextBidAmount },
           },
-          { upsert: true }
+          {
+            $set: {
+              currentHighestBid: nextBidAmount,
+              currentHighestBidder: candidate.bidderId._id,
+            },
+          },
+          { new: true, session }
         );
 
-        const room = `auction_${propertyId}`;
-        io.to(room).emit('new_bid', {
-          amount: nextBidAmount,
-          bidderId: candidate.bidderId._id,
-          bidderName: candidate.bidderId.name,
-          time: new Date(),
-          isAutoBid: true,
-        });
+        if (updated) {
+          await PropertyBid.findOneAndUpdate(
+            { propertyId, bidderId: candidate.bidderId._id },
+            {
+              amount: nextBidAmount,
+              isAutoBid: true,
+              escrowPaymentId: candidate.escrowPaymentId,
+              autoBidMax: candidate.autoBidMax,
+              bidStatus: BID_STATUS.ACTIVE,
+            },
+            { upsert: true, session }
+          );
 
-        console.log(`🤖 AutoBid: ${candidate.bidderId.name} placed ${nextBidAmount}`);
-        rounds++;
+          const room = `auction_${propertyId}`;
+          io.to(room).emit('new_bid', {
+            amount: nextBidAmount,
+            bidderId: candidate.bidderId._id,
+            bidderName: candidate.bidderId.name,
+            time: new Date(),
+            isAutoBid: true,
+          });
 
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } else {
-        continue;
+          console.log(`🤖 AutoBid: ${candidate.bidderId.name} placed ${nextBidAmount}`);
+
+          const timeLeft = updated.auctionEndsAt.getTime() - Date.now();
+          if (timeLeft <= LAST_MINUTE_WINDOW && timeLeft > 0) {
+            const updatedEndTime = new Date(updated.auctionEndsAt.getTime() + EXTENSION_TIME);
+            await Property.findByIdAndUpdate(
+              propertyId,
+              {
+                auctionEndsAt: updatedEndTime,
+                extended: true,
+              },
+              { session }
+            );
+            console.log(
+              `⏰ AutoBid Extension: Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`
+            );
+            io.to(room).emit('auction_extended', {
+              newEndTime: updatedEndTime,
+              extendedBy: EXTENSION_TIME / 60000,
+            });
+          }
+
+          await session.commitTransaction();
+          rounds++;
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } else {
+          await session.abortTransaction();
+          continue;
+        }
+      } catch (error) {
+        await session.abortTransaction();
+        console.error('AutoBid Transaction Error:', error);
+        break;
+      } finally {
+        session.endSession();
       }
     }
   }
 }
-
 module.exports = AuctionService;

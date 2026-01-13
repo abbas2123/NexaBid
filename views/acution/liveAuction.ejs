@@ -1,6 +1,5 @@
 <body
-  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans antialiased min-h-screen"
->
+  class="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans antialiased min-h-screen">
   <!-- ================= AUCTION STATUS HEADER ================= -->
   <div class="max-w-7xl mx-auto px-4 py-6 text-center">
     <h1 class="text-3xl font-bold mb-2">Live Property Auction</h1>
@@ -47,41 +46,27 @@
               ₹ <%= (currentHighestBid || 0).toLocaleString("en-IN") %>
             </span>
             <span id="highestBidderName" class="text-xs text-gray-500 font-medium">
-              <%= property.currentHighestBidder ? property.currentHighestBidder.name : 'No bids yet'
-              %>
+              <%= property.currentHighestBidder ? property.currentHighestBidder.name : 'No bids yet' %>
             </span>
           </div>
         </div>
         <p class="text-sm text-gray-500">
-          Next minimum bid: ₹ <%= ((currentHighestBid || 0) + auctionStep).toLocaleString("en-IN")
-          %>
+          Next minimum bid: ₹ <%= ((currentHighestBid || 0) + auctionStep).toLocaleString("en-IN") %>
         </p>
       </div>
 
       <!-- BID FORM -->
       <div class="bg-white dark:bg-slate-900 p-6 rounded-xl border">
-        <input
-          id="bidAmount"
-          type="number"
-          class="w-full mb-4 px-4 py-3 rounded border text-lg"
-          placeholder="Enter your bid"
-          disabled
-        />
+        <input id="bidAmount" type="number" class="w-full mb-4 px-4 py-3 rounded border text-lg"
+          placeholder="Enter your bid" disabled />
 
         <div class="flex gap-4">
-          <button
-            id="autoBidBtn"
-            class="flex-1 px-4 py-3 rounded bg-gray-200 cursor-not-allowed"
-            disabled
-          >
+          <button id="autoBidBtn" class="flex-1 px-4 py-3 rounded bg-gray-200 cursor-not-allowed" disabled>
             Auto Bid
           </button>
 
-          <button
-            id="placeBidBtn"
-            class="flex-1 px-4 py-3 rounded bg-primary text-white font-bold cursor-not-allowed"
-            disabled
-          >
+          <button id="placeBidBtn" class="flex-1 px-4 py-3 rounded bg-primary text-white font-bold cursor-not-allowed"
+            disabled>
             Place Bid
           </button>
         </div>
@@ -161,15 +146,25 @@
     setInterval(updateCountdown, 1000);
     updateCountdown();
   </script>
+  <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
+    const socket = io("<%= process.env.SOCKET_URL || 'http://localhost:3000' %>", {
+      withCredentials: true
+    });
+
     let currentHighestBid = <%= currentHighestBid || 0 %>;
     const basePrice = <%= basePrice %>;
     const auctionStep = <%= auctionStep %>;
+    let myAutoBidMax = <%= (typeof myAutoBidMax !== 'undefined' ? myAutoBidMax : 0) %>;
+
+    socket.emit("join_auction", {
+      propertyId: "<%= propertyId %>",
+      userId: "<%= user._id %>"
+    });
 
     document.getElementById("placeBidBtn").addEventListener("click", () => {
       const bidValue = Number(document.getElementById("bidAmount").value);
-
       let minAllowed;
       let maxAllowed = null;
 
@@ -180,10 +175,7 @@
         maxAllowed = currentHighestBid + auctionStep;
       }
 
-      if (
-        bidValue < minAllowed ||
-        (maxAllowed && bidValue > maxAllowed)
-      ) {
+      if (bidValue < minAllowed || (maxAllowed && bidValue > maxAllowed)) {
         Swal.fire({
           icon: "error",
           title: "Invalid Bid",
@@ -199,18 +191,6 @@
         amount: bidValue,
       });
     });
-  </script>
-  <script src="/socket.io/socket.io.js"></script>
-  <script>
-    const socket = io("http://localhost:3000", {
-      withCredentials: true
-    });
-    socket.emit("join_auction", {
-      propertyId: "<%= propertyId %>",
-      userId: "<%= user._id %>"
-    });
-
-    let myAutoBidMax = <%= myAutoBidMax || 0 %>;
 
     socket.on("new_bid", (data) => {
       currentHighestBid = data.amount;
@@ -256,8 +236,6 @@
         window.location.href = `/auctions/failed/<%= propertyId %>`;
       }
     });
-  </script>
-  <script>
     socket.on('bid_error', (data) => {
       Swal.fire({
         icon: 'error',
@@ -266,8 +244,7 @@
         confirmButtonColor: '#1d72d6',
       });
     });
-  </script>
-  <script>
+
     socket.on('auction_extended', (data) => {
       Swal.fire({
         icon: 'info',
@@ -280,26 +257,44 @@
       // Update countdown end time
       auctionEndsAt = new Date(data.newEndTime).getTime();
     });
-  </script>
-  <script>
-    socket.on('newNotification', (data) => {
-      Swal.fire({
-        icon: 'success',
-        title: '🎉 You won the auction!',
-        text: `Winning bid: ₹${data.amount.toLocaleString('en-IN')}`,
-      }).then(() => {
-        window.location.href = `/auctions/success/${data.propertyId}`;
-      });
-    });
 
     socket.on('newNotification', (data) => {
-      Swal.fire({
-        icon: 'info',
-        title: 'Auction Ended',
-        text: 'You did not win this auction.',
-      }).then(() => {
-        window.location.href = `/auctions/failed/${data.propertyId}`;
-      });
+      if (data.type === 'won' || (data.message && data.message.includes('won'))) {
+        Swal.fire({
+          icon: 'success',
+          title: '🎉 You won the auction!',
+          text: data.message || `Winning bid: ₹${(data.amount || 0).toLocaleString('en-IN')}`,
+          timer: 3000,
+          showConfirmButton: true,
+        }).then(() => {
+          window.location.href = `/auctions/success/${data.propertyId || '<%= propertyId %>'}`;
+        });
+      } else {
+        Swal.fire({
+          icon: 'info',
+          title: 'Notification',
+          text: data.message,
+          timer: 3000,
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+        });
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const error = urlParams.get('error');
+
+      if (error === 'auto_bid_too_low') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Auto Bid Limit Too Low',
+          text: 'Your max bid amount must be higher than the current highest bid.',
+          confirmButtonColor: '#d33',
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
     });
   </script>
 </body>

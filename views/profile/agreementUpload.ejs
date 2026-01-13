@@ -1,19 +1,21 @@
 <main class="flex flex-1 justify-center py-8 px-4 sm:px-6 lg:px-8">
   <div class="layout-content-container flex flex-col w-full max-w-3xl flex-1 gap-6">
-    <% if (typeof approved !=="undefined" && approved===false) { %>
-      <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-        <p class="font-bold text-red-700">Agreement Rejected</p>
-        <p class="text-sm text-red-800">
-          <%= remarks || "No remarks provided." %>
-        </p>
+    <% if (approved===null) { %>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+        <p class="font-bold text-yellow-700">Waiting for publisher approval</p>
       </div>
-      <% } else if (vendorAgreement && approved===null) { %>
-        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <p class="font-bold text-yellow-700">Waiting for publisher approval</p>
+
+      <% } else if (approved===true) { %>
+        <div class="bg-green-50 border border-green-200 rounded-xl p-4">
+          <p class="font-bold text-green-700">Agreement Approved</p>
         </div>
-        <% } else if (approved===true) { %>
-          <div class="bg-green-50 border border-green-200 rounded-xl p-4">
-            <p class="font-bold text-green-700">Agreement Approved</p>
+
+        <% } else if (approved===false) { %>
+          <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+            <p class="font-bold text-red-700">Agreement Rejected</p>
+            <p class="text-sm text-red-800">
+              <%= remarks || "No remarks provided." %>
+            </p>
           </div>
           <% } %>
             <div class="flex flex-col gap-3">
@@ -39,49 +41,48 @@
                   Download Agreement PDF
                 </a>
 
-                <!-- </div> -->
-                <% } %>
-                  <form action="<%= formAction %>" method="POST" enctype="multipart/form-data">
+              </div>
+              <% } %>
+                <form action="<%= formAction %>" method="POST" enctype="multipart/form-data">
 
-                    <div
-                      class="flex flex-col p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <div
+                    class="flex flex-col p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
 
-                      <div class="flex flex-col items-center gap-6 border-2 border-dashed 
+                    <div class="flex flex-col items-center gap-6 border-2 border-dashed 
                         border-slate-300 dark:border-slate-700 px-6 py-14 rounded-lg">
 
-                        <span class="material-symbols-outlined text-5xl text-slate-400 dark:text-slate-500">
-                          upload_file
-                        </span>
+                      <span class="material-symbols-outlined text-5xl text-slate-400 dark:text-slate-500">
+                        upload_file
+                      </span>
 
-                        <p class="text-lg font-bold text-slate-900 dark:text-white">Drag & Drop your PDF here</p>
-                        <p class="text-sm text-slate-500 dark:text-slate-400">or click below</p>
+                      <p class="text-lg font-bold text-slate-900 dark:text-white">Drag & Drop your PDF here</p>
+                      <p class="text-sm text-slate-500 dark:text-slate-400">or click below</p>
 
-                        <input type="file" id="agreementFile" name="agreement" accept="application/pdf"
-                          class="hidden" />
+                      <input type="file" id="agreementFile" name="agreement" accept="application/pdf" class="hidden" />
 
-                        <label for="agreementFile" class="cursor-pointer bg-slate-100 dark:bg-slate-800 px-4 py-2 
+                      <label for="agreementFile" class="cursor-pointer bg-slate-100 dark:bg-slate-800 px-4 py-2 
                               rounded-lg text-sm font-bold hover:bg-slate-200 dark:hover:bg-slate-700">
-                          Upload Signed Agreement
-                        </label>
+                        Upload Signed Agreement
+                      </label>
 
-                        <p id="fileName" class="text-primary text-sm font-semibold"></p>
-                      </div>
+                      <p id="fileName" class="text-primary text-sm font-semibold"></p>
                     </div>
+                  </div>
 
-                    <div class="flex items-center gap-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-lg">
-                      <span class="material-symbols-outlined text-primary">info</span>
-                      <p class="text-slate-800 dark:text-slate-200 text-sm">
-                        After upload, the agreement will be sent for publisher approval.
-                      </p>
-                    </div>
+                  <div class="flex items-center gap-4 bg-primary/10 dark:bg-primary/20 p-4 rounded-lg">
+                    <span class="material-symbols-outlined text-primary">info</span>
+                    <p class="text-slate-800 dark:text-slate-200 text-sm">
+                      After upload, the agreement will be sent for publisher approval.
+                    </p>
+                  </div>
 
-                    <button type="submit" class="w-full sm:w-auto bg-primary text-white h-12 px-5 rounded-lg 
+                  <button type="submit" class="w-full sm:w-auto bg-primary text-white h-12 px-5 rounded-lg 
                    font-bold hover:bg-primary/90 mt-4">
-                      Submit Agreement
-                    </button>
+                    Submit Agreement
+                  </button>
 
-                  </form>
-              </div>
+                </form>
+  </div>
 </main>
 
 <script>

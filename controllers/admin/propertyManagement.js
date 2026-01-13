@@ -10,7 +10,6 @@ const {
   AUCTION_STATUS,
   REDIRECTS,
 } = require('../../utils/constants');
-
 exports.getAllProperties = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -20,7 +19,6 @@ exports.getAllProperties = async (req, res) => {
     };
     console.log('rgrvrrbr', req.query.status);
     const properties = await propertyService.getAllProperties(page, filter);
-
     res.render(VIEWS.ADMIN_PROPERTY_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
       properties: properties.property,
@@ -34,17 +32,14 @@ exports.getAllProperties = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
-
 exports.getPropertyDetails = async (req, res) => {
   try {
     const property = await propertyService.getPropertyDetails(req.params.id);
-
     if (!property) {
       return res
         .status(statusCode.NOT_FOUND)
         .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
-
     res.json({ success: true, property });
   } catch (err) {
     console.error('DETAIL FETCH ERROR:', err);
@@ -53,7 +48,6 @@ exports.getPropertyDetails = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
 exports.approveProperty = async (req, res) => {
   try {
     const serviceResponse = await propertyService.approvePropertyService(
@@ -62,13 +56,11 @@ exports.approveProperty = async (req, res) => {
       req.body.approveMessage,
       req.app.get('io')
     );
-
     if (!serviceResponse) {
       return res
         .status(statusCode.NOT_FOUND)
         .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
-
     res.json({ success: true, message: SUCCESS_MESSAGES.PROPERTY_APPROVED });
   } catch (err) {
     console.error('APPROVE ERROR:', err);
@@ -77,7 +69,6 @@ exports.approveProperty = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
 exports.rejectProperty = async (req, res) => {
   try {
     const serviceResponse = await propertyService.rejectPropertyService(
@@ -86,13 +77,11 @@ exports.rejectProperty = async (req, res) => {
       req.body.rejectionMessage,
       req.app.get('io')
     );
-
     if (!serviceResponse) {
       return res
         .status(statusCode.NOT_FOUND)
         .json({ success: false, message: ERROR_MESSAGES.PROPERTY_NOT_FOUND });
     }
-
     res.json({ success: true, message: SUCCESS_MESSAGES.PROPERTY_REJECTED });
   } catch (err) {
     console.error('REJECT ERROR:', err);
@@ -101,37 +90,30 @@ exports.rejectProperty = async (req, res) => {
       .json({ success: false, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
-
 exports.adminLiveAuctionPage = async (req, res) => {
   try {
     const { propertyId } = req.params;
     if (!propertyId) {
       return res.status(statusCode.BAD_REQUEST).send(ERROR_MESSAGES.PROPERTY_ID_MISSING);
     }
-
     const property = await Property.findById(propertyId)
       .populate('sellerId', 'name email')
       .populate('currentHighestBidder', 'name email')
       .lean();
-
     if (!property || !property.isAuction) {
       return res.redirect(REDIRECTS.ADMIN_PROPERTY_MANAGEMENT);
     }
-
     const bids = await PropertyBid.find({ propertyId })
       .populate('bidderId', 'name email')
       .sort({ createdAt: -1 })
       .lean();
-
     const now = new Date();
     let auctionStatus = AUCTION_STATUS.NOT_STARTED;
-
     if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
       auctionStatus = AUCTION_STATUS.LIVE;
     } else if (now > property.auctionEndsAt) {
       auctionStatus = AUCTION_STATUS.ENDED;
     }
-
     res.render(VIEWS.ADMIN_AUCTION_VIEW, {
       layout: LAYOUTS.ADMIN_LAYOUT,
       currentPage: 'auction',
@@ -149,19 +131,15 @@ exports.adminLiveAuctionPage = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
-
 exports.getAuctionReport = async (req, res) => {
   try {
     const { propertyId } = req.params;
     const data = await propertyService.getAuctionReportData(propertyId);
-
     if (!data) {
       return res
         .status(statusCode.NOT_FOUND)
         .json({ success: false, message: 'Property not found' });
     }
-
-    // Generate HTML string for the report
     let html = `
         <div class="space-y-6">
             <!-- Summary Header -->
@@ -184,9 +162,10 @@ exports.getAuctionReport = async (req, res) => {
                     <p class="font-bold text-blue-600 text-xl">${data.totalBids}</p>
                 </div>
             </div>
-
             <!-- Highest Bidder Section -->
-            ${data.winningBid ? `
+            ${
+              data.winningBid
+                ? `
             <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
                 <div>
                     <p class="text-xs font-bold uppercase text-green-800">Use this User as Winner</p>
@@ -196,8 +175,9 @@ exports.getAuctionReport = async (req, res) => {
                 <div class="bg-white p-2 rounded-full shadow-sm">
                     <span class="material-symbols-outlined text-green-600">emoji_events</span>
                 </div>
-            </div>` : ''}
-            
+            </div>`
+                : ''
+            }
             <!-- Bid History Table -->
             <div>
                 <h3 class="font-bold text-lg text-slate-800 mb-3 border-b pb-2">Bid History</h3>
@@ -212,7 +192,6 @@ exports.getAuctionReport = async (req, res) => {
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
     `;
-
     if (data.bids.length > 0) {
       data.bids.forEach((bid) => {
         html += `
@@ -231,9 +210,7 @@ exports.getAuctionReport = async (req, res) => {
     } else {
       html += `<tr><td colspan="3" class="p-8 text-center text-slate-400 italic">No bids have been placed yet.</td></tr>`;
     }
-
     html += `</tbody></table></div></div></div>`;
-
     res.json({ success: true, html });
   } catch (err) {
     console.error('Auction Report Controller Error:', err);

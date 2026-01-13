@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const ocrResultSchema = new mongoose.Schema(
   {
     fileId: {
@@ -18,5 +17,4 @@ const ocrResultSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model('OCRResult', ocrResultSchema);

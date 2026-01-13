@@ -1,6 +1,5 @@
 const tenderService = require('../../services/tender/tender');
 const statusCode = require('../../utils/statusCode');
-
 const {
   VIEWS,
   LAYOUTS,
@@ -9,13 +8,10 @@ const {
   ERROR_CODES,
   DEFAULTS,
 } = require('../../utils/constants');
-
 exports.getTenderListingPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || DEFAULTS.PAGE;
-
     const { tenders, pagination } = await tenderService.getAllTenders(page);
-
     res.render(VIEWS.TENDER_LISTING, {
       layout: LAYOUTS.USER_LAYOUT,
       tenders,
@@ -32,22 +28,17 @@ exports.getTenderListingPage = async (req, res) => {
     });
   }
 };
-
 exports.getTenderDetailsPage = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const user = req.user || null;
-
     const { tender, isVendor, canViewFull } = await tenderService.getTenderDetailsForUser(
       tenderId,
       user
     );
-
     const isOwner =
       user && tender.createdBy && tender.createdBy._id.toString() === user._id.toString();
-
     const canParticipate = isVendor && !isOwner;
-
     return res.render(VIEWS.TENDER_DETAILS, {
       layout: LAYOUTS.USER_LAYOUT,
       title: tender.title,
@@ -61,14 +52,12 @@ exports.getTenderDetailsPage = async (req, res) => {
     });
   } catch (err) {
     console.error('Tender Details Error:', err);
-
     if (err.code === ERROR_CODES.TENDER_DRAFT || err.statusCode === statusCode.FORBIDDEN) {
       return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
         message: ERROR_MESSAGES.TENDER_RESTRICTED,
       });
     }
-
     const httpStatus = err.statusCode || statusCode.INTERNAL_SERVER_ERROR;
     return res.status(httpStatus).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -76,14 +65,12 @@ exports.getTenderDetailsPage = async (req, res) => {
     });
   }
 };
-
 exports.resubmitTender = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const { body } = req;
     const uploadedFiles = req.files || [];
     const updatedTender = await tenderService.resubmitTenderService(tenderId, body, uploadedFiles);
-
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_RESUBMITTED,
@@ -94,5 +81,29 @@ exports.resubmitTender = async (req, res) => {
       success: false,
       message: err.message || ERROR_MESSAGES.SERVER_ERROR,
     });
+  }
+};
+
+exports.getTenderStatus = async (req, res) => {
+  try {
+    const status = await tenderService.getTenderStatus(req.params.id);
+    return res.status(statusCode.OK).json({
+      success: true,
+      status,
+    });
+  } catch (err) {
+    return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+    });
+  }
+};
+
+exports.viewTenderDoc = async (req, res) => {
+  try {
+    const viewUrl = await tenderService.getTenderFileUrl(req.params.fileId);
+    return res.redirect(viewUrl);
+  } catch (err) {
+    console.error('Doc view error:', err);
+    return res.status(err.statusCode || 500).send(err.message || 'Unable to open file');
   }
 };

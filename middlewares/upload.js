@@ -2,7 +2,6 @@ const cloudinary = require('../config/cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const path = require('path');
-
 const createUploader = (
   folderName,
   allowedFormats = ['jpg', 'jpeg', 'png', 'pdf', 'doc', 'docx'],
@@ -10,7 +9,6 @@ const createUploader = (
   storageType = 'memory'
 ) => {
   let storage;
-
   if (storageType === 'memory') {
     storage = multer.memoryStorage();
   } else {
@@ -26,11 +24,9 @@ const createUploader = (
       },
     });
   }
-
   return multer({
     storage: storage,
     limits: { fileSize: maxFileSize },
   });
 };
-
 module.exports = createUploader;

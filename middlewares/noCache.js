@@ -1,5 +1,4 @@
 const nocache = require('nocache');
-
 module.exports = [
   nocache(),
   (req, res, next) => {

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -12,14 +11,12 @@ const userSchema = new mongoose.Schema(
     avatar: { type: String, default: null },
     twoFA: { type: Boolean, default: false },
     twoFASecret: { type: String, default: null },
-
     isVendor: { type: Boolean, default: false },
     authProvider: {
       type: String,
       enum: ['local', 'google'],
       default: 'local',
     },
-
     googleId: {
       type: String,
       default: null,
@@ -27,5 +24,4 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model('User', userSchema);

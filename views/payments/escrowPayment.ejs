@@ -890,8 +890,6 @@
           },
 
           handler: function (response) {
-            console.log('✅ Payment successful:', response);
-
             fetch('/payments/confirm', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -902,42 +900,37 @@
                 razorpay_signature: response.razorpay_signature,
               }),
             })
-              .then((res) => res.json())
-              .then((data) => {
-                window.location.href = data.redirect || '/dashboard';
-              })
-              .catch(() => {
-                window.location.href = '/payments/failure/<%= payment._id %>';
-              });
+              .then((r) => r.json())
+              .then((r) => (window.location.href = r.redirect));
           },
 
           modal: {
-            ondismiss: function () {
-              console.log('❌ Payment cancelled by user');
-              btn.innerHTML = originalHTML;
-              btn.disabled = false;
+            ondismiss: async function () {
+              await fetch('/payments/mark-failed/<%= payment._id %>', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reason: 'User cancelled payment' }),
+              });
+              window.location.href = '/payments/failure/<%= payment._id %>';
             },
           },
 
           theme: { color: '#2563eb' },
         };
-
         const rzp = new Razorpay(options);
 
         /* 🔴 VERY IMPORTANT – HANDLE FAILURES */
-        rzp.on('payment.failed', function (response) {
-          console.log('❌ Razorpay failed', response.error);
-          const reason = response.error ? response.error.description : 'Payment failed';
-          window.location.href = `/payments/failure/<%= payment._id %>?reason=${encodeURIComponent(reason)}`;
-        });
+        rzp.on('payment.failed', async function (response) {
+          await fetch('/payments/mark-failed/<%= payment._id %>', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reason: response.error?.description || 'Payment failed',
+            }),
+          });
 
-        /* USER CANCEL / CLOSE */
-        options.modal = {
-          ondismiss: function () {
-            console.log('❌ Razorpay dismissed');
-            window.location.href = '/payments/failure/<%= payment._id %>?reason=Cancelled by user';
-          },
-        };
+          window.location.href = '/payments/failure/<%= payment._id %>';
+        });
 
         rzp.open();
       } catch (error) {

@@ -1,0 +1,144 @@
+<div
+    class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background-light dark:bg-background-dark">
+    <main class="flex-1 w-full max-w-[1280px] mx-auto px-4 md:px-8 py-8 md:py-12">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
+                    Work Order Reports
+                </h1>
+                <p class="text-gray-500 dark:text-gray-400 mt-1">
+                    <% if (userRole==='admin' ) { %> Overview of all work orders and their status. <% } else { %> Track
+                            your assigned work orders and milestones. <% } %>
+                </p>
+            </div>
+            <a href="/user/report-management"
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
+                Back to Reports
+            </a>
+        </div>
+
+        <!-- Reports Table -->
+        <div
+            class="bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm text-gray-500 dark:text-gray-400">
+                    <thead
+                        class="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400 font-bold tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4">Work Order</th>
+                            <th class="px-6 py-4">Project</th>
+                            <% if (userRole==='admin' ) { %>
+                                <th class="px-6 py-4">Vendor</th>
+                                <% } %>
+                                    <th class="px-6 py-4">Value</th>
+                                    <th class="px-6 py-4">Status</th>
+                                    <th class="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <% if (workOrders && workOrders.length> 0) { %> <% workOrders.forEach(wo=> { %>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                                    <!-- Work Order Info -->
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-gray-900 dark:text-white text-base">
+                                                <%= wo.woNumber || 'N/A' %>
+                                            </span>
+                                            <span class="text-xs text-gray-400 mt-0.5">
+                                                <%= wo.title %>
+                                            </span>
+                                            <span class="text-xs text-blue-600 mt-1">
+                                                Issued: <%= new Date(wo.createdAt).toLocaleDateString() %>
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Project Info -->
+                                    <td class="px-6 py-4">
+                                        <span class="font-semibold text-gray-900 dark:text-gray-200">
+                                            <%= wo.tenderId ? wo.tenderId.title : 'Deleted Project' %>
+                                        </span>
+                                    </td>
+
+                                    <!-- Vendor (Admin Only) -->
+                                    <% if (userRole==='admin' ) { %>
+                                        <td class="px-6 py-4">
+                                            <% if (wo.vendorId) { %>
+                                                <div class="flex flex-col">
+                                                    <span class="font-semibold text-gray-900 dark:text-gray-200">
+                                                        <%= wo.vendorId.name %>
+                                                    </span>
+                                                    <a href="mailto:<%= wo.vendorId.email %>"
+                                                        class="text-xs text-blue-500 hover:underline">
+                                                        <%= wo.vendorId.email %>
+                                                    </a>
+                                                </div>
+                                                <% } else { %>
+                                                    <span class="text-gray-400 italic">Unknown</span>
+                                                    <% } %>
+                                        </td>
+                                        <% } %>
+
+                                            <!-- Value -->
+                                            <td class="px-6 py-4">
+                                                <span class="font-black text-gray-900 dark:text-green-400 text-lg">
+                                                    ₹<%= (wo.value || 0).toLocaleString('en-IN') %>
+                                                </span>
+                                            </td>
+
+                                            <!-- Status -->
+                                            <td class="px-6 py-4">
+                                                <% let badgeClass='' ; let badgeText=wo.status.charAt(0).toUpperCase() +
+                                                    wo.status.slice(1); switch(wo.status) { case 'completed' :
+                                                    badgeClass='bg-green-100 text-green-600 border-green-200' ; break;
+                                                    case 'active' :
+                                                    badgeClass='bg-blue-100 text-blue-600 border-blue-200 animate-pulse'
+                                                    ; break; case 'cancelled' :
+                                                    badgeClass='bg-red-100 text-red-600 border-red-200' ; break;
+                                                    default: badgeClass='bg-gray-100 text-gray-600 border-gray-200' ; }
+                                                    %>
+                                                    <span
+                                                        class="px-2.5 py-1 rounded-full text-xs font-bold border <%= badgeClass %>">
+                                                        <%= badgeText %>
+                                                    </span>
+                                            </td>
+
+                                            <!-- Actions -->
+                                            <td class="px-6 py-4 text-right">
+                                                <div class="flex flex-col items-end gap-2">
+                                                    <% if (userRole==='vendor' ) { %>
+                                                        <a href="/publisher/work-orders/<%= wo._id %>/tracking"
+                                                            class="text-primary hover:text-blue-800 font-semibold text-sm">
+                                                            Track Progress
+                                                        </a>
+                                                        <% } %>
+                                                            <% if (wo.status==='completed' ) { %>
+                                                                <a href="/user/work-orders/download-report/<%= wo._id %>"
+                                                                    target="_blank"
+                                                                    class="text-green-600 hover:text-green-800 font-semibold text-xs flex items-center gap-1">
+                                                                    <span
+                                                                        class="material-symbols-outlined text-[16px]">download</span>
+                                                                    Report
+                                                                </a>
+                                                                <% } %>
+                                                </div>
+                                            </td>
+                                </tr>
+                                <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="<%= userRole === 'admin' ? 6 : 5 %>"
+                                                class="px-6 py-12 text-center text-gray-500">
+                                                <span
+                                                    class="material-symbols-outlined text-4xl mb-3 text-gray-300">engineering</span>
+                                                <p>No work orders found.</p>
+                                            </td>
+                                        </tr>
+                                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>

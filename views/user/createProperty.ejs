@@ -264,7 +264,13 @@
 
     console.log("📌 Sending →", method, url);
 
-    const res = await fetch(url, { method, body: formData });
+    const res = await fetch(url, {
+      method,
+      body: formData,
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
+    });
     const data = await res.json();
 
     console.log("🛬 API Response:", data);
@@ -274,7 +280,7 @@
     }
 
     Swal.fire({ icon: "success", title: isEditMode ? "Updated!" : "Submitted!" })
-      .then(() => window.location.href = "/user/status/propertyStatus");
+      .then(() => window.location.href = "/user/manage/propertyStatus");
   });
 
 
@@ -345,8 +351,11 @@
     });
 
     try {
-      const res = await fetch(`/user/status/property/delete-media/${propertyId}/${mediaId}`, {
+      const res = await fetch(`/user/manage/property/delete-media/${propertyId}/${mediaId}`, {
         method: "DELETE",
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
       });
 
       const data = await res.json();
@@ -407,8 +416,11 @@
     });
 
     try {
-      const res = await fetch(`/user/status/property/delete-doc/${propertyId}/${docId}`, {
+      const res = await fetch(`/user/manage/property/delete-doc/${propertyId}/${docId}`, {
         method: "DELETE",
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
       });
 
       const data = await res.json();

@@ -1,7 +1,6 @@
 const rateLimit = require('express-rate-limit');
 const statusCode = require('../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../utils/constants');
-
 module.exports = rateLimit({
   windowMs: 60 * 1000,
   max: 100,

@@ -318,6 +318,41 @@
 
         if (data.success) {
           const p = data.property;
+
+          let mediaHtml = '';
+          if (p.media && p.media.length > 0) {
+            mediaHtml = `
+              <div class="mt-4">
+                <strong>Images:</strong>
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                  ${p.media.map(m => `
+                    <a href="${m.url}" target="_blank" class="block border rounded overflow-hidden">
+                      <img src="${m.url}" class="w-full h-24 object-cover hover:scale-105 transition-transform" />
+                    </a>
+                  `).join('')}
+                </div>
+              </div>
+            `;
+          }
+
+          let docsHtml = '';
+          if (p.docs && p.docs.length > 0) {
+            docsHtml = `
+              <div class="mt-4">
+                <strong>Documents:</strong>
+                <ul class="list-disc list-inside mt-2 text-sm text-blue-600">
+                  ${p.docs.map(d => `
+                    <li>
+                      <a href="${d.url}" target="_blank" class="hover:underline">
+                        ${d.originalName || d.fileName || 'View Document'}
+                      </a>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            `;
+          }
+
           reviewContent.innerHTML = `
           <div><strong>Title:</strong> ${p.title}</div>
           <div><strong>Type:</strong> ${p.type}</div>
@@ -327,6 +362,8 @@
           <div><strong>Description:</strong> ${p.description || 'N/A'}</div>
           <div><strong>Seller:</strong> ${p.sellerId?.name} (${p.sellerId?.email})</div>
           <div><strong>Status:</strong> ${p.verificationStatus}</div>
+          ${mediaHtml}
+          ${docsHtml}
         `;
 
           adminComment.value = p.rejectionMessage || '';
@@ -335,7 +372,11 @@
         }
       } catch (err) {
         console.error(err);
-        alert('Failed to load property details');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to load property details',
+        });
       }
     });
   });
@@ -346,7 +387,17 @@
   });
 
   approveBtn.addEventListener('click', async () => {
-    if (!confirm('Approve this property?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Approve this property?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, Approve!'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`/admin/property-management/approve/${currentPropertyId}`, {
@@ -357,25 +408,51 @@
 
       const data = await res.json();
       if (data.success) {
-        alert('Property approved!');
+        await Swal.fire({
+          icon: 'success',
+          title: 'Approved!',
+          text: 'Property has been approved.',
+        });
         location.reload();
       } else {
-        alert(data.message || 'Failed to approve');
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to approve',
+        });
       }
     } catch (err) {
       console.error(err);
-      alert('Error approving property');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error approving property',
+      });
     }
   });
 
   rejectBtn.addEventListener('click', async () => {
     const comment = adminComment.value.trim();
     if (!comment) {
-      alert('Please provide a reason for rejection');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Missing Reason',
+        text: 'Please provide a reason for rejection',
+      });
       return;
     }
 
-    if (!confirm('Reject this property?')) return;
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "Reject this property?",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, Reject!'
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`/admin/property-management/reject/${currentPropertyId}`, {
@@ -386,14 +463,26 @@
 
       const data = await res.json();
       if (data.success) {
-        alert('Property rejected');
+        await Swal.fire({
+          icon: 'success',
+          title: 'Rejected!',
+          text: 'Property has been rejected.',
+        });
         location.reload();
       } else {
-        alert(data.message || 'Failed to reject');
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed',
+          text: data.message || 'Failed to reject',
+        });
       }
     } catch (err) {
       console.error(err);
-      alert('Error rejecting property');
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Error rejecting property',
+      });
     }
   });
 
@@ -416,11 +505,19 @@
           auctionReportModal.classList.remove('hidden');
           auctionReportModal.classList.add('flex');
         } else {
-          alert(data.message || 'Failed to load auction report');
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message || 'Failed to load auction report',
+          });
         }
       } catch (err) {
         console.error(err);
-        alert('Error loading auction report');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error loading auction report',
+        });
       }
     });
   });

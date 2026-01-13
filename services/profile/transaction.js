@@ -1,13 +1,10 @@
 const Payment = require('../../models/payment');
 const WalletTransaction = require('../../models/walletTransaction');
-
 exports.getTransacation = async (userId, page, filters) => {
   const limit = 5;
   const skip = (page - 1) * limit;
-
   const payments = await Payment.find({ userId }).lean();
   const walletTxns = await WalletTransaction.find({ userId }).lean();
-
   let ledger = [
     ...payments.map((p) => ({
       type: 'debit',
@@ -24,11 +21,8 @@ exports.getTransacation = async (userId, page, filters) => {
       createdAt: w.createdAt,
     })),
   ];
-
   if (filters.type) ledger = ledger.filter((x) => x.type === filters.type);
-
   if (filters.source) ledger = ledger.filter((x) => x.source === filters.source);
-
   if (filters.dateRange) {
     const now = new Date();
     ledger = ledger.filter((tx) => {
@@ -42,9 +36,7 @@ exports.getTransacation = async (userId, page, filters) => {
       return true;
     });
   }
-
   ledger.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
   return {
     transactions: ledger.slice(skip, skip + limit),
     totalPages: Math.ceil(ledger.length / limit),

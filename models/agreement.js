@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const agreementSchema = new mongoose.Schema(
   {
     tenderId: {
@@ -7,30 +6,25 @@ const agreementSchema = new mongoose.Schema(
       ref: 'Tender',
       required: true,
     },
-
     vendorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
-
     publisherAgreement: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',
       default: null,
     },
-
     uploadedByVendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'File',
       default: null,
     },
-
     approvedByPublisher: {
       type: Boolean,
-      default: false,
+      default: null,
     },
-
     publisherRemarks: {
       type: String,
       default: null,
@@ -38,5 +32,4 @@ const agreementSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 module.exports = mongoose.model('Agreement', agreementSchema);

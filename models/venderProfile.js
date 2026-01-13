@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const vendorProfileSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', unique: true },
@@ -15,7 +14,5 @@ const vendorProfileSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 vendorProfileSchema.index({ userId: 1 }, { unique: true });
-
 module.exports = mongoose.model('VendorProfile', vendorProfileSchema);

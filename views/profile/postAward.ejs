@@ -5,9 +5,7 @@
       <div class="flex flex-col w-full max-w-5xl gap-8 pt-8">
         <!-- PAGE TITLE -->
         <div class="flex flex-wrap justify-between items-center gap-3">
-          <h1
-            class="text-[#111418] dark:text-white text-3xl sm:text-4xl font-black tracking-[-0.033em]"
-          >
+          <h1 class="text-[#111418] dark:text-white text-3xl sm:text-4xl font-black tracking-[-0.033em]">
             Tender Award Summary
           </h1>
         </div>
@@ -15,37 +13,30 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <!-- WINNER VENDOR CARD -->
           <div
-            class="lg:col-span-3 p-6 bg-white dark:bg-background-dark rounded-xl shadow border border-gray-100 dark:border-gray-800"
-          >
+            class="lg:col-span-3 p-6 bg-white dark:bg-background-dark rounded-xl shadow border border-gray-100 dark:border-gray-800">
             <div class="flex flex-col gap-4">
               <p class="text-lg font-bold text-[#111418] dark:text-white">Winner Vendor</p>
 
               <div class="grid grid-cols-1 sm:grid-cols-[150px_1fr] gap-x-6 gap-y-4">
-                <div
-                  class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700"
-                >
+                <div class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700">
                   <p class="text-sm text-[#617589] dark:text-gray-400">Name</p>
                   <p class="text-sm font-medium text-[#111418] dark:text-gray-200">
                     <%= winner.vendorName %>
                   </p>
                 </div>
 
-                <div
-                  class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700"
-                >
+                <div class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700">
                   <p class="text-sm text-[#617589] dark:text-gray-400">Email</p>
                   <p class="text-sm font-medium text-[#111418] dark:text-gray-200">
                     <%= winner.vendorEmail %>
                   </p>
                 </div>
 
-                <div
-                  class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700"
-                >
+                <div class="col-span-full grid grid-cols-subgrid border-t py-4 dark:border-gray-700">
                   <p class="text-sm text-[#617589] dark:text-gray-400">Quoted Amount</p>
                   <p class="text-sm font-medium text-[#111418] dark:text-gray-200">
-                    <% if (winner.amount) { %> ₹<%= winner.amount.toLocaleString("en-IN") %> <% }
-                    else { %> No amount <% } %>
+                    <% if (winner.amount) { %> ₹<%= winner.amount.toLocaleString("en-IN") %>
+                        <% } else { %> No amount <% } %>
                   </p>
                 </div>
               </div>
@@ -53,9 +44,7 @@
           </div>
 
           <!-- PURCHASE ORDER CARD -->
-          <div
-            class="p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800"
-          >
+          <div class="p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800">
             <p class="text-lg font-bold text-[#111418] dark:text-white">Purchase Order</p>
             <p class="text-sm text-[#617589] dark:text-gray-400 mt-1">
               Manage the Purchase Order generation and distribution.
@@ -63,96 +52,74 @@
 
             <div class="flex items-center justify-between mt-4">
               <% if (!poGenerated) { %>
-              <span
-                class="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/50 text-xs font-semibold text-orange-600 dark:text-orange-300"
-              >
-                Not Generated
-              </span>
+                <span
+                  class="px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/50 text-xs font-semibold text-orange-600 dark:text-orange-300">
+                  Not Generated
+                </span>
 
-              <a
-                href="/publisher/tender/<%= tender._id %>/po/generate"
-                class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold"
-              >
-                Generate PO
-              </a>
-              <% } else if (po.status === "vendor_rejected") { %>
+                <a href="/publisher/tender/<%= tender._id %>/po/generate"
+                  class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">
+                  Generate PO
+                </a>
+                <% } else if (po.status==="vendor_rejected" ) { %>
 
-              <span
-                class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-xs font-semibold text-red-700 dark:text-red-300"
-              >
-                Rejected by Vendor
-              </span>
+                  <span
+                    class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-xs font-semibold text-red-700 dark:text-red-300">
+                    Rejected by Vendor
+                  </span>
 
-              <a
-                href="/publisher/tender/<%= tender._id %>/po/generate"
-                class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold"
-              >
-                Re-Generate PO
-              </a>
+                  <a href="/publisher/tender/<%= tender._id %>/po/generate"
+                    class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-bold">
+                    Re-Generate PO
+                  </a>
 
-              <!-- GENERATED / ACCEPTED -->
-              <% } else { %>
+                  <!-- GENERATED / ACCEPTED -->
+                  <% } else { %>
 
-              <span
-                class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-xs font-semibold text-green-600 dark:text-green-300"
-              >
-                <%= po.status === "vendor_accepted" ? "Accepted" : "Generated" %>
-              </span>
+                    <span
+                      class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-xs font-semibold text-green-600 dark:text-green-300">
+                      <%= po.status==="vendor_accepted" ? "Accepted" : "Generated" %>
+                    </span>
 
-              <a
-                target="_blank"
-                href="/publisher/tender/<%= tender._id %>/po/view"
-                class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold"
-              >
-                View PO
-              </a>
+                    <a target="_blank" href="/publisher/tender/<%= tender._id %>/po/view"
+                      class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold">
+                      View PO
+                    </a>
 
-              <% } %>
+                    <% } %>
             </div>
           </div>
 
           <!-- VENDOR RESPONSE CARD -->
-          <div
-            class="p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800"
-          >
+          <div class="p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800">
             <p class="text-lg font-bold text-[#111418] dark:text-white">Vendor Response</p>
             <p class="text-sm text-[#617589] dark:text-gray-400 mt-1">
               Track vendor's acceptance of the Purchase Order.
             </p>
 
             <div class="mt-4">
-              <% if (vendorAccepted === false) { %>
-              <span
-                class="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/50 text-xs font-semibold text-yellow-700 dark:text-yellow-300"
-              >
-                Awaiting
-              </span>
-              <% } else if (vendorAccepted === true) { %>
-              <span
-                class="px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/50 text-xs font-semibold text-green-700 dark:text-green-300"
-              >
-                Accepted
-              </span>
-              <% } else { %>
-              <span
-                class="px-3 py-1 rounded-full bg-red-100 dark:bg-red-900/50 text-xs font-semibold text-red-700 dark:text-red-300"
-              >
-                Rejected
-              </span>
+              <% if (vendorAccepted===null) { %>
+                <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">
+                  Awaiting
+                </span>
 
-              <!-- VENDOR MESSAGE BOX -->
-              <div
-                class="mt-3 p-4 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20"
-              >
-                <p class="text-sm font-semibold text-red-700 dark:text-red-300 mb-1">
-                  Vendor Message
-                </p>
+                <% } else if (vendorAccepted===true) { %>
+                  <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+                    Accepted
+                  </span>
 
-                <p class="text-sm text-red-800 dark:text-red-200">
-                  <%= po.rejectionReason || "No message provided by the vendor." %>
-                </p>
-              </div>
-              <% } %>
+                  <% } else if (vendorAccepted===false) { %>
+                    <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">
+                      Rejected
+                    </span>
+
+                    <div class="mt-3 p-4 rounded-lg border border-red-200 bg-red-50">
+                      <p class="text-sm font-semibold text-red-700 mb-1">Vendor Message</p>
+                      <p class="text-sm text-red-800">
+                        <%= (po && po.rejectionReason) ? po.rejectionReason : "No message provided by the vendor." %>
+                      </p>
+                    </div>
+                    <% } %>
             </div>
           </div>
 
@@ -163,112 +130,82 @@
 
             <div class="mt-4 flex flex-col gap-3">
               <!-- 1️⃣ Vendor uploaded & Publisher approved -->
-              <% if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher ===
-              true) { %>
+              <% if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher===true) { %>
 
-              <a
-                href="/publisher/view/<%= agreement.uploadedByVendor._id %>"
-                target="_blank"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold text-center"
-              >
-                View Signed Agreement
-              </a>
+                <a href="/publisher/view/<%= agreement.uploadedByVendor._id %>" target="_blank"
+                  class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold text-center">
+                  View Signed Agreement
+                </a>
 
-              <span
-                class="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full"
-              >
-                Agreement Approved
-              </span>
+                <span class="text-xs font-semibold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                  Agreement Approved
+                </span>
 
-              <!-- 2️⃣ Vendor uploaded & Pending approval -->
-              <% } else if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher
-              === null) { %>
+                <!-- 2️⃣ Vendor uploaded & Pending approval -->
+                <% } else if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher===null) { %>
 
-              <a
-                href="/publisher/view/<%= agreement.uploadedByVendor._id %>"
-                target="_blank"
-                class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold text-center"
-              >
-                Review Signed Agreement
-              </a>
+                  <a href="/publisher/view/<%= agreement.uploadedByVendor._id %>" target="_blank"
+                    class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold text-center">
+                    Review Signed Agreement
+                  </a>
 
-              <form method="POST" action="/publisher/agreement/<%= agreement._id %>/approve">
-                <button
-                  class="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold"
-                >
-                  Accept Agreement
-                </button>
-              </form>
+                  <form method="POST" action="/publisher/agreement/<%= agreement._id %>/approve">
+                    <button class="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold">
+                      Accept Agreement
+                    </button>
+                  </form>
 
-              <form
-                method="POST"
-                action="/publisher/agreement/<%= agreement._id %>/reject"
-                class="space-y-2"
-              >
-                <textarea
-                  name="remarks"
-                  placeholder="Reason (optional)"
-                  class="w-full border rounded-md p-2 text-sm"
-                ></textarea>
+                  <form method="POST" action="/publisher/agreement/<%= agreement._id %>/reject" class="space-y-2">
+                    <textarea name="remarks" placeholder="Reason (optional)"
+                      class="w-full border rounded-md p-2 text-sm"></textarea>
 
-                <button class="w-full px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">
-                  Reject Agreement
-                </button>
-              </form>
+                    <button class="w-full px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-bold">
+                      Reject Agreement
+                    </button>
+                  </form>
 
-              <!-- 3️⃣ Vendor uploaded & Publisher rejected -->
-              <% } else if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher
-              === false) { %>
+                  <!-- 3️⃣ Vendor uploaded & Publisher rejected -->
+                  <% } else if (agreement && agreement.uploadedByVendor && agreement.approvedByPublisher===false) { %>
 
-              <a
-                href="/publisher/view/<%= agreement.uploadedByVendor._id %>"
-                target="_blank"
-                class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-bold text-center"
-              >
-                View Rejected Agreement
-              </a>
+                    <a href="/publisher/view/<%= agreement.uploadedByVendor._id %>" target="_blank"
+                      class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-bold text-center">
+                      View Rejected Agreement
+                    </a>
 
-              <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
-                <p class="font-semibold text-red-700 mb-1">Rejected</p>
-                <p class="text-red-800">
-                  <%= agreement.publisherRemarks || "No remarks provided" %>
-                </p>
-              </div>
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-3 text-sm">
+                      <p class="font-semibold text-red-700 mb-1">Rejected</p>
+                      <p class="text-red-800">
+                        <%= agreement.publisherRemarks || "No remarks provided" %>
+                      </p>
+                    </div>
 
-              <!-- 4️⃣ Only publisher uploaded draft -->
-              <% } else if (agreement && agreement.publisherAgreement) { %>
+                    <!-- 4️⃣ Only publisher uploaded draft -->
+                    <% } else if (agreement && agreement.publisherAgreement) { %>
 
-              <a
-                href="/publisher/view/<%= agreement.publisherAgreement._id %>"
-                target="_blank"
-                class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold text-center"
-              >
-                View Draft Agreement
-              </a>
+                      <a href="/publisher/view/<%= agreement.publisherAgreement._id %>" target="_blank"
+                        class="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-bold text-center">
+                        View Draft Agreement
+                      </a>
 
-              <span class="text-xs text-yellow-600 font-semibold">
-                Awaiting vendor signed upload
-              </span>
+                      <span class="text-xs text-yellow-600 font-semibold">
+                        Awaiting vendor signed upload
+                      </span>
 
-              <!-- 5️⃣ Nothing uploaded -->
-              <% } else { %>
+                      <!-- 5️⃣ Nothing uploaded -->
+                      <% } else { %>
 
-              <span class="text-sm text-gray-500"> Agreement not uploaded yet. </span>
+                        <span class="text-sm text-gray-500"> Agreement not uploaded yet. </span>
 
-              <a
-                href="/publisher/tender/<%= tender._id %>/agreement/upload"
-                class="px-4 py-2 bg-gray-200 rounded-lg text-sm font-bold text-center"
-              >
-                Upload Agreement
-              </a>
+                        <a href="/publisher/tender/<%= tender._id %>/agreement/upload"
+                          class="px-4 py-2 bg-gray-200 rounded-lg text-sm font-bold text-center">
+                          Upload Agreement
+                        </a>
 
-              <% } %>
+                        <% } %>
             </div>
           </div>
           <!-- WORK ORDER CARD -->
-          <div
-            class="lg:col-span-3 p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800"
-          >
+          <div class="lg:col-span-3 p-6 bg-white dark:bg-background-dark rounded-xl shadow border dark:border-gray-800">
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <p class="text-lg font-bold text-[#111418] dark:text-white">Work Order</p>
@@ -278,21 +215,16 @@
               </div>
 
               <% if (!workOrderIssued) { %>
-              <a
-                href="/publisher/tender/<%= tender._id %>/workorder/issue"
-                class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold w-full sm:w-auto"
-              >
-                Issue Work Order
-              </a>
-              <% } else { %>
-              <a
-                target="_blank"
-                href="/publisher/workorder/file/<%= workOrder.pdfFile._id %>"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold w-full sm:w-auto"
-              >
-                View Work Order
-              </a>
-              <% } %>
+                <a href="/publisher/tender/<%= tender._id %>/workorder/issue"
+                  class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold w-full sm:w-auto">
+                  Issue Work Order
+                </a>
+                <% } else { %>
+                  <a target="_blank" href="/publisher/workorder/file/<%= workOrder.pdfFile._id %>"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-bold w-full sm:w-auto">
+                    View Work Order
+                  </a>
+                  <% } %>
             </div>
           </div>
         </div>

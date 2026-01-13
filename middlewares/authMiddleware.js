@@ -1,37 +1,29 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-
 const protectRoute = async (req, res, next) => {
   console.log('➡️ protectRoute middleware triggered');
-
   try {
     const { token } = req.cookies;
     console.log('Token from cookies:', token);
-
     if (!token) return res.redirect('/auth/login');
-
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const updatedUser = await User.findById(decoded.id).lean();
-
-    if (!updatedUser|| updatedUser.status==='blocked') {
-      res.clearCookie('token')
+    if (!updatedUser || updatedUser.status === 'blocked') {
+      res.clearCookie('token');
       return res.redirect('/auth/login');
     }
-
     if (decoded.role !== updatedUser.role) {
       const newToken = jwt.sign(
         { id: updatedUser._id, role: updatedUser.role },
         process.env.JWT_SECRET,
         { expiresIn: '7d' }
       );
-
       res.cookie('token', newToken, {
         httpOnly: true,
         secure: false,
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
     }
-
     req.user = updatedUser;
     next();
   } catch (err) {
@@ -39,14 +31,11 @@ const protectRoute = async (req, res, next) => {
     return res.redirect('/auth/login');
   }
 };
-
 const preventAuthPages = (req, res, next) => {
   console.log('➡️ preventAuthPages triggered');
-
   const { token } = req.cookies;
   const { adminToken } = req.cookies;
   console.log('Token from cookies:', token);
-
   if (adminToken) {
     try {
       const decoded = jwt.verify(adminToken, process.env.JWT_SECRET);
@@ -57,7 +46,6 @@ const preventAuthPages = (req, res, next) => {
       res.clearCookie(adminToken);
     }
   }
-
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -68,7 +56,6 @@ const preventAuthPages = (req, res, next) => {
       res.clearCookie('token');
     }
   }
-
   next();
 };
 const isAuthenticated = (req, res, next) => {
@@ -76,14 +63,11 @@ const isAuthenticated = (req, res, next) => {
     console.log('Auth: Passport session user');
     return next();
   }
-
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
-
   if (!token) {
     console.log('Auth: No token found');
     return res.redirect('/auth/login');
   }
-
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -94,24 +78,18 @@ const isAuthenticated = (req, res, next) => {
     return res.redirect('/auth/login');
   }
 };
-
 const checkForgotOtp = (req, res, next) => {
   const { userId } = req.query;
-
   if (!userId || userId.trim() === '') {
     return res.redirect('/auth/forgot-password');
   }
-
   next();
 };
-
 const checkResetPassword = (req, res, next) => {
   const { userId, mode } = req.query;
-
   if (!userId || !mode) {
     return res.redirect('/auth/forgot-password');
   }
-
   next();
 };
 const nochache = function noCache(req, res, next) {
@@ -121,6 +99,15 @@ const nochache = function noCache(req, res, next) {
   res.setHeader('Expires', '0');
   next();
 };
+const vendorProtect = (req, res, next) => {
+  if (req.user && req.user.role === 'vendor' && req.user.isVendor === true) {
+    return next();
+  }
+  return res.status(403).render('error', {
+    layout: 'layouts/user/userLayout',
+    message: 'Access Denied: Only verified vendors can perform this action.',
+  });
+};
 
 module.exports = {
   protectRoute,
@@ -129,4 +116,5 @@ module.exports = {
   checkResetPassword,
   checkForgotOtp,
   nochache,
+  vendorProtect,
 };

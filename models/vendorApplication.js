@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const vendorApplicationSchema = new mongoose.Schema(
   {
     userId: {
@@ -43,8 +42,6 @@ const vendorApplicationSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
 vendorApplicationSchema.index({ userId: 1 });
 vendorApplicationSchema.index({ status: 1 });
-
 module.exports = mongoose.model('VendorApplication', vendorApplicationSchema);

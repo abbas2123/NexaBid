@@ -3,7 +3,7 @@
 <div class="space-y-4">
   <!-- Create Property -->
   <button
-    onclick="window.location.href = '/Properties/Create'"
+    onclick="window.location.href = '/properties/create'"
     class="w-full bg-primary text-white font-semibold py-3 rounded-lg shadow-md hover:opacity-90 transition-opacity"
   >
     Create Properties...
@@ -17,10 +17,10 @@
     Explore Tenders
   </button>
 
-  <% const role = user?.role || 'user'; %> <% const isVendor = user?.isVendor; %>
+  <% const role=user?.role || 'user' ; %> <% const isVendor=user?.isVendor; %>
 
   <!-- Vendor Button -->
-  <% if (role === "admin") { %>
+  <% if (role==="admin" ) { %>
 
   <button
     onclick="window.location.href = '/admin/dashboard'"
@@ -29,7 +29,7 @@
     Go to Admin Panel
   </button>
 
-  <% } else if (user&&user?.role==="vendor") { %>
+  <% } else if (user&&user?.role==="vendor" ) { %>
 
   <button
     onclick="window.location.href = '/tenders/create'"

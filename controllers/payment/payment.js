@@ -8,17 +8,13 @@ const {
   REDIRECTS,
   ROUTES,
 } = require('../../utils/constants');
-
 exports.initiatePayment = async (req, res) => {
   try {
     const { type, id } = req.query;
     const userId = req.user._id;
-
     console.log('type', type);
     console.log('id', id);
-
     if (!type || !id) return res.redirect(REDIRECTS.DASHBOARD);
-
     const payment = await paymentService.startInitiatePayment(userId, type, id);
     res.redirect(`${ROUTES.PAYMENT_ESCROW}/${payment._id}`);
   } catch (err) {
@@ -33,12 +29,11 @@ exports.initiatePayment = async (req, res) => {
     });
   }
 };
-
 exports.createOrder = async (req, res) => {
   try {
     const { paymentId, amount } = req.body;
     const result = await paymentService.createRazorpayOrder(paymentId, amount);
-
+    console.log('payment order creating......');
     return res.status(statusCode.OK).json({
       success: true,
       ...result,
@@ -51,14 +46,11 @@ exports.createOrder = async (req, res) => {
     });
   }
 };
-
 exports.loadEscrowPage = async (req, res) => {
   try {
     const { paymentId } = req.params;
     const userId = req.user._id;
-
     const data = await paymentService.getEscrowPageDetails(paymentId, userId);
-
     res.status(statusCode.OK).render(VIEWS.ESCROW_PAYMENT, {
       layout: LAYOUTS.USER_LAYOUT,
       productType: data.payment.contextType,
@@ -80,18 +72,13 @@ exports.loadEscrowPage = async (req, res) => {
     });
   }
 };
-
 exports.processWalletPayment = async (req, res) => {
   try {
     const { paymentId, amount } = req.body;
     const userId = req.user._id;
-
     console.log('💳 Wallet payment:', { paymentId, amount, userId });
-
     const result = await paymentService.processWalletPayment(userId, paymentId, amount);
-
     console.log('✅ Wallet payment successful');
-
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
@@ -106,7 +93,6 @@ exports.processWalletPayment = async (req, res) => {
     });
   }
 };
-
 exports.verifyPayment = async (req, res) => {
   try {
     const { paymentId } = req.body;
@@ -118,7 +104,6 @@ exports.verifyPayment = async (req, res) => {
     return res.json({ success: false, redirect: `/payments/failure/${req.body.paymentId}` });
   }
 };
-
 exports.paymentSuccessPage = async (req, res) => {
   try {
     console.log('sdddvd');
@@ -137,11 +122,9 @@ exports.paymentSuccessPage = async (req, res) => {
     res.redirect(REDIRECTS.DASHBOARD);
   }
 };
-
 exports.paymentFailurePage = async (req, res) => {
   try {
     console.log('❌ Payment failure route hit');
-
     const payment = await paymentService.getFailurePageData(req.params.paymentId);
     if (!payment) return res.redirect(REDIRECTS.DASHBOARD);
     console.log('failed', payment);
@@ -155,22 +138,17 @@ exports.paymentFailurePage = async (req, res) => {
     res.redirect(REDIRECTS.DASHBOARD);
   }
 };
-
 exports.applyCoupon = async (req, res) => {
   try {
     const { couponCode, intentId } = req.body;
     const userId = req.user._id;
-
     if (!couponCode || !intentId) {
       return res
         .status(statusCode.BAD_REQUEST)
         .json({ success: false, message: ERROR_MESSAGES.INVALID_REQUEST });
     }
-
     const result = await paymentService.applyCoupon(userId, intentId, couponCode);
-
     console.log('✅ Coupon applied:', couponCode);
-
     return res.status(statusCode.OK).json({
       success: true,
       ...result,
@@ -183,16 +161,12 @@ exports.applyCoupon = async (req, res) => {
     });
   }
 };
-
 exports.removeCoupon = async (req, res) => {
   try {
     const { intentId } = req.body;
     console.log('🗑️ Removing coupon for payment:', intentId);
-
     const result = await paymentService.removeCoupon(intentId);
-
     console.log('✅ Coupon removed:', result.removedCouponCode);
-
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.COUPON_REMOVED,
@@ -208,5 +182,16 @@ exports.removeCoupon = async (req, res) => {
       success: false,
       message: ERROR_MESSAGES.COUPON_REMOVE_FAILED + err.message,
     });
+  }
+};
+exports.markFailed = async (req, res) => {
+  try {
+    const { paymentId } = req.params;
+    const { reason } = req.body;
+    await paymentService.markPaymentFailed(paymentId, reason);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false });
   }
 };

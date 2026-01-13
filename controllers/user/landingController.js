@@ -1,11 +1,9 @@
 const landingService = require('../../services/landingService');
 const statusCode = require('../../utils/statusCode');
 const { VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
-
 exports.loadLandingPage = async (req, res) => {
   try {
     const data = await landingService.getLandingPageData();
-
     res.render(VIEWS.LANDING_PAGE, {
       layout: false,
       pageTitle: 'NexaBid - Buy & Sell Properties',

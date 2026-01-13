@@ -37,8 +37,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <% if (properties && properties.length> 0) { %>
-              <% properties.forEach(prop=> { %>
+            <% if (properties && properties.length> 0) { %> <% properties.forEach(prop=> { %>
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                   <!-- Property Info -->
                   <td class="px-6 py-4">
@@ -113,10 +112,9 @@
                       <!-- Status -->
                       <td class="px-6 py-4">
                         <% const now=new Date(); const ends=new Date(prop.auctionEndsAt); const starts=new
-                          Date(prop.auctionStartsAt); let badgeClass='' ; let badgeText='' ; if (now> ends) {
-                          badgeClass = 'bg-gray-100 text-gray-600 border-gray-200';
-                          badgeText = 'Ended';
-                          } else if (now >= starts && now <= ends) {
+                          Date(prop.auctionStartsAt); let badgeClass='' ; let badgeText='' ; if (now> ends) { badgeClass
+                          = 'bg-gray-100 text-gray-600 border-gray-200'; badgeText = 'Ended'; }
+                          else if (now >= starts && now <= ends) {
                             badgeClass='bg-red-100 text-red-600 border-red-200 animate-pulse' ; badgeText='Live' ; }
                             else { badgeClass='bg-blue-100 text-blue-600 border-blue-200' ; badgeText='Upcoming' ; } %>
                             <span class="px-2.5 py-1 rounded-full text-xs font-bold border <%= badgeClass %>">

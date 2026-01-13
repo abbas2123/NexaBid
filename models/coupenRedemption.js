@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const couponRedemptionSchema = new mongoose.Schema({
   couponId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -25,5 +24,4 @@ const couponRedemptionSchema = new mongoose.Schema({
     default: Date.now,
   },
 });
-
 module.exports = mongoose.model('CouponRedemption', couponRedemptionSchema);

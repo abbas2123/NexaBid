@@ -1,13 +1,11 @@
 const vendorService = require('../../services/admin/venderManagement');
 const sendMail = require('../../utils/email');
 const statusCode = require('../../utils/statusCode');
-
 const {
   VIEWS,
   LAYOUTS,
   SUCCESS_MESSAGES,
   ERROR_MESSAGES,
-
   NOTIFICATION_MESSAGES,
   TITLES,
 } = require('../../utils/constants');
@@ -16,10 +14,9 @@ exports.getAllVendorApplications = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const filter = {
       status: req.query.status || '',
+      search: req.query.search || '',
     };
-
     const vendorApps = await vendorService.getAllVendorApplications(page, filter);
-
     res.render(VIEWS.ADMIN_VENDOR_LIST, {
       layout: LAYOUTS.ADMIN_LAYOUT,
       title: TITLES.VENDOR_APPLICATIONS,
@@ -36,12 +33,10 @@ exports.getAllVendorApplications = async (req, res) => {
     });
   }
 };
-
 exports.startReview = async (req, res) => {
   try {
     const { id } = req.params;
     const vendor = await vendorService.startReview(id);
-
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.REVIEW_STARTED,
@@ -51,7 +46,6 @@ exports.startReview = async (req, res) => {
     return res.json({ success: false, message: err.message });
   }
 };
-
 exports.getVendorDetails = async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,9 +63,7 @@ exports.approveVendor = async (req, res) => {
     const { id } = req.params;
     const { comment } = req.body;
     const vendor = await vendorService.approveVendor(id, comment, req);
-
     res.json({ success: true, message: SUCCESS_MESSAGES.VENDOR_APPROVED });
-
     setTimeout(async () => {
       await sendMail.sendMailUser(
         vendor.userId.email,
@@ -83,13 +75,11 @@ exports.approveVendor = async (req, res) => {
     return res.json({ success: false, message: ERROR_MESSAGES.APPROVE_FAILED });
   }
 };
-
 exports.rejectVendor = async (req, res) => {
   try {
     const { id } = req.params;
     const { comment } = req.body;
     const vendor = await vendorService.rejectVendor(id, comment, req);
-
     if (!vendor) {
       return res.json({
         success: false,
@@ -108,13 +98,10 @@ exports.rejectVendor = async (req, res) => {
     return res.json({ success: false, message: ERROR_MESSAGES.REJECT_FAILED });
   }
 };
-
 exports.removeVendor = async (req, res) => {
   try {
     const { id } = req.params;
-
     await vendorService.removeVendorService(id, req);
-
     return res.json({
       success: true,
       message: SUCCESS_MESSAGES.VENDOR_REMOVED,

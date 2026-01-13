@@ -1,18 +1,15 @@
 const propertyService = require('../../services/property/propertyService.js');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
-
 exports.getPropertyPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-
     const filters = {
       type: req.query.type || '',
       district: req.query.district || '',
       minPrice: req.query.minPrice || '',
       maxPrice: req.query.maxPrice || '',
     };
-
     const { properties, pagination } = await propertyService.getProperties(page, filters);
     console.log(properties);
     res.render('user/property', {
@@ -27,24 +24,20 @@ exports.getPropertyPage = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
-
 exports.getPropertyDetails = async (req, res) => {
   try {
     const { id } = req.params;
     const { user } = req;
-
     const { property, userHasPaidForProperty, isOwner } = await propertyService.getPropertyDetails(
       id,
       user
     );
-
     if (!property) {
       return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
         message: ERROR_MESSAGES.PROPERTY_NOT_FOUND,
         layout: LAYOUTS.USER_LAYOUT,
       });
     }
-
     res.render('user/propertyDetailsPage', {
       layout: LAYOUTS.USER_LAYOUT,
       user,
@@ -57,7 +50,6 @@ exports.getPropertyDetails = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
-
 exports.getCreatePropertyPage = (req, res) =>
   res.render('user/createProperty', {
     layout: LAYOUTS.USER_LAYOUT,
@@ -66,7 +58,6 @@ exports.getCreatePropertyPage = (req, res) =>
     property: null,
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
-
 exports.postCreateProperty = async (req, res) => {
   console.log('reached');
   try {
@@ -88,12 +79,9 @@ exports.postCreateProperty = async (req, res) => {
       bhk,
       size,
     } = req.body;
-
     const mediaFiles = req.files?.media || [];
     const docFiles = req.files?.docs || [];
-
     const isAuctionBool = isAuction === 'on' || isAuction === 'true';
-
     const payload = {
       sellerId: req.user._id,
       title,
@@ -113,13 +101,11 @@ exports.postCreateProperty = async (req, res) => {
       bhk,
       size,
     };
-
     const property = await propertyService.createProperty({
       data: payload,
       mediaFiles,
       docFiles,
     });
-
     return res.status(statusCode.CREATED).json({
       success: true,
       message: SUCCESS_MESSAGES.PROPERTY_SUBMITTED,
@@ -134,7 +120,6 @@ exports.postCreateProperty = async (req, res) => {
       .json({ success: false, message: err.message || 'Something went wrong' });
   }
 };
-
 exports.updatePropertyController = async (req, res) => {
   try {
     const updatedProperty = await propertyService.updatePropertyService(
@@ -143,7 +128,6 @@ exports.updatePropertyController = async (req, res) => {
       req.body,
       req.files
     );
-
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.PROPERTY_UPDATED,

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-
 const fileSchema = new mongoose.Schema(
   {
     ownerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -15,8 +14,6 @@ const fileSchema = new mongoose.Schema(
   },
   { timestamps: { createdAt: 'uploadedAt' } }
 );
-
 fileSchema.index({ relatedType: 1, relatedId: 1 });
 fileSchema.index({ checksum: 1 });
-
 module.exports = mongoose.model('File', fileSchema);

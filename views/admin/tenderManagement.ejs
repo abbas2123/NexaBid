@@ -5,156 +5,156 @@
   <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
     <!-- Search -->
-    <input 
-      id="tenderSearchInput"
-      type="text"
-      placeholder="Search by tender title, department, vendor..."
-      value="<%= applied.search || '' %>"
-      class="w-full md:w-1/2 border rounded px-3 py-2"
-    />
+    <input id="tenderSearchInput" type="text" placeholder="Search by tender title, department, vendor..."
+      value="<%= applied.search || '' %>" class="w-full md:w-1/2 border rounded px-3 py-2" />
 
     <!-- Status Filter -->
     <select id="tenderStatusFilter" class="w-full md:w-48 border px-3 py-2 rounded">
       <option value="">All Status</option>
-      <option value="draft" <%= applied.status === 'draft' ? 'selected' : '' %>>Draft</option>
-      <option value="submitted" <%= applied.status === 'submitted' ? 'selected' : '' %>>Submitted</option>
-      <option value="published" <%= applied.status === 'published' ? 'selected' : '' %>>Published</option>
-      <option value="awarded" <%= applied.status === 'awarded' ? 'selected' : '' %>>Awarded</option>
-      <option value="rejected" <%= applied.status === 'rejected' ? 'selected' : '' %>>Rejected</option>
-      <option value="closed" <%= applied.status === 'closed' ? 'selected' : '' %>>Closed</option>
+      <option value="draft" <%=applied.status==='draft' ? 'selected' : '' %>>Draft</option>
+      <option value="submitted" <%=applied.status==='submitted' ? 'selected' : '' %>>Submitted</option>
+      <option value="published" <%=applied.status==='published' ? 'selected' : '' %>>Published</option>
+      <option value="awarded" <%=applied.status==='awarded' ? 'selected' : '' %>>Awarded</option>
+      <option value="rejected" <%=applied.status==='rejected' ? 'selected' : '' %>>Rejected</option>
+      <option value="closed" <%=applied.status==='closed' ? 'selected' : '' %>>Closed</option>
     </select>
   </div>
 
   <!-- Active Filters Display -->
   <% if (applied.search || applied.status) { %>
-  <div class="flex items-center gap-2 mb-4 flex-wrap">
-    <span class="text-sm text-gray-600">Active filters:</span>
-    
-    <% if (applied.search) { %>
-    <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center gap-2">
-      Search: "<%= applied.search %>"
-      <a href="?page=1&status=<%= applied.status || '' %>" class="hover:text-blue-900 font-bold">×</a>
-    </span>
-    <% } %>
-    
-    <% if (applied.status) { %>
-    <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center gap-2">
-      Status: <%= applied.status %>
-      <a href="?page=1&search=<%= applied.search || '' %>" class="hover:text-green-900 font-bold">×</a>
-    </span>
-    <% } %>
-    
-    <a href="?page=1" class="text-xs text-red-600 hover:underline ml-2">Clear all filters</a>
-  </div>
-  <% } %>
+    <div class="flex items-center gap-2 mb-4 flex-wrap">
+      <span class="text-sm text-gray-600">Active filters:</span>
 
-  <!-- Results Summary -->
-  <div class="mb-4 text-sm text-gray-600">
-    Showing <%= tenders.length %> tenders
-    <% if (applied.search || applied.status) { %>
-      (filtered)
-    <% } %>
-  </div>
-
-  <!-- TABLE -->
-  <div class="bg-white rounded-lg border p-4 overflow-x-auto">
-    <table class="w-full text-left text-sm">
-      <thead>
-        <tr class="text-gray-600 border-b">
-          <th class="py-3">Title</th>
-          <th class="py-3">Department</th>
-          <th class="py-3">Vendor</th>
-          <th class="py-3">Bid End Date</th>
-          <th class="py-3">Status</th>
-          <th class="py-3">Action</th>
-        </tr>
-      </thead>
-
-      <tbody>
-        <% if (!tenders || tenders.length === 0) { %>
-          <tr>
-            <td colspan="6" class="py-8 text-center text-gray-500">
-              No tenders found
-              <% if (applied.search || applied.status) { %>
-                matching your filters
-              <% } %>
-            </td>
-          </tr>
-        <% } else { %>
-          <% tenders.forEach(t => { %>
-            <tr class="border-b hover:bg-gray-50">
-
-              <!-- Title -->
-              <td class="py-3 font-semibold"><%= t.title %></td>
-
-              <!-- Department -->
-              <td class="py-3"><%= t.dept %></td>
-
-              <!-- Vendor -->
-              <td class="py-3"><%= t.createdBy?.name || "Unknown Vendor" %></td>
-
-              <!-- Bid End -->
-              <td class="py-3">
-                <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "N/A" %>
-              </td>
-
-              <!-- Status -->
-              <td class="py-3">
-                <% if (t.status === "draft") { %>
-                  <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">Draft</span>
-
-                <% } else if (t.status === "submitted") { %>
-                  <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">Submitted</span>
-
-                <% } else if (t.status === "published") { %>
-                  <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">Published</span>
-
-                <% } else if (t.status === "awarded") { %>
-                  <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">Awarded</span>
-
-                <% } else if (t.status === "closed") { %>
-                  <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">Closed</span>
-
-                <% } else if (t.status === "rejected") { %>
-                  <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">Rejected</span>
-
-                <% } else { %>
-                  <span class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">Unknown</span>
-                <% } %>
-              </td>
-
-              <!-- Actions -->
-              <td class="py-3">
-                <button class="tender-review-btn text-blue-600 font-semibold text-xs hover:underline"
-                        data-id="<%= t._id %>">
-                  Review
-                </button>
-              </td>
-
-            </tr>
-          <% }) %>
+      <% if (applied.search) { %>
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs flex items-center gap-2">
+          Search: "<%= applied.search %>"
+            <a href="?page=1&status=<%= applied.status || '' %>" class="hover:text-blue-900 font-bold">×</a>
+        </span>
         <% } %>
-      </tbody>
-    </table>
-  </div>
 
-  <!-- PAGINATION -->
-  <%- include('../partials/admin/pagination') %>
+          <% if (applied.status) { %>
+            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs flex items-center gap-2">
+              Status: <%= applied.status %>
+                <a href="?page=1&search=<%= applied.search || '' %>" class="hover:text-green-900 font-bold">×</a>
+            </span>
+            <% } %>
+
+              <a href="?page=1" class="text-xs text-red-600 hover:underline ml-2">Clear all filters</a>
+    </div>
+    <% } %>
+
+      <!-- Results Summary -->
+      <div class="mb-4 text-sm text-gray-600">
+        Showing <%= tenders.length %> tenders
+          <% if (applied.search || applied.status) { %>
+            (filtered)
+            <% } %>
+      </div>
+
+      <!-- TABLE -->
+      <div class="bg-white rounded-lg border p-4 overflow-x-auto">
+        <table class="w-full text-left text-sm">
+          <thead>
+            <tr class="text-gray-600 border-b">
+              <th class="py-3">Title</th>
+              <th class="py-3">Department</th>
+              <th class="py-3">Vendor</th>
+              <th class="py-3">Bid End Date</th>
+              <th class="py-3">Status</th>
+              <th class="py-3">Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% if (!tenders || tenders.length===0) { %>
+              <tr>
+                <td colspan="6" class="py-8 text-center text-gray-500">
+                  No tenders found
+                  <% if (applied.search || applied.status) { %>
+                    matching your filters
+                    <% } %>
+                </td>
+              </tr>
+              <% } else { %>
+                <% tenders.forEach(t=> { %>
+                  <tr class="border-b hover:bg-gray-50">
+
+                    <!-- Title -->
+                    <td class="py-3 font-semibold">
+                      <%= t.title %>
+                    </td>
+
+                    <!-- Department -->
+                    <td class="py-3">
+                      <%= t.dept %>
+                    </td>
+
+                    <!-- Vendor -->
+                    <td class="py-3">
+                      <%= t.createdBy?.name || "Unknown Vendor" %>
+                    </td>
+
+                    <!-- Bid End -->
+                    <td class="py-3">
+                      <%= t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "N/A" %>
+                    </td>
+
+                    <!-- Status -->
+                    <td class="py-3">
+                      <% if (t.status==="draft" ) { %>
+                        <span class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs">Draft</span>
+
+                        <% } else if (t.status==="submitted" ) { %>
+                          <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs">Submitted</span>
+
+                          <% } else if (t.status==="published" ) { %>
+                            <span class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs">Published</span>
+
+                            <% } else if (t.status==="awarded" ) { %>
+                              <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs">Awarded</span>
+
+                              <% } else if (t.status==="closed" ) { %>
+                                <span class="px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-xs">Closed</span>
+
+                                <% } else if (t.status==="rejected" ) { %>
+                                  <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs">Rejected</span>
+
+                                  <% } else { %>
+                                    <span
+                                      class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-xs">Unknown</span>
+                                    <% } %>
+                    </td>
+
+                    <!-- Actions -->
+                    <td class="py-3">
+                      <button class="tender-review-btn text-blue-600 font-semibold text-xs hover:underline"
+                        data-id="<%= t._id %>">
+                        Review
+                      </button>
+                    </td>
+
+                  </tr>
+                  <% }) %>
+                    <% } %>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- PAGINATION -->
+      <%- include('../partials/admin/pagination') %>
 
 </div>
 
 
 <!-- REVIEW MODAL -->
-<div id="tenderModal"
-  class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
+<div id="tenderModal" class="fixed inset-0 bg-black bg-opacity-40 hidden justify-center items-center z-50 px-4">
 
   <div class="bg-white w-full max-w-2xl rounded-lg shadow-lg relative">
 
     <!-- Header -->
     <div class="flex justify-between items-center p-4 border-b sticky top-0 bg-white z-50">
       <h2 class="text-xl font-bold">Tender Review</h2>
-      <button id="tenderCloseModal"
-        class="text-gray-700 text-xl font-bold hover:text-black">×</button>
+      <button id="tenderCloseModal" class="text-gray-700 text-xl font-bold hover:text-black">×</button>
     </div>
 
     <!-- Scrollable Content -->
@@ -163,27 +163,22 @@
 
       <div>
         <label class="font-semibold text-sm">Admin Comments</label>
-        <textarea id="tenderAdminComment"
-          class="w-full border rounded px-3 py-2 mt-2 text-sm"
-          rows="3"
+        <textarea id="tenderAdminComment" class="w-full border rounded px-3 py-2 mt-2 text-sm" rows="3"
           placeholder="Write comments here..."></textarea>
       </div>
     </div>
 
     <!-- Footer -->
     <div class="flex flex-wrap justify-end gap-3 p-4 border-t sticky bottom-0 bg-white z-50">
-      <button id="tenderRejectBtn"
-        class="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700">
+      <button id="tenderRejectBtn" class="px-4 py-2 bg-red-600 text-white rounded text-sm hover:bg-red-700">
         Reject
       </button>
 
-      <button id="tenderApproveBtn"
-        class="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
+      <button id="tenderApproveBtn" class="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">
         Approve & Publish
       </button>
 
-      <button id="tenderCloseBtn"
-        class="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
+      <button id="tenderCloseBtn" class="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700">
         Close Tender
       </button>
     </div>
@@ -192,85 +187,85 @@
 </div>
 
 <style>
-.break-message {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  word-break: break-word;
-  overflow-wrap: break-word;
-}
+  .break-message {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-// ----------------- FILTERING ------------------ 
-const searchInput = document.getElementById('tenderSearchInput');
-const statusFilter = document.getElementById('tenderStatusFilter');
+  // ----------------- FILTERING ------------------ 
+  const searchInput = document.getElementById('tenderSearchInput');
+  const statusFilter = document.getElementById('tenderStatusFilter');
 
-function applyFilter() {
-  const search = searchInput.value.trim();
-  const status = statusFilter.value;
-  
-  // Build query string
-  const params = new URLSearchParams();
-  params.set('page', '1'); // Reset to page 1 on filter change
-  if (search) params.set('search', search);
-  if (status) params.set('status', status);
-  
-  // Redirect with filter params
-  window.location.href = '?' + params.toString();
-}
+  function applyFilter() {
+    const search = searchInput.value.trim();
+    const status = statusFilter.value;
 
-// Debounce function to avoid too many requests while typing
-function debounce(func, wait) {
-  let timeout;
-  return function executedFunction(...args) {
-    const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
-}
+    // Build query string
+    const params = new URLSearchParams();
+    params.set('page', '1'); // Reset to page 1 on filter change
+    if (search) params.set('search', search);
+    if (status) params.set('status', status);
 
-// Add event listeners
-searchInput.addEventListener('input', debounce(applyFilter, 500)); // Wait 500ms after typing stops
-statusFilter.addEventListener('change', applyFilter); // Immediate on dropdown change
-
-
-// ----------------- MODAL & TENDER REVIEW ------------------
-let currentTenderId = null;
-
-async function safeFetch(url, options = {}) {
-  const res = await fetch(url, options);
-  const text = await res.text();
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
+    // Redirect with filter params
+    window.location.href = '?' + params.toString();
   }
-}
 
-// OPEN MODAL + LOAD TENDER DETAILS
-document.querySelectorAll(".tender-review-btn").forEach(btn => {
-  btn.addEventListener("click", async () => {
-    currentTenderId = btn.dataset.id;
+  // Debounce function to avoid too many requests while typing
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
 
-    const res = await safeFetch(`/admin/tender-management/${currentTenderId}`);
+  // Add event listeners
+  searchInput.addEventListener('input', debounce(applyFilter, 500)); // Wait 500ms after typing stops
+  statusFilter.addEventListener('change', applyFilter); // Immediate on dropdown change
 
-    if (!res || !res.success || !res.tender) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: res.message || "Tender details not found",
-      });
-      return;
+
+  // ----------------- MODAL & TENDER REVIEW ------------------
+  let currentTenderId = null;
+
+  async function safeFetch(url, options = {}) {
+    const res = await fetch(url, options);
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return text;
     }
+  }
 
-    const t = res.tender;
+  // OPEN MODAL + LOAD TENDER DETAILS
+  document.querySelectorAll(".tender-review-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      currentTenderId = btn.dataset.id;
 
-    document.getElementById("tenderReviewContent").innerHTML = `
+      const res = await safeFetch(`/admin/tender-management/${currentTenderId}`);
+
+      if (!res || !res.success || !res.tender) {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: res.message || "Tender details not found",
+        });
+        return;
+      }
+
+      const t = res.tender;
+
+      document.getElementById("tenderReviewContent").innerHTML = `
       <p><b>Title:</b> ${t.title}</p>
       <p><b>Department:</b> ${t.dept}</p>
       <p><b>Description:</b> ${t.description || "-"}</p>
@@ -278,103 +273,101 @@ document.querySelectorAll(".tender-review-btn").forEach(btn => {
       <p><b>Status:</b> ${t.status}</p>
       <p><b>Bid End:</b> ${t.bidEndAt ? new Date(t.bidEndAt).toDateString() : "N/A"}</p>
 
-      ${
-        t.adminComment
+      ${t.adminComment
           ? `
             <div class="w-full break-message border border-red-300 bg-red-50 text-red-600 rounded p-2 text-sm mt-3">
               <b class="text-red-700">Previous Admin Comment</b><br>
               ${t.adminComment}
             </div>`
           : ""
-      }
+        }
 
       <h3 class="font-semibold mt-4">Documents:</h3>
-      ${
-        t.files && t.files.length
+      ${t.files && t.files.length
           ? t.files.map(d => {
-              const file = d.fileId;
-              if (!file?.fileUrl) return "";
+            const file = d.fileId;
+            if (!file?.fileUrl) return "";
 
-              let viewUrl = file.fileUrl;
+            let viewUrl = file.fileUrl;
 
-              // Only for PDFs (raw)
-              if (file.mimeType === "application/pdf") {
-                viewUrl = file.fileUrl.replace(
-                  "/raw/upload/",
-                  "/raw/upload/fl_attachment:false/"
-                );
-              }
+            // Only for PDFs (raw)
+            if (file.mimeType === "application/pdf") {
+              viewUrl = file.fileUrl.replace(
+                "/raw/upload/",
+                "/raw/upload/fl_attachment:false/"
+              );
+            }
 
-              const isImage = file.mimeType?.startsWith("image/");
+            const isImage = file.mimeType?.startsWith("image/");
 
-              return `
+            return `
                 <div class="mt-2">
                   <a href="${viewUrl}" target="_blank" class="text-blue-600 underline">
                     ${d.originalName || file.fileName}
                   </a>
                   <span class="text-xs text-gray-500">
-                    (${(file.size/1024).toFixed(1)} KB)
+                    (${(file.size / 1024).toFixed(1)} KB)
                   </span>
 
                   ${isImage ? `<img src="${viewUrl}" class="mt-2 h-32 rounded border">` : ""}
                 </div>
               `;
-            }).join("")
+          }).join("")
           : "<p class='text-gray-400'>No documents uploaded</p>"
-      }
+        }
     `;
 
-    document.getElementById("tenderModal").classList.remove("hidden");
-    document.getElementById("tenderModal").classList.add("flex");
-  });
-});
-
-// CLOSE MODAL
-document.getElementById("tenderCloseModal").addEventListener("click", () => {
-  document.getElementById("tenderModal").classList.add("hidden");
-  document.getElementById("tenderModal").classList.remove("flex");
-});
-
-// STATUS UPDATE HELPERS
-async function updateTenderStatus(status) {
-  if (!currentTenderId) return;
-
-  const comment = document.getElementById("tenderAdminComment").value;
-
-  const res = await safeFetch(`/admin/tender-management/status/${currentTenderId}`, {
-    method: "PATCH",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status, comment }),
-  });
-
-  if (!res || !res.success) {
-    Swal.fire({
-      icon: "error",
-      title: "Failed",
-      text: res.message || "Could not update tender",
+      document.getElementById("tenderModal").classList.remove("hidden");
+      document.getElementById("tenderModal").classList.add("flex");
     });
-    return;
+  });
+
+  // CLOSE MODAL
+  document.getElementById("tenderCloseModal").addEventListener("click", () => {
+    document.getElementById("tenderModal").classList.add("hidden");
+    document.getElementById("tenderModal").classList.remove("flex");
+  });
+
+  // STATUS UPDATE HELPERS
+  async function updateTenderStatus(status) {
+    if (!currentTenderId) return;
+
+    const comment = document.getElementById("tenderAdminComment").value;
+
+    const res = await safeFetch(`/admin/tender-management/status/${currentTenderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, comment }),
+    });
+
+    if (!res || !res.success) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: res.message || "Could not update tender",
+      });
+      return;
+    }
+
+    Swal.fire({
+      icon: "success",
+      title: "Updated",
+      text: res.message,
+    }).then(() => {
+      location.reload();
+    });
   }
 
-  Swal.fire({
-    icon: "success",
-    title: "Updated",
-    text: res.message,
-  }).then(() => {
-    location.reload();
+  // Buttons
+  document.getElementById("tenderApproveBtn").addEventListener("click", () => {
+    updateTenderStatus("published");
   });
-}
 
-// Buttons
-document.getElementById("tenderApproveBtn").addEventListener("click", () => {
-  updateTenderStatus("published");
-});
+  document.getElementById("tenderRejectBtn").addEventListener("click", () => {
+    updateTenderStatus("rejected");
+  });
 
-document.getElementById("tenderRejectBtn").addEventListener("click", () => {
-  updateTenderStatus("rejected");
-});
-
-document.getElementById("tenderCloseBtn").addEventListener("click", () => {
-  updateTenderStatus("closed");
-});
+  document.getElementById("tenderCloseBtn").addEventListener("click", () => {
+    updateTenderStatus("closed");
+  });
 </script>

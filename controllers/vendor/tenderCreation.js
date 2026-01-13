@@ -1,6 +1,5 @@
 const tenderCreationService = require('../../services/tender/tenderCreation');
 const statusCode = require('../../utils/statusCode');
-
 const {
   LAYOUTS,
   VIEWS,
@@ -8,7 +7,6 @@ const {
   SUCCESS_MESSAGES,
   TITLES,
 } = require('../../utils/constants');
-
 exports.getCreateTenderPage = async (req, res) => {
   try {
     res.render(VIEWS.TENDER_CREATE, {
@@ -33,7 +31,6 @@ exports.createTenderController = async (req, res) => {
       req.body,
       req.files || []
     );
-
     return res.status(statusCode.CREATED).json({
       success: true,
       message: SUCCESS_MESSAGES.TENDER_CREATED,

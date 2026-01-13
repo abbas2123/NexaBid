@@ -4,14 +4,11 @@ const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 const Tender = require('../../models/tender');
 const TenderBid = require('../../models/tenderBid');
-
 exports.showCreatePOPage = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-
     const { tender, vendor, amount } = await postAwardService.getCreatePOPageData(tenderId, userId);
-
     return res.render(VIEWS.CREATE_PO, {
       layout: LAYOUTS.USER_LAYOUT,
       tender,
@@ -31,25 +28,20 @@ exports.showCreatePOPage = async (req, res) => {
     });
   }
 };
-
 exports.createPO = async (req, res) => {
   try {
     const tenderId = req.params.id;
-
     const po = await poService.createPO({
       tenderId,
       publisher: req.user,
       form: req.body,
       io: req.app.get('io'),
     });
-
     const winnerBid = await TenderBid.findOne({
       tenderId,
       isWinner: true,
     }).populate('vendorId');
-
     const vendor = winnerBid.vendorId;
-
     return res.render(VIEWS.CREATE_PO, {
       layout: LAYOUTS.USER_LAYOUT,
       tender: await Tender.findById(tenderId),
@@ -69,13 +61,10 @@ exports.createPO = async (req, res) => {
     });
   }
 };
-
 exports.viewPO = async (req, res) => {
   try {
     const tenderId = req.params.id;
-
     const { po, tender } = await poService.getPOData(tenderId);
-
     return res.render(VIEWS.VIEW_PO, {
       layout: LAYOUTS.USER_LAYOUT,
       po,
@@ -92,14 +81,11 @@ exports.viewPO = async (req, res) => {
     });
   }
 };
-
 exports.issuePage = async (req, res) => {
   try {
     const tenderId = req.params.id;
     console.log(`[DEBUG] Issue Page Request - TenderId: ${tenderId}, User: ${req.user._id}`);
-
     const data = await postAwardService.getIssuePageData(req.user._id, tenderId);
-
     res.render(VIEWS.WORK_ORDER, {
       layout: LAYOUTS.USER_LAYOUT,
       tender: data.tender,
@@ -114,14 +100,11 @@ exports.issuePage = async (req, res) => {
       .render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: err.message });
   }
 };
-
 exports.issueWorkOrder = async (req, res) => {
   try {
     const { tenderId } = req.params;
-
     const wo = await postAwardService.issueWorkOrder(req.user._id, tenderId, req.body, req.file);
-
-    return res.redirect(`/vendor/work-order/tracking/${wo._id}`);
+    return res.redirect(`/publisher/work-orders/${wo._id}/tracking`);
   } catch (err) {
     console.error('Issue work order error:', err.message);
     res.status(statusCode.BAD_REQUEST).render(VIEWS.ERROR, {

@@ -1,7 +1,6 @@
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const User = require('../models/user');
-
 passport.use(
   new GoogleStrategy(
     {
@@ -13,27 +12,20 @@ passport.use(
     async (req, accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
-
         if (!email) return done(new Error('Google did not return email'), null);
-
         let user = await User.findOne({ googleId: profile.id });
-
         if (user) {
           return done(null, user);
         }
-
         user = await User.findOne({ email });
-
         if (user) {
           if (!user.googleId) {
             return done(null, false, {
               message: 'email_exists_password_login_required',
             });
           }
-
           return done(null, user);
         }
-
         const newUser = await User.create({
           name: profile.displayName,
           email,
@@ -43,7 +35,6 @@ passport.use(
           role: 'user',
           status: 'active',
         });
-
         return done(null, newUser);
       } catch (error) {
         console.error('Google OAuth Error:', error);
@@ -52,11 +43,9 @@ passport.use(
     },
   ),
 );
-
 passport.serializeUser((user, done) => {
   done(null, user._id);
 });
-
 passport.deserializeUser(async (id, done) => {
   try {
     const userFound = await User.findById(id);
@@ -65,5 +54,4 @@ passport.deserializeUser(async (id, done) => {
     return done(err, null);
   }
 });
-
 module.exports = passport;

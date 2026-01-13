@@ -1,0 +1,515 @@
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
+    <a href="<%= userRole === 'admin' ? '/admin/dashboard' : '/vendor/dashboard' %>"
+        class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+        Home
+    </a>
+    <span class="text-[#616f89] dark:text-gray-500">/</span>
+    <a href="<%= userRole === 'admin' ? '/admin/reports' : '/vendor/reports' %>"
+        class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+        Reports
+    </a>
+    <span class="text-[#616f89] dark:text-gray-500">/</span>
+    <span class="text-[#111318] dark:text-white font-medium">Tender Evaluation</span>
+</nav>
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Tender Evaluation</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">Analyze tender performance and bid statistics</p>
+    </div>
+    <button onclick="exportPDF()"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <span class="material-symbols-outlined text-[20px]">download</span>
+        Export Report
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Total Tenders</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.totalTenders %>
+                </p>
+            </div>
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[28px]">description</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Active Tenders</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.activeTenders %>
+                </p>
+            </div>
+            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <span
+                    class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-[28px]">pending_actions</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Completed</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.completedTenders %>
+                </p>
+            </div>
+            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-[28px]">task_alt</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Est. Volume</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹<%= stats.totalVolume.toLocaleString()
+                        %>
+                </p>
+            </div>
+            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <span
+                    class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-[28px]">analytics</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-8">
+    <form method="GET"
+        action="<%= userRole === 'admin' ? '/admin/reports/tender-evaluation' : '/vendor/reports/tender-evaluation' %>"
+        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+
+        <!-- Status -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <select name="status"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="">All Status</option>
+                <option value="published" <%=filters.status==='published' ? 'selected' : '' %>>Active (Published)
+                </option>
+                <option value="closed" <%=filters.status==='closed' ? 'selected' : '' %>>Closed</option>
+                <option value="awarded" <%=filters.status==='awarded' ? 'selected' : '' %>>Awarded</option>
+                <option value="cancelled" <%=filters.status==='cancelled' ? 'selected' : '' %>>Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Start Date -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+            <input type="date" name="startDate" value="<%= filters.startDate || '' %>"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- End Date -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+            <input type="date" name="endDate" value="<%= filters.endDate || '' %>"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- Search -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+            <input type="text" name="searchQuery" value="<%= filters.searchQuery || '' %>"
+                placeholder="Search by title..."
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex items-end gap-2">
+            <button type="submit"
+                class="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition h-[42px]">
+                Apply
+            </button>
+            <a href="<%= userRole === 'admin' ? '/admin/reports/tender-evaluation' : '/vendor/reports/tender-evaluation' %>"
+                class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition h-[42px] flex items-center justify-center">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Data Table -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Tender Title</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status</th>
+                    <% if (userRole==='admin' ) { %>
+                        <th
+                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Publisher</th>
+                        <% } %>
+                            <th
+                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Winner</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Bids</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Lowest</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Highest</th>
+                            <th
+                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Average</th>
+                            <th
+                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <% if (tenders && tenders.length> 0) { %>
+                    <% tenders.forEach(tender=> { %>
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    <%= tender.title %>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">#<%=
+                                        tender._id.toString().substring(18, 24) %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <% let statusClass='bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' ; if
+                                    (tender.status==='awarded' )
+                                    statusClass='bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' ;
+                                    else if (tender.status==='published' )
+                                    statusClass='bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' ;
+                                    else if (tender.status==='closed' )
+                                    statusClass='bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                    ; else if (tender.status==='cancelled' )
+                                    statusClass='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' ; %>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= statusClass %>">
+                                        <%= tender.status.charAt(0).toUpperCase() + tender.status.slice(1) %>
+                                    </span>
+                            </td>
+                            <% if (userRole==='admin' ) { %>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900 dark:text-white">
+                                        <%= tender.createdBy?.name || 'N/A' %>
+                                    </div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                        <%= tender.createdBy?.companyName || '' %>
+                                    </div>
+                                </td>
+                                <% } %>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <% if (tender.awardedTo && tender.winningBid) { %>
+                                            <div class="flex flex-col">
+                                                <span class="font-medium text-green-600">
+                                                    <%= tender.awardedTo.name %>
+                                                </span>
+                                                <span class="text-xs text-gray-500">₹<%=
+                                                        tender.winningBid.amount.toLocaleString() %>
+                                                </span>
+                                            </div>
+                                            <% } else if (tender.awardedTo) { %>
+                                                <span class="font-medium text-green-600">
+                                                    <%= tender.awardedTo.name %>
+                                                </span>
+                                                <% } else { %>
+                                                    <span class="text-gray-400">-</span>
+                                                    <% } %>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                        <%= tender.stats.totalBids %>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                        ₹<%= tender.stats.minBid.toLocaleString() %>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                        ₹<%= tender.stats.maxBid.toLocaleString() %>
+                                    </td>
+                                    <td
+                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                        ₹<%= Math.round(tender.stats.avgBid).toLocaleString() %>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <button onclick="showDetails(<%= JSON.stringify(tender) %>)"
+                                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm">
+                                            View
+                                        </button>
+                                    </td>
+                        </tr>
+                        <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span
+                                                class="material-symbols-outlined text-gray-400 text-[48px]">analytics</span>
+                                            <p class="text-gray-500 dark:text-gray-400">No tenders found for evaluation
+                                            </p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages> 1) { %>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <div class="text-sm text-gray-700 dark:text-gray-300">
+                Showing <%= ((currentPage - 1) * limit) + 1 %> to <%= Math.min(currentPage * limit, totalRecords) %> of
+                        <%= totalRecords %> results
+            </div>
+            <div class="flex gap-2">
+                <% if (currentPage> 1) { %>
+                    <a href="?page=<%= currentPage - 1 %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
+                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                        Previous
+                    </a>
+                    <% } %>
+
+                        <% for (let i=Math.max(1, currentPage - 2); i <=Math.min(totalPages, currentPage + 2); i++) { %>
+                            <a href="?page=<%= i %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
+                                class="px-3 py-1 border <%= i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' %> rounded-lg text-sm transition">
+                                <%= i %>
+                            </a>
+                            <% } %>
+
+                                <% if (currentPage < totalPages) { %>
+                                    <a href="?page=<%= currentPage + 1 %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
+                                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+                                        Next
+                                    </a>
+                                    <% } %>
+            </div>
+        </div>
+        <% } %>
+</div>
+
+<script>
+    function exportPDF() {
+        // Get current filters
+        const params = new URLSearchParams(window.location.search);
+
+        const button = document.querySelector('button[onclick="exportPDF()"]');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> Exporting...';
+        button.disabled = true;
+
+        fetch(window.location.pathname + '/export-pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                status: params.get('status') || '',
+                searchQuery: params.get('searchQuery') || '',
+                startDate: params.get('startDate') || '',
+                endDate: params.get('endDate') || '',
+            })
+        })
+            .then(async res => {
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'tender-evaluation-report.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Failed to export PDF');
+                }
+            })
+            .catch(err => {
+                console.error('Export error:', err);
+                alert('Failed to export PDF');
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+
+    const userRole = "<%= userRole %>";
+
+    function showDetails(tender) {
+        const modal = document.getElementById('evaluationModal');
+        const content = document.getElementById('modalContent');
+
+        content.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white">${tender.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ref: #${tender._id}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                         <p class="text-sm text-gray-500">Department</p>
+                         <p class="font-semibold text-gray-900 dark:text-white">${tender.dept}</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                         <p class="text-sm text-gray-500">Category</p>
+                         <p class="font-semibold text-gray-900 dark:text-white">${tender.category}</p>
+                    </div>
+                </div>
+
+                ${tender.stats.minBid ? `
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Bid Statistics</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                         <div class="p-3 border rounded-lg dark:border-gray-700">
+                            <span class="block text-xl font-bold text-blue-600">${tender.stats.totalBids}</span>
+                            <span class="text-xs text-gray-500">Total Bids</span>
+                         </div>
+                         <div class="p-3 border rounded-lg dark:border-gray-700">
+                            <span class="block text-xl font-bold text-green-600">₹${tender.stats.minBid.toLocaleString()}</span>
+                            <span class="text-xs text-gray-500">Lowest</span>
+                         </div>
+                         <div class="p-3 border rounded-lg dark:border-gray-700">
+                            <span class="block text-xl font-bold text-red-600">₹${tender.stats.maxBid.toLocaleString()}</span>
+                            <span class="text-xs text-gray-500">Highest</span>
+                         </div>
+                         <div class="p-3 border rounded-lg dark:border-gray-700">
+                            <span class="block text-xl font-bold text-purple-600">₹${Math.round(tender.stats.avgBid).toLocaleString()}</span>
+                            <span class="text-xs text-gray-500">Average</span>
+                         </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                ${tender.awardedTo ? `
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3 text-green-600 flex items-center gap-2">
+                        <span class="material-symbols-outlined">emoji_events</span>
+                        Winner Details
+                    </h4>
+                    <div class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Name</p>
+                                <p class="font-bold text-gray-900 dark:text-white">${tender.awardedTo.name}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.awardedTo.email}</p>
+                            </div>
+                            ${tender.awardedTo.phone ? `
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.awardedTo.phone}</p>
+                            </div>
+                            ` : ''}
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Winning Bid</p>
+                                <p class="font-bold text-green-600 dark:text-green-400">
+                                    ${tender.winningBid ? '₹' + tender.winningBid.amount.toLocaleString() : 'N/A'}
+                                </p>
+                            </div>
+                        </div>
+
+                        ${tender.winningBid && tender.winningBid.documents && Object.keys(tender.winningBid.documents).length > 0 ? `
+                        <div class="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                            <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Submitted Documents</p>
+                            <div class="space-y-4">
+                                ${Object.entries(tender.winningBid.documents).map(([category, files]) => `
+                                    <div>
+                                         <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 pl-1 border-l-2 border-green-500">${category}</p>
+                                         <div class="flex flex-wrap gap-2">
+                                            ${files.map(doc => `
+                                                <a href="${doc.fileUrl}" target="_blank"
+                                                   class="inline-flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 transition">
+                                                    <span class="material-symbols-outlined text-[16px]">description</span>
+                                                    ${doc.fileName}
+                                                </a>
+                                            `).join('')}
+                                         </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <% if (userRole === 'admin') { %>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Publisher Details</h4>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Name</p>
+                                <p class="font-bold text-gray-900 dark:text-white">${tender.createdBy?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Company</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.companyName || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.email || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% } %>
+
+                <div class="flex justify-end gap-3 pt-4">
+                     ${userRole !== 'admin' ? `
+                     <a href="/tenders/${tender._id}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                         View Tender Details
+                     </a>
+                     ` : ''}
+                     <button onclick="document.getElementById('evaluationModal').classList.add('hidden')" 
+                             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition ${userRole === 'admin' ? 'w-full' : ''}">
+                        Close
+                     </button>
+                </div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+    }
+
+    // Close modal on outside click
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('evaluationModal');
+        if (e.target === modal) modal.classList.add('hidden');
+    });
+</script>
+
+<!-- Modal -->
+<div id="evaluationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6" id="modalContent"></div>
+    </div>
+</div>

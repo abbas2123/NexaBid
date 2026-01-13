@@ -122,7 +122,7 @@
 
               <!-- EDIT: only draft & rejected -->
               <% if (t.status==="draft" || t.status==="rejected" ) { %>
-                <a href="/user/status/tenders/resubmit/<%= t._id %>"
+                <a href="/user/manage/tenders/resubmit/<%= t._id %>"
                   class="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 font-semibold text-sm">
                   Edit Tender
                 </a>
@@ -130,7 +130,7 @@
 
                   <!-- RE-SUBMIT button only when rejected -->
                   <% if (t.status==="rejected" ) { %>
-                    <a href="/user/status/tenders/resubmit/<%= t._id %>"
+                    <a href="/user/manage/tenders/resubmit/<%= t._id %>"
                       class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold text-sm">
                       Re-submit
                     </a>
@@ -174,7 +174,7 @@
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`/user/status/tenders/delete/${tenderId}`, {
+      const res = await fetch(`/user/manage/tenders/delete/${tenderId}`, {
         method: "DELETE",
         headers: { "Accept": "application/json" }
       });

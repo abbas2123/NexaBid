@@ -22,41 +22,37 @@ const paymentRoutes = require('./paymentRoute/payment');
 const auctionRoutes = require('./auction/liveAuction');
 const chatRoute = require('./chat/routerChat');
 const workOrder = require('./vendor/workOrders');
-
+const bidReportsRoute = require('./user/bidReports');
+const adminBidReportsRoute = require('./admin/bidReports');
+const adminTenderEvaluationRoute = require('./admin/tenderEvaluation');
+const vendorTenderEvaluationRoute = require('./vendor/tenderEvaluation');
 module.exports = function registerRoutes(app) {
-  app.get(
-    '/secure-files/:fileId/:filename',
-    require('../middlewares/authMiddleware').protectRoute,
-    require('../controllers/common/fileProxy').downloadSecureFile
-  );
-  app.get(
-    '/secure-files/:fileId',
-    require('../middlewares/authMiddleware').protectRoute,
-    require('../controllers/common/fileProxy').downloadSecureFile
-  );
-
   app.use('/', landingRoute);
   app.use('/auth', authRoute);
   app.use('/vendor', authVendor);
   app.use('/admin', adminRoute);
   app.use('/admin/file', fileRoute);
+  app.use('/user/manage/my-listing', userListingRoutes);
+  app.use('/user/manage', userStatusRoutes);
+  app.use('/user/settings', userProfileRoutes);
   app.use('/user', profileRoute);
   app.use('/properties', authProperty);
   app.use('/tenders', authTender);
   app.use('/search', routerSearch);
   app.use('/notifications', notification);
+  app.use('/wallet', userWalletRoutes);
+  app.use('/payments', paymentRoutes);
+  app.use('/auctions', auctionRoutes);
+  app.use('/chat', chatRoute);
   app.use('/admin/property-management', adminPropertyRoutes);
   app.use('/admin/tender-management', adminTenderRoutes);
   app.use('/admin/contract-management', adminContractRoutes);
   app.use('/admin/coupon-management', adminCouponRoutes);
-  app.use('/user/status', userStatusRoutes);
-  app.use('/user/status', userProfileRoutes);
-  app.use('/user/status/my-listing', userListingRoutes);
-  app.use('/wallet', userWalletRoutes);
   app.use('/vendor/tender', vendorTenderRoutes);
   app.use('/publisher', vendorPostAwardRoutes);
-  app.use('/payments', paymentRoutes);
-  app.use('/auctions', auctionRoutes);
-  app.use('/chat', chatRoute);
   app.use('/', workOrder);
+  app.use('/', bidReportsRoute);
+  app.use('/', adminBidReportsRoute);
+  app.use('/', adminTenderEvaluationRoute);
+  app.use('/', vendorTenderEvaluationRoute);
 };

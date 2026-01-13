@@ -6,7 +6,7 @@ const {
   TENDER_STATUS,
   SUCCESS_MESSAGES,
 } = require('../../utils/constants');
-const TenderService = require('../../services/admin/tenderManagement')
+const TenderService = require('../../services/admin/tenderManagement');
 exports.getAdminTenderPage = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -14,9 +14,7 @@ exports.getAdminTenderPage = async (req, res) => {
       status: req.query.status || '',
       search: req.query.search || '',
     };
-
     const { tenders, pagination } = await TenderService.getAllTenders(page, filters);
-
     return res.render(VIEWS.ADMIN_TENDER_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
       title: 'Tender Management',
@@ -33,15 +31,14 @@ exports.getAdminTenderPage = async (req, res) => {
     });
   }
 };
-
 exports.getTenderDetails = async (req, res) => {
   try {
     const { id } = req.params;
-
     const tender = await TenderService.getTenderById(id);
-
     if (!tender) {
-      return res.status(statusCode.NOT_FOUND).json({ success: false, message: ERROR_MESSAGES.TENDER_NOT_FOUND });
+      return res
+        .status(statusCode.NOT_FOUND)
+        .json({ success: false, message: ERROR_MESSAGES.TENDER_NOT_FOUND });
     }
     return res.json({
       success: true,
@@ -55,30 +52,25 @@ exports.getTenderDetails = async (req, res) => {
     });
   }
 };
-
 exports.updateTenderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment } = req.body;
     const allowedStatuses = Object.values(TENDER_STATUS);
-
     if (!allowedStatuses.includes(status)) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
         message: `${ERROR_MESSAGES.INVALID_STATUS}: ${status}`,
       });
     }
-
     const io = req.app.get('io');
     const tender = await TenderService.updateTenderStatus(id, status, comment, io);
-
     if (!tender) {
       return res.status(statusCode.NOT_FOUND).json({
         success: false,
         message: ERROR_MESSAGES.TENDER_NOT_FOUND,
       });
     }
-
     return res.json({
       success: true,
       message: `${SUCCESS_MESSAGES.STATUS_UPDATED} to ${status}`,

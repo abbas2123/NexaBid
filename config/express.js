@@ -49,8 +49,17 @@ module.exports = (app) => {
   const csrfProtection = csrf();
   // Exclude Razorpay callback routes from CSRF
   app.use((req, res, next) => {
-    const excludedRoutes = ['/payments/confirm', '/payments/razorpay-webhook'];
-    if (excludedRoutes.includes(req.path)) {
+    const excludedRoutes = [
+      '/payments/confirm',
+      '/payments/razorpay-webhook',
+      '/payments/mark-failed'
+    ];
+
+    // Check if path starts with any excluded route to handle params
+    const isExcluded = excludedRoutes.some(route => req.originalUrl.startsWith(route));
+
+
+    if (isExcluded) {
       return next();
     }
     csrfProtection(req, res, next);

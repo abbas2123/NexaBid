@@ -734,6 +734,10 @@
           description: 'Escrow Payment',
           order_id: data.orderId,
 
+          // 🔥 REQUIRED FOR NET BANKING
+          callback_url: `${window.location.origin}/payments/confirm?paymentId=<%= payment._id %>`,
+          redirect: true,
+
           prefill: {
             name: "<%= user?.name || '' %>",
             email: "<%= user?.email || '' %>",
@@ -741,25 +745,25 @@
           },
 
           handler: function (response) {
-            // New Form Submission Logic
+            // Only used for Card / UPI
+            if (!response.razorpay_signature) return;
+
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = '/payments/confirm';
+            form.action = '/payments/confirm?paymentId=<%= payment._id %>';
             form.style.display = 'none';
 
-            const addField = (name, value) => {
-              const input = document.createElement('input');
-              input.type = 'hidden';
-              input.name = name;
-              input.value = value;
-              form.appendChild(input);
+            const add = (n, v) => {
+              const i = document.createElement('input');
+              i.type = 'hidden';
+              i.name = n;
+              i.value = v;
+              form.appendChild(i);
             };
 
-            addField('paymentId', '<%= payment._id %>');
-            addField('razorpay_payment_id', response.razorpay_payment_id);
-            addField('razorpay_order_id', response.razorpay_order_id);
-            addField('razorpay_signature', response.razorpay_signature);
-            addField('_csrf', '<%= csrfToken %>');
+            add('razorpay_payment_id', response.razorpay_payment_id);
+            add('razorpay_order_id', response.razorpay_order_id);
+            add('razorpay_signature', response.razorpay_signature);
 
             document.body.appendChild(form);
             form.submit();

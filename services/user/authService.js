@@ -163,13 +163,15 @@ exports.getDashboard = async () => {
     Property.find({
       status: 'published',
       verificationStatus: 'approved',
+      isBlocked: { $ne: true }
     })
       .sort({ createdAt: -1, _id: -1 })
       .limit(6)
       .lean(),
-    Tender.find({ status: 'published', bidEndAt: { $gt: now } })
+    Tender.find({ status: 'published', bidEndAt: { $gt: now }, isBlocked: { $ne: true } })
       .sort({ createdAt: -1, _id: -1 })
-      .limit(6),
+      .limit(6)
+      .lean()
   ]);
   return { property, tender };
 };

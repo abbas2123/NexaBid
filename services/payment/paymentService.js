@@ -500,7 +500,7 @@ exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
     return;
   }
 
-  // Use Promise.all to process refunds in parallel for efficiency
+
   await Promise.all(
     successfulPayments.map((payment) => _processSingleRefund(payment, contextId, contextType, reason))
   );
@@ -508,10 +508,6 @@ exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
   console.log(`🏁 Automatic refunds completed for ${contextType} ${contextId}`);
 };
 
-/**
- * Helper to process a single refund within a transaction
- * @private
- */
 const _processSingleRefund = async (payment, contextId, contextType, reason) => {
   const mongoose = require('mongoose');
   const session = await mongoose.startSession();
@@ -549,7 +545,7 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
     { session }
   );
 
-  // 3. Update Payment Status
+
   await Payment.updateOne(
     { _id: payment._id },
     {
@@ -563,8 +559,12 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
     { session }
   );
 
-  // 4. Update Participant Status & Bids
+
+  let contextTitle = 'Item';
   if (contextType === CONTEXT_TYPES.PROPERTY) {
+    const property = await Property.findById(contextId).select('title').session(session);
+    if (property) contextTitle = property.title;
+
     await PropertyParticipant.updateOne(
       { propertyId: contextId, userId: payment.userId },
       { $set: { status: 'cancelled' } },
@@ -576,6 +576,9 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
       { session }
     );
   } else if (contextType === CONTEXT_TYPES.TENDER) {
+    const tender = await Tender.findById(contextId).select('title').session(session);
+    if (tender) contextTitle = tender.title;
+
     await TenderParticipants.updateOne(
       { tenderId: contextId, userId: payment.userId },
       { $set: { status: 'cancelled' } },
@@ -583,12 +586,12 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
     );
   }
 
-  // 5. Create Notification Record
+
   await Notification.create(
     [
       {
         userId: payment.userId,
-        message: `Your fee of ₹${refundAmount} for ${contextType} #${contextId} has been refunded. Reason: ${reason}`,
+        message: `Your fee of ₹${refundAmount} for ${contextType} #${contextTitle} has been refunded. Reason: ${reason}`,
         link: contextType === 'property' ? `/properties/${contextId}` : `/tenders/${contextId}`,
       },
     ],

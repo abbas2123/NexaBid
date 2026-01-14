@@ -31,12 +31,14 @@ exports.getAllProperties = async (page, filter) => {
   const liveAuctions = await Property.find({
     isAuction: true,
     verificationStatus: 'approved',
+    status: { $in: ['published', 'active'] },
+    isBlocked: { $ne: true },
     auctionStartsAt: { $lte: now },
     auctionEndsAt: { $gte: now },
     deletedAt: null,
   })
     .sort({ auctionEndsAt: 1 })
-    .limit(3)
+    .sort({ auctionEndsAt: 1 })
     .lean();
   return {
     property,
@@ -142,8 +144,6 @@ exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
 
   if (isBlocked && property) {
     const paymentService = require('../payment/paymentService');
-    // We don't await to avoid blocking the admin's response, 
-    // but the process will run in the background.
     paymentService.processAutomaticRefunds(id, 'property', reason);
   }
 

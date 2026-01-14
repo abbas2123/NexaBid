@@ -24,5 +24,8 @@ const tenderParticipantSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-tenderParticipantSchema.index({ tenderId: 1, userId: 1 }, { unique: true });
+tenderParticipantSchema.index(
+  { tenderId: 1, userId: 1 },
+  { unique: true, partialFilterExpression: { status: 'active' } }
+);
 module.exports = mongoose.model('TenderParticipant', tenderParticipantSchema);

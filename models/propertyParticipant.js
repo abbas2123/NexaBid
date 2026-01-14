@@ -28,5 +28,8 @@ const propertyParticipantSchema = new mongoose.Schema(
     timestamps: { createdAt: true, updatedAt: false },
   }
 );
-propertyParticipantSchema.index({ propertyId: 1, userId: 1 }, { unique: true });
+propertyParticipantSchema.index(
+  { propertyId: 1, userId: 1 },
+  { unique: true, partialFilterExpression: { status: 'active' } }
+);
 module.exports = mongoose.model('PropertyParticipant', propertyParticipantSchema);

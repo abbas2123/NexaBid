@@ -145,8 +145,16 @@ exports.getAuctionReport = async (req, res) => {
             <!-- Summary Header -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <div>
-                    <p class="text-xs font-bold uppercase text-slate-500">Property</p>
-                    <p class="font-bold text-slate-800">${data.property.title}</p>
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-bold uppercase text-slate-500">Property</p>
+                            <p class="font-bold text-slate-800">${data.property.title}</p>
+                        </div>
+                        <a href="/admin/property-management/view/live/${data.property._id}" target="_blank" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[16px]">visibility</span>
+                            View Live
+                        </a>
+                    </div>
                 </div>
                  <div>
                     <p class="text-xs font-bold uppercase text-slate-500">Base Price</p>

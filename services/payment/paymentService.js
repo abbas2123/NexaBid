@@ -61,21 +61,29 @@ const _handlePostPaymentActions = async (payment, userId) => {
     }
   }
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
-    await PropertyParticipant.create({
-      userId,
-      propertyId: payment.contextId,
-      participationPaymentId: payment._id,
-      status: BID_STATUS.ACTIVE,
-    });
-    console.log('✅ Property participant created');
+    await PropertyParticipant.findOneAndUpdate(
+      { propertyId: payment.contextId, userId, status: 'active' },
+      {
+        userId,
+        propertyId: payment.contextId,
+        participationPaymentId: payment._id,
+        status: BID_STATUS.ACTIVE,
+      },
+      { upsert: true, new: true }
+    );
+    console.log('✅ Property participant created/updated');
   } else if (payment.contextType === CONTEXT_TYPES.TENDER) {
-    await TenderParticipants.create({
-      userId,
-      tenderId: payment.contextId,
-      participationPaymentId: payment._id,
-      status: BID_STATUS.ACTIVE,
-    });
-    console.log('✅ Tender participant created');
+    await TenderParticipants.findOneAndUpdate(
+      { tenderId: payment.contextId, userId, status: 'active' },
+      {
+        userId,
+        tenderId: payment.contextId,
+        participationPaymentId: payment._id,
+        status: BID_STATUS.ACTIVE,
+      },
+      { upsert: true, new: true }
+    );
+    console.log('✅ Tender participant created/updated');
   }
 };
 exports.startInitiatePayment = async (userId, type, id) => {
@@ -83,7 +91,7 @@ exports.startInitiatePayment = async (userId, type, id) => {
     userId,
     contextType: type,
     contextId: id,
-    status: { $in: ['pending', 'failed'] },
+    status: { $in: ['pending', 'failed', 'refunded'] },
   });
   let currentAmount = 0;
   if (type === CONTEXT_TYPES.PROPERTY) {
@@ -112,8 +120,20 @@ exports.startInitiatePayment = async (userId, type, id) => {
       }
       checkSave = true;
     }
-    if (payment.status === 'failed') {
+    if (payment.status === 'failed' || payment.status === 'refunded') {
+      console.log(`♻️ Recycling ${payment.status} payment ${payment._id} for retry`);
       payment.status = PAYMENT_STATUS.PENDING;
+      payment.gatewayPaymentId = null;
+      payment.gatewayTransactionId = null;
+      payment.refundStatus = 'pending';
+      payment.refundAmount = 0;
+
+      // Clear failure/refund metadata but keep other data
+      if (payment.metadata) {
+        delete payment.metadata.failureReason;
+        delete payment.metadata.refundNote;
+      }
+
       checkSave = true;
     }
     if (checkSave) {
@@ -271,8 +291,8 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
 };
 exports.processWalletPayment = async (userId, paymentId) => {
   const payment = await Payment.findOneAndUpdate(
-    { _id: paymentId, status: PAYMENT_STATUS.PENDING },
-    { $set: { status: PAYMENT_STATUS.PROCESSING } },
+    { _id: paymentId, status: { $in: ['pending', 'failed'] } },
+    { $set: { status: 'processing' } },
     { new: true }
   );
   if (!payment) {
@@ -551,10 +571,15 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
     {
       $set: {
         status: 'refunded',
+        gatewayPaymentId: null,
+        gatewayTransactionId: null,
         refundAmount,
         refundStatus: 'completed',
         'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
       },
+      $unset: {
+        orderNumber: 1 // Clear order number so new payment generates text one
+      }
     },
     { session }
   );

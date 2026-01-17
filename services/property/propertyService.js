@@ -63,8 +63,8 @@ exports.getPropertyDetails = async (propertyId, user) => {
   if (!property) return { property: null, userHasPaidForProperty: false, isOwner: false };
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
 
-  // Handle blocking and approval status
-  // We allow fetching even if blocked so the detail page can show the "Blocked" banner
+
+  
   if (property.verificationStatus !== 'approved' && !isOwner && user.role !== 'admin') {
     return { property: null, userHasPaidForProperty: false, isOwner: false };
   }

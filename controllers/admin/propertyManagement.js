@@ -232,6 +232,7 @@ exports.toggleBlockProperty = async (req, res) => {
     const { isBlocked, blockingReason } = req.body;
 
     const property = await propertyService.toggleIsBlocked(id, isBlocked, blockingReason);
+    console.log('klnwdvlkv');
     res.json({
       success: true,
       message: `Property ${isBlocked ? 'blocked' : 'unblocked'} successfully`,

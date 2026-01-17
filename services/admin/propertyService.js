@@ -38,7 +38,6 @@ exports.getAllProperties = async (page, filter) => {
     deletedAt: null,
   })
     .sort({ auctionEndsAt: 1 })
-    .sort({ auctionEndsAt: 1 })
     .lean();
   return {
     property,
@@ -136,6 +135,7 @@ exports.getAdminLiveAuctionData = async (propertyId) => {
   };
 };
 exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
+  console.log('toglled');
   const update = { isBlocked };
   if (isBlocked) {
     update.blockingReason = reason;

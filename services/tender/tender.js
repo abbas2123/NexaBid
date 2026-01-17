@@ -55,9 +55,7 @@ exports.getTenderDetailsForUser = async (tenderId, user) => {
     err.code = 'TENDER_DRAFT';
     throw err;
   }
-  // We allow viewing even if blocked to show the blocked banner on details page
-  // But we keep other status checks
-
+ 
   return {
     tender,
     isVendor,

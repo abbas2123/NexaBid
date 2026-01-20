@@ -63,7 +63,7 @@ exports.verifyOtp = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res
@@ -86,7 +86,7 @@ exports.loginUser = async (req, res) => {
     res.cookie('token', response.token, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.status(statusCode.OK).json({

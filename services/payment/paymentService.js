@@ -128,7 +128,7 @@ exports.startInitiatePayment = async (userId, type, id) => {
       payment.refundStatus = 'pending';
       payment.refundAmount = 0;
 
-      // Clear failure/refund metadata but keep other data
+      
       if (payment.metadata) {
         delete payment.metadata.failureReason;
         delete payment.metadata.refundNote;
@@ -165,7 +165,7 @@ exports.createRazorpayOrder = async (paymentId) => {
     await payment.save();
   }
 
-  // Double check if product is blocked
+  
   const product = payment.contextType === CONTEXT_TYPES.PROPERTY
     ? await Property.findById(payment.contextId)
     : await Tender.findById(payment.contextId);
@@ -196,9 +196,30 @@ exports.createRazorpayOrder = async (paymentId) => {
     };
   }
   const payable = payment.metadata?.payableAmount || payment.amount;
+
+ 
+  if (payable <= 0) {
+    console.log('🎉 Payment amount is 0 (covered by coupon). Bypassing gateway.');
+
+    payment.status = PAYMENT_STATUS.SUCCESS;
+    payment.gateway = GATEWAYS.WALLET; 
+    payment.gatewayTransactionId = `FREE_${Date.now()}`;
+    payment.amount = 0;
+    await payment.save();
+
+    await _handlePostPaymentActions(payment, payment.userId);
+
+    return {
+      orderId: payment.gatewayTransactionId,
+      amount: 0,
+      bypassed: true, 
+      paymentId: payment._id
+    };
+  }
+
   const { withTimeout } = require('../../utils/promiseUtils');
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000; // 10 seconds
+  const RAZORPAY_TIMEOUT = 10000; 
 
   const razorpayCall = async () => {
     try {
@@ -263,7 +284,8 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
       ? Property.findById(payment.contextId)
       : Tender.findById(payment.contextId),
     Coupon.find({
-      $or: [{ applicableTo: 'all' }, { applicableTo: `${payment.contextType}s` }],
+      isActive: true,
+      $or: [{ applicableTo: 'all' }, { applicableTo: `${payment.contextType}s` },],
       $and: [
         { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
         { $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }] },
@@ -441,7 +463,9 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
   if (payment.metadata?.coupon) throw new Error(ERROR_MESSAGES.REMOVE_COUPON_FIRST);
   const coupon = await Coupon.findOne({
     code: couponCode.toUpperCase(),
+    isActive: true,
   }).lean();
+  console.log('coupen', coupon);
   if (!coupon) throw new Error(ERROR_MESSAGES.INVALID_COUPON);
   const now = new Date();
   if ((coupon.startsAt && now < coupon.startsAt) || (coupon.expiresAt && now > coupon.expiresAt)) {
@@ -578,7 +602,7 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
         'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
       },
       $unset: {
-        orderNumber: 1 // Clear order number so new payment generates text one
+        orderNumber: 1 
       }
     },
     { session }

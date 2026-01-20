@@ -246,10 +246,10 @@ exports.getRecentActivities = async () => {
 };
 exports.getPendingTasks = async () => {
   const pendingVendor = await vendorApplication
-    .find({ status: 'pending' })
+    .find({ status: 'submitted' })
     .limit(5)
     .sort({ createdAt: -1 });
-  const pendingProperties = await Property.find({ verificationStatus: 'pending' })
+  const pendingProperties = await Property.find({ status: 'draft' })
     .limit(5)
     .sort({ createdAt: -1 });
   const tasks = [];
@@ -259,14 +259,14 @@ exports.getPendingTasks = async () => {
       task: 'Vendor Approval',
       status: 'Pending',
       dueDate: new Date(v.createdAt).toLocaleDateString(),
-      action: `/admin/vendor-applications`,
+      action: `/admin/vendor-management`,
     });
   });
   pendingProperties.forEach((p) => {
     tasks.push({
       name: p.title,
       task: 'Property Verification',
-      status: 'Pending',
+      status: 'draft',
       dueDate: new Date(p.createdAt).toLocaleDateString(),
       action: `/admin/property-management`,
     });

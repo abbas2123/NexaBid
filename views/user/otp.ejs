@@ -89,52 +89,74 @@
       });
     });
 
-    // Timer countdown
-    let time = 50;
+    // --- Persistent Timer Logic ---
+    const TIMER_DURATION = 50; // seconds
+    const STORAGE_KEY = `otp_deadline_<%= userId %>`; // unique key per user
     const timerElement = document.getElementById('otp-timer');
     const verifyBtn = document.getElementById('verifyBtn');
     const resendBtn = document.getElementById('resendOtpBtn');
 
-    let countdown = setInterval(() => {
-      let minutes = Math.floor(time / 60);
-      let seconds = time % 60;
+    let countdownInterval;
 
-      timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    function startTimer() {
+      // Check for existing deadline
+      let deadline = localStorage.getItem(STORAGE_KEY);
+      const now = Date.now();
 
-      time--;
+      if (!deadline) {
+        // First visit or cleared data -> Start new timer
+        deadline = now + (TIMER_DURATION * 1000);
+        localStorage.setItem(STORAGE_KEY, deadline);
+      } else {
+        deadline = parseInt(deadline);
+      }
 
-      // When time ends
-      if (time < 0) {
-        clearInterval(countdown);
+      updateTimerDisplay(deadline); // Initial call
+
+      // Clear any existing interval
+      if (countdownInterval) clearInterval(countdownInterval);
+
+      // Only start interval if not already expired
+      if (deadline > now) {
+        countdownInterval = setInterval(() => {
+          updateTimerDisplay(deadline);
+        }, 1000);
+      }
+    }
+
+    function updateTimerDisplay(deadline) {
+      const now = Date.now();
+      const diff = Math.ceil((deadline - now) / 1000);
+
+      if (diff <= 0) {
+        // Time expired
+        clearInterval(countdownInterval);
+        // Do NOT clear localStorage here, or reload will restart timer!
 
         timerElement.textContent = 'OTP Expired ❌';
         verifyBtn.disabled = true;
-
-        // 👇 Show "Resend OTP" button
         resendBtn.classList.remove('hidden');
-      }
-    }, 1000);
-
-    function restartTimer() {
-      time = 50;
-      verifyBtn.disabled = false;
-      resendBtn.classList.add('hidden');
-
-      countdown = setInterval(() => {
-        let minutes = Math.floor(time / 60);
-        let seconds = time % 60;
-
+      } else {
+        // Ongoing
+        let minutes = Math.floor(diff / 60);
+        let seconds = diff % 60;
         timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
-        time--;
+        // Ensure UI state matches active timer
+        verifyBtn.disabled = false;
+        resendBtn.classList.add('hidden');
+      }
+    }
 
-        if (time === 0) {
-          clearInterval(countdown);
-          timerElement.textContent = 'OTP Expired ❌';
-          verifyBtn.disabled = true;
-          resendBtn.classList.remove('hidden');
-        }
-      }, 1000);
+    // Initialize timer on load
+    startTimer();
+
+    // Reset timer function (called after successful resend)
+    function restartTimer() {
+      const now = Date.now();
+      const newDeadline = now + (TIMER_DURATION * 1000);
+      localStorage.setItem(STORAGE_KEY, newDeadline);
+      startTimer();
     }
 
     // Submit OTP
@@ -150,10 +172,14 @@
       }
 
       const route = '<%= mode %>' === 'forgot' ? '/auth/forgot-otp' : '/auth/verify-otp';
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
       const res = await fetch(route, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
         body: JSON.stringify({ userId: '<%= userId %>', otp }),
       });
 
@@ -162,6 +188,9 @@
       if (!data.success) {
         return Swal.fire('Error', data.message, 'error');
       }
+
+      // Clear timer storage on success
+      localStorage.removeItem(STORAGE_KEY);
 
       Swal.fire('Verified!', 'Redirecting...', 'success');
 
@@ -180,31 +209,46 @@
       e.preventDefault();
 
       const userId = document.getElementById('userIdHidden').value;
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
       verifyBtn.disabled = true;
 
-      const res = await fetch('/auth/resend-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      });
-
-      const data = await res.json();
-
-      if (data.success) {
-        Swal.fire({
-          icon: 'success',
-          title: 'New OTP Sent',
-          text: 'Your new OTP has been sent to your email',
+      try {
+        const res = await fetch('/auth/resend-otp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': csrfToken
+          },
+          body: JSON.stringify({ userId }),
         });
 
-        restartTimer();
-      } else {
+        const data = await res.json();
+
+        if (data.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'New OTP Sent',
+            text: 'Your new OTP has been sent to your email',
+          });
+
+          restartTimer();
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text: data.message,
+          });
+          verifyBtn.disabled = false; // Re-enable if failed
+        }
+      } catch (err) {
+        console.error(err);
         Swal.fire({
           icon: 'error',
-          title: 'Failed',
-          text: data.message,
+          title: 'Error',
+          text: 'Something went wrong. Please try again.',
         });
+        verifyBtn.disabled = false;
       }
     });
   </script>

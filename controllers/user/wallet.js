@@ -1,6 +1,6 @@
 const walletService = require('../../services/user/walletService');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, ERROR_MESSAGES, _SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.getWalletPage = async (req, res) => {
   try {
@@ -117,24 +117,41 @@ exports.createAddFundsOrder = async (req, res) => {
 
 exports.verifyAddFundsPayment = async (req, res) => {
   try {
-    const userId = req.user._id;
+    // Since we removed protectRoute for callback support, req.user might be missing.
+    // We pass userId in query params for the callback.
+    const userId = req.user ? req.user._id : req.query.userId;
+
+    if (!userId) {
+      throw new Error('User identification failed');
+    }
     const paymentData = req.body;
+    console.log('💳 Payment Data Received:', JSON.stringify(paymentData, null, 2));
+
+    // Check if we have the required fields (handle potential direct access or malformed requests)
+    if (!paymentData.razorpay_payment_id || !paymentData.razorpay_order_id || !paymentData.razorpay_signature) {
+      throw new Error('Invalid payment data provided');
+    }
+
+    if (!paymentData.amount) {
+      console.warn('⚠️ Amount missing from payment data, checking if it can be retrieved or if service handles it.');
+      // We won't throw immediately, let the service try, but logging it is key.
+      // Actually, service WILL fail if amount is missing.
+      // Let's rely on the service error but at least we have the log now.
+    }
+
     console.log('💳 Verifying payment for user:', userId);
 
     const result = await walletService.verifyAddFundsPayment(userId, paymentData);
 
     console.log('✅ Payment verified and wallet updated');
-    return res.json({
-      success: true,
-      message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
-      newBalance: result.newBalance,
-    });
+
+    // REDIRECT on success
+    return res.redirect('/wallet?success=true&amount=' + (paymentData.amount || result.newBalance));
+
   } catch (error) {
     console.error('❌ Verify payment error:', error.message);
-    return res.json({
-      success: false,
-      message: `Payment verification failed: ${error.message}`,
-    });
+    // REDIRECT on failure
+    return res.redirect(`/wallet?error=${encodeURIComponent(error.message)}`);
   }
 };
 

@@ -87,7 +87,7 @@ exports.toggleBlockTender = async (req, res) => {
   try {
     const { id } = req.params;
     const { isBlocked, blockingReason } = req.body;
-    const tender = await TenderService.toggleIsBlocked(id, isBlocked, blockingReason);
+    const _tender = await TenderService.toggleIsBlocked(id, isBlocked, blockingReason);
     return res.json({
       success: true,
       message: `Tender ${isBlocked ? 'blocked' : 'unblocked'} successfully`,

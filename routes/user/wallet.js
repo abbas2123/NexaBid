@@ -6,5 +6,5 @@ router.get('/add-funds', protectRoute, walletController.getAddFundsPage);
 router.get('/transactions', protectRoute, walletController.getAllTransactions);
 router.get('/api/balance', protectRoute, walletController.getWalletBalance);
 router.post('/api/create-order', protectRoute, walletController.createAddFundsOrder);
-router.post('/api/verify-payment', protectRoute, walletController.verifyAddFundsPayment);
+router.post('/api/verify-payment', walletController.verifyAddFundsPayment);
 module.exports = router;

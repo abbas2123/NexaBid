@@ -724,6 +724,13 @@
           return;
         }
 
+        // Handle Zero-Amount (Bypassed) Payments
+        if (data.bypassed) {
+          console.log('🎉 Payment bypassed (Zero Amount). Redirecting to success...');
+          window.location.href = `/payments/success/${data.paymentId}`;
+          return;
+        }
+
         console.log('✅ Razorpay order created:', data.orderId);
 
         const options = {

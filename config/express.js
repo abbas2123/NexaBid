@@ -52,7 +52,8 @@ module.exports = (app) => {
     const excludedRoutes = [
       '/payments/confirm',
       '/payments/razorpay-webhook',
-      '/payments/mark-failed'
+      '/payments/mark-failed',
+      '/wallet/api/verify-payment'
     ];
 
     // Check if path starts with any excluded route to handle params

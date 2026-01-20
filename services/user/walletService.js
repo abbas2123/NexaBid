@@ -187,12 +187,35 @@ exports.verifyAddFundsPayment = async (userId, paymentData) => {
     throw error;
   }
 
+  let finalAmount = amount;
+
+  // If amount is missing (Netbanking callback case), fetch it from Razorpay Order
+  if (!finalAmount) {
+    try {
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      if (order && order.amount) {
+        // Razorpay returns amount in paise (1 INR = 100 paise)
+        finalAmount = order.amount / 100;
+      } else {
+        throw new Error('Failed to fetch order amount');
+      }
+    } catch (fetchError) {
+      console.error('❌ Failed to fetch Razorpay order:', fetchError);
+      throw new Error('Could not verify payment amount');
+    }
+  }
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const wallet = await getOrCreateWallet(userId, session);
-    const amountToAdd = parseFloat(amount);
+    const amountToAdd = parseFloat(finalAmount);
 
     wallet.balance += amountToAdd;
     wallet.updatedAt = new Date();

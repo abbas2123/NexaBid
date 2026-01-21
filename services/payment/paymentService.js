@@ -25,10 +25,8 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-console.log('🔑 Razorpay Config:', {
-  keyIdLength: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 0,
-  keySecretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
-});
+
+
 const _handlePostPaymentActions = async (payment, userId) => {
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(payment.contextId);
@@ -43,7 +41,6 @@ const _handlePostPaymentActions = async (payment, userId) => {
       },
       { upsert: true, new: true }
     );
-    console.log('✅ Bid created/updated with escrowPaymentId');
   }
   if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
@@ -71,7 +68,6 @@ const _handlePostPaymentActions = async (payment, userId) => {
       },
       { upsert: true, new: true }
     );
-    console.log('✅ Property participant created/updated');
   } else if (payment.contextType === CONTEXT_TYPES.TENDER) {
     await TenderParticipants.findOneAndUpdate(
       { tenderId: payment.contextId, userId, status: 'active' },
@@ -83,7 +79,6 @@ const _handlePostPaymentActions = async (payment, userId) => {
       },
       { upsert: true, new: true }
     );
-    console.log('✅ Tender participant created/updated');
   }
 };
 exports.startInitiatePayment = async (userId, type, id) => {
@@ -110,9 +105,6 @@ exports.startInitiatePayment = async (userId, type, id) => {
   if (payment) {
     let checkSave = false;
     if (payment.amount !== currentAmount) {
-      console.log(
-        `⚠️ Payment amount mismatch! Updating from ${payment.amount} to ${currentAmount}`
-      );
       payment.amount = currentAmount;
       payment.gatewayPaymentId = null;
       if (payment.metadata && payment.metadata.payableAmount) {
@@ -121,14 +113,13 @@ exports.startInitiatePayment = async (userId, type, id) => {
       checkSave = true;
     }
     if (payment.status === 'failed' || payment.status === 'refunded') {
-      console.log(`♻️ Recycling ${payment.status} payment ${payment._id} for retry`);
       payment.status = PAYMENT_STATUS.PENDING;
       payment.gatewayPaymentId = null;
       payment.gatewayTransactionId = null;
       payment.refundStatus = 'pending';
       payment.refundAmount = 0;
 
-      
+
       if (payment.metadata) {
         delete payment.metadata.failureReason;
         delete payment.metadata.refundNote;
@@ -156,7 +147,6 @@ exports.createRazorpayOrder = async (paymentId) => {
     _id: paymentId,
     status: { $in: [PAYMENT_STATUS.PENDING, PAYMENT_STATUS.FAILED] },
   });
-  console.log('payment', payment);
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
@@ -165,7 +155,7 @@ exports.createRazorpayOrder = async (paymentId) => {
     await payment.save();
   }
 
-  
+
   const product = payment.contextType === CONTEXT_TYPES.PROPERTY
     ? await Property.findById(payment.contextId)
     : await Tender.findById(payment.contextId);
@@ -178,7 +168,6 @@ exports.createRazorpayOrder = async (paymentId) => {
       const payments = await razorpay.orders.fetchPayments(payment.gatewayPaymentId);
       const successfulPayment = payments.items.find((p) => p.status === 'captured');
       if (successfulPayment) {
-        console.log('✅ Found captured payment for existing order:', successfulPayment.id);
         payment.status = PAYMENT_STATUS.SUCCESS;
         payment.gatewayTransactionId = successfulPayment.id;
         payment.amount = payment.metadata?.payableAmount || payment.amount;
@@ -187,7 +176,7 @@ exports.createRazorpayOrder = async (paymentId) => {
         throw new Error(ERROR_MESSAGES.PAYMENT_ALREADY_COMPLETED);
       }
     } catch (err) {
-      console.warn('⚠️ Auto-verify check failed:', err.message);
+      // Ignore error
     }
     const payable = payment.metadata?.payableAmount || payment.amount;
     return {
@@ -197,12 +186,10 @@ exports.createRazorpayOrder = async (paymentId) => {
   }
   const payable = payment.metadata?.payableAmount || payment.amount;
 
- 
-  if (payable <= 0) {
-    console.log('🎉 Payment amount is 0 (covered by coupon). Bypassing gateway.');
 
+  if (payable <= 0) {
     payment.status = PAYMENT_STATUS.SUCCESS;
-    payment.gateway = GATEWAYS.WALLET; 
+    payment.gateway = GATEWAYS.WALLET;
     payment.gatewayTransactionId = `FREE_${Date.now()}`;
     payment.amount = 0;
     await payment.save();
@@ -212,15 +199,14 @@ exports.createRazorpayOrder = async (paymentId) => {
     return {
       orderId: payment.gatewayTransactionId,
       amount: 0,
-      bypassed: true, 
+      bypassed: true,
       paymentId: payment._id
     };
   }
 
   const { withTimeout } = require('../../utils/promiseUtils');
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000; 
-
+  const RAZORPAY_TIMEOUT = 10000;
   const razorpayCall = async () => {
     try {
       const order = await razorpay.orders.create({
@@ -228,10 +214,8 @@ exports.createRazorpayOrder = async (paymentId) => {
         currency: 'INR',
         receipt: `rcpt_${Date.now()}`,
       });
-      console.log('✅ Razorpay order created via SDK:', order.id);
       return order;
     } catch (sdkError) {
-      console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
       const auth = Buffer.from(
         `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
       ).toString('base64');
@@ -249,7 +233,6 @@ exports.createRazorpayOrder = async (paymentId) => {
           },
         }
       );
-      console.log('✅ Razorpay order created via Axios Fallback:', response.data.id);
       return response.data;
     }
   };
@@ -275,7 +258,6 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
-  console.log('escro', payment);
 
   const now = new Date();
   const [userWallet, product, coupons] = await Promise.all([
@@ -321,13 +303,11 @@ exports.processWalletPayment = async (userId, paymentId) => {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
 
-  // Check if product is blocked
   const product = payment.contextType === CONTEXT_TYPES.PROPERTY
     ? await Property.findById(payment.contextId)
     : await Tender.findById(payment.contextId);
 
   if (product?.isBlocked) {
-    // Revert status to pending
     payment.status = PAYMENT_STATUS.PENDING;
     await payment.save();
     throw new Error('This item has been blocked by administration. Payment cannot proceed.');
@@ -380,18 +360,12 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
     status: PAYMENT_STATUS.PENDING,
   });
   if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
-  console.log('paymentVeri', payment);
+
   const stringToSign = `${razorpay_order_id}|${razorpay_payment_id}`;
   const generatedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(stringToSign)
     .digest('hex');
-  console.log('🔐 Verification Debug:', {
-    sentSignature: razorpay_signature,
-    generatedSignature: generatedSignature,
-    stringToSign: stringToSign,
-    secretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
-  });
   if (generatedSignature !== razorpay_signature) {
     payment.status = PAYMENT_STATUS.FAILED;
     payment.gatewayPaymentId = null;
@@ -405,14 +379,9 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   await payment.save();
 
 
-  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
-    ? await Property.findById(payment.contextId)
-    : await Tender.findById(payment.contextId);
 
-  if (product?.isBlocked) {
-    console.log(`⚠️ Payment ${payment._id} successful for BLOCKED item ${payment.contextId}`);
 
-  }
+
 
   await _handlePostPaymentActions(payment, payment.userId);
   return payment;
@@ -465,7 +434,6 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
     code: couponCode.toUpperCase(),
     isActive: true,
   }).lean();
-  console.log('coupen', coupon);
   if (!coupon) throw new Error(ERROR_MESSAGES.INVALID_COUPON);
   const now = new Date();
   if ((coupon.startsAt && now < coupon.startsAt) || (coupon.expiresAt && now > coupon.expiresAt)) {
@@ -531,8 +499,6 @@ exports.markPaymentFailed = async (paymentId, reason) => {
 };
 
 exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
-  console.log(`💸 Starting automatic refunds for ${contextType} ${contextId}. Reason: ${reason}`);
-
   const successfulPayments = await Payment.find({
     contextId,
     contextType,
@@ -540,16 +506,12 @@ exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
   });
 
   if (!successfulPayments.length) {
-    console.log('ℹ️ No successful payments found to refund.');
     return;
   }
-
 
   await Promise.all(
     successfulPayments.map((payment) => _processSingleRefund(payment, contextId, contextType, reason))
   );
-
-  console.log(`🏁 Automatic refunds completed for ${contextType} ${contextId}`);
 };
 
 const _processSingleRefund = async (payment, contextId, contextType, reason) => {
@@ -557,7 +519,6 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  // 1. Credit User Wallet
   let userWallet = await Wallet.findOne({ userId: payment.userId }).session(session);
   if (!userWallet) {
     userWallet = new Wallet({ userId: payment.userId, balance: 0 });
@@ -568,7 +529,6 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
   userWallet.updatedAt = new Date();
   await userWallet.save({ session });
 
-  // 2. Create Wallet Transaction
   await WalletTransaction.create(
     [
       {
@@ -602,7 +562,7 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
         'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
       },
       $unset: {
-        orderNumber: 1 
+        orderNumber: 1
       }
     },
     { session }
@@ -649,5 +609,4 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
 
   await session.commitTransaction();
   session.endSession();
-  console.log(`✅ Refunded ₹${refundAmount} to User ${payment.userId}`);
 };

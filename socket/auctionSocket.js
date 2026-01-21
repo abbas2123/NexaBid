@@ -101,6 +101,25 @@ module.exports = (io, socket) => {
       session.startTransaction();
 
       try {
+        // Check for existing bid to preserve auto-bid status if applicable
+        const existingBid = await PropertyBid.findOne({ propertyId, bidderId: userId }).session(session);
+
+        let isAutoBid = false;
+        let autoBidMax = 0;
+        let escrowPaymentId = payment._id;
+
+        if (existingBid) {
+          // Keep existing escrow ID if we are just updating
+          if (existingBid.escrowPaymentId) escrowPaymentId = existingBid.escrowPaymentId;
+
+          // Preserve auto-bid if manual bid is still within limits
+          if (existingBid.isAutoBid && existingBid.autoBidMax > bidAmount) {
+            isAutoBid = true;
+            autoBidMax = existingBid.autoBidMax;
+            console.log(`Keep auto-bid active for ${userId}`);
+          }
+        }
+
         const updatedProperty = await Property.findOneAndUpdate(
           {
             _id: propertyId,
@@ -128,8 +147,9 @@ module.exports = (io, socket) => {
             propertyId,
             bidderId: userId,
             amount: bidAmount,
-            escrowPaymentId: payment._id,
-            isAutoBid: false,
+            escrowPaymentId: escrowPaymentId,
+            isAutoBid: isAutoBid,
+            autoBidMax: autoBidMax,
             bidStatus: 'active',
           },
           { upsert: true, session }

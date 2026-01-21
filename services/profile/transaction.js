@@ -10,7 +10,7 @@ exports.getTransacation = async (userId, page, filters) => {
       type: 'debit',
       source: p.gateway === 'wallet' ? 'wallet' : 'payment',
       amount: p.amount,
-      transactionId: p.orderNumber || p.gatewayPaymentId,
+      transactionId: p.orderNumber || p.gatewayPaymentId || p._id,
       createdAt: p.createdAt,
     })),
     ...walletTxns.map((w) => ({

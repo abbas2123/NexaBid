@@ -19,7 +19,6 @@ exports.showCreatePOPage = async (req, res) => {
       amount,
     });
   } catch (err) {
-    console.log(err);
     const status = err.statusCode || statusCode.INTERNAL_ERROR;
     res.status(status).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -53,7 +52,6 @@ exports.createPO = async (req, res) => {
       amount: winnerBid.quotes.amount,
     });
   } catch (err) {
-    console.error(err);
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: err.message,
@@ -73,7 +71,6 @@ exports.viewPO = async (req, res) => {
       user: req.user,
     });
   } catch (err) {
-    console.error(err);
     return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: err.message || ERROR_MESSAGES.SERVER_ERROR,
@@ -84,7 +81,6 @@ exports.viewPO = async (req, res) => {
 exports.issuePage = async (req, res) => {
   try {
     const tenderId = req.params.id;
-    console.log(`[DEBUG] Issue Page Request - TenderId: ${tenderId}, User: ${req.user._id}`);
     const data = await postAwardService.getIssuePageData(req.user._id, tenderId);
     res.render(VIEWS.WORK_ORDER, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -94,7 +90,6 @@ exports.issuePage = async (req, res) => {
       amount: data.amount,
     });
   } catch (err) {
-    console.error('Issue page error:', err);
     res
       .status(statusCode.NOT_FOUND)
       .render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: err.message });

@@ -1,7 +1,6 @@
 const Property = require('../models/property');
 exports.getLandingPageData = async () => {
   const now = new Date();
-  // Run queries in parallel for better performance
   const [liveAuctions, upcomingAuctions, featuredProperties] = await Promise.all([
     Property.find({
       isAuction: true,

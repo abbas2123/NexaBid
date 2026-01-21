@@ -13,18 +13,16 @@ exports.getBidReports = async (req, res) => {
         const userRole = currentUser.role || (req.admin ? 'admin' : 'user');
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
+        const limit = parseInt(req.query.limit) || 10;
+
 
         const { bidType, status, searchQuery, startDate, endDate } = req.query;
         const filters = { bidType, status, searchQuery, startDate, endDate };
 
-        // Delegate data fetching to service
-        const { filteredBids, stats } = await bidReportService.getBidReportsData(userId, userRole, filters);
+        const { bids, stats, totalRecords } = await bidReportService.getBidReportsData(userId, userRole, filters, page, limit);
 
-        const totalRecords = filteredBids.length;
         const totalPages = Math.ceil(totalRecords / limit);
-        const paginatedBids = filteredBids.slice(skip, skip + limit);
+        const paginatedBids = bids;
 
         const layoutToUse = userRole === 'admin' ? LAYOUTS.ADMIN_LAYOUT : LAYOUTS.USER_LAYOUT;
 
@@ -32,15 +30,15 @@ exports.getBidReports = async (req, res) => {
             layout: layoutToUse,
             bids: paginatedBids,
             stats,
-            currentPage: page,
-            totalPages,
-            totalRecords,
-            limit,
-            filters,
-            user: req.user,
-            admin: req.admin,
-            userRole,
             title: 'My Bid Reports',
+            filters,
+            pagination: {
+                currentPage: page,
+                totalPages,
+                hasPrevPage: page > 1,
+                hasNextPage: page < totalPages,
+            },
+            queryParams: new URLSearchParams(req.query).toString() ? '&' + new URLSearchParams(req.query).toString() : '',
         });
     } catch (error) {
         console.error('Error fetching bid reports:', error);
@@ -59,7 +57,7 @@ exports.exportBidReportPDF = async (req, res) => {
         const { bidType, status, searchQuery, startDate, endDate } = req.body;
         const filters = { bidType, status, searchQuery, startDate, endDate };
 
-       
+
         await bidReportService.generateBidReportPDF(res, currentUser, userRole, filters);
     } catch (error) {
         console.error('Error exporting PDF:', error);

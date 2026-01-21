@@ -77,4 +77,17 @@ const propertySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound indexes for common filters
+propertySchema.index({ status: 1, type: 1, basePrice: 1 });
+propertySchema.index({ isAuction: 1, auctionEndsAt: 1 });
+propertySchema.index({ sellerId: 1, status: 1 });
+
+// Text index for search
+propertySchema.index({
+  title: 'text',
+  address: 'text',
+  locationDistrict: 'text',
+  locationState: 'text'
+});
 module.exports = mongoose.model('Property', propertySchema);

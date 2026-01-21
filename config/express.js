@@ -67,8 +67,7 @@ module.exports = (app) => {
   });
 
   app.use((req, res, next) => {
-    // For excluded routes, req.csrfToken() might not exist.
-    // We set it to null so views don't crash with ReferenceError.
+  
     if (typeof req.csrfToken === 'function') {
       res.locals.csrfToken = req.csrfToken();
     } else {

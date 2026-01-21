@@ -136,7 +136,7 @@ exports.createAddFundsOrder = async (userId, amount) => {
   };
 
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000; // 10 seconds
+  const RAZORPAY_TIMEOUT = 10000;
 
   try {
     razorOrder = await withTimeout(
@@ -147,7 +147,6 @@ exports.createAddFundsOrder = async (userId, amount) => {
   } catch (err) {
     console.warn('⚠️ Razorpay primary attempt failed or timed out:', err.message);
 
-    // Fallback to Axios if SDK fails OR if it was a timeout (Axios might still work if SDK had internal issues)
     const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString('base64');
     try {
       const response = await withTimeout(
@@ -189,7 +188,6 @@ exports.verifyAddFundsPayment = async (userId, paymentData) => {
 
   let finalAmount = amount;
 
-  // If amount is missing (Netbanking callback case), fetch it from Razorpay Order
   if (!finalAmount) {
     try {
       const razorpay = new Razorpay({
@@ -199,7 +197,6 @@ exports.verifyAddFundsPayment = async (userId, paymentData) => {
 
       const order = await razorpay.orders.fetch(razorpay_order_id);
       if (order && order.amount) {
-        // Razorpay returns amount in paise (1 INR = 100 paise)
         finalAmount = order.amount / 100;
       } else {
         throw new Error('Failed to fetch order amount');

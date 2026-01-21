@@ -82,15 +82,15 @@ module.exports = {
       if (!bid) throw new Error(ERROR_MESSAGES.BID_NOT_FOUND);
 
       const { tenderId } = bid;
-      const tender = await Tender.findById(tenderId).session(session);
 
-      // Update winning bid
+
+
       bid.finReviewStatus = 'accepted';
       bid.techReviewStatus = 'accepted';
       bid.isWinner = true;
       await bid.save({ session });
 
-      // Update tender status
+
       await Tender.findByIdAndUpdate(
         tenderId,
         {
@@ -102,7 +102,6 @@ module.exports = {
         { session }
       );
 
-      // Reject all other bids
       await TenderBid.updateMany(
         { tenderId, _id: { $ne: bidId } },
         {
@@ -116,55 +115,63 @@ module.exports = {
       );
 
       await session.commitTransaction();
+      session.endSession();
+    } catch (error) {
+      await session.abortTransaction();
+      session.endSession();
+      throw error;
+    }
 
-      // Parallelize notifications for better performance
+
+    try {
+      const bid = await TenderBid.findOne({ _id: bidId }).populate('vendorId');
+      const tender = await Tender.findById(bid.tenderId);
+
       const notificationTasks = [];
 
-      // Notification to winner
-      notificationTasks.push(
-        notification.sendNotification(
-          bid.vendorId._id,
-          `🎉 You WON the tender: ${tender.title}`,
-          `/user/my-participation/tender/${tenderId}`,
-          io
-        )
-      );
-
-      // Notification to losers
-      const losers = await TenderBid.find({
-        tenderId,
-        _id: { $ne: bidId },
-      }).populate('vendorId');
-
-      for (const b of losers) {
+      if (bid && bid.vendorId) {
         notificationTasks.push(
           notification.sendNotification(
-            b.vendorId._id,
-            `You were not selected for tender: ${tender.title}`,
-            `/user/my-participation/tender/${tenderId}`,
+            bid.vendorId._id,
+            `🎉 You WON the tender: ${tender.title}`,
+            `/user/my-participation/tender/${tender._id}`,
             io
           )
         );
       }
 
-      // Notification to tender owner (publisher)
+      const losers = await TenderBid.find({
+        tenderId: tender._id,
+        _id: { $ne: bidId },
+      }).populate('vendorId');
+
+      for (const b of losers) {
+        if (b.vendorId) {
+          notificationTasks.push(
+            notification.sendNotification(
+              b.vendorId._id,
+              `You were not selected for tender: ${tender.title}`,
+              `/user/my-participation/tender/${tender._id}`,
+              io
+            )
+          );
+        }
+      }
+
       notificationTasks.push(
         notification.sendNotification(
           tender.createdBy,
           `Winner selected for tender "${tender.title}" → ${bid.vendorId.name}`,
-          `/user/status/my-listing/owner/tender/${tenderId}/evaluation`,
+          `/user/status/my-listing/owner/tender/${tender._id}/evaluation`,
           io
         )
       );
 
       await Promise.all(notificationTasks);
-
-      return tenderId;
-    } catch (error) {
-      await session.abortTransaction();
-      throw error;
-    } finally {
-      session.endSession();
+    } catch (notifyError) {
+      console.error('Notification Error (Non-blocking):', notifyError.message);
     }
+
+    return await TenderBid.findById(bidId).then(b => b.tenderId);
   },
 };

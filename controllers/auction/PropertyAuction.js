@@ -110,6 +110,30 @@ exports.getAutoBidPage = async (req, res) => {
     return res.redirect(REDIRECTS.PROPERTIES);
   }
 };
+exports.auctionLost = async (req, res) => {
+  try {
+    const { propertyId } = req.params;
+    const property = await Property.findById(propertyId).lean();
+
+    if (!property) {
+      return res.redirect(REDIRECTS.PROPERTIES);
+    }
+
+    res.render(VIEWS.PROPERTY_AUCTION_LOST, {
+      layout: LAYOUTS.USER_LAYOUT,
+      property,
+      user: req.user,
+    });
+  } catch (err) {
+    console.error('Auction lost page error:', err);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: ERROR_MESSAGES.SERVER_ERROR,
+      user: req.user
+    });
+  }
+};
+
 exports.success = async (req, res) => {
   try {
     const { propertyId } = req.params;

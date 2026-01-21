@@ -24,7 +24,6 @@ const chatRoute = require('./chat/routerChat');
 const workOrder = require('./vendor/workOrders');
 const bidReportsRoute = require('./user/bidReports');
 const adminBidReportsRoute = require('./admin/bidReports');
-const adminTenderEvaluationRoute = require('./admin/tenderEvaluation');
 const vendorTenderEvaluationRoute = require('./vendor/tenderEvaluation');
 module.exports = function registerRoutes(app) {
   app.use('/', landingRoute);
@@ -53,6 +52,5 @@ module.exports = function registerRoutes(app) {
   app.use('/', workOrder);
   app.use('/', bidReportsRoute);
   app.use('/', adminBidReportsRoute);
-  app.use('/', adminTenderEvaluationRoute);
   app.use('/', vendorTenderEvaluationRoute);
 };

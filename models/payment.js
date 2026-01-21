@@ -52,6 +52,12 @@ const paymentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Indexes for common queries
+paymentSchema.index({ userId: 1, status: 1 });
+paymentSchema.index({ contextId: 1, contextType: 1 });
+
+paymentSchema.index({ gatewayPaymentId: 1 });
 paymentSchema.pre('save', async function () {
   if (!this.orderNumber) {
     const rand = Math.random().toString(36).substring(2, 7).toUpperCase();

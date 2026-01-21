@@ -1,111 +1,185 @@
 const PropertyBid = require('../../models/propertyBid');
-const TenderBid = require('../../models/tenderBid');
 const PDFDocument = require('pdfkit');
 
 
-exports.getBidReportsData = async (userId, userRole, filters) => {
+exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 1000000) => {
     const { bidType, status, searchQuery, startDate, endDate } = filters;
+    const skip = (page - 1) * limit;
 
-    let propertyQuery = {};
-    if (userRole !== 'admin') {
-        propertyQuery.bidderId = userId;
-    }
-    if (status && bidType !== 'tender') {
-        propertyQuery.bidStatus = status;
-    }
+    // 1. Build Property Query
+    const propertyMatch = {};
+    if (userRole !== 'admin') propertyMatch.bidderId = userId;
+    if (status && bidType !== 'tender') propertyMatch.bidStatus = status;
     if (startDate || endDate) {
-        propertyQuery.createdAt = {};
-        if (startDate) propertyQuery.createdAt.$gte = new Date(startDate);
-        if (endDate) propertyQuery.createdAt.$lte = new Date(endDate);
+        propertyMatch.createdAt = {};
+        if (startDate) propertyMatch.createdAt.$gte = new Date(startDate);
+        if (endDate) propertyMatch.createdAt.$lte = new Date(endDate);
     }
 
-    let tenderQuery = {};
-    if (userRole !== 'admin') {
-        tenderQuery.vendorId = userId;
-    }
-    if (status && bidType !== 'property') {
-        tenderQuery.status = status;
-    }
+    // 2. Build Tender Query
+    const tenderMatch = {};
+    if (userRole !== 'admin') tenderMatch.vendorId = userId;
+    if (status && bidType !== 'property') tenderMatch.status = status;
     if (startDate || endDate) {
-        tenderQuery.createdAt = {};
-        if (startDate) tenderQuery.createdAt.$gte = new Date(startDate);
-        if (endDate) tenderQuery.createdAt.$lte = new Date(endDate);
+        tenderMatch.createdAt = {};
+        if (startDate) tenderMatch.createdAt.$gte = new Date(startDate);
+        if (endDate) tenderMatch.createdAt.$lte = new Date(endDate);
     }
 
-    let propertyBids = [];
-    let tenderBids = [];
+    const pipeline = [];
 
+    // 3. Initial Stage: Property Bids
     if (!bidType || bidType === 'all' || bidType === 'property') {
-        propertyBids = await PropertyBid.find(propertyQuery)
-            .populate({
-                path: 'propertyId',
-                select: 'title reservePrice auctionEndTime sellerId',
-                populate: { path: 'sellerId', select: 'name email companyName' },
-            })
-            .populate('bidderId', 'name email')
-            .sort({ createdAt: -1 })
-            .lean();
+        pipeline.push({ $match: propertyMatch });
+        pipeline.push({
+            $project: {
+                _id: 1,
+                type: { $literal: 'property' },
+                amount: 1,
+                status: '$bidStatus',
+                date: '$createdAt',
+                refId: '$propertyId',
+                userId: '$bidderId'
+            }
+        });
+    } else {
+        // If query is ONLY tenders, start with empty match on properties to effectively skip them? 
+        // No, cleaner to start aggregation on TenderBid if ONLY tender.
+        // But for uniform pipeline with $unionWith, we can start with a dummy match resulting in 0 docs from PropertyBid.
+        pipeline.push({ $match: { _id: null } });
     }
 
+    // 4. Union Stage: Tender Bids
     if (!bidType || bidType === 'all' || bidType === 'tender') {
-        tenderBids = await TenderBid.find(tenderQuery)
-            .populate({
-                path: 'tenderId',
-                select: 'title estimatedValue closingDate createdBy',
-                populate: { path: 'createdBy', select: 'name email companyName' },
-            })
-            .populate('vendorId', 'name email')
-            .sort({ createdAt: -1 })
-            .lean();
+        pipeline.push({
+            $unionWith: {
+                coll: 'tenderbids',
+                pipeline: [
+                    { $match: tenderMatch },
+                    {
+                        $project: {
+                            _id: 1,
+                            type: { $literal: 'tender' },
+                            amount: '$quotes.amount',
+                            status: '$status',
+                            date: '$createdAt',
+                            refId: '$tenderId',
+                            userId: '$vendorId'
+                        }
+                    }
+                ]
+            }
+        });
     }
 
-    const allBids = [
-        ...propertyBids.map((bid) => ({
-            _id: bid._id,
-            type: 'property',
-            title: bid.propertyId?.title || 'N/A',
-            amount: bid.amount,
-            status: bid.bidStatus,
-            date: bid.createdAt,
-            isWinning: bid.isWinningBid,
-            referenceId: bid.propertyId?._id,
-            bidderName: bid.bidderId?.name || 'N/A',
-            bidderEmail: bid.bidderId?.email || 'N/A',
-        })),
-        ...tenderBids.map((bid) => ({
-            _id: bid._id,
-            type: 'tender',
-            title: bid.tenderId?.title || 'N/A',
-            amount: bid.quotes?.amount || 0,
-            status: bid.status,
-            date: bid.createdAt,
-            isWinning: bid.isWinner,
-            referenceId: bid.tenderId?._id,
-            bidderName: bid.vendorId?.name || 'N/A',
-            bidderEmail: bid.vendorId?.email || 'N/A',
-            ownerName: bid.tenderId?.createdBy?.name || 'N/A',
-            ownerEmail: bid.tenderId?.createdBy?.email || 'N/A',
-        })),
-    ];
+    // 5. Lookups for Details (Property/Tender/User)
+    pipeline.push(
+        {
+            $lookup: {
+                from: 'properties',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'property'
+            }
+        },
+        {
+            $lookup: {
+                from: 'tenders',
+                localField: 'refId',
+                foreignField: '_id',
+                as: 'tender'
+            }
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'userId',
+                foreignField: '_id',
+                as: 'user'
+            }
+        },
+        {
+            $addFields: {
+                title: {
+                    $cond: {
+                        if: { $eq: ['$type', 'property'] },
+                        then: { $arrayElemAt: ['$property.title', 0] },
+                        else: { $arrayElemAt: ['$tender.title', 0] }
+                    }
+                },
+                bidderName: { $arrayElemAt: ['$user.name', 0] },
+                bidderEmail: { $arrayElemAt: ['$user.email', 0] },
+                isWinning: {
+                    // Logic for winning varies
+                    // For property: isWinningBid (missing in project stage? need to check Model)
+                    // PropertyBid schema has 'isWinningBid' ? No, it has `currentHighestBidder` on Property. 
+                    // Wait, the original code used `isWinningBid` but PropertyBid model (viewed earlier) doesn't explicitly show it.
+                    // Ah, PropertyBid has `status: 'won'`. And `currentHighestBidder`.
+                    // Let's rely on status.
+                    $or: [
+                        { $eq: ['$status', 'won'] },
+                        { $eq: ['$status', 'awarded'] }
+                    ]
+                }
+            }
+        }
+    );
 
-    let filteredBids = allBids;
+    // 6. Search Filter
     if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filteredBids = allBids.filter((bid) => bid.title.toLowerCase().includes(query));
+        pipeline.push({
+            $match: {
+                title: { $regex: searchQuery, $options: 'i' }
+            }
+        });
     }
 
-    filteredBids.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // 7. Facet for Data and Stats
+    pipeline.push(
+        { $sort: { date: -1 } },
+        {
+            $facet: {
+                metadata: [{ $count: 'total' }],
+                data: [{ $skip: skip }, { $limit: limit }],
+                stats: [
+                    {
+                        $group: {
+                            _id: null,
+                            totalAmount: { $sum: '$amount' },
+                            activeCount: {
+                                $sum: {
+                                    $cond: [{ $in: ['$status', ['active', 'submitted', 'qualified']] }, 1, 0]
+                                }
+                            },
+                            wonCount: {
+                                $sum: {
+                                    $cond: [{ $in: ['$status', ['won', 'awarded']] }, 1, 0]
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    );
 
-    const stats = {
-        totalBids: filteredBids.length,
-        activeBids: filteredBids.filter(
-            (b) => b.status === 'active' || b.status === 'submitted' || b.status === 'qualified'
-        ).length,
-        wonBids: filteredBids.filter((b) => b.status === 'won' || b.status === 'awarded').length,
-        totalAmount: filteredBids.reduce((sum, b) => sum + (b.amount || 0), 0),
+    const results = await PropertyBid.aggregate(pipeline);
+    const result = results[0];
+
+    const totalRecords = result.metadata[0]?.total || 0;
+    const bids = result.data || [];
+    const statsData = result.stats[0] || { totalAmount: 0, activeCount: 0, wonCount: 0 };
+
+    return {
+        bids, // Renamed from filteredBids to bids for clarity, controller updated to expect `bids`
+        stats: {
+            totalBids: totalRecords,
+            activeBids: statsData.activeCount,
+            wonBids: statsData.wonCount,
+            totalAmount: statsData.totalAmount
+        },
+        totalRecords
     };
-
-    return { filteredBids, stats };
 };
 
 
@@ -126,7 +200,6 @@ exports.generateBidReportPDF = async (res, currentUser, userRole, filters) => {
         text: '#111827',
     };
 
-    // Header
     doc.rect(0, 0, 600, 100).fill(colors.primary);
     doc.fillColor(colors.white).fontSize(28).font('Helvetica-Bold').text('NexaBid', 40, 35);
     doc.fontSize(10).font('Helvetica').text('My Activity & Bid Report', 40, 70);
@@ -136,7 +209,6 @@ exports.generateBidReportPDF = async (res, currentUser, userRole, filters) => {
     });
     doc.text(`User: ${currentUser.name || 'User'}`, 400, 50, { align: 'right', width: 150 });
 
-    // Stats Cards
     const startY = 120;
     const cardWidth = 120;
     const cardGap = 15;
@@ -155,7 +227,6 @@ exports.generateBidReportPDF = async (res, currentUser, userRole, filters) => {
         currentX += cardWidth + cardGap;
     });
 
-    // Table
     const tableTop = 210;
     let y = tableTop;
     const colX = [30, 90, 230, 310, 390, 480];
@@ -189,7 +260,6 @@ exports.generateBidReportPDF = async (res, currentUser, userRole, filters) => {
         doc.text(b.title, colX[1], y, { width: colWidths[1], ellipsis: true, lineBreak: false });
         doc.text(`₹${(b.amount || 0).toLocaleString()}`, colX[2], y, { width: colWidths[2] });
 
-        // Status Column
         let statusColor = colors.text;
         const s = b.status.toLowerCase();
         if (['won', 'awarded'].includes(s)) statusColor = '#16a34a';
@@ -208,7 +278,6 @@ exports.generateBidReportPDF = async (res, currentUser, userRole, filters) => {
         y += rowHeight;
     });
 
-    // Pagination Info
     const pages = doc.bufferedPageRange();
     for (let i = 0; i < pages.count; i++) {
         doc.switchToPage(i);

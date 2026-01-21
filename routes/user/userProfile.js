@@ -6,6 +6,7 @@ const TransactionControler = require('../../controllers/user/transaction');
 const uploads = require('../../middlewares/upload');
 const reportManagementController = require('../../controllers/user/reportManagement');
 const userController = require('../../controllers/vendor/agreementController');
+const tenderEvaluationController = require('../../controllers/user/tenderEvaluationController');
 const router = express.Router();
 router.get('/profile', authMiddleware.protectRoute, profileController.userProfile);
 router.get('/status', authMiddleware.protectRoute, profileController.getUserStatuspage);
@@ -15,7 +16,7 @@ router.get('/my-listings', authMiddleware.protectRoute, vendorOpController.getMy
 router.get('/about-us', authMiddleware.protectRoute, profileController.getAboutUs);
 router.get('/contact', authMiddleware.protectRoute, profileController.getContact);
 router.get('/my-participation', authMiddleware.protectRoute, vendorOpController.getMyParticipation);
-// router.get('/tender-reports', authMiddleware.protectRoute, vendorOpController.getTenderReports);
+
 router.get(
   '/my-participation/tender/:id',
   authMiddleware.protectRoute,
@@ -72,4 +73,17 @@ router.post(
   authMiddleware.protectRoute,
   vendorOpController.completeWorkOrder
 );
+
+router.get(
+  '/reports/tender-evaluation',
+  authMiddleware.protectRoute,
+  tenderEvaluationController.getTenderEvaluation
+);
+
+router.post(
+  '/reports/tender-evaluation/export-pdf',
+  authMiddleware.protectRoute,
+  tenderEvaluationController.exportTenderEvaluationPDF
+);
+
 module.exports = router;

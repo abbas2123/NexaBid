@@ -5,15 +5,15 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-2xl md:text-3xl font-black text-gray-900 dark:text-white">
-                    Work Order Reports
+                    Admin Work Order Reports
                 </h1>
                 <p class="text-gray-500 dark:text-gray-400 mt-1">
-                    Track your assigned work orders and milestones.
+                    System-wide overview of all work orders, vendors, and statuses.
                 </p>
             </div>
-            <a href="/user/report-management"
+            <a href="/admin/dashboard"
                 class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-semibold transition-colors">
-                Back to Reports
+                Back to Dashboard
             </a>
         </div>
 
@@ -27,14 +27,15 @@
                         <tr>
                             <th class="px-6 py-4">Work Order</th>
                             <th class="px-6 py-4">Project</th>
-
+                            <th class="px-6 py-4">Vendor</th>
                             <th class="px-6 py-4">Value</th>
                             <th class="px-6 py-4">Status</th>
                             <th class="px-6 py-4 text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                        <% if (workOrders && workOrders.length> 0) { %> <% workOrders.forEach(wo=> { %>
+                        <% if (workOrders && workOrders.length> 0) { %>
+                            <% workOrders.forEach(wo=> { %>
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
                                     <!-- Work Order Info -->
                                     <td class="px-6 py-4">
@@ -58,8 +59,22 @@
                                         </span>
                                     </td>
 
-                                    <!-- Vendor (Admin Only) -->
-
+                                    <!-- Vendor (Always Visible for Admin) -->
+                                    <td class="px-6 py-4">
+                                        <% if (wo.vendorId) { %>
+                                            <div class="flex flex-col">
+                                                <span class="font-semibold text-gray-900 dark:text-gray-200">
+                                                    <%= wo.vendorId.name %>
+                                                </span>
+                                                <a href="mailto:<%= wo.vendorId.email %>"
+                                                    class="text-xs text-blue-500 hover:underline">
+                                                    <%= wo.vendorId.email %>
+                                                </a>
+                                            </div>
+                                            <% } else { %>
+                                                <span class="text-gray-400 italic">Unknown</span>
+                                                <% } %>
+                                    </td>
 
                                     <!-- Value -->
                                     <td class="px-6 py-4">
@@ -87,28 +102,21 @@
                                     <!-- Actions -->
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex flex-col items-end gap-2">
-                                            <% if (userRole==='vendor' ) { %>
-                                                <a href="/publisher/work-orders/<%= wo._id %>/tracking"
-                                                    class="text-primary hover:text-blue-800 font-semibold text-sm">
-                                                    Track Progress
+                                            <% if (wo.status==='completed' ) { %>
+                                                <a href="/admin/work-orders/download-report/<%= wo._id %>"
+                                                    target="_blank"
+                                                    class="text-green-600 hover:text-green-800 font-semibold text-xs flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[16px]">download</span>
+                                                    Report
                                                 </a>
                                                 <% } %>
-                                                    <% if (wo.status==='completed' ) { %>
-                                                        <a href="/user/work-orders/download-report/<%= wo._id %>"
-                                                            target="_blank"
-                                                            class="text-green-600 hover:text-green-800 font-semibold text-xs flex items-center gap-1">
-                                                            <span
-                                                                class="material-symbols-outlined text-[16px]">download</span>
-                                                            Report
-                                                        </a>
-                                                        <% } %>
                                         </div>
                                     </td>
                                 </tr>
                                 <% }) %>
                                     <% } else { %>
                                         <tr>
-                                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                            <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                                                 <span
                                                     class="material-symbols-outlined text-4xl mb-3 text-gray-300">engineering</span>
                                                 <p>No work orders found.</p>
@@ -120,7 +128,8 @@
             </div>
 
             <!-- Pagination -->
-            <%- include('../../partials/user/pagination.ejs', { pagination: pagination, queryParams: queryParams }) %>
+            <%- include('../../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams })
+                %>
         </div>
     </main>
 </div>

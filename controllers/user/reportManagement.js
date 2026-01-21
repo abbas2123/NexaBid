@@ -37,11 +37,21 @@ exports.getPropertyAuctionReports = async (req, res) => {
     if (userRole !== 'admin') {
       query.sellerId = currentUser._id;
     }
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const totalRecords = await Property.countDocuments(query);
     const properties = await Property.find(query)
       .populate('currentHighestBidder')
       .populate('sellerId', 'name email')
       .sort({ auctionEndsAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
     res.render('profile/reports/propertyAuctionReports', {
       layout: userRole === 'admin' ? LAYOUTS.ADMIN_LAYOUT : LAYOUTS.USER_LAYOUT,
       title: 'Property Auction Reports',
@@ -49,6 +59,13 @@ exports.getPropertyAuctionReports = async (req, res) => {
       user: currentUser,
       userRole,
       currentPage: 'reports',
+      pagination: {
+        currentPage: page,
+        totalPages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+      queryParams: '',
     });
   } catch (error) {
     console.error('Property Auction Report Error:', error);
@@ -89,10 +106,20 @@ exports.getAuctionDetailReport = async (req, res) => {
         message: ERROR_MESSAGES.UNAUTHORIZED,
       });
     }
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const totalRecords = await PropertyBid.countDocuments({ propertyId: id });
     const bids = await PropertyBid.find({ propertyId: id })
       .populate('bidderId', 'name email profileImage')
       .sort({ amount: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
     res.render('profile/reports/auctionDetailReport', {
       layout: userRole === 'admin' ? LAYOUTS.ADMIN_LAYOUT : LAYOUTS.USER_LAYOUT,
       title: 'Auction Detail Report',
@@ -101,6 +128,13 @@ exports.getAuctionDetailReport = async (req, res) => {
       user: currentUser,
       userRole,
       currentPage: 'reports',
+      pagination: {
+        currentPage: page,
+        totalPages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+      queryParams: '',
     });
   } catch (error) {
     console.error('Auction Detail Report Error:', error);
@@ -119,12 +153,26 @@ exports.getWorkOrderReports = async (req, res) => {
     let query = {};
     if (userRole === 'vendor') {
       query.vendorId = currentUser._id;
+    } else if (userRole !== 'admin') {
+      query.issuedBy = currentUser._id;
     }
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const skip = (page - 1) * limit;
+
+    const totalRecords = await WorkOrder.countDocuments(query);
+
     const workOrders = await WorkOrder.find(query)
       .populate('tenderId', 'title')
       .populate('vendorId', 'name email')
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
+
+    const totalPages = Math.ceil(totalRecords / limit);
+
     res.render('profile/reports/workOrderReports', {
       layout: userRole === 'admin' ? LAYOUTS.ADMIN_LAYOUT : LAYOUTS.USER_LAYOUT,
       title: 'Work Order Reports',
@@ -132,6 +180,13 @@ exports.getWorkOrderReports = async (req, res) => {
       user: currentUser,
       userRole,
       currentPage: 'reports',
+      pagination: {
+        currentPage: page,
+        totalPages,
+        hasPrevPage: page > 1,
+        hasNextPage: page < totalPages,
+      },
+      queryParams: '',
     });
   } catch (error) {
     console.error('Work Order Report Error:', error);

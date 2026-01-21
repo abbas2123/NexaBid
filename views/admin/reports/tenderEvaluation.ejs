@@ -1,12 +1,10 @@
 <!-- Breadcrumbs -->
 <nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
-    <a href="/vendor/dashboard" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
-        Home
+    <a href="/admin/dashboard" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+        Dashboard
     </a>
     <span class="text-[#616f89] dark:text-gray-500">/</span>
-    <a href="/vendor/reports" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
-        Reports
-    </a>
+    <span class="text-[#616f89] dark:text-gray-500">Reports</span>
     <span class="text-[#616f89] dark:text-gray-500">/</span>
     <span class="text-[#111318] dark:text-white font-medium">Tender Evaluation</span>
 </nav>
@@ -14,8 +12,8 @@
 <!-- Header -->
 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
     <div>
-        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Tender Evaluation</h1>
-        <p class="text-gray-600 dark:text-gray-400 mt-1">Analyze tender performance and bid statistics</p>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Admin Tender Evaluation</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">System-wide analysis of tender performance and statistics</p>
     </div>
     <button onclick="exportPDF()"
         class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
@@ -87,9 +85,8 @@
 
 <!-- Filters -->
 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-8">
-    <form method="GET" action="/vendor/reports/tender-evaluation"
+    <form method="GET" action="/admin/reports/tender-evaluation"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-
         <!-- Status -->
         <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
@@ -132,7 +129,7 @@
                 class="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition h-[42px]">
                 Apply
             </button>
-            <a href="/vendor/reports/tender-evaluation"
+            <a href="/admin/reports/tender-evaluation"
                 class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition h-[42px] flex items-center justify-center">
                 Clear
             </a>
@@ -152,7 +149,9 @@
                     <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Status</th>
-
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Publisher</th>
                     <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Winner</th>
@@ -201,6 +200,16 @@
                                     </span>
                             </td>
 
+                            <!-- Publisher Info (Always Visible for Admin) -->
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900 dark:text-white">
+                                    <%= tender.createdBy?.name || 'N/A' %>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <%= tender.createdBy?.companyName || '' %>
+                                </div>
+                            </td>
+
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <% if (tender.awardedTo && tender.winningBid) { %>
                                     <div class="flex flex-col">
@@ -208,8 +217,7 @@
                                             <%= tender.awardedTo.name %>
                                         </span>
                                         <span class="text-xs text-gray-500">₹<%=
-                                                tender.winningBid.amount.toLocaleString() %>
-                                        </span>
+                                                tender.winningBid.amount.toLocaleString() %></span>
                                     </div>
                                     <% } else if (tender.awardedTo) { %>
                                         <span class="font-medium text-green-600">
@@ -232,8 +240,7 @@
                                 ₹<%= Math.round(tender.stats.avgBid).toLocaleString() %>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
-                                <button data-item='<%- JSON.stringify(tender) %>'
-                                    onclick="showDetails(JSON.parse(this.dataset.item))"
+                                <button onclick="showDetails(<%= JSON.stringify(tender) %>)"
                                     class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm">
                                     View
                                 </button>
@@ -242,7 +249,7 @@
                         <% }) %>
                             <% } else { %>
                                 <tr>
-                                    <td colspan="7" class="px-6 py-12 text-center">
+                                    <td colspan="9" class="px-6 py-12 text-center">
                                         <div class="flex flex-col items-center gap-2">
                                             <span
                                                 class="material-symbols-outlined text-gray-400 text-[48px]">analytics</span>
@@ -257,31 +264,20 @@
     </div>
 
     <!-- Pagination -->
-    <!-- Pagination -->
-    <% const queryParams=`&status=${filters.status || '' }&searchQuery=${filters.searchQuery || ''
-        }&startDate=${filters.startDate || '' }&endDate=${filters.endDate || '' }`; const paginationData={ currentPage:
-        typeof currentPage !=='undefined' ? currentPage : 1, totalPages: typeof totalPages !=='undefined' ? totalPages :
-        1, hasPrevPage: (typeof currentPage !=='undefined' ? currentPage : 1)> 1,
-        hasNextPage: (typeof currentPage !== 'undefined' ? currentPage : 1) < (typeof totalPages !=='undefined' ?
-            totalPages : 1) }; %>
-            <%- include('../partials/user/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
+    <%- include('../../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
 </div>
 
 <script>
     function exportPDF() {
-        // Get current filters
         const params = new URLSearchParams(window.location.search);
-
         const button = document.querySelector('button[onclick="exportPDF()"]');
         const originalText = button.innerHTML;
         button.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> Exporting...';
         button.disabled = true;
 
-        fetch(window.location.pathname + '/export-pdf', {
+        fetch('/admin/reports/tender-evaluation/export-pdf', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 status: params.get('status') || '',
                 searchQuery: params.get('searchQuery') || '',
@@ -315,11 +311,14 @@
             });
     }
 
-    const userRole = "<%= userRole %>";
-
     function showDetails(tender) {
         const modal = document.getElementById('evaluationModal');
         const content = document.getElementById('modalContent');
+
+        // Safe access helpers to avoid undefined errors in admin view
+        const awardedToName = tender.awardedTo?.name || 'N/A';
+        const awardedToEmail = tender.awardedTo?.email || 'N/A';
+        const awardedToPhone = tender.awardedTo?.phone || '';
 
         content.innerHTML = `
             <div class="space-y-6">
@@ -341,24 +340,24 @@
                     </div>
                 </div>
 
-                ${tender.stats.minBid ? `
+                ${tender.stats.minBid !== undefined ? `
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Bid Statistics</h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                          <div class="p-3 border rounded-lg dark:border-gray-700">
-                            <span class="block text-xl font-bold text-blue-600">${tender.stats.totalBids}</span>
+                            <span class="block text-xl font-bold text-blue-600">${tender.stats.totalBids || 0}</span>
                             <span class="text-xs text-gray-500">Total Bids</span>
                          </div>
                          <div class="p-3 border rounded-lg dark:border-gray-700">
-                            <span class="block text-xl font-bold text-green-600">₹${tender.stats.minBid.toLocaleString()}</span>
+                            <span class="block text-xl font-bold text-green-600">₹${(tender.stats.minBid || 0).toLocaleString()}</span>
                             <span class="text-xs text-gray-500">Lowest</span>
                          </div>
                          <div class="p-3 border rounded-lg dark:border-gray-700">
-                            <span class="block text-xl font-bold text-red-600">₹${tender.stats.maxBid.toLocaleString()}</span>
+                            <span class="block text-xl font-bold text-red-600">₹${(tender.stats.maxBid || 0).toLocaleString()}</span>
                             <span class="text-xs text-gray-500">Highest</span>
                          </div>
                          <div class="p-3 border rounded-lg dark:border-gray-700">
-                            <span class="block text-xl font-bold text-purple-600">₹${Math.round(tender.stats.avgBid).toLocaleString()}</span>
+                            <span class="block text-xl font-bold text-purple-600">₹${Math.round(tender.stats.avgBid || 0).toLocaleString()}</span>
                             <span class="text-xs text-gray-500">Average</span>
                          </div>
                     </div>
@@ -375,16 +374,16 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Name</p>
-                                <p class="font-bold text-gray-900 dark:text-white">${tender.awardedTo.name}</p>
+                                <p class="font-bold text-gray-900 dark:text-white">${awardedToName}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                                <p class="font-medium text-gray-900 dark:text-white">${tender.awardedTo.email}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${awardedToEmail}</p>
                             </div>
-                            ${tender.awardedTo.phone ? `
+                            ${awardedToPhone ? `
                             <div>
                                 <p class="text-xs text-gray-500 uppercase tracking-wide">Phone</p>
-                                <p class="font-medium text-gray-900 dark:text-white">${tender.awardedTo.phone}</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${awardedToPhone}</p>
                             </div>
                             ` : ''}
                             <div>
@@ -394,50 +393,64 @@
                                 </p>
                             </div>
                         </div>
-
-                        ${tender.winningBid && tender.winningBid.documents && Object.keys(tender.winningBid.documents).length > 0 ? `
-                        <div class="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
-                            <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Submitted Documents</p>
-                            <div class="space-y-4">
-                                ${Object.entries(tender.winningBid.documents).map(([category, files]) => `
-                                    <div>
-                                         <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 pl-1 border-l-2 border-green-500">${category}</p>
-                                         <div class="flex flex-wrap gap-2">
-                                            ${files.map(doc => `
-                                                <a href="${doc.fileUrl}" target="_blank"
-                                                   class="inline-flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 transition">
-                                                    <span class="material-symbols-outlined text-[16px]">description</span>
-                                                    ${doc.fileName}
-                                                </a>
-                                            `).join('')}
-                                         </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                        ` : ''}
                     </div>
                 </div>
                 ` : ''}
                 
-
+                ${tender.winningBid && tender.winningBid.documents && Object.keys(tender.winningBid.documents).length > 0 ? `
+                <div class="mt-4 pt-4 border-t border-green-200 dark:border-green-800">
+                    <p class="text-xs text-gray-500 uppercase tracking-wide mb-3">Submitted Documents</p>
+                    <div class="space-y-4">
+                        ${Object.entries(tender.winningBid.documents).map(([category, files]) => `
+                            <div>
+                                    <p class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 pl-1 border-l-2 border-green-500">${category}</p>
+                                    <div class="flex flex-wrap gap-2">
+                                    ${files.map(doc => `
+                                        <a href="${doc.fileUrl}" target="_blank"
+                                            class="inline-flex items-center gap-1 px-3 py-1 bg-white dark:bg-gray-800 border border-green-200 dark:border-green-700 rounded-lg text-xs font-medium text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/30 transition">
+                                            <span class="material-symbols-outlined text-[16px]">description</span>
+                                            ${doc.fileName}
+                                        </a>
+                                    `).join('')}
+                                    </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+                
+                <!-- Publisher Details -->
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Publisher Details</h4>
+                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Name</p>
+                                <p class="font-bold text-gray-900 dark:text-white">${tender.createdBy?.name || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Company</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.companyName || 'N/A'}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
+                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.email || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="flex justify-end gap-3 pt-4">
-                     <a href="/tenders/${tender._id}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                         View Tender Details
-                     </a>
                      <button onclick="document.getElementById('evaluationModal').classList.add('hidden')" 
-                             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition w-full">
                         Close
                      </button>
                 </div>
             </div>
         `;
-
         modal.classList.remove('hidden');
     }
 
-    // Close modal on outside click
     document.addEventListener('click', (e) => {
         const modal = document.getElementById('evaluationModal');
         if (e.target === modal) modal.classList.add('hidden');

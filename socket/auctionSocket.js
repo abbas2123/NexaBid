@@ -60,20 +60,29 @@ module.exports = (io, socket) => {
       if (property.sellerId.toString() === userId) {
         return socket.emit('bid_error', { message: ERROR_MESSAGES.UNAUTHORIZED });
       }
-      let payment = await Payment.findOne({
+      let payment;
+      console.log(`Searching payment for: User=${userId}, Property=${propertyId}`);
+
+      payment = await Payment.findOne({
         userId: userId,
         contextId: propertyId,
         contextType: 'property',
         type: 'participation_fee',
         status: 'success',
       });
+
       if (!payment) {
+        const allPaymentsForUser = await Payment.find({ userId: userId });
+        console.log(`Found ${allPaymentsForUser.length} total payments for user ${userId}`);
+        console.log('Payments:', JSON.stringify(allPaymentsForUser, null, 2));
+
         payment = await Payment.findOne({
           userId: userId,
           contextId: propertyId,
           contextType: 'property',
           type: 'participation_fee',
         }).sort({ createdAt: -1 });
+
         if (!payment) {
           payment = await Payment.findOne({
             userId: userId,
@@ -97,22 +106,27 @@ module.exports = (io, socket) => {
         if (payment.status === 'failed') msg = 'Payment failed. Please retry.';
         return socket.emit('bid_error', { message: msg });
       }
-      const session = await mongoose.startSession();
-      session.startTransaction();
+      const useTransactions = process.env.NODE_ENV !== 'test';
+      const session = useTransactions ? await mongoose.startSession() : null;
+      if (session) session.startTransaction();
 
       try {
-        // Check for existing bid to preserve auto-bid status if applicable
-        const existingBid = await PropertyBid.findOne({ propertyId, bidderId: userId }).session(session);
+        const updateOptions = useTransactions ? { new: true, session } : { new: true };
+        const upsertOptions = useTransactions ? { upsert: true, session } : { upsert: true };
+
+        const existingBid = await PropertyBid.findOne({ propertyId, bidderId: userId }).session(
+          useTransactions ? session : null
+        );
 
         let isAutoBid = false;
         let autoBidMax = 0;
         let escrowPaymentId = payment._id;
 
         if (existingBid) {
-          // Keep existing escrow ID if we are just updating
+
           if (existingBid.escrowPaymentId) escrowPaymentId = existingBid.escrowPaymentId;
 
-          // Preserve auto-bid if manual bid is still within limits
+
           if (existingBid.isAutoBid && existingBid.autoBidMax > bidAmount) {
             isAutoBid = true;
             autoBidMax = existingBid.autoBidMax;
@@ -131,7 +145,7 @@ module.exports = (io, socket) => {
               currentHighestBidder: userId,
             },
           },
-          { new: true, session }
+          updateOptions
         );
 
         if (!updatedProperty) {
@@ -152,7 +166,7 @@ module.exports = (io, socket) => {
             autoBidMax: autoBidMax,
             bidStatus: 'active',
           },
-          { upsert: true, session }
+          upsertOptions
         );
 
         const timeLeft = updatedProperty.auctionEndsAt - Date.now();
@@ -165,13 +179,13 @@ module.exports = (io, socket) => {
               auctionEndsAt: updatedEndTime,
               extended: true,
             },
-            { session }
+            updateOptions
           );
           extended = true;
           updatedProperty.auctionEndsAt = updatedEndTime;
         }
 
-        await session.commitTransaction();
+        if (session) await session.commitTransaction();
 
         const room = `auction_${propertyId}`;
         io.to(room).emit('new_bid', {
@@ -203,10 +217,10 @@ module.exports = (io, socket) => {
           }
         }
       } catch (error) {
-        await session.abortTransaction();
+        if (session) await session.abortTransaction();
         throw error;
       } finally {
-        session.endSession();
+        if (session) session.endSession();
       }
     } catch (err) {
       console.error('Bid Error:', err);

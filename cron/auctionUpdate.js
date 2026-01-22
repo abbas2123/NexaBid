@@ -110,7 +110,7 @@ module.exports = async (io) => {
       } catch (e) {
         await session.abortTransaction();
         console.error(`Refund failed for bidder ${bid.bidderId}:`, e);
-        throw e; // Rethrow so allSettled catches it as rejected
+        throw e; 
       } finally {
         session.endSession();
       }

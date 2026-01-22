@@ -176,7 +176,7 @@ exports.createRazorpayOrder = async (paymentId) => {
         throw new Error(ERROR_MESSAGES.PAYMENT_ALREADY_COMPLETED);
       }
     } catch (err) {
-      // Ignore error
+      console.error(err);
     }
     const payable = payment.metadata?.payableAmount || payment.amount;
     return {

@@ -53,7 +53,7 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Indexes for common queries
+
 paymentSchema.index({ userId: 1, status: 1 });
 paymentSchema.index({ contextId: 1, contextType: 1 });
 

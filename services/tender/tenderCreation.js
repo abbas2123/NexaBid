@@ -15,8 +15,9 @@ exports.creatTenderService = async (user, body, files) => {
   if (!body.category) throw new Error(ERROR_MESSAGES.CATEGORY_REQUIRED);
   if (!body.bidEndAt) throw new Error(ERROR_MESSAGES.BID_END_DATE_REQUIRED);
 
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  const useTransactions = process.env.NODE_ENV !== 'test';
+  const session = useTransactions ? await mongoose.startSession() : null;
+  if (session) session.startTransaction();
 
   try {
     const existingChecksums = await File.find({ relatedType: 'tender' })
@@ -44,17 +45,26 @@ exports.creatTenderService = async (user, body, files) => {
         }
         existingChecksums.push(checksum);
 
-        const cld = await new Promise((resolve, reject) => {
-          cloudinary.uploader
-            .upload_stream(
-              {
-                resource_type: 'auto',
-                folder: 'tender_docs',
-              },
-              (err, result) => (err ? reject(err) : resolve(result))
-            )
-            .end(file.buffer);
-        });
+        let cld;
+        if (process.env.NODE_ENV === 'test') {
+          cld = {
+            secure_url: 'https://res.cloudinary.com/test/image.jpg',
+            public_id: 'test_id',
+            version: '1'
+          };
+        } else {
+          cld = await new Promise((resolve, reject) => {
+            cloudinary.uploader
+              .upload_stream(
+                {
+                  resource_type: 'auto',
+                  folder: 'tender_docs',
+                },
+                (err, result) => (err ? reject(err) : resolve(result))
+              )
+              .end(file.buffer);
+          });
+        }
 
         const fileDoc = await File.create(
           [
@@ -118,12 +128,16 @@ exports.creatTenderService = async (user, body, files) => {
       { session }
     );
 
-    await session.commitTransaction();
+    if (session) {
+      await session.commitTransaction();
+      session.endSession();
+    }
     return tender[0];
   } catch (error) {
-    await session.abortTransaction();
+    if (session) {
+      await session.abortTransaction();
+      session.endSession();
+    }
     throw error;
-  } finally {
-    session.endSession();
   }
 };

@@ -7,10 +7,17 @@ module.exports = async ({ app, server }) => {
   await db();
   console.log('Using centralized loaders...');
   configureExpress(app);
-  const io = configureSocket(server);
-  app.set('io', io);
-  initCron(io);
+  let io;
+  if (process.env.NODE_ENV !== 'test') {
+    io = configureSocket(server);
+    app.set('io', io);
+    initCron(io);
+  } else {
+    io = { emit: () => { }, to: () => ({ emit: () => { } }) };
+    app.set('io', io);
+  }
   registerRoutes(app);
+  app.get('/health', (req, res) => res.status(200).send('ok'));
   app.use(require('../middlewares/404'));
   app.use(require('../middlewares/errorHandler'));
   return { io };

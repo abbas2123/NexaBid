@@ -47,27 +47,29 @@ module.exports = (app) => {
 
 
   const csrfProtection = csrf();
-  // Exclude Razorpay callback routes from CSRF
+
   app.use((req, res, next) => {
     const excludedRoutes = [
       '/payments/confirm',
       '/payments/razorpay-webhook',
       '/payments/mark-failed',
-      '/wallet/api/verify-payment'
+      '/wallet/api/verify-payment',
+      '/socket.io',
+      '/vendor/tender/upload'
     ];
 
-    // Check if path starts with any excluded route to handle params
+
     const isExcluded = excludedRoutes.some(route => req.originalUrl.startsWith(route));
 
 
-    if (isExcluded) {
+    if (isExcluded || process.env.NODE_ENV === 'test') {
       return next();
     }
     csrfProtection(req, res, next);
   });
 
   app.use((req, res, next) => {
-  
+
     if (typeof req.csrfToken === 'function') {
       res.locals.csrfToken = req.csrfToken();
     } else {

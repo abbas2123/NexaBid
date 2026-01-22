@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const isTestEnv = require('../../utils/isTestEnv');
 const Tender = require('../../models/tender');
 const TenderBid = require('../../models/tenderBid');
 const notification = require('../notificationService');
@@ -74,11 +75,14 @@ module.exports = {
   },
 
   async selectWinner(bidId, io) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const useTransactions = !isTestEnv;
+    const session = useTransactions ? await mongoose.startSession() : null;
+    if (session) session.startTransaction();
 
     try {
-      const bid = await TenderBid.findById(bidId).populate('vendorId').session(session);
+      const bid = await TenderBid.findById(bidId)
+        .populate('vendorId')
+        .session(session);
       if (!bid) throw new Error(ERROR_MESSAGES.BID_NOT_FOUND);
 
       const { tenderId } = bid;
@@ -114,11 +118,15 @@ module.exports = {
         { session }
       );
 
-      await session.commitTransaction();
-      session.endSession();
+      if (session) {
+        await session.commitTransaction();
+        session.endSession();
+      }
     } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
+      if (session) {
+        await session.abortTransaction();
+        session.endSession();
+      }
       throw error;
     }
 

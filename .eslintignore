@@ -1,7 +1,5 @@
 node_modules
-**/*.d.ts
-public
+coverage
 dist
 build
-coverage
-config
+cypress

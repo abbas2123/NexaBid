@@ -79,7 +79,7 @@ exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
 
   if (isBlocked && tender) {
     const paymentService = require('../payment/paymentService');
-    // Run refund process in background
+    
     paymentService.processAutomaticRefunds(id, 'tender', reason);
   }
 

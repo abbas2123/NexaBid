@@ -6,7 +6,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
     const { bidType, status, searchQuery, startDate, endDate } = filters;
     const skip = (page - 1) * limit;
 
-    // 1. Build Property Query
+    
     const propertyMatch = {};
     if (userRole !== 'admin') propertyMatch.bidderId = userId;
     if (status && bidType !== 'tender') propertyMatch.bidStatus = status;
@@ -16,7 +16,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         if (endDate) propertyMatch.createdAt.$lte = new Date(endDate);
     }
 
-    // 2. Build Tender Query
+    
     const tenderMatch = {};
     if (userRole !== 'admin') tenderMatch.vendorId = userId;
     if (status && bidType !== 'property') tenderMatch.status = status;
@@ -28,7 +28,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
 
     const pipeline = [];
 
-    // 3. Initial Stage: Property Bids
+    
     if (!bidType || bidType === 'all' || bidType === 'property') {
         pipeline.push({ $match: propertyMatch });
         pipeline.push({
@@ -43,13 +43,13 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
             }
         });
     } else {
-        // If query is ONLY tenders, start with empty match on properties to effectively skip them? 
-        // No, cleaner to start aggregation on TenderBid if ONLY tender.
-        // But for uniform pipeline with $unionWith, we can start with a dummy match resulting in 0 docs from PropertyBid.
+        
+        
+        
         pipeline.push({ $match: { _id: null } });
     }
 
-    // 4. Union Stage: Tender Bids
+    
     if (!bidType || bidType === 'all' || bidType === 'tender') {
         pipeline.push({
             $unionWith: {
@@ -72,7 +72,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         });
     }
 
-    // 5. Lookups for Details (Property/Tender/User)
+    
     pipeline.push(
         {
             $lookup: {
@@ -110,12 +110,12 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
                 bidderName: { $arrayElemAt: ['$user.name', 0] },
                 bidderEmail: { $arrayElemAt: ['$user.email', 0] },
                 isWinning: {
-                    // Logic for winning varies
-                    // For property: isWinningBid (missing in project stage? need to check Model)
-                    // PropertyBid schema has 'isWinningBid' ? No, it has `currentHighestBidder` on Property. 
-                    // Wait, the original code used `isWinningBid` but PropertyBid model (viewed earlier) doesn't explicitly show it.
-                    // Ah, PropertyBid has `status: 'won'`. And `currentHighestBidder`.
-                    // Let's rely on status.
+                    
+                    
+                    
+                    
+                    
+                    
                     $or: [
                         { $eq: ['$status', 'won'] },
                         { $eq: ['$status', 'awarded'] }
@@ -125,7 +125,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         }
     );
 
-    // 6. Search Filter
+    
     if (searchQuery) {
         pipeline.push({
             $match: {
@@ -134,7 +134,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         });
     }
 
-    // 7. Facet for Data and Stats
+    
     pipeline.push(
         { $sort: { date: -1 } },
         {
@@ -171,7 +171,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
     const statsData = result.stats[0] || { totalAmount: 0, activeCount: 0, wonCount: 0 };
 
     return {
-        bids, // Renamed from filteredBids to bids for clarity, controller updated to expect `bids`
+        bids, 
         stats: {
             totalBids: totalRecords,
             activeBids: statsData.activeCount,

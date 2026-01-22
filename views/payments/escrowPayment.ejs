@@ -10,347 +10,403 @@
       <p class="text-gray-600 mt-2">Complete your escrow payment securely</p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div class="lg:col-span-2 space-y-6">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
-                </path>
-              </svg>
-            </div>
-            <h2 class="text-xl font-semibold text-gray-900">
-              <%= productType==="property" ? "Property Details" : "Tender Details" %>
-            </h2>
-          </div>
-
-          <div class="space-y-3">
-            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-              <span class="text-gray-600 font-medium">Title</span>
-              <span class="font-medium text-gray-900 sm:text-right sm:max-w-xs">
-                <%= product.title %>
-              </span>
-            </div>
-
-            <% if (productType==="tender" ) { %>
-              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <span class="text-gray-600 font-medium">Tender No</span>
-                <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded-lg inline-block">
-                  <%= product.referenceNo %>
-                </span>
-              </div>
-              <% } %>
-                <% if (product.winningBid) { %>
-                  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-3 border-t">
-                    <span class="text-gray-600 font-medium">Winning Bid</span>
-                    <span class="text-2xl font-bold text-green-600">
-                      ₹ <%= product.winningBid.toLocaleString("en-IN") %>
-                    </span>
-                  </div>
-                  <% } %>
+    <% if (product.isBlocked) { %>
+      <div
+        class="mb-6 p-4 rounded-2xl bg-red-100 border-2 border-red-300 flex items-center justify-between gap-4 text-red-800 animate-fadeIn">
+        <div class="flex items-center gap-3">
+          <svg class="w-8 h-8 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+            </path>
+          </svg>
+          <div>
+            <p class="font-bold text-lg">Payment Restricted</p>
+            <p class="text-sm opacity-90">This item has been blocked by administration. You cannot proceed with the
+              payment at this time.</p>
           </div>
         </div>
+        <button onclick="showBlockReason()"
+          class="px-4 py-2 bg-red-800 text-white rounded-xl text-sm font-bold hover:bg-red-900 transition flex items-center gap-2 flex-shrink-0">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Why?
+        </button>
+      </div>
 
-        <!-- COUPON SECTION -->
-        <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl shadow-sm border border-purple-100">
-          <div class="flex items-center gap-2 mb-4">
-            <svg class="w-5 h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-              </path>
-            </svg>
-            <h2 class="text-xl font-semibold text-gray-900">Apply Discount Coupon</h2>
-          </div>
+      <script>
+        function showBlockReason() {
+          Swal.fire({
+            title: 'Blocking Reason',
+            text: `<%= product.blockingReason || "No specific reason provided." %>`,
+            icon: 'warning',
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Understood'
+          });
+        }
+      </script>
+      <% } %>
 
-          <!-- Applied Coupon Badge (Initially Hidden) -->
-          <div id="appliedCouponBadge" class="hidden mb-4 bg-green-50 border-2 border-green-500 rounded-xl p-4">
-            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div class="flex items-center gap-3 flex-1">
-                <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-                <div>
-                  <p class="font-bold text-green-800 text-lg font-mono" id="appliedCouponName">
-                    CODE123
-                  </p>
-                  <p class="text-sm text-green-600">Coupon applied successfully</p>
-                </div>
-              </div>
-              <button type="button" id="removeCouponBtn"
-                class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-all flex-shrink-0"
-                title="Remove coupon">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Coupon Input (Initially Visible) -->
-          <div id="couponInputSection">
-            <div class="flex flex-col sm:flex-row gap-3">
-              <div class="flex-1">
-                <input id="couponCode" type="text" placeholder="Enter coupon code"
-                  class="w-full border-2 border-purple-200 rounded-xl px-5 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none uppercase" />
-              </div>
-              <button type="button" id="applyCouponBtn"
-                class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap">
-                Apply
-              </button>
-            </div>
-
-            <p id="couponMsg" class="text-sm mt-3 font-medium"></p>
-          </div>
-        </div>
-
-        <!-- AVAILABLE COUPONS -->
-        <div id="availableCouponsSection" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
-              </path>
-            </svg>
-            Available Coupons
-          </h3>
-
-          <% if (coupons && coupons.length> 0) { %>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <% coupons.forEach(c=> { %>
-                <div
-                  class="relative border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
-                  onclick="selectCoupon('<%= c.code %>')">
-                  <div
-                    class="absolute -right-2 -top-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
-                    <% if (c.discountType==="flat" ) { %> ₹<%= c.discountValue %>
-                        <% } else { %>
-                          <%= c.discountValue %>% <% } %>
-                  </div>
-
-                  <div class="flex items-center justify-between gap-3">
-                    <div class="flex-1">
-                      <p class="font-bold text-gray-900 text-lg font-mono break-all">
-                        <%= c.code %>
-                      </p>
-                      <p class="text-sm text-gray-600 mt-1">
-                        <% if (c.discountType==="flat" ) { %> Save ₹<%= c.discountValue %> on this order
-                            <% } else { %> Get <%= c.discountValue %>% discount <% } %>
-                      </p>
-                    </div>
-
-                    <svg class="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
-                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                    </svg>
-                  </div>
-                </div>
-                <% }) %>
-            </div>
-            <% } else { %>
-              <p class="text-gray-500 text-sm">No coupons available for this payment.</p>
-              <% } %>
-        </div>
-
-        <!-- PAYMENT METHOD -->
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-          <h2 class="text-xl font-semibold text-gray-900 mb-5">Select Payment Method</h2>
-
-          <div class="space-y-3">
-            <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
-              <input type="radio" name="payment_method" value="wallet"
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
-              <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div
-                  class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900">Wallet</p>
-                  <p class="text-sm text-gray-600">
-                    Balance: ₹ <%= walletBalance.toLocaleString("en-IN") %>
-                  </p>
-                </div>
-              </div>
-            </label>
-
-            <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
-              <input type="radio" name="payment_method" value="card" checked
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
-              <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div
-                  class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
-                  </svg>
-                </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900">Credit / Debit Card</p>
-                  <p class="text-sm text-gray-600">Visa, Mastercard, Rupay</p>
-                </div>
-              </div>
-            </label>
-
-            <label
-              class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
-              <input type="radio" name="payment_method" value="upi"
-                class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
-              <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                <div
-                  class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
                     </path>
                   </svg>
                 </div>
-                <div class="flex-1">
-                  <p class="font-semibold text-gray-900">UPI</p>
-                  <p class="text-sm text-gray-600">Google Pay, PhonePe, Paytm</p>
+                <h2 class="text-xl font-semibold text-gray-900">
+                  <%= productType==="property" ? "Property Details" : "Tender Details" %>
+                </h2>
+              </div>
+
+              <div class="space-y-3">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                  <span class="text-gray-600 font-medium">Title</span>
+                  <span class="font-medium text-gray-900 sm:text-right sm:max-w-xs">
+                    <%= product.title %>
+                  </span>
                 </div>
-              </div>
-            </label>
-          </div>
 
-          <div id="wallet-form" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-            <p class="text-green-700 font-semibold flex items-center gap-2">
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              Wallet payment selected
-            </p>
-            <p id="wallet-error" class="hidden text-red-600 mt-2 flex items-center gap-2">
-              <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-              Insufficient wallet balance
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: Payment Summary (Sticky) -->
-      <div class="lg:col-span-1">
-        <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-6">
-          <h2 class="text-xl font-semibold text-gray-900 mb-5">Payment Summary</h2>
-
-          <div class="space-y-3 mb-6" id="breakdownContainer">
-            <% breakdown.forEach(item=> { %>
-              <div class="flex justify-between items-center text-gray-700">
-                <span class="text-sm">
-                  <%= item.label %>
-                </span>
-                <span class="font-medium whitespace-nowrap">₹ <%= item.amount.toLocaleString("en-IN") %></span>
-              </div>
-              <% }) %>
-
-                <!-- Discount row (initially hidden) -->
-                <div id="discountRow" class="hidden flex justify-between items-center text-green-600 animate-fadeIn">
-                  <div class="flex items-center gap-2 flex-1 min-w-0">
-                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
-                      </path>
-                    </svg>
-                    <span class="text-sm font-medium truncate">
-                      Discount (<span id="appliedCouponCodeSummary" class="font-mono"></span>)
+                <% if (productType==="tender" ) { %>
+                  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <span class="text-gray-600 font-medium">Tender No</span>
+                    <span class="font-mono text-sm bg-gray-100 px-3 py-1 rounded-lg inline-block">
+                      <%= product.referenceNo %>
                     </span>
                   </div>
-                  <span class="font-semibold whitespace-nowrap ml-2">- ₹ <span id="discountAmount">0</span></span>
-                </div>
-          </div>
-
-          <div class="border-t-2 border-dashed pt-4 mb-6">
-            <!-- Subtotal (shown when discount is applied) -->
-            <div id="subtotalRow" class="hidden flex justify-between items-center mb-3 text-gray-600">
-              <span class="text-sm">Subtotal</span>
-              <span class="font-medium line-through whitespace-nowrap">₹
-                <span id="originalAmount">
-                  <%= totalAmount.toLocaleString("en-IN") %>
-                </span></span>
-            </div>
-
-            <!-- Final Total -->
-            <div class="flex justify-between items-center gap-3">
-              <span class="text-lg font-semibold text-gray-900">Total Amount</span>
-              <span class="text-3xl font-bold text-primary transition-all duration-300 whitespace-nowrap"
-                id="finalTotal">
-                ₹ <%= totalAmount.toLocaleString("en-IN") %>
-              </span>
-            </div>
-
-            <!-- Savings badge (shown when discount is applied) -->
-            <div id="savingsBadge"
-              class="hidden mt-3 bg-green-50 border border-green-200 rounded-lg p-3 text-center animate-fadeIn">
-              <p class="text-green-700 font-semibold text-sm flex items-center justify-center gap-2">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
-                  </path>
-                </svg>
-                <span>You're saving ₹ <span id="totalSavings">0</span></span>
-              </p>
-            </div>
-          </div>
-
-          <!-- PAYMENT FORM -->
-          <form method="POST" action="/payments/confirm">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <input type="hidden" name="intentId" value="<%= intentId %>" />
-
-            <button id="payBtn" type="button"
-              class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-2 group">
-              <svg class="w-6 h-6 group-hover:rotate-12 transition-transform flex-shrink-0" fill="none"
-                stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                </path>
-              </svg>
-              Proceed to Pay
-            </button>
-          </form>
-
-          <!-- SECURITY BADGES -->
-          <div class="mt-6 pt-6 border-t">
-            <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
-                  </path>
-                </svg>
-                <span>Secure</span>
+                  <% } %>
+                    <% if (product.winningBid) { %>
+                      <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 pt-3 border-t">
+                        <span class="text-gray-600 font-medium">Winning Bid</span>
+                        <span class="text-2xl font-bold text-green-600">
+                          ₹ <%= product.winningBid.toLocaleString("en-IN") %>
+                        </span>
+                      </div>
+                      <% } %>
               </div>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                  </path>
-                </svg>
-                <span>Encrypted</span>
-              </div>
-              <div class="flex items-center gap-1">
-                <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor"
+            </div>
+
+            <!-- COUPON SECTION -->
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-2xl shadow-sm border border-purple-100">
+              <div class="flex items-center gap-2 mb-4">
+                <svg class="w-5 h-5 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor"
                   viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                  </path>
                 </svg>
-                <span>Verified</span>
+                <h2 class="text-xl font-semibold text-gray-900">Apply Discount Coupon</h2>
               </div>
+
+              <!-- Applied Coupon Badge (Initially Hidden) -->
+              <div id="appliedCouponBadge" class="hidden mb-4 bg-green-50 border-2 border-green-500 rounded-xl p-4">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 flex-1">
+                    <div class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <p class="font-bold text-green-800 text-lg font-mono" id="appliedCouponName">
+                        CODE123
+                      </p>
+                      <p class="text-sm text-green-600">Coupon applied successfully</p>
+                    </div>
+                  </div>
+                  <button type="button" id="removeCouponBtn"
+                    class="text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-lg transition-all flex-shrink-0"
+                    title="Remove coupon">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                      </path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Coupon Input (Initially Visible) -->
+              <div id="couponInputSection">
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="flex-1">
+                    <input id="couponCode" type="text" placeholder="Enter coupon code"
+                      class="w-full border-2 border-purple-200 rounded-xl px-5 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none uppercase" />
+                  </div>
+                  <button type="button" id="applyCouponBtn"
+                    class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all active:scale-95 whitespace-nowrap">
+                    Apply
+                  </button>
+                </div>
+
+                <p id="couponMsg" class="text-sm mt-3 font-medium"></p>
+              </div>
+            </div>
+
+            <!-- AVAILABLE COUPONS -->
+            <div id="availableCouponsSection" class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h3 class="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                  </path>
+                </svg>
+                Available Coupons
+              </h3>
+
+              <% if (coupons && coupons.length> 0) { %>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <% coupons.forEach(c=> { %>
+                    <div
+                      class="relative border-2 border-dashed border-gray-200 rounded-xl p-4 cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group"
+                      onclick="selectCoupon('<%= c.code %>')">
+                      <div
+                        class="absolute -right-2 -top-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full z-10">
+                        <% if (c.discountType==="flat" ) { %> ₹<%= c.discountValue %>
+                            <% } else { %>
+                              <%= c.discountValue %>% <% } %>
+                      </div>
+
+                      <div class="flex items-center justify-between gap-3">
+                        <div class="flex-1">
+                          <p class="font-bold text-gray-900 text-lg font-mono break-all">
+                            <%= c.code %>
+                          </p>
+                          <p class="text-sm text-gray-600 mt-1">
+                            <% if (c.discountType==="flat" ) { %> Save ₹<%= c.discountValue %> on this order
+                                <% } else { %> Get <%= c.discountValue %>% discount <% } %>
+                          </p>
+                        </div>
+
+                        <svg
+                          class="w-5 h-5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                        </svg>
+                      </div>
+                    </div>
+                    <% }) %>
+                </div>
+                <% } else { %>
+                  <p class="text-gray-500 text-sm">No coupons available for this payment.</p>
+                  <% } %>
+            </div>
+
+            <!-- PAYMENT METHOD -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 class="text-xl font-semibold text-gray-900 mb-5">Select Payment Method</h2>
+
+              <div class="space-y-3">
+                <label
+                  class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+                  <input type="radio" name="payment_method" value="wallet"
+                    class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
+                  <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div
+                      class="w-10 h-10 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                        </path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-semibold text-gray-900">Wallet</p>
+                      <p class="text-sm text-gray-600">
+                        Balance: ₹ <%= walletBalance.toLocaleString("en-IN") %>
+                      </p>
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+                  <input type="radio" name="payment_method" value="card" checked
+                    class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
+                  <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div
+                      class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z">
+                        </path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-semibold text-gray-900">Credit / Debit Card</p>
+                      <p class="text-sm text-gray-600">Visa, Mastercard, Rupay</p>
+                    </div>
+                  </div>
+                </label>
+
+                <label
+                  class="flex items-start sm:items-center gap-4 p-4 border-2 rounded-xl cursor-pointer hover:border-primary hover:bg-blue-50 transition-all group">
+                  <input type="radio" name="payment_method" value="upi"
+                    class="w-5 h-5 text-primary mt-1 sm:mt-0 flex-shrink-0" />
+                  <div class="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div
+                      class="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                        </path>
+                      </svg>
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-semibold text-gray-900">UPI</p>
+                      <p class="text-sm text-gray-600">Google Pay, PhonePe, Paytm</p>
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div id="wallet-form" class="hidden mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
+                <p class="text-green-700 font-semibold flex items-center gap-2">
+                  <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  Wallet payment selected
+                </p>
+                <p id="wallet-error" class="hidden text-red-600 mt-2 flex items-center gap-2">
+                  <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  Insufficient wallet balance
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Payment Summary (Sticky) -->
+          <div class="lg:col-span-1">
+            <div class="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 sticky top-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-5">Payment Summary</h2>
+
+              <div class="space-y-3 mb-6" id="breakdownContainer">
+                <% breakdown.forEach(item=> { %>
+                  <div class="flex justify-between items-center text-gray-700">
+                    <span class="text-sm">
+                      <%= item.label %>
+                    </span>
+                    <span class="font-medium whitespace-nowrap">₹ <%= item.amount.toLocaleString("en-IN") %></span>
+                  </div>
+                  <% }) %>
+
+                    <!-- Discount row (initially hidden) -->
+                    <div id="discountRow"
+                      class="hidden flex justify-between items-center text-green-600 animate-fadeIn">
+                      <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
+                          </path>
+                        </svg>
+                        <span class="text-sm font-medium truncate">
+                          Discount (<span id="appliedCouponCodeSummary" class="font-mono"></span>)
+                        </span>
+                      </div>
+                      <span class="font-semibold whitespace-nowrap ml-2">- ₹ <span id="discountAmount">0</span></span>
+                    </div>
+              </div>
+
+              <div class="border-t-2 border-dashed pt-4 mb-6">
+                <!-- Subtotal (shown when discount is applied) -->
+                <div id="subtotalRow" class="hidden flex justify-between items-center mb-3 text-gray-600">
+                  <span class="text-sm">Subtotal</span>
+                  <span class="font-medium line-through whitespace-nowrap">₹
+                    <span id="originalAmount">
+                      <%= totalAmount.toLocaleString("en-IN") %>
+                    </span></span>
+                </div>
+
+                <!-- Final Total -->
+                <div class="flex justify-between items-center gap-3">
+                  <span class="text-lg font-semibold text-gray-900">Total Amount</span>
+                  <span class="text-3xl font-bold text-primary transition-all duration-300 whitespace-nowrap"
+                    id="finalTotal">
+                    ₹ <%= totalAmount.toLocaleString("en-IN") %>
+                  </span>
+                </div>
+
+                <!-- Savings badge (shown when discount is applied) -->
+                <div id="savingsBadge"
+                  class="hidden mt-3 bg-green-50 border border-green-200 rounded-lg p-3 text-center animate-fadeIn">
+                  <p class="text-green-700 font-semibold text-sm flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z">
+                      </path>
+                    </svg>
+                    <span>You're saving ₹ <span id="totalSavings">0</span></span>
+                  </p>
+                </div>
+              </div>
+
+              <!-- PAYMENT FORM -->
+              <form method="POST" action="/payments/confirm">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="intentId" value="<%= intentId %>" />
+
+                <button id="payBtn" type="button"
+                  class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl hover:scale-105 transition-all active:scale-95 flex items-center justify-center gap-2 group">
+                  <svg class="w-6 h-6 group-hover:rotate-12 transition-transform flex-shrink-0" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                    </path>
+                  </svg>
+                  Proceed to Pay
+                </button>
+              </form>
+
+              <% if (product.isBlocked) { %>
+                <script>
+                  document.getElementById('payBtn').disabled = true;
+                  document.getElementById('payBtn').classList.add('opacity-50', 'cursor-not-allowed');
+                  document.getElementById('payBtn').classList.remove('hover:scale-105', 'active:scale-95');
+                  document.getElementById('payBtn').innerHTML = '<svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Payment Blocked';
+                </script>
+                <% } %>
+
+                  <!-- SECURITY BADGES -->
+                  <div class="mt-6 pt-6 border-t">
+                    <div class="flex flex-wrap items-center justify-center gap-4 text-xs text-gray-500">
+                      <div class="flex items-center gap-1">
+                        <svg class="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                          </path>
+                        </svg>
+                        <span>Secure</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                          </path>
+                        </svg>
+                        <span>Encrypted</span>
+                      </div>
+                      <div class="flex items-center gap-1">
+                        <svg class="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                          </path>
+                        </svg>
+                        <span>Verified</span>
+                      </div>
+                    </div>
+                  </div>
             </div>
           </div>
         </div>
-      </div>
-    </div>
   </div>
 
   <!-- Custom Animation Styles -->
@@ -668,6 +724,13 @@
           return;
         }
 
+        // Handle Zero-Amount (Bypassed) Payments
+        if (data.bypassed) {
+          console.log('🎉 Payment bypassed (Zero Amount). Redirecting to success...');
+          window.location.href = `/payments/success/${data.paymentId}`;
+          return;
+        }
+
         console.log('✅ Razorpay order created:', data.orderId);
 
         const options = {
@@ -678,6 +741,10 @@
           description: 'Escrow Payment',
           order_id: data.orderId,
 
+          // 🔥 REQUIRED FOR NET BANKING
+          callback_url: `${window.location.origin}/payments/confirm?paymentId=<%= payment._id %>`,
+          redirect: true,
+
           prefill: {
             name: "<%= user?.name || '' %>",
             email: "<%= user?.email || '' %>",
@@ -685,18 +752,28 @@
           },
 
           handler: function (response) {
-            fetch('/payments/confirm', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                paymentId: '<%= payment._id %>',
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            })
-              .then((r) => r.json())
-              .then((r) => (window.location.href = r.redirect));
+            // Only used for Card / UPI
+            if (!response.razorpay_signature) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/payments/confirm?paymentId=<%= payment._id %>';
+            form.style.display = 'none';
+
+            const add = (n, v) => {
+              const i = document.createElement('input');
+              i.type = 'hidden';
+              i.name = n;
+              i.value = v;
+              form.appendChild(i);
+            };
+
+            add('razorpay_payment_id', response.razorpay_payment_id);
+            add('razorpay_order_id', response.razorpay_order_id);
+            add('razorpay_signature', response.razorpay_signature);
+
+            document.body.appendChild(form);
+            form.submit();
           },
 
           modal: {
@@ -719,12 +796,9 @@
           await fetch('/payments/mark-failed/<%= payment._id %>', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reason: response.error?.description || 'Payment failed',
-            }),
+            body: JSON.stringify({ reason: response.error.description }),
           });
-
-          window.location.href = '/payments/failure/<%= payment._id %>';
+          window.location.href = `/payments/failure/<%= payment._id %>?reason=${encodeURIComponent(response.error.description)}`;
         });
 
         rzp.open();

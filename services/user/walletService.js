@@ -136,7 +136,7 @@ exports.createAddFundsOrder = async (userId, amount) => {
   };
 
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000; // 10 seconds
+  const RAZORPAY_TIMEOUT = 10000;
 
   try {
     razorOrder = await withTimeout(
@@ -147,7 +147,6 @@ exports.createAddFundsOrder = async (userId, amount) => {
   } catch (err) {
     console.warn('⚠️ Razorpay primary attempt failed or timed out:', err.message);
 
-    // Fallback to Axios if SDK fails OR if it was a timeout (Axios might still work if SDK had internal issues)
     const auth = Buffer.from(`${razorpayKeyId}:${razorpayKeySecret}`).toString('base64');
     try {
       const response = await withTimeout(
@@ -187,12 +186,33 @@ exports.verifyAddFundsPayment = async (userId, paymentData) => {
     throw error;
   }
 
+  let finalAmount = amount;
+
+  if (!finalAmount) {
+    try {
+      const razorpay = new Razorpay({
+        key_id: process.env.RAZORPAY_KEY_ID,
+        key_secret: process.env.RAZORPAY_KEY_SECRET,
+      });
+
+      const order = await razorpay.orders.fetch(razorpay_order_id);
+      if (order && order.amount) {
+        finalAmount = order.amount / 100;
+      } else {
+        throw new Error('Failed to fetch order amount');
+      }
+    } catch (fetchError) {
+      console.error('❌ Failed to fetch Razorpay order:', fetchError);
+      throw new Error('Could not verify payment amount');
+    }
+  }
+
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
     const wallet = await getOrCreateWallet(userId, session);
-    const amountToAdd = parseFloat(amount);
+    const amountToAdd = parseFloat(finalAmount);
 
     wallet.balance += amountToAdd;
     wallet.updatedAt = new Date();

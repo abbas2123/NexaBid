@@ -11,11 +11,13 @@ router.get('/', async (req, res) => {
   try {
     const properties = await Property.find({
       title: { $regex: q, $options: 'i' },
+      isBlocked: { $ne: true },
     })
       .limit(5)
       .lean();
     const tenders = await Tender.find({
       title: { $regex: q, $options: 'i' },
+      isBlocked: { $ne: true },
     })
       .limit(5)
       .lean();

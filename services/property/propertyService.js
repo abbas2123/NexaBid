@@ -12,6 +12,7 @@ exports.getProperties = async (page = 1, filters = {}) => {
     status: 'published',
     verificationStatus: 'approved',
     deletedAt: null,
+    isBlocked: { $ne: true },
   };
   if (filters.type) {
     query.type = filters.type;
@@ -61,10 +62,11 @@ exports.getPropertyDetails = async (propertyId, user) => {
     .lean();
   if (!property) return { property: null, userHasPaidForProperty: false, isOwner: false };
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
-  if (property.verificationStatus !== 'approved') {
-    if (!isOwner && user.role !== 'admin') {
-      return { property: null, userHasPaidForProperty: false, isOwner: false };
-    }
+
+
+  
+  if (property.verificationStatus !== 'approved' && !isOwner && user.role !== 'admin') {
+    return { property: null, userHasPaidForProperty: false, isOwner: false };
   }
   const userHasPaidForProperty = await Payment.findOne({
     userId: user._id,
@@ -365,4 +367,14 @@ exports.deleteUserPropertyImage = async (propertyId, mediaId, userId) => {
   property.media.pull({ _id: mediaId });
   await property.save();
   return mediaObj;
+};
+
+exports.getPropertyStatus = async (propertyId) => {
+  const property = await Property.findById(propertyId).select('status isBlocked');
+  if (!property) {
+    const err = new Error('Property not found');
+    err.statusCode = statusCode.NOT_FOUND;
+    throw err;
+  }
+  return { status: property.status, isBlocked: property.isBlocked };
 };

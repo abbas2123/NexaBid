@@ -18,7 +18,7 @@ class AuctionService {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     const now = new Date();
@@ -58,7 +58,7 @@ class AuctionService {
     const property = await Property.findById(propertyId)
       .populate('currentHighestBidder', 'name email')
       .lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     if (property.sellerId.toString() !== sellerId.toString()) {
@@ -99,10 +99,11 @@ class AuctionService {
 
   static async enableAutoBid({ propertyId, userId, maxBid }) {
     const property = await Property.findByIdAndUpdate(propertyId);
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
-    if (Number(maxBid) <= property.currentHighestBid) {
+    const currentPrice = property.currentHighestBid || property.basePrice;
+    if (Number(maxBid) <= currentPrice) {
       throw new Error(ERROR_MESSAGES.BID_TOO_LOW);
     }
     const participationPayment = await Payment.findOne({
@@ -133,7 +134,7 @@ class AuctionService {
 
   static async getAutoBidPageData(propertyId, userId) {
     const property = await Property.findById(propertyId).lean();
-    if (!property || !property.isAuction) {
+    if (!property || !property.isAuction || property.isBlocked) {
       throw new Error(ERROR_MESSAGES.INVALID_AUCTION);
     }
     const existingAutoBid = await PropertyBid.findOne({
@@ -151,20 +152,27 @@ class AuctionService {
 
   static async handleAutoBids(propertyId, io) {
     let rounds = 0;
-    while (rounds < 50) {
+    while (rounds < 2000) {
       const property = await Property.findById(propertyId);
       if (!property || !property.isAuction || new Date() > property.auctionEndsAt) break;
 
-      const currentPrice = property.currentHighestBid || property.basePrice;
+      const currentHighestBid = property.currentHighestBid || 0;
+      const currentPrice = currentHighestBid || property.basePrice;
       const step = property.auctionStep || 1000;
-      let nextBidAmount = currentPrice + step;
+
+      let nextBidAmount;
+      if (currentHighestBid === 0) {
+        nextBidAmount = property.basePrice;
+      } else {
+        nextBidAmount = currentPrice + step;
+      }
 
       const candidate = await PropertyBid.findOne({
         propertyId,
         isAutoBid: true,
         bidStatus: BID_STATUS.ACTIVE,
         bidderId: { $ne: property.currentHighestBidder },
-        autoBidMax: { $gt: currentPrice },
+        autoBidMax: { $gt: currentHighestBid === 0 ? property.basePrice - 1 : currentPrice },
       })
         .populate('bidderId', 'name')
         .sort({ autoBidMax: -1, updatedAt: 1 });
@@ -175,15 +183,29 @@ class AuctionService {
         nextBidAmount = candidate.autoBidMax;
       }
 
+
+      if (nextBidAmount < property.basePrice) {
+        nextBidAmount = property.basePrice;
+      }
+
       const session = await mongoose.startSession();
       session.startTransaction();
 
       try {
+        const query = {
+          _id: propertyId,
+        };
+
+
+        if (currentHighestBid > 0) {
+          query.currentHighestBid = { $lt: nextBidAmount };
+        } else {
+
+          query.currentHighestBid = 0;
+        }
+
         const updated = await Property.findOneAndUpdate(
-          {
-            _id: propertyId,
-            currentHighestBid: { $lt: nextBidAmount },
-          },
+          query,
           {
             $set: {
               currentHighestBid: nextBidAmount,
@@ -251,6 +273,14 @@ class AuctionService {
       } finally {
         session.endSession();
       }
+    }
+
+    if (rounds >= 2000) {
+      console.warn(`⚠️ Auto-bid limit reached for property ${propertyId}`);
+      io.to(`auction_${propertyId}`).emit('newNotification', {
+        type: 'warning',
+        message: 'Auto-bidding paused due to high activity. Please place a manual bid to resume.',
+      });
     }
   }
 }

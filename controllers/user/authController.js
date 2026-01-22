@@ -63,7 +63,7 @@ exports.verifyOtp = async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     res
@@ -83,12 +83,14 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     const response = await authService.LoginUser({ email, password });
+    console.log('[DEBUG] Setting token cookie:', response.token ? 'exists' : 'MISSING');
     res.cookie('token', response.token, {
       httpOnly: true,
       secure: false,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
+    console.log('[DEBUG] Headers before send:', res.getHeaders());
     return res.status(statusCode.OK).json({
       success: true,
       message: response.message,

@@ -1,10 +1,8 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const protectRoute = async (req, res, next) => {
-  console.log('➡️ protectRoute middleware triggered');
   try {
     const { token } = req.cookies;
-    console.log('Token from cookies:', token);
     if (!token) return res.redirect('/auth/login');
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const updatedUser = await User.findById(decoded.id).lean();
@@ -35,7 +33,7 @@ const preventAuthPages = (req, res, next) => {
   console.log('➡️ preventAuthPages triggered for path:', req.path);
   const { token, adminToken } = req.cookies;
 
-  // If on admin login page, only redirect if already logged in as admin
+  
   if (req.path.startsWith('/admin')) {
     if (adminToken) {
       try {
@@ -48,7 +46,7 @@ const preventAuthPages = (req, res, next) => {
       }
     }
   }
-  // If on user login/signup page, only redirect if already logged in as user/vendor
+  
   else {
     if (token) {
       try {

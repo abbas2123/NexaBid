@@ -2,10 +2,8 @@
   <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
     <!-- Back Button -->
     <div class="mb-6">
-      <button
-        onclick="window.location.href = '/wallet'"
-        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-      >
+      <button onclick="window.location.href = '/wallet'"
+        class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
         <span class="material-icons">arrow_back</span>
         <span class="font-medium">Back to Wallet</span>
       </button>
@@ -25,9 +23,7 @@
         <!-- Current Balance Card -->
         <div class="bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-lg">
           <div class="flex items-center gap-3 mb-3">
-            <div
-              class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm"
-            >
+            <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
               <span class="material-icons text-white">account_balance_wallet</span>
             </div>
             <p class="text-white/90 font-medium">Current Balance</p>
@@ -43,24 +39,18 @@
 
           <!-- Quick Amount Buttons -->
           <div class="grid grid-cols-3 gap-3 mb-6">
-            <button
-              onclick="selectAmount(5000)"
-              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group"
-            >
+            <button onclick="selectAmount(5000)"
+              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group">
               <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600">₹5,000</p>
               <p class="text-xs text-gray-500 mt-1">Starter</p>
             </button>
-            <button
-              onclick="selectAmount(10000)"
-              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group"
-            >
+            <button onclick="selectAmount(10000)"
+              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group">
               <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600">₹10,000</p>
               <p class="text-xs text-gray-500 mt-1">Popular</p>
             </button>
-            <button
-              onclick="selectAmount(25000)"
-              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group"
-            >
+            <button onclick="selectAmount(25000)"
+              class="quick-amount-btn px-6 py-4 bg-gray-50 border-2 border-gray-200 rounded-xl hover:border-indigo-600 hover:bg-indigo-50 transition-all text-center group">
               <p class="text-2xl font-bold text-gray-900 group-hover:text-indigo-600">₹25,000</p>
               <p class="text-xs text-gray-500 mt-1">Pro</p>
             </button>
@@ -68,23 +58,12 @@
 
           <!-- Custom Amount Input -->
           <div class="mb-6">
-            <label class="block text-sm font-semibold text-gray-700 mb-3"
-              >Or Enter Custom Amount</label
-            >
+            <label class="block text-sm font-semibold text-gray-700 mb-3">Or Enter Custom Amount</label>
             <div class="relative">
-              <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-500"
-                >₹</span
-              >
-              <input
-                type="number"
-                id="customAmount"
-                min="100"
-                step="100"
-                placeholder="Enter amount"
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-2xl font-bold text-gray-500">₹</span>
+              <input type="number" id="customAmount" min="100" step="100" placeholder="Enter amount"
                 class="w-full pl-12 pr-4 py-4 text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-indigo-600 focus:ring-0 transition-colors"
-                oninput="updateAmount(this.value)"
-              />
+                oninput="updateAmount(this.value)" />
             </div>
             <p class="text-sm text-gray-500 mt-2">Minimum amount: ₹100</p>
           </div>
@@ -111,23 +90,12 @@
             <label class="block text-sm font-semibold text-gray-700 mb-3">Payment Method</label>
             <div class="space-y-3">
               <label
-                class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-600 hover:bg-indigo-50 transition-all"
-              >
-                <input
-                  type="radio"
-                  name="paymentMethod"
-                  value="razorpay"
-                  checked
-                  class="w-5 h-5 text-indigo-600"
-                />
+                class="flex items-center p-4 border-2 border-gray-200 rounded-xl cursor-pointer hover:border-indigo-600 hover:bg-indigo-50 transition-all">
+                <input type="radio" name="paymentMethod" value="razorpay" checked class="w-5 h-5 text-indigo-600" />
                 <div class="ml-4 flex-1">
                   <div class="flex items-center justify-between">
                     <span class="font-semibold text-gray-900">Razorpay</span>
-                    <img
-                      src="https://razorpay.com/assets/razorpay-glyph.svg"
-                      alt="Razorpay"
-                      class="h-6"
-                    />
+                    <img src="https://razorpay.com/assets/razorpay-glyph.svg" alt="Razorpay" class="h-6" />
                   </div>
                   <p class="text-sm text-gray-500 mt-1">UPI, Cards, NetBanking, Wallets</p>
                 </div>
@@ -136,12 +104,8 @@
           </div>
 
           <!-- Action Button -->
-          <button
-            id="proceedBtn"
-            onclick="initiatePayment()"
-            disabled
-            class="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
+          <button id="proceedBtn" onclick="initiatePayment()" disabled
+            class="w-full px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
             <span class="material-icons">lock</span>
             <span>Proceed to Secure Payment</span>
           </button>
@@ -201,8 +165,7 @@
           </div>
           <p class="text-sm text-gray-600 mb-4">Our support team is available 24/7 to assist you</p>
           <button
-            class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
-          >
+            class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors">
             Contact Support
           </button>
         </div>
@@ -304,48 +267,35 @@
           name: 'NexaBid',
           description: 'Add Funds to Wallet',
           order_id: data.orderId,
-          handler: async function (response) {
-            console.log('✅ Payment successful');
+          // CRITICAL: Callback URL for Netbanking redirects
+          callback_url: window.location.origin + '/wallet/api/verify-payment?userId=<%= user._id %>',
+          redirect: true,
 
-            // Show processing message
-            proceedBtn.innerHTML =
-              '<span class="material-icons animate-spin">refresh</span><span>Verifying payment...</span>';
+          handler: function (response) {
+            // For UPI/Cards that don't auto-redirect, we manually submit the form
+            // to the SAME callback URL.
 
-            try {
-              // Verify payment
-              const verifyResponse = await fetch('/wallet/api/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  razorpay_payment_id: response.razorpay_payment_id,
-                  razorpay_order_id: response.razorpay_order_id,
-                  razorpay_signature: response.razorpay_signature,
-                  amount: selectedAmount,
-                }),
-              });
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/wallet/api/verify-payment?userId=<%= user._id %>';
+            form.style.display = 'none';
 
-              const verifyData = await verifyResponse.json();
-              console.log('📥 Verification response:', verifyData);
+            const addField = (name, value) => {
+              const input = document.createElement('input');
+              input.type = 'hidden';
+              input.name = name;
+              input.value = value;
+              form.appendChild(input);
+            };
 
-              if (verifyData.success) {
-                // Show success message
-                alert(
-                  'Payment successful! ₹' +
-                    selectedAmount.toLocaleString('en-IN') +
-                    ' added to your wallet.'
-                );
-                window.location.href = '/wallet?success=true';
-              } else {
-                alert('Payment verification failed:\n' + (verifyData.message || 'Unknown error'));
-                proceedBtn.disabled = false;
-                proceedBtn.innerHTML = originalBtnHTML;
-              }
-            } catch (verifyError) {
-              console.error('❌ Verification error:', verifyError);
-              alert('Payment verification failed. Please contact support.');
-              proceedBtn.disabled = false;
-              proceedBtn.innerHTML = originalBtnHTML;
-            }
+            addField('razorpay_payment_id', response.razorpay_payment_id);
+            addField('razorpay_order_id', response.razorpay_order_id);
+            addField('razorpay_signature', response.razorpay_signature);
+            // We MUST pass amount because backend controller expects it & Razorpay callback doesn't send it by default
+            addField('amount', selectedAmount);
+
+            document.body.appendChild(form);
+            form.submit();
           },
           modal: {
             ondismiss: function () {

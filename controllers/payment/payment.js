@@ -95,13 +95,31 @@ exports.processWalletPayment = async (req, res) => {
 };
 exports.verifyPayment = async (req, res) => {
   try {
-    const { paymentId } = req.body;
+    console.log('🚀 Verify Payment Route Hit');
+    console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+
+    const paymentId = req.query.paymentId || req.body.paymentId;
+    console.log('🆔 Payment ID extracted:', paymentId);
+
     const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
-    console.log('');
-    return res.json({ success: true, redirect: `/payments/success/${payment._id}` });
+    console.log('✅ Payment verified successfully:', payment._id);
+
+    console.log('🔄 Redirecting to success page...');
+    return res.redirect(`/payments/success/${payment._id}`);
   } catch (err) {
-    console.error(err);
-    return res.json({ success: false, redirect: `/payments/failure/${req.body.paymentId}` });
+    console.error('❌ Verify Payment Error:', err);
+    console.error('❌ Error Stack:', err.stack);
+
+    const paymentId = req.query.paymentId || req.body.paymentId;
+    const reason = encodeURIComponent(err.message || 'Verification Failed');
+
+    if (paymentId) {
+      console.log(`🔄 Redirecting to failure page (Payment ID: ${paymentId})`);
+      return res.redirect(`/payments/failure/${paymentId}?reason=${reason}`);
+    } else {
+      console.log('❌ No Payment ID found to redirect to failure page');
+      return res.status(400).send('Payment Verification Failed and Payment ID missing.');
+    }
   }
 };
 exports.paymentSuccessPage = async (req, res) => {

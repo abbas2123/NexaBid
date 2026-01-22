@@ -47,10 +47,34 @@ module.exports = (app) => {
 
 
   const csrfProtection = csrf();
-  app.use(csrfProtection);
 
   app.use((req, res, next) => {
-    res.locals.csrfToken = req.csrfToken();
+    const excludedRoutes = [
+      '/payments/confirm',
+      '/payments/razorpay-webhook',
+      '/payments/mark-failed',
+      '/wallet/api/verify-payment',
+      '/socket.io',
+      '/vendor/tender/upload'
+    ];
+
+
+    const isExcluded = excludedRoutes.some(route => req.originalUrl.startsWith(route));
+
+
+    if (isExcluded || process.env.NODE_ENV === 'test') {
+      return next();
+    }
+    csrfProtection(req, res, next);
+  });
+
+  app.use((req, res, next) => {
+
+    if (typeof req.csrfToken === 'function') {
+      res.locals.csrfToken = req.csrfToken();
+    } else {
+      res.locals.csrfToken = null;
+    }
     next();
   });
 

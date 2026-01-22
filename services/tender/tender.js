@@ -9,12 +9,16 @@ exports.getAllTenders = async (page = 1) => {
   const limit = 8;
   const skip = (page - 1) * limit;
   const now = new Date();
-  const tenders = await Tender.find({ status: 'published', bidEndAt: { $gt: now } })
+  const tenders = await Tender.find({
+    status: 'published',
+    bidEndAt: { $gt: now },
+    isBlocked: { $ne: true }
+  })
     .sort({ createdAt: -1, _id: -1 })
     .skip(skip)
     .limit(limit)
     .lean();
-  const total = await Tender.countDocuments({ status: 'published' });
+  const total = await Tender.countDocuments({ status: 'published', isBlocked: { $ne: true } });
   const totalPages = Math.ceil(total / limit);
   return {
     tenders,
@@ -51,6 +55,7 @@ exports.getTenderDetailsForUser = async (tenderId, user) => {
     err.code = 'TENDER_DRAFT';
     throw err;
   }
+ 
   return {
     tender,
     isVendor,
@@ -150,13 +155,13 @@ exports.resubmitTenderService = async (tenderId, updatedData, uploadedFiles) => 
 };
 
 exports.getTenderStatus = async (tenderId) => {
-  const tender = await Tender.findById(tenderId).select('status');
+  const tender = await Tender.findById(tenderId).select('status isBlocked');
   if (!tender) {
     const err = new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
     err.statusCode = statusCode.NOT_FOUND;
     throw err;
   }
-  return tender.status;
+  return { status: tender.status, isBlocked: tender.isBlocked };
 };
 
 exports.getTenderFileUrl = async (fileId) => {

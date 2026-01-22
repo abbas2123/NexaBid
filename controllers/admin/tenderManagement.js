@@ -83,3 +83,17 @@ exports.updateTenderStatus = async (req, res) => {
     });
   }
 };
+exports.toggleBlockTender = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBlocked, blockingReason } = req.body;
+    const _tender = await TenderService.toggleIsBlocked(id, isBlocked, blockingReason);
+    return res.json({
+      success: true,
+      message: `Tender ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
+    });
+  } catch (err) {
+    console.error('Tender block error:', err);
+    return res.json({ success: false, message: err.message });
+  }
+};

@@ -7,5 +7,6 @@ router.patch('/approve/:id', adminProtect, authProperty.approveProperty);
 router.patch('/reject/:id', adminProtect, authProperty.rejectProperty);
 router.get('/:id', adminProtect, authProperty.getPropertyDetails);
 router.get('/auction-report/:propertyId', adminProtect, authProperty.getAuctionReport);
+router.patch('/toggle-block/:id', adminProtect, authProperty.toggleBlockProperty);
 router.get('/view/live/:propertyId', adminProtect, authProperty.adminLiveAuctionPage);
 module.exports = router;

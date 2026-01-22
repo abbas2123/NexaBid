@@ -109,11 +109,21 @@ exports.getMyParticipationData = async (userId) => {
         property.status === 'closed' ||
         (auctionEndDate && now > auctionEndDate);
       const isLive =
-        property.status === 'active' &&
+        (property.status === 'active' || property.status === 'published') &&
         auctionStartDate &&
         auctionEndDate &&
         now >= auctionStartDate &&
         now <= auctionEndDate;
+
+      console.log(`🕵️‍♂️ Debug Status [${property.title}]:`, {
+        status: property.status,
+        now: now.toISOString(),
+        start: auctionStartDate ? auctionStartDate.toISOString() : 'null',
+        end: auctionEndDate ? auctionEndDate.toISOString() : 'null',
+        isLive,
+        isEnded
+      });
+
       const isWinner = property.soldTo && property.soldTo.toString() === userId.toString();
       return {
         _id: property._id,
@@ -132,6 +142,8 @@ exports.getMyParticipationData = async (userId) => {
         closingDate: property.auctionEndsAt
           ? new Date(property.auctionEndsAt).toLocaleDateString('en-IN')
           : '—',
+        isBlocked: property.isBlocked,
+        blockingReason: property.blockingReason,
       };
     });
 
@@ -171,6 +183,8 @@ exports.getMyParticipationData = async (userId) => {
         projectStatus: isWinner ? 'Assigned' : '—',
         closingDate: tender.bidEndAt ? new Date(tender.bidEndAt).toLocaleDateString('en-IN') : '—',
         submissionDate: t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-IN') : '—',
+        isBlocked: tender.isBlocked,
+        blockingReason: tender.blockingReason,
       };
     });
   return { properties, tenders };

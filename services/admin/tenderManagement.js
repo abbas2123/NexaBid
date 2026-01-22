@@ -70,3 +70,18 @@ exports.updateTenderStatus = async (id, status, comment, io) => {
   }
   return tender;
 };
+exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
+  const update = { isBlocked };
+  if (isBlocked) {
+    update.blockingReason = reason;
+  }
+  const tender = await Tender.findByIdAndUpdate(id, update, { new: true });
+
+  if (isBlocked && tender) {
+    const paymentService = require('../payment/paymentService');
+    
+    paymentService.processAutomaticRefunds(id, 'tender', reason);
+  }
+
+  return tender;
+};

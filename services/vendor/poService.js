@@ -7,6 +7,7 @@ const File = require('../../models/File');
 const generatePONumber = require('../../utils/poNumber');
 const notificationService = require('../notificationService');
 const { ERROR_MESSAGES } = require('../../utils/constants');
+const isTestEnv = require('../../utils/isTestEnv');
 const uploadPDF = (buffer, filename) =>
   new Promise((resolve, reject) => {
     cloudinary.uploader
@@ -178,7 +179,12 @@ exports.createPO = async ({ tenderId, publisher, form, io }) => {
     });
     doc.end();
   });
-  const cld = await uploadPDF(pdfBuffer, poNumber);
+  let cld;
+  if (isTestEnv) {
+    cld = { secure_url: 'http://mock-url.com/po.pdf', public_id: 'mock-id', version: 1, resource_type: 'raw', type: 'authenticated' };
+  } else {
+    cld = await uploadPDF(pdfBuffer, poNumber);
+  }
   const pdfFileDoc = await File.create({
     ownerId: publisher._id,
     fileName: `${poNumber}.pdf`,

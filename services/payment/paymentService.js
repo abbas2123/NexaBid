@@ -11,6 +11,7 @@ const PropertyParticipant = require('../../models/propertyParticipant');
 const PropertyBid = require('../../models/propertyBid');
 const Wallet = require('../../models/wallet');
 const WalletTransaction = require('../../models/walletTransaction');
+const Notification = require('../../models/notification');
 const {
   PAYMENT_STATUS,
   CONTEXT_TYPES,
@@ -24,10 +25,8 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-console.log('🔑 Razorpay Config:', {
-  keyIdLength: process.env.RAZORPAY_KEY_ID ? process.env.RAZORPAY_KEY_ID.length : 0,
-  keySecretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
-});
+
+
 const _handlePostPaymentActions = async (payment, userId) => {
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(payment.contextId);
@@ -42,7 +41,6 @@ const _handlePostPaymentActions = async (payment, userId) => {
       },
       { upsert: true, new: true }
     );
-    console.log('✅ Bid created/updated with escrowPaymentId');
   }
   if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
@@ -60,21 +58,27 @@ const _handlePostPaymentActions = async (payment, userId) => {
     }
   }
   if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
-    await PropertyParticipant.create({
-      userId,
-      propertyId: payment.contextId,
-      participationPaymentId: payment._id,
-      status: BID_STATUS.ACTIVE,
-    });
-    console.log('✅ Property participant created');
+    await PropertyParticipant.findOneAndUpdate(
+      { propertyId: payment.contextId, userId, status: 'active' },
+      {
+        userId,
+        propertyId: payment.contextId,
+        participationPaymentId: payment._id,
+        status: BID_STATUS.ACTIVE,
+      },
+      { upsert: true, new: true }
+    );
   } else if (payment.contextType === CONTEXT_TYPES.TENDER) {
-    await TenderParticipants.create({
-      userId,
-      tenderId: payment.contextId,
-      participationPaymentId: payment._id,
-      status: BID_STATUS.ACTIVE,
-    });
-    console.log('✅ Tender participant created');
+    await TenderParticipants.findOneAndUpdate(
+      { tenderId: payment.contextId, userId, status: 'active' },
+      {
+        userId,
+        tenderId: payment.contextId,
+        participationPaymentId: payment._id,
+        status: BID_STATUS.ACTIVE,
+      },
+      { upsert: true, new: true }
+    );
   }
 };
 exports.startInitiatePayment = async (userId, type, id) => {
@@ -82,16 +86,18 @@ exports.startInitiatePayment = async (userId, type, id) => {
     userId,
     contextType: type,
     contextId: id,
-    status: { $in: ['pending', 'failed'] },
+    status: { $in: ['pending', 'failed', 'refunded'] },
   });
   let currentAmount = 0;
   if (type === CONTEXT_TYPES.PROPERTY) {
     const property = await Property.findById(id);
     if (!property) throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
+    if (property.isBlocked) throw new Error('This property is blocked and cannot be paid for.');
     currentAmount = 5000;
   } else if (type === CONTEXT_TYPES.TENDER) {
     const tender = await Tender.findById(id);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
+    if (tender.isBlocked) throw new Error('This tender is blocked and cannot be paid for.');
     currentAmount = 5000 + (tender.emdAmount || 0);
   } else {
     throw new Error(ERROR_MESSAGES.INVALID_CONTEXT_TYPE);
@@ -99,9 +105,6 @@ exports.startInitiatePayment = async (userId, type, id) => {
   if (payment) {
     let checkSave = false;
     if (payment.amount !== currentAmount) {
-      console.log(
-        `⚠️ Payment amount mismatch! Updating from ${payment.amount} to ${currentAmount}`
-      );
       payment.amount = currentAmount;
       payment.gatewayPaymentId = null;
       if (payment.metadata && payment.metadata.payableAmount) {
@@ -109,8 +112,19 @@ exports.startInitiatePayment = async (userId, type, id) => {
       }
       checkSave = true;
     }
-    if (payment.status === 'failed') {
+    if (payment.status === 'failed' || payment.status === 'refunded') {
       payment.status = PAYMENT_STATUS.PENDING;
+      payment.gatewayPaymentId = null;
+      payment.gatewayTransactionId = null;
+      payment.refundStatus = 'pending';
+      payment.refundAmount = 0;
+
+
+      if (payment.metadata) {
+        delete payment.metadata.failureReason;
+        delete payment.metadata.refundNote;
+      }
+
       checkSave = true;
     }
     if (checkSave) {
@@ -133,7 +147,6 @@ exports.createRazorpayOrder = async (paymentId) => {
     _id: paymentId,
     status: { $in: [PAYMENT_STATUS.PENDING, PAYMENT_STATUS.FAILED] },
   });
-  console.log('payment', payment);
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
@@ -141,12 +154,20 @@ exports.createRazorpayOrder = async (paymentId) => {
     payment.status = PAYMENT_STATUS.PENDING;
     await payment.save();
   }
+
+
+  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
+    ? await Property.findById(payment.contextId)
+    : await Tender.findById(payment.contextId);
+
+  if (product?.isBlocked) {
+    throw new Error('This item has been blocked by administration. Payment cannot proceed.');
+  }
   if (payment.gatewayPaymentId) {
     try {
       const payments = await razorpay.orders.fetchPayments(payment.gatewayPaymentId);
       const successfulPayment = payments.items.find((p) => p.status === 'captured');
       if (successfulPayment) {
-        console.log('✅ Found captured payment for existing order:', successfulPayment.id);
         payment.status = PAYMENT_STATUS.SUCCESS;
         payment.gatewayTransactionId = successfulPayment.id;
         payment.amount = payment.metadata?.payableAmount || payment.amount;
@@ -155,7 +176,7 @@ exports.createRazorpayOrder = async (paymentId) => {
         throw new Error(ERROR_MESSAGES.PAYMENT_ALREADY_COMPLETED);
       }
     } catch (err) {
-      console.warn('⚠️ Auto-verify check failed:', err.message);
+      console.error(err);
     }
     const payable = payment.metadata?.payableAmount || payment.amount;
     return {
@@ -164,10 +185,28 @@ exports.createRazorpayOrder = async (paymentId) => {
     };
   }
   const payable = payment.metadata?.payableAmount || payment.amount;
+
+
+  if (payable <= 0) {
+    payment.status = PAYMENT_STATUS.SUCCESS;
+    payment.gateway = GATEWAYS.WALLET;
+    payment.gatewayTransactionId = `FREE_${Date.now()}`;
+    payment.amount = 0;
+    await payment.save();
+
+    await _handlePostPaymentActions(payment, payment.userId);
+
+    return {
+      orderId: payment.gatewayTransactionId,
+      amount: 0,
+      bypassed: true,
+      paymentId: payment._id
+    };
+  }
+
   const { withTimeout } = require('../../utils/promiseUtils');
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000; // 10 seconds
-
+  const RAZORPAY_TIMEOUT = 10000;
   const razorpayCall = async () => {
     try {
       const order = await razorpay.orders.create({
@@ -175,10 +214,8 @@ exports.createRazorpayOrder = async (paymentId) => {
         currency: 'INR',
         receipt: `rcpt_${Date.now()}`,
       });
-      console.log('✅ Razorpay order created via SDK:', order.id);
       return order;
     } catch (sdkError) {
-      console.warn('⚠️ Razorpay SDK failed, trying generic Axios request:', sdkError.message);
       const auth = Buffer.from(
         `${process.env.RAZORPAY_KEY_ID}:${process.env.RAZORPAY_KEY_SECRET}`
       ).toString('base64');
@@ -196,7 +233,6 @@ exports.createRazorpayOrder = async (paymentId) => {
           },
         }
       );
-      console.log('✅ Razorpay order created via Axios Fallback:', response.data.id);
       return response.data;
     }
   };
@@ -222,7 +258,6 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
   }
-  console.log('escro', payment);
 
   const now = new Date();
   const [userWallet, product, coupons] = await Promise.all([
@@ -231,7 +266,8 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
       ? Property.findById(payment.contextId)
       : Tender.findById(payment.contextId),
     Coupon.find({
-      $or: [{ applicableTo: 'all' }, { applicableTo: `${payment.contextType}s` }],
+      isActive: true,
+      $or: [{ applicableTo: 'all' }, { applicableTo: `${payment.contextType}s` },],
       $and: [
         { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
         { $or: [{ expiresAt: null }, { expiresAt: { $gte: now } }] },
@@ -259,12 +295,22 @@ exports.getEscrowPageDetails = async (paymentId, userId) => {
 };
 exports.processWalletPayment = async (userId, paymentId) => {
   const payment = await Payment.findOneAndUpdate(
-    { _id: paymentId, status: PAYMENT_STATUS.PENDING },
-    { $set: { status: PAYMENT_STATUS.PROCESSING } },
+    { _id: paymentId, status: { $in: ['pending', 'failed'] } },
+    { $set: { status: 'processing' } },
     { new: true }
   );
   if (!payment) {
     throw new Error(ERROR_MESSAGES.INVALID_PAYMENT);
+  }
+
+  const product = payment.contextType === CONTEXT_TYPES.PROPERTY
+    ? await Property.findById(payment.contextId)
+    : await Tender.findById(payment.contextId);
+
+  if (product?.isBlocked) {
+    payment.status = PAYMENT_STATUS.PENDING;
+    await payment.save();
+    throw new Error('This item has been blocked by administration. Payment cannot proceed.');
   }
   let userWallet = await Wallet.findOne({ userId });
   if (!userWallet) {
@@ -314,18 +360,12 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
     status: PAYMENT_STATUS.PENDING,
   });
   if (!payment) throw new Error(ERROR_MESSAGES.PAYMENT_NOT_FOUND);
-  console.log('paymentVeri', payment);
+
   const stringToSign = `${razorpay_order_id}|${razorpay_payment_id}`;
   const generatedSignature = crypto
     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
     .update(stringToSign)
     .digest('hex');
-  console.log('🔐 Verification Debug:', {
-    sentSignature: razorpay_signature,
-    generatedSignature: generatedSignature,
-    stringToSign: stringToSign,
-    secretLength: process.env.RAZORPAY_KEY_SECRET ? process.env.RAZORPAY_KEY_SECRET.length : 0,
-  });
   if (generatedSignature !== razorpay_signature) {
     payment.status = PAYMENT_STATUS.FAILED;
     payment.gatewayPaymentId = null;
@@ -335,9 +375,14 @@ exports.verifyRazorpayPayment = async (paymentId, razorpayData) => {
   }
   payment.status = PAYMENT_STATUS.SUCCESS;
   payment.gatewayTransactionId = razorpay_payment_id;
-  console.log('failed', payment.metadata.payableAmount);
   payment.amount = payment.metadata?.payableAmount || payment.amount;
   await payment.save();
+
+
+
+
+
+
   await _handlePostPaymentActions(payment, payment.userId);
   return payment;
 };
@@ -387,6 +432,7 @@ exports.applyCoupon = async (userId, intentId, couponCode) => {
   if (payment.metadata?.coupon) throw new Error(ERROR_MESSAGES.REMOVE_COUPON_FIRST);
   const coupon = await Coupon.findOne({
     code: couponCode.toUpperCase(),
+    isActive: true,
   }).lean();
   if (!coupon) throw new Error(ERROR_MESSAGES.INVALID_COUPON);
   const now = new Date();
@@ -450,4 +496,117 @@ exports.markPaymentFailed = async (paymentId, reason) => {
     failureReason: reason || ERROR_MESSAGES.USER_CANCELLED_OR_DECLINED,
   };
   await payment.save();
+};
+
+exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
+  const successfulPayments = await Payment.find({
+    contextId,
+    contextType,
+    status: PAYMENT_STATUS.SUCCESS,
+  });
+
+  if (!successfulPayments.length) {
+    return;
+  }
+
+  await Promise.all(
+    successfulPayments.map((payment) => _processSingleRefund(payment, contextId, contextType, reason))
+  );
+};
+
+const _processSingleRefund = async (payment, contextId, contextType, reason) => {
+  const mongoose = require('mongoose');
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  let userWallet = await Wallet.findOne({ userId: payment.userId }).session(session);
+  if (!userWallet) {
+    userWallet = new Wallet({ userId: payment.userId, balance: 0 });
+  }
+
+  const refundAmount = payment.amount;
+  userWallet.balance += refundAmount;
+  userWallet.updatedAt = new Date();
+  await userWallet.save({ session });
+
+  await WalletTransaction.create(
+    [
+      {
+        walletId: userWallet._id,
+        userId: payment.userId,
+        type: 'credit',
+        source: 'refund',
+        amount: refundAmount,
+        balanceAfter: userWallet.balance,
+        metadata: {
+          paymentId: payment._id,
+          contextType,
+          contextId,
+          reason: `Auto-refund (Item Blocked): ${reason}`,
+        },
+      },
+    ],
+    { session }
+  );
+
+
+  await Payment.updateOne(
+    { _id: payment._id },
+    {
+      $set: {
+        status: 'refunded',
+        gatewayPaymentId: null,
+        gatewayTransactionId: null,
+        refundAmount,
+        refundStatus: 'completed',
+        'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
+      },
+      $unset: {
+        orderNumber: 1
+      }
+    },
+    { session }
+  );
+
+
+  let contextTitle = 'Item';
+  if (contextType === CONTEXT_TYPES.PROPERTY) {
+    const property = await Property.findById(contextId).select('title').session(session);
+    if (property) contextTitle = property.title;
+
+    await PropertyParticipant.updateOne(
+      { propertyId: contextId, userId: payment.userId },
+      { $set: { status: 'cancelled' } },
+      { session }
+    );
+    await PropertyBid.updateMany(
+      { propertyId: contextId, bidderId: payment.userId },
+      { $set: { bidStatus: 'cancelled' } },
+      { session }
+    );
+  } else if (contextType === CONTEXT_TYPES.TENDER) {
+    const tender = await Tender.findById(contextId).select('title').session(session);
+    if (tender) contextTitle = tender.title;
+
+    await TenderParticipants.updateOne(
+      { tenderId: contextId, userId: payment.userId },
+      { $set: { status: 'cancelled' } },
+      { session }
+    );
+  }
+
+
+  await Notification.create(
+    [
+      {
+        userId: payment.userId,
+        message: `Your fee of ₹${refundAmount} for ${contextType} #${contextTitle} has been refunded. Reason: ${reason}`,
+        link: contextType === 'property' ? `/properties/${contextId}` : `/tenders/${contextId}`,
+      },
+    ],
+    { session }
+  );
+
+  await session.commitTransaction();
+  session.endSession();
 };

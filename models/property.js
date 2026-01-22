@@ -71,8 +71,23 @@ const propertySchema = new mongoose.Schema(
       default: null,
     },
     soldAt: Date,
+    isBlocked: { type: Boolean, default: false },
+    blockingReason: { type: String, default: '' },
     deletedAt: Date,
   },
   { timestamps: true }
 );
+
+
+propertySchema.index({ status: 1, type: 1, basePrice: 1 });
+propertySchema.index({ isAuction: 1, auctionEndsAt: 1 });
+propertySchema.index({ sellerId: 1, status: 1 });
+
+
+propertySchema.index({
+  title: 'text',
+  address: 'text',
+  locationDistrict: 'text',
+  locationState: 'text'
+});
 module.exports = mongoose.model('Property', propertySchema);

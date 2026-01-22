@@ -1,9 +1,24 @@
 {
-  "env": { "node": true, "es2021": true },
-  "extends": ["eslint:recommended"],
-  "plugins": ["unused-imports"],
+  "env": {
+    "node": true,
+    "es2021": true,
+    "jest": true,
+    "browser": true
+  },
+  "extends": [
+    "eslint:recommended"
+  ],
+  "plugins": [
+    "unused-imports"
+  ],
   "rules": {
-    "no-unused-vars": ["error", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+    "no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_"
+      }
+    ],
     "unused-imports/no-unused-imports": "error"
   }
 }

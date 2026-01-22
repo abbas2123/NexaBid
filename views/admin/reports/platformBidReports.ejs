@@ -1,0 +1,435 @@
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
+    <a href="/admin/dashboard" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+        Dashboard
+    </a>
+    <span class="text-[#616f89] dark:text-gray-500">/</span>
+    <span class="text-[#616f89] dark:text-gray-500">Reports</span>
+    <span class="text-[#616f89] dark:text-gray-500">/</span>
+    <span class="text-[#111318] dark:text-white font-medium">Platform Bid Reports</span>
+</nav>
+
+<!-- Header -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">All Platform Bids</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage all property and tender bids across the
+            platform</p>
+    </div>
+    <button onclick="exportPDF()"
+        class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+        <span class="material-symbols-outlined text-[20px]">download</span>
+        Export Full Report (PDF)
+    </button>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Bids</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.totalBids %>
+                </p>
+            </div>
+            <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-primary text-[28px]">receipt_long</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.activeBids %>
+                </p>
+            </div>
+            <div class="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-[28px]">pending</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Won</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                    <%= stats.wonBids %>
+                </p>
+            </div>
+            <div class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <span
+                    class="material-symbols-outlined text-green-600 dark:text-green-400 text-[28px]">check_circle</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Value</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">₹<%= (stats.totalAmount ||
+                        0).toLocaleString() %>
+                </p>
+            </div>
+            <div class="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-[28px]">payments</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Only: Revenue Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Revenue</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">₹<%= (stats.totalRevenue ||
+                        0).toLocaleString() %>
+                </p>
+            </div>
+            <div class="p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                <span
+                    class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[28px]">attach_money</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Only: Refund Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Refunds</p>
+                <p class="text-xl font-bold text-gray-900 dark:text-white mt-1">₹<%= (stats.totalRefunds ||
+                        0).toLocaleString() %>
+                </p>
+            </div>
+            <div class="p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                <span
+                    class="material-symbols-outlined text-red-600 dark:text-red-400 text-[28px]">currency_exchange</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-8">
+    <form method="GET" action="/admin/reports/my-bids" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- Bid Type -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Bid Type</label>
+            <select name="bidType"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="all" <%=filters.bidType==='all' ? 'selected' : '' %>>All Bids</option>
+                <option value="property" <%=filters.bidType==='property' ? 'selected' : '' %>>Property Bids
+                </option>
+                <option value="tender" <%=filters.bidType==='tender' ? 'selected' : '' %>>Tender Bids</option>
+            </select>
+        </div>
+
+        <!-- Status -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+            <select name="status"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="">All Status</option>
+                <option value="active" <%=filters.status==='active' ? 'selected' : '' %>>Active</option>
+                <option value="submitted" <%=filters.status==='submitted' ? 'selected' : '' %>>Submitted
+                </option>
+                <option value="won" <%=filters.status==='won' ? 'selected' : '' %>>Won</option>
+                <option value="awarded" <%=filters.status==='awarded' ? 'selected' : '' %>>Awarded</option>
+                <option value="outbid" <%=filters.status==='outbid' ? 'selected' : '' %>>Outbid</option>
+                <option value="rejected" <%=filters.status==='rejected' ? 'selected' : '' %>>Rejected</option>
+            </select>
+        </div>
+
+        <!-- Start Date -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+            <input type="date" name="startDate" value="<%= filters.startDate || '' %>"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- End Date -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End Date</label>
+            <input type="date" name="endDate" value="<%= filters.endDate || '' %>"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- Search -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search</label>
+            <input type="text" name="searchQuery" value="<%= filters.searchQuery || '' %>"
+                placeholder="Search by title, bidder..."
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+        </div>
+
+        <!-- Buttons -->
+        <div class="md:col-span-2 lg:col-span-5 flex gap-2">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                Apply Filters
+            </button>
+            <a href="/admin/reports/my-bids"
+                class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                Clear
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Data Table -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden min-h-[400px]">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                <tr>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Type</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Title</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Bidder</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Owner</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Amount</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Date</th>
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                <% if (bids && bids.length> 0) { %>
+                    <% bids.forEach(bid=> { %>
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <% if (bid.type==='property' ) { %>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                        <span class="material-symbols-outlined text-[14px] mr-1">home</span>
+                                        Property
+                                    </span>
+                                    <% } else { %>
+                                        <span
+                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                            <span class="material-symbols-outlined text-[14px] mr-1">description</span>
+                                            Tender
+                                        </span>
+                                        <% } %>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white truncate max-w-[200px]"
+                                    title="<%= bid.title %>">
+                                    <%= bid.title %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 dark:text-white">
+                                    <%= bid.bidderName %>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <%= bid.bidderEmail %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm text-gray-900 dark:text-white">
+                                    <%= bid.ownerName %>
+                                </div>
+                                <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <%= bid.ownerEmail %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-semibold text-gray-900 dark:text-white">₹<%=
+                                        bid.amount.toLocaleString() %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <% let statusClass='bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300' ;
+                                    const s=bid.status.toLowerCase(); if (['won', 'awarded' , 'accepted' ].includes(s))
+                                    statusClass='bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' ;
+                                    else if (['active', 'submitted' , 'placed' ].includes(s))
+                                    statusClass='bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+                                    ; else if (['outbid', 'rejected' , 'disqualified' ].includes(s))
+                                    statusClass='bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' ; %>
+                                    <span
+                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium <%= statusClass %>">
+                                        <%= bid.status.charAt(0).toUpperCase() + bid.status.slice(1) %>
+                                    </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500 dark:text-gray-400">
+                                    <%= new Date(bid.date).toLocaleDateString('en-IN', { year: 'numeric' ,
+                                        month: 'short' , day: 'numeric' }) %>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <button onclick="showBidDetails(<%= JSON.stringify(bid) %>)"
+                                    class="text-primary hover:text-blue-600 font-medium cursor-pointer">
+                                    View Details
+                                </button>
+                            </td>
+                        </tr>
+                        <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span
+                                                class="material-symbols-outlined text-gray-400 text-[48px]">inbox</span>
+                                            <p class="text-gray-500 dark:text-gray-400">No bids found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <% } %>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <%- include('../../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
+</div>
+
+<script>
+    function exportPDF() {
+        // Get current filters
+        const params = new URLSearchParams(window.location.search);
+        const button = document.querySelector('button[onclick="exportPDF()"]');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span> Exporting...';
+        button.disabled = true;
+
+        fetch('/admin/reports/my-bids/export-pdf', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bidType: params.get('bidType') || 'all',
+                status: params.get('status') || '',
+                searchQuery: params.get('searchQuery') || '',
+                startDate: params.get('startDate') || '',
+                endDate: params.get('endDate') || '',
+            }),
+        })
+            .then(async res => {
+                if (res.ok) {
+                    const blob = await res.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'platform-bids-report.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const data = await res.json();
+                    alert(data.message || 'Failed to export PDF');
+                }
+            })
+            .catch(err => {
+                console.error('Export error:', err);
+                alert('Failed to export PDF');
+            })
+            .finally(() => {
+                button.innerHTML = originalText;
+                button.disabled = false;
+            });
+    }
+
+    function showBidDetails(bid) {
+        const modal = document.getElementById('bidDetailsModal');
+        const modalContent = document.getElementById('modalBidContent');
+
+        const statusColors = {
+            won: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            awarded: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            accepted: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+            active: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+            submitted: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+            placed: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
+            outbid: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+            rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
+        };
+
+        const statusClass = statusColors[bid.status.toLowerCase()] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+
+        modalContent.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900 dark:text-white">${bid.title}</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            ${bid.type === 'property' ? 'Property Auction Bid' : 'Tender Bid'} | ID: ${bid._id}
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusClass}">
+                        ${bid.status.charAt(0).toUpperCase() + bid.status.slice(1)}
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Bid Amount</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹${bid.amount.toLocaleString()}</p>
+                    </div>
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Bid Date</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white mt-1">
+                            ${new Date(bid.date).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Bidder Name</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white mt-1">${bid.bidderName}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${bid.bidderEmail}</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Owner / Publisher</p>
+                        <p class="text-lg font-semibold text-gray-900 dark:text-white mt-1">${bid.ownerName}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">${bid.ownerEmail}</p>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeBidModal()" class="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        `;
+        modal.classList.remove('hidden');
+    }
+
+    function closeBidModal() {
+        document.getElementById('bidDetailsModal').classList.add('hidden');
+    }
+
+    document.addEventListener('click', function (event) {
+        const modal = document.getElementById('bidDetailsModal');
+        if (event.target === modal) closeBidModal();
+    });
+</script>
+
+<!-- Bid Details Modal -->
+<div id="bidDetailsModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6" id="modalBidContent"></div>
+    </div>
+</div>

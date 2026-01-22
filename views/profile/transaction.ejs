@@ -113,7 +113,7 @@
                       <%= txn.type==='credit' ? '+' : '-' %>₹<%= txn.amount.toLocaleString('en-IN') %>
                     </td>
                     <td class="py-4 px-6 text-xs font-mono text-gray-500 dark:text-gray-400">
-                      <%= (txn.transactionId || txn._id).toString().slice(-8).toUpperCase() %>
+                      <%= (txn.transactionId || txn._id || 'N/A' ).toString().slice(-8).toUpperCase() %>
                     </td>
                     <td class="py-4 px-6 text-sm">
                       <span
@@ -170,7 +170,7 @@
                 <div class="flex justify-between text-xs">
                   <span class="text-gray-500 dark:text-gray-400">Transaction ID</span>
                   <span class="text-gray-700 dark:text-gray-300 font-mono">
-                    <%= (txn.transactionId || txn._id).toString().slice(-8).toUpperCase() %>
+                    <%= (txn.transactionId || txn._id || 'N/A' ).toString().slice(-8).toUpperCase() %>
                   </span>
                 </div>
                 <div class="flex justify-between text-xs">

@@ -3,9 +3,10 @@ const authController = require('../../controllers/admin/authController');
 const { adminProtect, preventAdminBack } = require('../../middlewares/adminAuth');
 const { preventAuthPages } = require('../../middlewares/authMiddleware');
 const venderManagement = require('../../controllers/admin/vendorManagement');
-const reportManagementController = require('../../controllers/user/reportManagement');
+const reportManagementController = require('../../controllers/admin/reportController');
 const router = express.Router();
-router.get('/report-management', adminProtect, reportManagementController.getReportManagement);
+router.get('/report-management', adminProtect, reportManagementController.getReportDashboard);
+router.get('/reports/payment-audit', adminProtect, reportManagementController.getPaymentAuditReport);
 router.get(
   '/reports/property-auctions',
   adminProtect,
@@ -13,6 +14,9 @@ router.get(
 );
 router.get('/reports/view/:id', adminProtect, reportManagementController.getAuctionDetailReport);
 router.get('/reports/work-orders', adminProtect, reportManagementController.getWorkOrderReports);
+router.get('/work-orders/download-report/:id', adminProtect, reportManagementController.downloadWorkOrderReport);
+router.get('/reports/tender-evaluation', adminProtect, reportManagementController.getTenderEvaluation);
+router.post('/reports/tender-evaluation/export-pdf', adminProtect, reportManagementController.exportTenderEvaluationPDF);
 router.get('/login', preventAuthPages, authController.getAdminLogin);
 router.post('/login', authController.postAdminLogin);
 router.get('/dashboard', adminProtect, preventAdminBack, authController.getAdminDashboard);

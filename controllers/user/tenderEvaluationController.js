@@ -104,18 +104,21 @@ exports.getTenderEvaluation = async (req, res) => {
                 0
             ),
         };
-        const layout = userRole === 'admin' ? LAYOUTS.ADMIN_LAYOUT : LAYOUTS.USER_LAYOUT;
+        const layout = LAYOUTS.USER_LAYOUT;
         res.render('user/tenderEvaluation', {
             title: 'Tender Evaluation Reports',
             tenders: tendersWithStats,
             stats: summaryStats,
-            currentPage: page,
-            totalPages: Math.ceil(totalRecords / limit),
-            totalRecords,
-            limit,
             filters: req.query,
             userRole,
             layout,
+            pagination: {
+                currentPage: page,
+                totalPages: Math.ceil(totalRecords / limit),
+                hasPrevPage: page > 1,
+                hasNextPage: page < Math.ceil(totalRecords / limit),
+            },
+            queryParams: new URLSearchParams(req.query).toString() ? '&' + new URLSearchParams(req.query).toString() : '',
         });
     } catch (error) {
         console.error('Tender Evaluation Error:', error);

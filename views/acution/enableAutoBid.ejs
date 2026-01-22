@@ -5,20 +5,18 @@
   </h1>
 
   <!-- AUTO BID FORM -->
-  <form id="autoBidForm" class="space-y-8" method="post">
+  <form id="autoBidForm" class="space-y-8" method="post" action="/auctions/auto-bid/<%= propertyId %>">
+    <!-- CSRF Token -->
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
     <!-- CURRENT HIGHEST BID -->
     <div class="space-y-2">
       <label class="block text-sm font-medium text-gray-700 dark:text-gray-200">
         Current Highest Bid
       </label>
 
-      <input
-        type="text"
-        value="₹ <%= currentHighestBid.toLocaleString('en-IN') %>"
-        disabled
-        readonly
-        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed"
-      />
+      <input type="text" value="₹ <%= currentHighestBid.toLocaleString('en-IN') %>" disabled readonly
+        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed" />
     </div>
 
     <!-- BID INCREMENT -->
@@ -27,13 +25,8 @@
         Minimum Bid Increment
       </label>
 
-      <input
-        type="text"
-        value="₹ <%= auctionStep.toLocaleString('en-IN') %>"
-        disabled
-        readonly
-        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed"
-      />
+      <input type="text" value="₹ <%= auctionStep.toLocaleString('en-IN') %>" disabled readonly
+        class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 py-3 px-4 text-sm cursor-not-allowed" />
     </div>
 
     <!-- MAX AUTO BID -->
@@ -42,15 +35,9 @@
         Enter Maximum Auto-Bid Amount
       </label>
 
-      <input
-        id="maxBid"
-        name="maxBid"
-        type="number"
-        min="<%= currentHighestBid + 1 %>"
-        placeholder="Enter max amount"
+      <input id="maxBid" name="maxBid" type="number" min="<%= currentHighestBid + 1 %>" placeholder="Enter max amount"
         class="w-full rounded-md border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 py-4 px-4 text-lg focus:ring-primary focus:border-primary"
-        required
-      />
+        required />
 
       <p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
         <span class="material-icons text-sm">info</span>
@@ -60,48 +47,15 @@
 
     <!-- ACTION BUTTONS -->
     <div class="flex justify-between pt-8">
-      <a
-        href="/auctions/live/<%= propertyId %>"
-        class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-      >
+      <a href="/auctions/live/<%= propertyId %>"
+        class="px-6 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-semibold rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">
         Cancel
       </a>
 
-      <button
-        type="submit"
-        class="px-8 py-2.5 bg-primary text-white font-semibold rounded-md shadow hover:bg-blue-600 transition"
-      >
+      <button type="submit"
+        class="px-8 py-2.5 bg-primary text-white font-semibold rounded-md shadow hover:bg-blue-600 transition">
         Enable Auto-Bid
       </button>
     </div>
   </form>
 </div>
-
-<script>
-  const socket = io('http://localhost:3000', {
-    auth: {
-      token: localStorage.getItem('token'), // or cookie value
-    },
-  });
-
-  document.getElementById('autoBidForm').addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const maxBid = Number(document.getElementById('maxBid').value);
-
-    socket.emit('enable_auto_bid', {
-      propertyId: '<%= propertyId %>',
-      maxBid,
-    });
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Auto-Bid Enabled',
-      text: 'System will now bid on your behalf.',
-      timer: 2000,
-      showConfirmButton: false,
-    }).then(() => {
-      window.location.href = '/auctions/live/<%= propertyId %>';
-    });
-  });
-</script>

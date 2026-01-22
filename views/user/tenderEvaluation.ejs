@@ -1,12 +1,10 @@
 <!-- Breadcrumbs -->
 <nav class="flex items-center gap-2 text-sm mb-6 flex-wrap">
-    <a href="<%= userRole === 'admin' ? '/admin/dashboard' : '/vendor/dashboard' %>"
-        class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+    <a href="/vendor/dashboard" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
         Home
     </a>
     <span class="text-[#616f89] dark:text-gray-500">/</span>
-    <a href="<%= userRole === 'admin' ? '/admin/reports' : '/vendor/reports' %>"
-        class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
+    <a href="/vendor/reports" class="text-[#616f89] dark:text-gray-400 hover:text-primary transition-colors">
         Reports
     </a>
     <span class="text-[#616f89] dark:text-gray-500">/</span>
@@ -89,8 +87,7 @@
 
 <!-- Filters -->
 <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm mb-8">
-    <form method="GET"
-        action="<%= userRole === 'admin' ? '/admin/reports/tender-evaluation' : '/vendor/reports/tender-evaluation' %>"
+    <form method="GET" action="/vendor/reports/tender-evaluation"
         class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
 
         <!-- Status -->
@@ -135,7 +132,7 @@
                 class="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition h-[42px]">
                 Apply
             </button>
-            <a href="<%= userRole === 'admin' ? '/admin/reports/tender-evaluation' : '/vendor/reports/tender-evaluation' %>"
+            <a href="/vendor/reports/tender-evaluation"
                 class="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition h-[42px] flex items-center justify-center">
                 Clear
             </a>
@@ -155,29 +152,25 @@
                     <th
                         class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                         Status</th>
-                    <% if (userRole==='admin' ) { %>
-                        <th
-                            class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Publisher</th>
-                        <% } %>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Winner</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Bids</th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Lowest</th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Highest</th>
-                            <th
-                                class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Average</th>
-                            <th
-                                class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                Actions</th>
+
+                    <th
+                        class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Winner</th>
+                    <th
+                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Bids</th>
+                    <th
+                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Lowest</th>
+                    <th
+                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Highest</th>
+                    <th
+                        class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Average</th>
+                    <th
+                        class="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -207,56 +200,44 @@
                                         <%= tender.status.charAt(0).toUpperCase() + tender.status.slice(1) %>
                                     </span>
                             </td>
-                            <% if (userRole==='admin' ) { %>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">
-                                        <%= tender.createdBy?.name || 'N/A' %>
+
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <% if (tender.awardedTo && tender.winningBid) { %>
+                                    <div class="flex flex-col">
+                                        <span class="font-medium text-green-600">
+                                            <%= tender.awardedTo.name %>
+                                        </span>
+                                        <span class="text-xs text-gray-500">₹<%=
+                                                tender.winningBid.amount.toLocaleString() %>
+                                        </span>
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
-                                        <%= tender.createdBy?.companyName || '' %>
-                                    </div>
-                                </td>
-                                <% } %>
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <% if (tender.awardedTo && tender.winningBid) { %>
-                                            <div class="flex flex-col">
-                                                <span class="font-medium text-green-600">
-                                                    <%= tender.awardedTo.name %>
-                                                </span>
-                                                <span class="text-xs text-gray-500">₹<%=
-                                                        tender.winningBid.amount.toLocaleString() %>
-                                                </span>
-                                            </div>
-                                            <% } else if (tender.awardedTo) { %>
-                                                <span class="font-medium text-green-600">
-                                                    <%= tender.awardedTo.name %>
-                                                </span>
-                                                <% } else { %>
-                                                    <span class="text-gray-400">-</span>
-                                                    <% } %>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        <%= tender.stats.totalBids %>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        ₹<%= tender.stats.minBid.toLocaleString() %>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        ₹<%= tender.stats.maxBid.toLocaleString() %>
-                                    </td>
-                                    <td
-                                        class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        ₹<%= Math.round(tender.stats.avgBid).toLocaleString() %>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <button onclick="showDetails(<%= JSON.stringify(tender) %>)"
-                                            class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm">
-                                            View
-                                        </button>
-                                    </td>
+                                    <% } else if (tender.awardedTo) { %>
+                                        <span class="font-medium text-green-600">
+                                            <%= tender.awardedTo.name %>
+                                        </span>
+                                        <% } else { %>
+                                            <span class="text-gray-400">-</span>
+                                            <% } %>
+                            </td>
+                            <td class="px-6 py-4 text-center whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <%= tender.stats.totalBids %>
+                            </td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                ₹<%= tender.stats.minBid.toLocaleString() %>
+                            </td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                ₹<%= tender.stats.maxBid.toLocaleString() %>
+                            </td>
+                            <td class="px-6 py-4 text-right whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                ₹<%= Math.round(tender.stats.avgBid).toLocaleString() %>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <button data-item='<%- JSON.stringify(tender) %>'
+                                    onclick="showDetails(JSON.parse(this.dataset.item))"
+                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm">
+                                    View
+                                </button>
+                            </td>
                         </tr>
                         <% }) %>
                             <% } else { %>
@@ -276,36 +257,14 @@
     </div>
 
     <!-- Pagination -->
-    <% if (totalPages> 1) { %>
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
-            <div class="text-sm text-gray-700 dark:text-gray-300">
-                Showing <%= ((currentPage - 1) * limit) + 1 %> to <%= Math.min(currentPage * limit, totalRecords) %> of
-                        <%= totalRecords %> results
-            </div>
-            <div class="flex gap-2">
-                <% if (currentPage> 1) { %>
-                    <a href="?page=<%= currentPage - 1 %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
-                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                        Previous
-                    </a>
-                    <% } %>
-
-                        <% for (let i=Math.max(1, currentPage - 2); i <=Math.min(totalPages, currentPage + 2); i++) { %>
-                            <a href="?page=<%= i %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
-                                class="px-3 py-1 border <%= i === currentPage ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700' %> rounded-lg text-sm transition">
-                                <%= i %>
-                            </a>
-                            <% } %>
-
-                                <% if (currentPage < totalPages) { %>
-                                    <a href="?page=<%= currentPage + 1 %>&status=<%= filters.status || '' %>&searchQuery=<%= filters.searchQuery || '' %>&startDate=<%= filters.startDate || '' %>&endDate=<%= filters.endDate || '' %>"
-                                        class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                        Next
-                                    </a>
-                                    <% } %>
-            </div>
-        </div>
-        <% } %>
+    <!-- Pagination -->
+    <% const queryParams=`&status=${filters.status || '' }&searchQuery=${filters.searchQuery || ''
+        }&startDate=${filters.startDate || '' }&endDate=${filters.endDate || '' }`; const paginationData={ currentPage:
+        typeof currentPage !=='undefined' ? currentPage : 1, totalPages: typeof totalPages !=='undefined' ? totalPages :
+        1, hasPrevPage: (typeof currentPage !=='undefined' ? currentPage : 1)> 1,
+        hasNextPage: (typeof currentPage !== 'undefined' ? currentPage : 1) < (typeof totalPages !=='undefined' ?
+            totalPages : 1) }; %>
+            <%- include('../partials/user/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
 </div>
 
 <script>
@@ -461,36 +420,14 @@
                 </div>
                 ` : ''}
                 
-                <% if (userRole === 'admin') { %>
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <h4 class="font-semibold text-gray-900 dark:text-white mb-3">Publisher Details</h4>
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Name</p>
-                                <p class="font-bold text-gray-900 dark:text-white">${tender.createdBy?.name || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Company</p>
-                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.companyName || 'N/A'}</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-500 uppercase tracking-wide">Email</p>
-                                <p class="font-medium text-gray-900 dark:text-white">${tender.createdBy?.email || 'N/A'}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <% } %>
+
 
                 <div class="flex justify-end gap-3 pt-4">
-                     ${userRole !== 'admin' ? `
                      <a href="/tenders/${tender._id}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
                          View Tender Details
                      </a>
-                     ` : ''}
                      <button onclick="document.getElementById('evaluationModal').classList.add('hidden')" 
-                             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition ${userRole === 'admin' ? 'w-full' : ''}">
+                             class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                         Close
                      </button>
                 </div>

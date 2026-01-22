@@ -31,12 +31,13 @@ exports.getAllProperties = async (page, filter) => {
   const liveAuctions = await Property.find({
     isAuction: true,
     verificationStatus: 'approved',
+    status: { $in: ['published', 'active'] },
+    isBlocked: { $ne: true },
     auctionStartsAt: { $lte: now },
     auctionEndsAt: { $gte: now },
     deletedAt: null,
   })
     .sort({ auctionEndsAt: 1 })
-    .limit(3)
     .lean();
   return {
     property,
@@ -132,4 +133,19 @@ exports.getAdminLiveAuctionData = async (propertyId) => {
     auctionEndsAt: property.auctionEndsAt,
     propertyId: property._id,
   };
+};
+exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
+  console.log('toglled');
+  const update = { isBlocked };
+  if (isBlocked) {
+    update.blockingReason = reason;
+  }
+  const property = await Property.findByIdAndUpdate(id, update, { new: true });
+
+  if (isBlocked && property) {
+    const paymentService = require('../payment/paymentService');
+    paymentService.processAutomaticRefunds(id, 'property', reason);
+  }
+
+  return property;
 };

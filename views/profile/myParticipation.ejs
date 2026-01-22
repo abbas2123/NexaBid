@@ -10,8 +10,7 @@
         <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">My Property Bids</h2>
 
         <div
-          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-        >
+          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-slate-50 dark:bg-slate-800/50">
@@ -27,30 +26,50 @@
 
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                 <% properties.forEach(p=> { %>
-                <tr
-                  class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
-                  onclick="window.location.href = '<%= p.currentStatus === 'Ended' ? '/auctions/won/' + p._id : '/auctions/live/' + p._id %>'"
-                >
-                  <td class="px-6 py-5"><%= p.title %></td>
-                  <td class="px-6 py-5">₹<%= p.myBid.toLocaleString('en-IN') %></td>
+                  <tr class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                    onclick="handlePropertyClick('<%= p._id %>', <%= p.isBlocked %>, '<%= p.blockingReason %>', '<%= p.currentStatus %>')">
+                    <td class="px-6 py-5">
+                      <%= p.title %>
+                    </td>
+                    <td class="px-6 py-5">₹<%= p.myBid.toLocaleString('en-IN') %>
+                    </td>
 
-                  <td class="px-6 py-5">
-                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.statusColor %>">
-                      <%= p.currentStatus %>
-                    </span>
-                  </td>
+                    <td class="px-6 py-5">
+                      <% if (p.isBlocked) { %>
+                        <span
+                          class="px-3 py-1 rounded-md text-sm font-medium bg-red-100 text-red-700 flex items-center gap-1">
+                          Blocked
+                          <button
+                            onclick="event.stopPropagation(); Swal.fire('Blocked', '<%= p.blockingReason || 'Admin blocked this item' %>', 'warning')"
+                            class="text-red-800 hover:text-red-900">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                          </button>
+                        </span>
+                        <% } else { %>
+                          <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.statusColor %>">
+                            <%= p.currentStatus %>
+                          </span>
+                          <% } %>
+                    </td>
 
-                  <td class="px-6 py-5">
-                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.winColor %>">
-                      <%= p.winStatus %>
-                    </span>
-                  </td>
+                    <td class="px-6 py-5">
+                      <span class="px-3 py-1 rounded-md text-sm font-medium <%= p.winColor %>">
+                        <%= p.winStatus %>
+                      </span>
+                    </td>
 
-                  <td class="px-6 py-5"><%= p.projectStatus || "—" %></td>
+                    <td class="px-6 py-5">
+                      <%= p.projectStatus || "—" %>
+                    </td>
 
-                  <td class="px-6 py-5"><%= p.closingDate %></td>
-                </tr>
-                <% }) %>
+                    <td class="px-6 py-5">
+                      <%= p.closingDate %>
+                    </td>
+                  </tr>
+                  <% }) %>
               </tbody>
             </table>
           </div>
@@ -64,8 +83,7 @@
         <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6">My Tender Offers</h2>
 
         <div
-          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden"
-        >
+          class="bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-slate-50 dark:bg-slate-800/50">
@@ -81,30 +99,50 @@
 
               <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
                 <% tenders.forEach(t=> { %>
-                <tr
-                  class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
-                  onclick="window.location.href = '/user/my-participation/tender/<%= t._id %>'"
-                >
-                  <td class="px-6 py-5"><%= t.title %></td>
-                  <td class="px-6 py-5">₹<%= t.myOffer.toLocaleString('en-IN') %></td>
+                  <tr class="hover:bg-blue-50 dark:hover:bg-slate-800 cursor-pointer"
+                    onclick="handleTenderClick('<%= t._id %>', <%= t.isBlocked %>, '<%= t.blockingReason %>')">
+                    <td class="px-6 py-5">
+                      <%= t.title %>
+                    </td>
+                    <td class="px-6 py-5">₹<%= t.myOffer.toLocaleString('en-IN') %>
+                    </td>
 
-                  <td class="px-6 py-5">
-                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.statusColor %>">
-                      <%= t.currentStatus %>
-                    </span>
-                  </td>
+                    <td class="px-6 py-5">
+                      <% if (t.isBlocked) { %>
+                        <span
+                          class="px-3 py-1 rounded-md text-sm font-medium bg-red-100 text-red-700 flex items-center gap-1">
+                          Blocked
+                          <button
+                            onclick="event.stopPropagation(); Swal.fire('Blocked', '<%= t.blockingReason || 'Admin blocked this item' %>', 'warning')"
+                            class="text-red-800 hover:text-red-900">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                          </button>
+                        </span>
+                        <% } else { %>
+                          <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.statusColor %>">
+                            <%= t.currentStatus %>
+                          </span>
+                          <% } %>
+                    </td>
 
-                  <td class="px-6 py-5">
-                    <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.winColor %>">
-                      <%= t.winStatus %>
-                    </span>
-                  </td>
+                    <td class="px-6 py-5">
+                      <span class="px-3 py-1 rounded-md text-sm font-medium <%= t.winColor %>">
+                        <%= t.winStatus %>
+                      </span>
+                    </td>
 
-                  <td class="px-6 py-5"><%= t.projectStatus || "—" %></td>
+                    <td class="px-6 py-5">
+                      <%= t.projectStatus || "—" %>
+                    </td>
 
-                  <td class="px-6 py-5"><%= t.submissionDate %></td>
-                </tr>
-                <% }) %>
+                    <td class="px-6 py-5">
+                      <%= t.submissionDate %>
+                    </td>
+                  </tr>
+                  <% }) %>
               </tbody>
             </table>
           </div>
@@ -113,3 +151,32 @@
     </div>
   </div>
 </main>
+
+<script>
+  function handlePropertyClick(id, isBlocked, reason, status) {
+    if (isBlocked) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Property Blocked',
+        text: reason || 'This property has been blocked by the admin.',
+        confirmButtonColor: '#d33'
+      });
+    } else {
+      const url = status === 'Ended' ? '/auctions/won/' + id : '/auctions/live/' + id;
+      window.location.href = url;
+    }
+  }
+
+  function handleTenderClick(id, isBlocked, reason) {
+    if (isBlocked) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Tender Blocked',
+        text: reason || 'This tender has been blocked by the admin.',
+        confirmButtonColor: '#d33'
+      });
+    } else {
+      window.location.href = '/user/my-participation/tender/' + id;
+    }
+  }
+</script>

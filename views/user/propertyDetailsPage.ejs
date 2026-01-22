@@ -1,283 +1,340 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-  <!-- Error Alert from Query Param (Client-side check or passed variable) -->
+<% if (property.isBlocked) { %>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="p-4 rounded-lg bg-red-100 border border-red-300 flex items-center justify-between gap-3 text-red-800">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-red-600">block</span>
+        <p class="font-bold">This property has been blocked by administration.</p>
+      </div>
+      <button onclick="showBlockingReason()"
+        class="flex items-center gap-1 bg-red-800 text-white px-3 py-1 rounded-full text-sm hover:bg-red-900 transition">
+        <span class="material-symbols-outlined text-sm">info</span>
+        Why?
+      </button>
+    </div>
+  </div>
+
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const errorMsg = urlParams.get('error');
-    if (errorMsg) {
-      document.write(`
+    function showBlockingReason() {
+      Swal.fire({
+        title: 'Blocking Reason',
+        text: `<%= property.blockingReason || "No specific reason provided." %>`,
+        icon: 'info',
+        confirmButtonColor: '#007AFF',
+        confirmButtonText: 'Understood'
+      });
+    }
+  </script>
+  <% } %>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <!-- Error Alert from Query Param (Client-side check or passed variable) -->
+      <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const errorMsg = urlParams.get('error');
+        if (errorMsg) {
+          document.write(`
         <div class="p-4 mb-6 rounded-lg bg-red-50 border border-red-200 flex items-center gap-3 text-red-800">
           <span class="material-symbols-outlined">error</span>
           <p class="font-medium">${errorMsg}</p>
         </div>
       `);
-    }
-  </script>
+        }
+      </script>
 
-  <% if (property.verificationStatus==="submitted" ) { %>
-  <div class="mt-4 mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
-    <p class="font-semibold text-blue-800">Your property is under review.</p>
-    <p class="text-sm text-blue-700 mt-1">
-      Our team is verifying your details. Until approval, this listing is visible only to you and
-      the admin.
-    </p>
-  </div>
-  <% } else if (property.verificationStatus==="rejected" ) { %>
-  <div class="mt-4 mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-    <p class="font-semibold text-red-800">This property was rejected.</p>
-    <% if (property.rejectionMessage) { %>
-    <p class="text-sm text-red-700 mt-1">Reason: <%= property.rejectionMessage %></p>
-    <% } %>
-    <a
-      href="/properties/create?id=<%= property._id %>"
-      class="inline-block mt-2 px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700"
-    >
-      Edit & Re-submit
-    </a>
-  </div>
-  <% } %>
-
-  <!-- BACK BUTTON + SLIDER -->
-  <div class="relative w-full mb-6">
-    <!-- Back Button -->
-    <button
-      onclick="window.location.href = '/properties'"
-      class="p-2 rounded-full bg-gray-100 hover:bg-gray-300 transition"
-    >
-      <span class="material-symbols-outlined text-2xl">arrow_back</span>
-    </button>
-
-    <!-- Slider Wrapper -->
-    <div class="overflow-hidden rounded-lg w-full mt-3 border">
-      <div id="slides" class="flex transition-all duration-500 ease-in-out">
-        <% if (property.media && property.media.length> 0) { %> <% property.media.forEach(img=> { %>
-        <img src="<%= img.url %>" class="h-[380px] min-w-full object-cover rounded-lg" />
-        <% }) %> <% } else { %>
-        <img src="/public/no-img.png" class="h-[380px] min-w-full object-cover rounded-lg" />
-        <% } %>
-      </div>
-    </div>
-
-    <% if (property.media && property.media.length> 1) { %>
-    <!-- Slider Controls -->
-    <button
-      id="prevBtn"
-      class="absolute top-1/2 left-3 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black"
-    >
-      <span class="material-symbols-outlined">chevron_left</span>
-    </button>
-
-    <button
-      id="nextBtn"
-      class="absolute top-1/2 right-3 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black"
-    >
-      <span class="material-symbols-outlined">chevron_right</span>
-    </button>
-    <% } %>
-  </div>
-
-  <!-- TITLE + LOCATION -->
-  <h1 class="text-3xl font-bold text-gray-900"><%= property.title %></h1>
-
-  <% if (property.address) { %>
-  <p class="text-gray-600 mt-1"><%= property.address %></p>
-  <% } %>
-
-  <!-- MAIN LAYOUT -->
-  <div class="grid grid-cols-1 md:grid-cols-3 mt-10 gap-8">
-    <!-- LEFT SIDE -->
-    <div class="md:col-span-2 space-y-10">
-      <!-- DESCRIPTION -->
-      <% if (property.description) { %>
-      <section>
-        <h2 class="text-2xl font-bold mb-3 text-gray-800">Description</h2>
-        <p class="leading-relaxed text-gray-700"><%= property.description %></p>
-      </section>
-      <% } %>
-
-      <!-- PRICING -->
-      <section>
-        <h2 class="text-2xl font-bold mb-3 text-gray-800">Pricing</h2>
-        <div class="space-y-2">
-          <% if (property.basePrice) { %>
-          <div class="flex justify-between text-lg">
-            <span>Base Price</span>
-            <span class="font-bold">&#8377;<%= property.basePrice.toLocaleString() %></span>
-          </div>
-          <% } %> <% if (property.buyNowPrice) { %>
-          <div class="flex justify-between text-lg">
-            <span>Buy Now Price</span>
-            <span class="font-bold text-green-600"
-              >&#8377;<%= property.buyNowPrice.toLocaleString() %></span
-            >
+      <% if (property.verificationStatus==="submitted" ) { %>
+        <div class="mt-4 mb-6 p-4 rounded-lg bg-blue-50 border border-blue-200">
+          <p class="font-semibold text-blue-800">Your property is under review.</p>
+          <p class="text-sm text-blue-700 mt-1">
+            Our team is verifying your details. Until approval, this listing is visible only to you and
+            the admin.
+          </p>
+        </div>
+        <% } else if (property.verificationStatus==="rejected" ) { %>
+          <div class="mt-4 mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
+            <p class="font-semibold text-red-800">This property was rejected.</p>
+            <% if (property.rejectionMessage) { %>
+              <p class="text-sm text-red-700 mt-1">Reason: <%= property.rejectionMessage %>
+              </p>
+              <% } %>
+                <a href="/properties/create?id=<%= property._id %>"
+                  class="inline-block mt-2 px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700">
+                  Edit & Re-submit
+                </a>
           </div>
           <% } %>
-        </div>
-      </section>
 
-      <!-- AUCTION DETAILS -->
-      <% if (property.isAuction) { %>
-      <section>
-        <h2 class="text-2xl font-bold mb-3 text-gray-800">Auction Details</h2>
+            <!-- BACK BUTTON + SLIDER -->
+            <div class="relative w-full mb-6">
+              <!-- Back Button -->
+              <button onclick="window.location.href = '/properties'"
+                class="p-2 rounded-full bg-gray-100 hover:bg-gray-300 transition">
+                <span class="material-symbols-outlined text-2xl">arrow_back</span>
+              </button>
 
-        <div class="space-y-2">
-          <div class="flex justify-between">
-            <span>Starts At</span>
-            <span class="font-semibold">
-              <%= property.auctionStartsAt ? property.auctionStartsAt.toDateString() : "Not set" %>
-            </span>
-          </div>
+              <!-- Slider Wrapper -->
+              <div class="overflow-hidden rounded-lg w-full mt-3 border">
+                <div id="slides" class="flex transition-all duration-500 ease-in-out">
+                  <% if (property.media && property.media.length> 0) { %> <% property.media.forEach(img=> { %>
+                      <img src="<%= img.url %>" class="h-[380px] min-w-full object-cover rounded-lg" />
+                      <% }) %>
+                        <% } else { %>
+                          <img src="/public/no-img.png" class="h-[380px] min-w-full object-cover rounded-lg" />
+                          <% } %>
+                </div>
+              </div>
 
-          <div class="flex justify-between">
-            <span>Ends At</span>
-            <span class="font-semibold">
-              <%= property.auctionEndsAt ? property.auctionEndsAt.toDateString() : "Not set" %>
-            </span>
-          </div>
-        </div>
-      </section>
-      <% } %>
+              <% if (property.media && property.media.length> 1) { %>
+                <!-- Slider Controls -->
+                <button id="prevBtn"
+                  class="absolute top-1/2 left-3 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black">
+                  <span class="material-symbols-outlined">chevron_left</span>
+                </button>
 
-      <!-- DOCUMENTS SECTION -->
-      <% if (property.docs && property.docs.length> 0) { %>
-      <section>
-        <h2 class="text-2xl font-bold mb-4 text-gray-800">Documents</h2>
-        <div class="space-y-2">
-          <% property.docs.forEach(doc=> { %>
-          <div class="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
-            <span> <%= doc.originalName || "Document" %> </span>
-            <a
-              href="<%= doc.url %>"
-              target="_blank"
-              class="px-3 py-2 border rounded-md bg-white hover:bg-gray-50"
-            >
-              View
-            </a>
-          </div>
-          <% }) %>
-        </div>
-      </section>
-      <% } %>
+                <button id="nextBtn"
+                  class="absolute top-1/2 right-3 -translate-y-1/2 bg-black/60 text-white p-3 rounded-full hover:bg-black">
+                  <span class="material-symbols-outlined">chevron_right</span>
+                </button>
+                <% } %>
+            </div>
 
-      <!-- LOCATION SECTION -->
-      <% if (property.geoLat && property.geoLng) { %>
-      <section>
-        <h2 class="text-2xl font-bold mb-3 text-gray-800">Location</h2>
+            <!-- TITLE + LOCATION -->
+            <h1 class="text-3xl font-bold text-gray-900">
+              <%= property.title %>
+            </h1>
 
-        <p class="text-gray-600 mt-1 mb-2">Exact pin location shown below:</p>
+            <% if (property.address) { %>
+              <p class="text-gray-600 mt-1">
+                <%= property.address %>
+              </p>
+              <% } %>
 
-        <iframe
-          width="100%"
-          height="350"
-          frameborder="0"
-          style="border-radius: 10px; border: 0"
-          src="https://www.google.com/maps?q=<%= property.geoLat %>,<%= property.geoLng %>&hl=es;z=15&output=embed"
-        >
-        </iframe>
-      </section>
-      <% } %>
+                <!-- MAIN LAYOUT -->
+                <div class="grid grid-cols-1 md:grid-cols-3 mt-10 gap-8">
+                  <!-- LEFT SIDE -->
+                  <div class="md:col-span-2 space-y-10">
+                    <!-- DESCRIPTION -->
+                    <% if (property.description) { %>
+                      <section>
+                        <h2 class="text-2xl font-bold mb-3 text-gray-800">Description</h2>
+                        <p class="leading-relaxed text-gray-700">
+                          <%= property.description %>
+                        </p>
+                      </section>
+                      <% } %>
+
+                        <!-- PRICING -->
+                        <section>
+                          <h2 class="text-2xl font-bold mb-3 text-gray-800">Pricing</h2>
+                          <div class="space-y-2">
+                            <% if (property.basePrice) { %>
+                              <div class="flex justify-between text-lg">
+                                <span>Base Price</span>
+                                <span class="font-bold">&#8377;<%= property.basePrice.toLocaleString() %></span>
+                              </div>
+                              <% } %>
+                                <% if (property.buyNowPrice) { %>
+                                  <div class="flex justify-between text-lg">
+                                    <span>Buy Now Price</span>
+                                    <span class="font-bold text-green-600">&#8377;<%=
+                                        property.buyNowPrice.toLocaleString() %></span>
+                                  </div>
+                                  <% } %>
+                          </div>
+                        </section>
+
+                        <!-- AUCTION DETAILS -->
+                        <% if (property.isAuction) { %>
+                          <section>
+                            <h2 class="text-2xl font-bold mb-3 text-gray-800">Auction Details</h2>
+
+                            <div class="space-y-2">
+                              <div class="flex justify-between">
+                                <span>Starts At</span>
+                                <span class="font-semibold">
+                                  <%= property.auctionStartsAt ? property.auctionStartsAt.toDateString() : "Not set" %>
+                                </span>
+                              </div>
+
+                              <div class="flex justify-between">
+                                <span>Ends At</span>
+                                <span class="font-semibold">
+                                  <%= property.auctionEndsAt ? property.auctionEndsAt.toDateString() : "Not set" %>
+                                </span>
+                              </div>
+                            </div>
+                          </section>
+                          <% } %>
+
+                            <!-- DOCUMENTS SECTION -->
+                            <% if (property.docs && property.docs.length> 0) { %>
+                              <section>
+                                <h2 class="text-2xl font-bold mb-4 text-gray-800">Documents</h2>
+                                <div class="space-y-2">
+                                  <% property.docs.forEach(doc=> { %>
+                                    <div class="flex justify-between items-center bg-gray-100 p-3 rounded-lg">
+                                      <span>
+                                        <%= doc.originalName || "Document" %>
+                                      </span>
+                                      <a href="<%= doc.url %>" target="_blank"
+                                        class="px-3 py-2 border rounded-md bg-white hover:bg-gray-50">
+                                        View
+                                      </a>
+                                    </div>
+                                    <% }) %>
+                                </div>
+                              </section>
+                              <% } %>
+
+                                <!-- LOCATION SECTION -->
+                                <% if (property.geoLat && property.geoLng) { %>
+                                  <section>
+                                    <h2 class="text-2xl font-bold mb-3 text-gray-800">Location</h2>
+
+                                    <p class="text-gray-600 mt-1 mb-2">Exact pin location shown below:</p>
+
+                                    <iframe width="100%" height="350" frameborder="0"
+                                      style="border-radius: 10px; border: 0"
+                                      src="https://www.google.com/maps?q=<%= property.geoLat %>,<%= property.geoLng %>&hl=es;z=15&output=embed">
+                                    </iframe>
+                                  </section>
+                                  <% } %>
+                  </div>
+
+                  <!-- RIGHT SIDE -->
+                  <aside class="space-y-3 sticky top-24 h-fit">
+                    <% if (property.isBlocked) { %>
+                      <!-- Blocked placeholder -->
+                      <div class="p-5 rounded-xl bg-red-50 border border-red-200 text-center">
+                        <span class="material-symbols-outlined text-4xl text-red-500 mb-2">lock_person</span>
+                        <h4 class="font-bold text-red-800">Participation Blocked</h4>
+                        <p class="text-xs text-red-600 mt-1">This property is currently restricted by administration.
+                        </p>
+                      </div>
+                      <% } else if (property.verificationStatus !=="approved" ) { %>
+                        <!-- Show only info / edit, no bid/buy -->
+                        <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                          Listing not yet approved
+                        </button>
+
+                        <a href="/user/manage/propertyStatus/edit/<%= property._id %>"
+                          class="w-full inline-block bg-primary text-white font-bold py-3 rounded-lg text-center hover:bg-blue-700">
+                          Edit Property
+                        </a>
+
+                        <% } else { %>
+                          <!-- Normal live listing actions -->
+                          <% if (property.isAuction) { %>
+                            <% if (userHasPaidForProperty) { %>
+                              <a href="/user/my-participation"
+                                class="w-full inline-flex items-center justify-center bg-[#28a745] text-white font-semibold px-6 py-3 rounded-full text-sm md:text-base tracking-wide hover:bg-green-700 transition">
+                                View My Participation
+                              </a>
+
+                              <% } else if (isOwner) { %>
+                                <button
+                                  class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                                  Owner cannot bid
+                                </button>
+                                <% } else { %>
+                                  <button
+                                    class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700"
+                                    id="placeBidBtn">
+                                    Place Bid
+                                  </button>
+                                  <% } %>
+                                    <% } else if (property.buyNowPrice) { %>
+                                      <button
+                                        class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
+                                        Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
+                                      </button>
+                                      <% } %>
+                                        <% } %>
+
+                                          <!-- CONTACT SELLER BUTTON -->
+                                          <% if (!isOwner && !property.isBlocked) { %>
+                                            <a href="/chat/start/<%= property.sellerId._id %>/property/<%= property._id %>"
+                                              class="w-full inline-flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition font-medium">
+                                              <span class="material-symbols-outlined">chat</span>
+                                              Contact Seller
+                                            </a>
+                                            <% } else if (isOwner) { %>
+                                              <button
+                                                class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
+                                                You are the seller
+                                              </button>
+                                              <% } %>
+                  </aside>
+                </div>
+
+                <% if (property.status==="owned" && property.soldTo && property.currentHighestBid) { %>
+                  <div class="mt-6 p-4 bg-green-100 border rounded-lg">
+                    <p class="font-bold text-lg text-green-800">Auction Winner</p>
+
+                    <p class="text-gray-700 mt-1">
+                      Winner: <%= property.soldTo.name || property.soldTo.email || property.soldTo._id %>
+                    </p>
+
+                    <p class="text-gray-700 mt-1">
+                      Final Price: ₹<%= Number(property.currentHighestBid || 0).toLocaleString("en-IN") %>
+                    </p>
+
+                    <p class="text-xs text-gray-500 mt-1">
+                      Sold At: <%= property.soldAt ? property.soldAt.toLocaleString("en-IN") : "N/A" %>
+                    </p>
+                  </div>
+                  <% } %>
     </div>
 
-    <!-- RIGHT SIDE -->
-    <aside class="space-y-3 sticky top-24 h-fit">
-      <% if (property.verificationStatus !=="approved" ) { %>
-      <!-- Show only info / edit, no bid/buy -->
-      <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
-        Listing not yet approved
-      </button>
+    <!-- SLIDER SCRIPT -->
+    <script>
+      const slides = document.getElementById("slides");
+      let index = 0;
+      const total = <%= property.media?.length || 0 %>;
 
-      <a
-        href="/user/manage/propertyStatus/edit/<%= property._id %>"
-        class="w-full inline-block bg-primary text-white font-bold py-3 rounded-lg text-center hover:bg-blue-700"
-      >
-        Edit Property
-      </a>
+      if (total > 1) {
+        document.getElementById("nextBtn").addEventListener("click", () => {
+          index = (index + 1) % total;
+          slides.style.transform = `translateX(-${index * 100}%)`;
+        });
 
-      <% } else { %>
-      <!-- Normal live listing actions -->
-      <% if (property.isAuction) { %> <% if (userHasPaidForProperty) { %>
-      <a
-        href="/user/my-participation"
-        class="w-full inline-flex items-center justify-center bg-[#28a745] text-white font-semibold px-6 py-3 rounded-full text-sm md:text-base tracking-wide hover:bg-green-700 transition"
-      >
-        View My Participation
-      </a>
+        document.getElementById("prevBtn").addEventListener("click", () => {
+          index = (index - 1 + total) % total;
+          slides.style.transform = `translateX(-${index * 100}%)`;
+        });
+      }
+    </script>
 
-      <% } else if (isOwner) { %>
-      <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
-        Owner cannot bid
-      </button>
-      <% } else { %>
-      <button
-        class="w-full bg-[#0095FF] text-white font-bold py-3 rounded-lg hover:bg-blue-700"
-        id="placeBidBtn"
-      >
-        Place Bid
-      </button>
-      <% } %> <% } else if (property.buyNowPrice) { %>
-      <button class="w-full bg-green-600 text-white font-bold py-3 rounded-lg hover:bg-green-700">
-        Buy Now (₹ <%= property.buyNowPrice.toLocaleString() %>)
-      </button>
-      <% } %> <% } %>
+    <script>
+      document.getElementById('placeBidBtn')?.addEventListener('click', () => {
+        window.location.href = `/payments/initiate?type=property&id=<%= property._id %>`;
+      });
 
-      <!-- CONTACT SELLER BUTTON -->
-      <% if (!isOwner) { %>
-      <a
-        href="/chat/start/<%= property.sellerId._id %>/property/<%= property._id %>"
-        class="w-full inline-flex items-center justify-center gap-2 border border-gray-300 py-3 rounded-lg hover:bg-gray-100 transition font-medium"
-      >
-        <span class="material-symbols-outlined">chat</span>
-        Contact Seller
-      </a>
-      <% } else { %>
-      <button class="w-full border py-3 rounded-lg bg-gray-100 text-gray-600 cursor-not-allowed">
-        You are the seller
-      </button>
-      <% } %>
-    </aside>
-  </div>
+      // Real-time status polling
+      const propertyId = '<%= property._id %>';
+      const propertyOwnerId = '<%= property.sellerId._id %>';
+      const currentUserId = '<%= user._id %>';
 
-  <% if (property.status==="owned" && property.soldTo && property.currentHighestBid) { %>
-  <div class="mt-6 p-4 bg-green-100 border rounded-lg">
-    <p class="font-bold text-lg text-green-800">Auction Winner</p>
-
-    <p class="text-gray-700 mt-1">
-      Winner: <%= property.soldTo.name || property.soldTo.email || property.soldTo._id %>
-    </p>
-
-    <p class="text-gray-700 mt-1">
-      Final Price: ₹<%= Number(property.currentHighestBid || 0).toLocaleString("en-IN") %>
-    </p>
-
-    <p class="text-xs text-gray-500 mt-1">
-      Sold At: <%= property.soldAt ? property.soldAt.toLocaleString("en-IN") : "N/A" %>
-    </p>
-  </div>
-  <% } %>
-</div>
-
-<!-- SLIDER SCRIPT -->
-<script>
-  const slides = document.getElementById("slides");
-  let index = 0;
-  const total = <%= property.media?.length || 0 %>;
-
-  if (total > 1) {
-    document.getElementById("nextBtn").addEventListener("click", () => {
-      index = (index + 1) % total;
-      slides.style.transform = `translateX(-${index * 100}%)`;
-    });
-
-    document.getElementById("prevBtn").addEventListener("click", () => {
-      index = (index - 1 + total) % total;
-      slides.style.transform = `translateX(-${index * 100}%)`;
-    });
-  }
-</script>
-
-<script>
-  document.getElementById('placeBidBtn')?.addEventListener('click', () => {
-    window.location.href = `/payments/initiate?type=property&id=<%= property._id %>`;
-  });
-</script>
+      async function checkPropertyStatus() {
+        try {
+          const res = await fetch(`/properties/status/${propertyId}`);
+          const data = await res.json();
+          // If state changed to blocked, reload to show banner
+          if (data.success && data.isBlocked) {
+             <% if (!property.isBlocked) { %>
+              location.reload();
+             <% } %>
+          }
+          // If state changed from blocked to unblocked, also reload
+          if (data.success && !data.isBlocked) {
+              <% if (property.isBlocked) { %>
+              location.reload();
+             <% } %>
+          }
+        } catch (e) {
+          console.error('Property status check failed', e);
+        }
+      }
+      setInterval(checkPropertyStatus, 7000);
+    </script>

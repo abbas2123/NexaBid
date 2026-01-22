@@ -1,16 +1,12 @@
 const walletService = require('../../services/user/walletService');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
+const { LAYOUTS, ERROR_MESSAGES, _SUCCESS_MESSAGES } = require('../../utils/constants');
 
 exports.getWalletPage = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log('📄 Loading wallet page for user:', userId);
 
     const { wallet, transactions } = await walletService.getWalletPageData(userId);
-
-    console.log(`💰 Wallet balance: ₹${wallet.balance}`);
-    console.log(`📊 Found ${transactions.length} recent transactions`);
 
     res.render('profile/wallat', {
       layout: LAYOUTS.USER_LAYOUT,
@@ -19,7 +15,6 @@ exports.getWalletPage = async (req, res) => {
       user: req.user,
     });
   } catch (error) {
-    console.error('❌ Wallet page error:', error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
@@ -27,7 +22,6 @@ exports.getWalletPage = async (req, res) => {
 exports.getAllTransactions = async (req, res) => {
   try {
     const userId = req.user._id;
-    console.log('📄 Loading all transactions for user:', userId);
 
     const data = await walletService.getAllTransactionsData(userId, req.query);
 
@@ -52,7 +46,6 @@ exports.getAllTransactions = async (req, res) => {
       availableSources: data.allSources,
     });
   } catch (error) {
-    console.error('❌ Transactions page error:', error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
@@ -68,7 +61,6 @@ exports.getWalletBalance = async (req, res) => {
       currency,
     });
   } catch (error) {
-    console.error('❌ Get balance error:', error);
     return res.json({
       success: false,
       message: ERROR_MESSAGES.FAILED_FETCH_BALANCE,
@@ -87,7 +79,6 @@ exports.getAddFundsPage = async (req, res) => {
       user: req.user,
     });
   } catch (error) {
-    console.error('❌ Add funds page error:', error);
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };
@@ -96,7 +87,6 @@ exports.createAddFundsOrder = async (req, res) => {
   try {
     const { amount } = req.body;
     const userId = req.user._id;
-    console.log('📝 Creating order request:', { amount, userId });
 
     const result = await walletService.createAddFundsOrder(userId, amount);
 
@@ -106,7 +96,6 @@ exports.createAddFundsOrder = async (req, res) => {
       orderId: result.orderId,
     });
   } catch (error) {
-    console.error('❌ Order creation error:', error.message);
     const errorMessage = error.statusCode === 400 ? error.message : 'Failed to create payment order';
     return res.json({
       success: false,
@@ -117,24 +106,23 @@ exports.createAddFundsOrder = async (req, res) => {
 
 exports.verifyAddFundsPayment = async (req, res) => {
   try {
-    const userId = req.user._id;
+    const userId = req.user ? req.user._id : req.query.userId;
+
+    if (!userId) {
+      throw new Error('User identification failed');
+    }
     const paymentData = req.body;
-    console.log('💳 Verifying payment for user:', userId);
+
+    if (!paymentData.razorpay_payment_id || !paymentData.razorpay_order_id || !paymentData.razorpay_signature) {
+      throw new Error('Invalid payment data provided');
+    }
 
     const result = await walletService.verifyAddFundsPayment(userId, paymentData);
 
-    console.log('✅ Payment verified and wallet updated');
-    return res.json({
-      success: true,
-      message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
-      newBalance: result.newBalance,
-    });
+    return res.redirect('/wallet?success=true&amount=' + (paymentData.amount || result.newBalance));
+
   } catch (error) {
-    console.error('❌ Verify payment error:', error.message);
-    return res.json({
-      success: false,
-      message: `Payment verification failed: ${error.message}`,
-    });
+    return res.redirect(`/wallet?error=${encodeURIComponent(error.message)}`);
   }
 };
 

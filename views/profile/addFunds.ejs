@@ -1,5 +1,15 @@
 <body class="bg-gray-50 min-h-screen">
   <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <!-- Breadcrumbs -->
+    <div class="flex flex-wrap gap-2 text-sm mb-6">
+      <a class="text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors"
+        href="/auth/dashboard">Dashboard</a>
+      <span class="text-gray-400">/</span>
+      <a class="text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors" href="/wallet">My Wallet</a>
+      <span class="text-gray-400">/</span>
+      <span class="text-gray-900 dark:text-white font-medium">Add Funds</span>
+    </div>
+
     <!-- Back Button -->
     <div class="mb-6">
       <button onclick="window.location.href = '/wallet'"
@@ -208,7 +218,7 @@
 
     async function initiatePayment() {
       if (selectedAmount < 100) {
-        alert('Minimum amount is ₹100');
+        Swal.fire({ icon: 'warning', title: 'Invalid Amount', text: 'Minimum amount is ₹100' });
         return;
       }
 

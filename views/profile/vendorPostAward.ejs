@@ -1,3 +1,14 @@
+<!-- Breadcrumbs -->
+<div class="flex flex-wrap gap-2 text-sm mb-6">
+  <a class="text-[#617589] dark:text-gray-400 hover:text-blue-600 transition-colors"
+    href="/auth/dashboard">Dashboard</a>
+  <span class="text-[#617589] dark:text-gray-400">/</span>
+  <a class="text-[#617589] dark:text-gray-400 hover:text-blue-600 transition-colors"
+    href="/user/my-participation">Participation</a>
+  <span class="text-[#617589] dark:text-gray-400">/</span>
+  <span class="text-[#111418] dark:text-white font-medium">Post Award</span>
+</div>
+
 <h2 class="text-xl font-bold mb-3">Purchase Order</h2>
 
 <% if (!po) { %>
@@ -44,19 +55,63 @@
 
         <!-- IF vendor has NOT responded -->
         <% if (["generated", "sent" ].includes(po.status)) { %>
-          <form method="POST" action="/user/vendor/po/<%= po._id %>/respond" class="space-y-3">
+          <form id="poResponseForm" method="POST" action="/user/vendor/po/<%= po._id %>/respond" class="space-y-3">
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-            <button name="action" value="accept" class="bg-green-600 text-white px-4 py-2 rounded-md">
+            <!-- Hidden input to store clicked action -->
+            <input type="hidden" name="action" id="formAction" value="">
+
+            <button type="button" onclick="submitPoResponse('accept')"
+              class="bg-green-600 text-white px-4 py-2 rounded-md">
               Accept PO
             </button>
 
-            <button name="action" value="reject" class="bg-red-600 text-white px-4 py-2 rounded-md">
+            <button type="button" onclick="submitPoResponse('reject')"
+              class="bg-red-600 text-white px-4 py-2 rounded-md">
               Reject PO
             </button>
 
-            <textarea name="reason" placeholder="Reason for rejection (optional)"
+            <textarea name="reason" id="poRejectReason" placeholder="Reason for rejection (optional)"
               class="w-full mt-3 p-3 border rounded-md"></textarea>
           </form>
+
+          <script>
+            function submitPoResponse(action) {
+              const form = document.getElementById('poResponseForm');
+              document.getElementById('formAction').value = action;
+
+              if (action === 'reject') {
+                const reason = document.getElementById('poRejectReason').value;
+                if (!reason || reason.trim() === '') {
+                  Swal.fire({ icon: 'warning', title: 'Reason Required', text: 'Please provide a reason for rejecting the PO.' });
+                  return;
+                }
+
+                Swal.fire({
+                  title: 'Reject Purchase Order?',
+                  text: 'Are you sure you want to reject this PO?',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonColor: '#d33',
+                  confirmButtonText: 'Yes, Reject'
+                }).then((result) => {
+                  if (result.isConfirmed) form.submit();
+                });
+
+              } else {
+                // Accept
+                Swal.fire({
+                  title: 'Accept Purchase Order?',
+                  text: 'You are about to accept this PO.',
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonColor: '#16a34a',
+                  confirmButtonText: 'Yes, Accept'
+                }).then((result) => {
+                  if (result.isConfirmed) form.submit();
+                });
+              }
+            }
+          </script>
           <% } %>
 
             <!-- IF vendor accepted -->

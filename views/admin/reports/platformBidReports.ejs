@@ -307,6 +307,7 @@
 
 <script>
     function exportPDF() {
+        const csrfToken = '<%= csrfToken %>';
         // Get current filters
         const params = new URLSearchParams(window.location.search);
         const button = document.querySelector('button[onclick="exportPDF()"]');
@@ -316,7 +317,10 @@
 
         fetch('/admin/reports/my-bids/export-pdf', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken
+            },
             body: JSON.stringify({
                 bidType: params.get('bidType') || 'all',
                 status: params.get('status') || '',

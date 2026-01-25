@@ -176,25 +176,19 @@
 
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
-        let valid = true;
-
-        // Reset errors
-        emailError.classList.add('hidden');
-        passwordError.classList.add('hidden');
-
-        // Email validation
+        // Client validation with SweetAlert
+        if (!email) {
+          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Email is required' });
+        }
         if (!emailRegex.test(email)) {
-          emailError.classList.remove('hidden');
-          valid = false;
+          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please enter a valid email' });
         }
-
-        // Password validation
+        if (!password) {
+          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Password is required' });
+        }
         if (password.length < 6) {
-          passwordError.classList.remove('hidden');
-          valid = false;
+          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Password must be at least 6 characters' });
         }
-
-        if (!valid) return;
 
         try {
           const res = await fetch('/auth/login', {

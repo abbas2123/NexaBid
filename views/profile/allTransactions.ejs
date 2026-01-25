@@ -1,6 +1,17 @@
 <body class="bg-gray-50 min-h-screen">
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+        <!-- Breadcrumbs -->
+        <div class="flex flex-wrap gap-2 text-sm mb-6">
+            <a class="text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors"
+                href="/auth/dashboard">Dashboard</a>
+            <span class="text-gray-400">/</span>
+            <a class="text-gray-600 dark:text-gray-400 hover:text-blue-600 transition-colors" href="/wallet">My
+                Wallet</a>
+            <span class="text-gray-400">/</span>
+            <span class="text-gray-900 dark:text-white font-medium">Transactions</span>
+        </div>
+
         <!-- Back Button & Header -->
         <div class="mb-6">
             <button onclick="window.location.href='/wallet'"

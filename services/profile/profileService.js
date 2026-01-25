@@ -17,6 +17,11 @@ exports.getMyProfileData = async (userId) => {
   if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
   return { user };
 };
+exports.updateAvatar = async (userId, avatarUrl) => {
+  const user = await User.findByIdAndUpdate(userId, { avatar: avatarUrl }, { new: true });
+  if (!user) throw new Error(ERROR_MESSAGES.USER_NOT_FOUND);
+  return user;
+};
 exports.userStatus = async (userId) => {
   const [vendorApp, userProperties, userTenders] = await Promise.all([
     vendorApplication.findOne({ userId }).populate('documents.fileId').populate('ocrResultId'),

@@ -22,8 +22,7 @@
       <div class="space-y-4">
         <div>
           <label>Title *</label>
-          <input required name="title" id="title" value="<%= property?.title || '' %>"
-            class="w-full border rounded p-2" />
+          <input name="title" id="title" value="<%= property?.title || '' %>" class="w-full border rounded p-2" />
         </div>
 
         <div>
@@ -84,52 +83,71 @@
     <!------------------------ PRICING ------------------------------>
     <section class="bg-white p-6 shadow-sm rounded-lg border space-y-6">
 
-      <div class="flex justify-between items-center">
-        <h2 class="text-lg font-bold">Pricing</h2>
+      <div class="flex justify-between items-center border-b pb-4 mb-4">
+        <h2 class="text-lg font-bold">Pricing & Auction</h2>
 
-        <label class="flex items-center gap-2 text-sm">
-          <span>Auction?</span>
-          <input name="isAuction" id="isAuction" type="checkbox" <%=property?.isAuction ? "checked" : "" %> />
+        <label class="flex items-center gap-3 cursor-pointer">
+          <span class="font-medium text-gray-700">Enable Auction</span>
+          <input name="isAuction" id="isAuction" type="checkbox" class="w-5 h-5 text-blue-600 rounded"
+            <%=property?.isAuction ? "checked" : "" %> />
         </label>
       </div>
 
-      <!-- AUCTION FIELDS -->
-      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- AUCTION FIELDS (Unified Grid) -->
+      <div class="auctionFields grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Row 1 -->
         <div>
-          <label class="font-medium block mb-1">Base Price *</label>
-          <input type="number" id="basePrice" name="basePrice" value="<%= property?.basePrice || '' %>"
-            class="border rounded-lg p-2 w-full">
+          <label class="font-medium block mb-2 text-gray-700">Base Price <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-gray-500">₹</span>
+            <input type="number" id="basePrice" name="basePrice" value="<%= property?.basePrice || '' %>"
+              class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="0.00">
+          </div>
         </div>
 
         <div>
-          <label class="font-medium block mb-1">Auction Step *</label>
-          <input type="number" id="auctionStep" name="auctionStep" value="<%= property?.auctionStep || '' %>"
-            class="border rounded-lg p-2 w-full">
-        </div>
-      </div>
-
-      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label class="font-medium block mb-1">Reserve Price *</label>
-          <input type="number" id="auctionReservePrice" name="auctionReservePrice"
-            value="<%= property?.auctionReservePrice || '' %>" class="border rounded-lg p-2 w-full">
+          <label class="font-medium block mb-2 text-gray-700">Auction Step <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-gray-500">₹</span>
+            <input type="number" id="auctionStep" name="auctionStep" value="<%= property?.auctionStep || '' %>"
+              class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Increment amount">
+          </div>
         </div>
 
+        <!-- Row 2 -->
         <div>
-          <label class="font-medium block mb-1">Auction Starts At</label>
+          <label class="font-medium block mb-2 text-gray-700">Reserve Price <span class="text-red-500">*</span></label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-gray-500">₹</span>
+            <input type="number" id="auctionReservePrice" name="auctionReservePrice"
+              value="<%= property?.auctionReservePrice || '' %>"
+              class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              placeholder="Minimum selling price">
+          </div>
+        </div>
+
+        <div><!-- Spacer for layout balance if needed, or collapse grid --></div>
+
+        <!-- Row 3: Dates -->
+        <div>
+          <label class="font-medium block mb-2 text-gray-700">Auction Starts At <span
+              class="text-red-500">*</span></label>
           <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
             value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
-            class="border rounded-lg p-2 w-full">
+            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
         </div>
-      </div>
 
-      <div class="auctionFields grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label class="font-medium block mb-1">Auction Ends At</label>
+          <label class="font-medium block mb-2 text-gray-700">Auction Ends At <span
+              class="text-red-500">*</span></label>
           <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
             value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
-            class="border rounded-lg p-2 w-full">
+            class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
         </div>
+
       </div>
 
     </section>
@@ -205,6 +223,7 @@
 <!---------------- SCRIPTS -------------------------->
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/zod@3.22.4/lib/index.umd.min.js"></script>
 <script defer
   src="https://maps.googleapis.com/maps/api/js?key=<%= googleMapsApiKey %>&libraries=places&callback=initMap">
   </script>
@@ -223,12 +242,14 @@
   const auctionFields = document.querySelectorAll(".auctionFields");
 
   function updatePricingUI() {
+    const inputs = document.querySelectorAll(".auctionFields input"); // Select inputs inside container
+
     if (isAuctionInput.checked) {
       auctionFields.forEach(f => f.classList.remove("hidden"));
-      // buyNowPrice.disabled = true;
+      inputs.forEach(input => input.disabled = false); // Enable inputs (Validation Active)
     } else {
       auctionFields.forEach(f => f.classList.add("hidden"));
-      // buyNowPrice.disabled = false;
+      inputs.forEach(input => input.disabled = true); // Disable inputs (Validation Ignored)
     }
   }
 
@@ -242,6 +263,39 @@
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     console.log("🔥 SUBMIT STARTED");
+
+    // NEW: Force Auction Checkbox
+    if (!isAuctionInput.checked) {
+      return Swal.fire({
+        icon: "warning",
+        title: "Action Required",
+        text: "Please check 'Enable Auction' to proceed with pricing."
+      });
+    }
+
+    // VALIDATION
+    const title = document.getElementById('title').value.trim();
+    if (!title) return Swal.fire({ icon: "error", title: "Validation Error", text: "Title is required" });
+
+    const description = document.getElementById('description').value.trim();
+    if (!description) return Swal.fire({ icon: "error", title: "Validation Error", text: "Description is required" });
+
+    const type = document.getElementById('type').value;
+    if (!type) return Swal.fire({ icon: "error", title: "Validation Error", text: "Property Type is required" });
+
+    const isAuction = isAuctionInput.checked;
+    if (isAuction) {
+      if (!document.getElementById('basePrice').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Base Price is required" });
+      if (!document.getElementById('auctionStep').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction Step is required" });
+      if (!document.getElementById('auctionReservePrice').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Reserve Price is required" });
+
+      const start = document.getElementById('auctionStartsAt').value;
+      const end = document.getElementById('auctionEndsAt').value;
+      if (!start) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction Start Date is required" });
+      if (!end) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction End Date is required" });
+      if (new Date(start) >= new Date(end)) return Swal.fire({ icon: "error", title: "Validation Error", text: "End Date must be after Start Date" });
+    }
+
     const propertyId = form.dataset.id;
     const lat = document.getElementById("geoLat").value.trim();
     const lng = document.getElementById("geoLng").value.trim();
@@ -271,12 +325,30 @@
         'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       }
     });
-    const data = await res.json();
+
+    // Handle CSRF/Session mismatch
+    if (res.status === 403) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Session Expired',
+        text: 'Your session or security token has expired. reloading page...',
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => location.reload());
+    }
+
+    let data;
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("Non-JSON response:", err);
+      return Swal.fire({ icon: "error", title: "Server Error", text: "Received invalid response from server." });
+    }
 
     console.log("🛬 API Response:", data);
 
     if (!data.success) {
-      return Swal.fire({ icon: "error", title: data.message || "Something failed" });
+      return Swal.fire({ icon: "error", title: "Submission Failed", text: data.message || "Something went wrong" });
     }
 
     Swal.fire({ icon: "success", title: isEditMode ? "Updated!" : "Submitted!" })

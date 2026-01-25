@@ -184,11 +184,7 @@ module.exports = {
     if (amount) updateQuery['quotes.amount'] = Number(amount);
 
     if (Object.keys(updateQuery).length > 0) {
-      // If we are setting amount, we use $set for it, but for arrays we use $push if we wanted to append
-      // But the logic above says "ALREADY_UPLOADED" if length > 0, so we are doing an initial set or overwrite.
-      // However, the original code used array assignment: bid.finForms.files = finIds.
-      // So we should use $set for the whole arrays since we checked they were empty.
-
+     
       const setQuery = {};
       if (finIds.length) setQuery['finForms.files'] = finIds;
       if (quoteIds.length) setQuery['quotes.files'] = quoteIds;

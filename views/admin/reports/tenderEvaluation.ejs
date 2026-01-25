@@ -269,6 +269,7 @@
 
 <script>
     function exportPDF() {
+        const csrfToken = '<%= csrfToken %>';
         const params = new URLSearchParams(window.location.search);
         const button = document.querySelector('button[onclick="exportPDF()"]');
         const originalText = button.innerHTML;
@@ -277,7 +278,10 @@
 
         fetch('/admin/reports/tender-evaluation/export-pdf', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken
+            },
             body: JSON.stringify({
                 status: params.get('status') || '',
                 searchQuery: params.get('searchQuery') || '',

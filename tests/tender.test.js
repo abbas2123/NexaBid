@@ -1,4 +1,4 @@
-// STANDARDIZED TEST SUITE
+
 const request = require('supertest');
 const bcrypt = require('bcrypt');
 const startApp = require('../app');

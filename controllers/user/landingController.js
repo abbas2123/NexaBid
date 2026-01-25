@@ -10,6 +10,7 @@ exports.loadLandingPage = async (req, res) => {
       liveProperties: data.liveAuctions,
       upcomingProperties: data.upcomingAuctions,
       featuredProperties: data.featuredProperties,
+      featuredTenders: data.featuredTenders,
     });
   } catch (error) {
     console.error('Landing Error:', error);

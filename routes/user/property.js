@@ -3,6 +3,8 @@ const authController = require('../../controllers/user/property');
 const authMiddleware = require('../../middlewares/authMiddleware');
 const uploadFactory = require('../../middlewares/upload');
 const propertyUpload = uploadFactory('nexabid/properties');
+const validate = require('../../middlewares/validate');
+const propertySchema = require('../../validators/propertyValidator');
 const router = express.Router();
 router.get('/create', authMiddleware.protectRoute, authController.getCreatePropertyPage);
 router.post(
@@ -12,6 +14,7 @@ router.post(
     { name: 'media', maxCount: 10 },
     { name: 'docs', maxCount: 10 },
   ]),
+  validate(propertySchema),
   authController.postCreateProperty
 );
 router.get('/', authMiddleware.protectRoute, authController.getPropertyPage);
@@ -24,6 +27,7 @@ router.patch(
     { name: 'media', maxCount: 10 },
     { name: 'docs', maxCount: 10 },
   ]),
+  validate(propertySchema),
   authController.updatePropertyController
 );
 module.exports = router;

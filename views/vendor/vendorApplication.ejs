@@ -328,6 +328,16 @@
 
       btnSubmit?.addEventListener('click', async (e) => {
         e.preventDefault();
+
+        // Manual validation
+        const bName = businessInput.value.trim();
+        const pan = panInput.value.trim();
+        const gst = gstInput.value.trim();
+
+        if (!bName) return Swal.fire('Error', 'Business Name is required', 'warning');
+        if (!pan) return Swal.fire('Error', 'PAN Number is required', 'warning');
+        if (!gst) return Swal.fire('Error', 'GST Number is required', 'warning');
+
         normalize();
         actionTypeInput.value = 'submit';
 

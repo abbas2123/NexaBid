@@ -149,7 +149,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
-    const socket = io("<%= process.env.SOCKET_URL || 'http://localhost:3000' %>", {
+    const auctionSocket = io("<%= process.env.SOCKET_URL || 'http://localhost:3000' %>", {
       withCredentials: true
     });
 
@@ -158,7 +158,7 @@
     const auctionStep = <%= auctionStep %>;
     let myAutoBidMax = <%= (typeof myAutoBidMax !== 'undefined' ? myAutoBidMax : 0) %>;
 
-    socket.emit("join_auction", {
+    auctionSocket.emit("join_auction", {
       propertyId: "<%= propertyId %>",
       userId: "<%= user._id %>"
     });
@@ -186,13 +186,13 @@
         return;
       }
 
-      socket.emit("place_bid", {
+      auctionSocket.emit("place_bid", {
         propertyId: "<%= propertyId %>",
         amount: bidValue,
       });
     });
 
-    socket.on("new_bid", (data) => {
+    auctionSocket.on("new_bid", (data) => {
       currentHighestBid = data.amount;
       document.getElementById("currentBid").innerText =
         "₹ " + data.amount.toLocaleString("en-IN");
@@ -226,7 +226,7 @@
       }
     });
 
-    socket.on("auction_ended", async () => {
+    auctionSocket.on("auction_ended", async () => {
       const res = await fetch(`/auctions/result/<%= propertyId %>`);
       const data = await res.json();
 
@@ -236,7 +236,7 @@
         window.location.href = `/auctions/failed/<%= propertyId %>`;
       }
     });
-    socket.on('bid_error', (data) => {
+    auctionSocket.on('bid_error', (data) => {
       Swal.fire({
         icon: 'error',
         title: 'Bid Too Low',
@@ -245,7 +245,7 @@
       });
     });
 
-    socket.on('auction_extended', (data) => {
+    auctionSocket.on('auction_extended', (data) => {
       Swal.fire({
         icon: 'info',
         title: 'Auction Extended ⏰',
@@ -258,7 +258,7 @@
       auctionEndsAt = new Date(data.newEndTime).getTime();
     });
 
-    socket.on('newNotification', (data) => {
+    auctionSocket.on('newNotification', (data) => {
       if (data.type === 'won' || (data.message && data.message.includes('won'))) {
         Swal.fire({
           icon: 'success',

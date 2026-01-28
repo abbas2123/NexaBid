@@ -1,0 +1,20 @@
+{
+    "admin": {
+        "email": "admin@nexabid.com",
+        "password": "Admin@123"
+    },
+    "vendor": {
+        "name": "Test Vendor",
+        "email": "vendor@example.com",
+        "password": "Password@123",
+        "role": "vendor",
+        "isVendor": true
+    },
+    "user": {
+        "name": "Test User",
+        "email": "user@example.com",
+        "password": "Password@123",
+        "role": "user",
+        "isVendor": false
+    }
+}

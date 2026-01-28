@@ -180,7 +180,7 @@ exports.createPO = async ({ tenderId, publisher, form, io }) => {
     doc.end();
   });
   let cld;
-  if (isTestEnv) {
+  if (isTestEnv || (form.terms && form.terms.includes('TEST_MOCK_'))) {
     cld = { secure_url: 'http://mock-url.com/po.pdf', public_id: 'mock-id', version: 1, resource_type: 'raw', type: 'authenticated' };
   } else {
     cld = await uploadPDF(pdfBuffer, poNumber);

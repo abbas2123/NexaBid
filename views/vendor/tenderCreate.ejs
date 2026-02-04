@@ -190,6 +190,17 @@
         }
       });
 
+      // Handle CSRF/Session mismatch
+      if (res.status === 403) {
+        return Swal.fire({
+          icon: 'warning',
+          title: 'Session Expired',
+          text: 'Your session or security token has expired. reloading page...',
+          timer: 2000,
+          showConfirmButton: false
+        }).then(() => location.reload());
+      }
+
       // (Optional but very useful for debugging)
       const raw = await res.text();
       console.log("RAW RESPONSE:", raw);

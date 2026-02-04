@@ -87,3 +87,19 @@ exports.getContact = (req, res) => {
     user: req.user,
   });
 };
+
+exports.updateAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(statusCode.BAD_REQUEST).json({ success: false, message: 'No file uploaded' });
+    }
+
+    const avatarUrl = req.file.path; // Multer-Cloudinary provides path for the URL
+    await myProfileService.updateAvatar(req.user._id, avatarUrl);
+
+    res.status(statusCode.OK).json({ success: true, message: 'Avatar updated' });
+  } catch (error) {
+    console.error('Update Avatar Error:', error);
+    res.status(statusCode.INTERNAL_ERROR).json({ success: false, message: 'Update failed' });
+  }
+};

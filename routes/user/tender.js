@@ -4,6 +4,8 @@ const authMiddleware = require('../../middlewares/authMiddleware');
 const tenderContorller = require('../../controllers/vendor/tenderCreation');
 const uploadFactory = require('../../middlewares/upload');
 const tenderUpload = uploadFactory('nexabid/tenders');
+const validate = require('../../middlewares/validate');
+const tenderSchema = require('../../validators/tenderValidator');
 const router = express.Router();
 router.get('/', authMiddleware.protectRoute, authController.getTenderListingPage);
 router.get('/create', authMiddleware.protectRoute, tenderContorller.getCreateTenderPage);
@@ -11,6 +13,7 @@ router.post(
   '/create',
   authMiddleware.protectRoute,
   tenderUpload.array('docs', 10),
+  validate(tenderSchema),
   tenderContorller.createTenderController
 );
 router.get('/status/:id', authMiddleware.protectRoute, authController.getTenderStatus);

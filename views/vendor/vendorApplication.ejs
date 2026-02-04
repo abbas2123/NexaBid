@@ -302,6 +302,8 @@
         });
 
         actionTypeInput.value = 'scan';
+        // Ensure inputs are enabled for FormData
+        [businessInput, panInput, gstInput].forEach(i => i.disabled = false);
         const res = await fetch('/vendor/apply', { method: 'POST', body: new FormData(vendorForm) });
         const data = await res.json();
         if (!data.success) return Swal.fire('Error', data.message, 'error');
@@ -328,10 +330,28 @@
 
       btnSubmit?.addEventListener('click', async (e) => {
         e.preventDefault();
+
+        // Manual validation
+        const bName = businessInput.value.trim();
+        const pan = panInput.value.trim();
+        const gst = gstInput.value.trim();
+
+        if (!bName) return Swal.fire('Error', 'Business Name is required', 'warning');
+        if (!pan) return Swal.fire('Error', 'PAN Number is required', 'warning');
+        if (!gst) return Swal.fire('Error', 'GST Number is required', 'warning');
+
         normalize();
         actionTypeInput.value = 'submit';
 
-        const res = await fetch('/vendor/apply', { method: 'POST', body: new FormData(vendorForm) });
+        // Re-enable temporarily so FormData captures them
+        [businessInput, panInput, gstInput].forEach(i => i.disabled = false);
+        const formData = new FormData(vendorForm);
+        // Re-disable if we want to maintain UI state
+        if (confirmInput.value === 'true') {
+          [businessInput, panInput, gstInput].forEach(i => i.disabled = true);
+        }
+
+        const res = await fetch('/vendor/apply', { method: 'POST', body: formData });
         const data = await res.json();
         if (!data.success) return Swal.fire('Error', data.message, 'error');
 

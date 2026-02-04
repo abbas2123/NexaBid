@@ -5,7 +5,8 @@ describe("Authentication & RBAC Tests", () => {
     let app;
 
     beforeAll(async () => {
-        app = await startApp();
+        const started = await startApp();
+        app = started.app;
     });
 
     describe("API: /auth/signup", () => {

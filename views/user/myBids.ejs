@@ -199,8 +199,8 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-gray-900 dark:text-white">₹<%=
-                                        bid.amount.toLocaleString() %>
+                                <div class="text-sm font-semibold text-gray-900 dark:text-white">₹<%= (bid.amount ||
+                                        0).toLocaleString() %>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -259,6 +259,36 @@
 </div>
 
 <script>
+    // Date validation for filter form
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.querySelector('form[action="/user/reports/my-bids"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function (e) {
+                const startDateInput = this.querySelector('input[name="startDate"]');
+                const endDateInput = this.querySelector('input[name="endDate"]');
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (end < start) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
     function exportPDF() {
         // Get current filters
         const params = new URLSearchParams(window.location.search);
@@ -338,7 +368,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                         <p class="text-sm text-gray-600 dark:text-gray-400">Bid Amount</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹${bid.amount.toLocaleString()}</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">₹${(bid.amount || 0).toLocaleString()}</p>
                     </div>
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                         <p class="text-sm text-gray-600 dark:text-gray-400">Bid Date</p>

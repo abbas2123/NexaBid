@@ -17,13 +17,11 @@ module.exports = (app) => {
   app.set('views', path.join(__dirname, '../views'));
   app.use(expressLayouts);
 
-
   app.use(helmet({ contentSecurityPolicy: false }));
 
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
   app.use(cookieParser());
-
 
   app.use(
     session({
@@ -36,15 +34,11 @@ module.exports = (app) => {
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       },
-    })
+    }),
   );
-
 
   app.use(passport.initialize());
   app.use(passport.session());
-  app.use(authUser);
-  app.use(adminUser);
-
 
   const csrfProtection = csrf();
 
@@ -55,12 +49,13 @@ module.exports = (app) => {
       '/payments/mark-failed',
       '/wallet/api/verify-payment',
       '/socket.io',
-      '/vendor/tender/upload'
+      '/vendor/tender/upload',
+      '/chat/thread/',
     ];
 
-
-    const isExcluded = excludedRoutes.some(route => req.originalUrl.startsWith(route));
-
+    const isExcluded = excludedRoutes.some((route) =>
+      req.originalUrl.startsWith(route),
+    );
 
     if (isExcluded || process.env.NODE_ENV === 'test') {
       return next();
@@ -68,8 +63,10 @@ module.exports = (app) => {
     csrfProtection(req, res, next);
   });
 
-  app.use((req, res, next) => {
+  app.use(authUser);
+  app.use(adminUser);
 
+  app.use((req, res, next) => {
     if (typeof req.csrfToken === 'function') {
       res.locals.csrfToken = req.csrfToken();
     } else {

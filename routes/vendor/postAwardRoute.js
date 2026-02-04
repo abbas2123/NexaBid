@@ -32,6 +32,15 @@ router.post(
   auth.protectRoute,
   agreementController.approveAgreement
 );
+<<<<<<< .merge_file_kIoGhQ
+=======
+router.get('/tender/:id/agreement/upload',auth.protectRoute,postAwardController.getUploadPage);
+router.post('/tender/:id/agreement/upload',auth.protectRoute,uploads.single('agreement'),postAwardController.uploadAgreement);
+
+
+router.get("/view/:id",auth.protectRoute,postAwardController.aview);
+
+>>>>>>> .merge_file_Q5eqnC
 router.post(
   '/agreement/:agreementId/reject',
   auth.protectRoute,

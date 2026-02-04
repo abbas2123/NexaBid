@@ -58,6 +58,7 @@ exports.getCreatePropertyPage = (req, res) =>
     property: null,
     googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY,
   });
+
 exports.postCreateProperty = async (req, res) => {
   console.log('reached');
   try {

@@ -4,14 +4,24 @@ const PurchaseOrder = require('../../models/purchaseOrder');
 const Agreement = require('../../models/agreement');
 const WorkOrder = require('../../models/workOrder');
 const { ERROR_MESSAGES } = require('../../utils/constants');
-exports.getContractManagementData = async (publisherId, tab, isAdmin = false) => {
+exports.getContractManagementData = async (publisherId, tab, isAdmin = false, page = 1, limit = 10) => {
   const tenderQuery = {
     status: 'awarded',
   };
   if (!isAdmin) {
     tenderQuery.createdBy = publisherId;
   }
-  const tenders = await Tender.find(tenderQuery).lean();
+
+  // Calculate pagination
+  const skip = (page - 1) * limit;
+  const totalTenders = await Tender.countDocuments(tenderQuery);
+  const totalPages = Math.ceil(totalTenders / limit);
+
+  const tenders = await Tender.find(tenderQuery)
+    .skip(skip)
+    .limit(limit)
+    .lean();
+
   let totalBids = 0;
   let active = 0;
   let pending = 0;
@@ -49,9 +59,9 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false) =>
       totalBids: bidsCount,
       winner: winnerBid
         ? {
-            name: winnerBid.vendorId?.name || 'Unknown Vendor',
-            amount: winnerBid.quotes.amount,
-          }
+          name: winnerBid.vendorId?.name || 'Unknown Vendor',
+          amount: winnerBid.quotes.amount,
+        }
         : null,
       poStatus: po ? po.status : 'Not Generated',
       agreementStatus: agreement
@@ -69,13 +79,19 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false) =>
   }
   return {
     summary: {
-      totalTenders: tenders.length,
+      totalTenders,
       totalBids,
       active,
       pending,
       completed,
     },
     contracts,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPrevPage: page > 1,
+    },
   };
 };
 exports.getContractDetails = async (adminId, tenderId) => {
@@ -134,9 +150,9 @@ exports.getContractDetails = async (adminId, tenderId) => {
     totalBids: bids.length,
     winner: winnerBid
       ? {
-          name: winnerBid.vendorId?.name || 'Vendor',
-          amount: typeof winnerBid.quotes?.amount === 'number' ? winnerBid.quotes.amount : 0,
-        }
+        name: winnerBid.vendorId?.name || 'Vendor',
+        amount: typeof winnerBid.quotes?.amount === 'number' ? winnerBid.quotes.amount : 0,
+      }
       : null,
     timeline: [
       { label: 'Tender Awarded', done: true },

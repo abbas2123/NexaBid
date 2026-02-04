@@ -31,7 +31,7 @@
 
       <!-- FORM -->
       <form id="workOrderForm" action="/publisher/tender/<%= tender._id %>/workorder" method="POST"
-        enctype="multipart/form-data" class="flex flex-col gap-6 pb-20">
+        class="flex flex-col gap-6 pb-20">
         <input type="hidden" name="_csrf" value="<%= csrfToken %>">
         <!-- Section 1: Work Order Details -->
         <div class="bg-white dark:bg-[#1a222c] rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">

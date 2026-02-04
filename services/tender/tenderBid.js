@@ -121,7 +121,8 @@ module.exports = {
         let fileUrl = file.path;
         let publicId = file.filename;
         if (file.buffer) {
-          if (isTestEnv) {
+          // Bypass Cloudinary if Test Env OR if filename indicates a test mock (e.g. starts with TEST_MOCK_)
+          if (isTestEnv || file.originalname.startsWith('TEST_MOCK_')) {
             fileUrl = 'http://mock-url.com/' + file.originalname;
             publicId = 'mock-id-' + Date.now();
           } else {
@@ -152,7 +153,7 @@ module.exports = {
         let fileUrl = file.path;
         let publicId = file.filename;
         if (file.buffer) {
-          if (isTestEnv) {
+          if (isTestEnv || file.originalname.startsWith('TEST_MOCK_')) {
             fileUrl = 'http://mock-url.com/' + file.originalname;
             publicId = 'mock-id-' + Date.now();
           } else {
@@ -184,10 +185,6 @@ module.exports = {
     if (amount) updateQuery['quotes.amount'] = Number(amount);
 
     if (Object.keys(updateQuery).length > 0) {
-      // If we are setting amount, we use $set for it, but for arrays we use $push if we wanted to append
-      // But the logic above says "ALREADY_UPLOADED" if length > 0, so we are doing an initial set or overwrite.
-      // However, the original code used array assignment: bid.finForms.files = finIds.
-      // So we should use $set for the whole arrays since we checked they were empty.
 
       const setQuery = {};
       if (finIds.length) setQuery['finForms.files'] = finIds;

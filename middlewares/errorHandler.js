@@ -1,6 +1,8 @@
 const multer = require('multer');
 const statusCode = require('../utils/statusCode');
 const { LAYOUTS, TITLES } = require('../utils/constants');
+
+
 module.exports = (err, req, res, _next) => {
   console.error('🔥 GLOBAL ERROR HANDLER:', err);
   const statusCodeVal = err.statusCode || statusCode.INTERNAL_SERVER_ERROR;

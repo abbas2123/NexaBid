@@ -3,7 +3,7 @@ const statusCode = require('../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../utils/constants');
 module.exports = rateLimit({
   windowMs: 60 * 1000,
-  max: 100,
+  max: 5000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) =>

@@ -4,7 +4,17 @@ const statusCode = require('../../utils/statusCode');
 const { VIEWS, LAYOUTS, ERROR_MESSAGES, TITLES } = require('../../utils/constants');
 exports.contractManagementPage = async (req, res) => {
   const tab = req.query.tab || 'tender';
-  const { summary, contracts } = await contractService.getContractManagementData(null, tab, true);
+  const page = parseInt(req.query.page) || 1;
+  const limit = 10; // Items per page
+
+  const { summary, contracts, pagination } = await contractService.getContractManagementData(
+    null,
+    tab,
+    true,
+    page,
+    limit
+  );
+
   res.render(VIEWS.ADMIN_CONTRACT_MANAGEMENT, {
     layout: LAYOUTS.ADMIN_LAYOUT,
     title: TITLES.CONTRACT_MANAGEMENT,
@@ -13,6 +23,9 @@ exports.contractManagementPage = async (req, res) => {
     summary,
     contracts,
     currentPage: 'contract-management',
+    // Pagination data
+    currentPage: pagination.currentPage,
+    totalPages: pagination.totalPages,
   });
 };
 exports.getContractDetails = async (req, res) => {

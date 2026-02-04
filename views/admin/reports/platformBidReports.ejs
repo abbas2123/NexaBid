@@ -306,7 +306,38 @@
 </div>
 
 <script>
+    // Date validation for filter form
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.querySelector('form[action="/admin/reports/platform-bid-reports"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function (e) {
+                const startDateInput = this.querySelector('input[name="startDate"]');
+                const endDateInput = this.querySelector('input[name="endDate"]');
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (end < start) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
     function exportPDF() {
+        const csrfToken = '<%= csrfToken %>';
         // Get current filters
         const params = new URLSearchParams(window.location.search);
         const button = document.querySelector('button[onclick="exportPDF()"]');
@@ -316,7 +347,10 @@
 
         fetch('/admin/reports/my-bids/export-pdf', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken
+            },
             body: JSON.stringify({
                 bidType: params.get('bidType') || 'all',
                 status: params.get('status') || '',

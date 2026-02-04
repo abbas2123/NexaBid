@@ -5,11 +5,8 @@
       <p class="text-gray-500 text-sm">Manage and create discount coupons</p>
     </div>
 
-    <button
-      id="openCouponBtn"
-      type="button"
-      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700"
-    >
+    <button id="openCouponBtn" type="button"
+      class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
       Create Coupon
     </button>
   </div>
@@ -30,43 +27,54 @@
       </thead>
 
       <tbody class="divide-y">
-        <% if (coupons && coupons.length > 0) { %> <% coupons.forEach(c => { %>
-        <tr class="hover:bg-gray-50">
-          <td class="px-4 py-3 font-semibold"><%= c.code %></td>
-          <td class="px-4 py-3 capitalize"><%= c.type %></td>
-          <td class="px-4 py-3"><%= c.type === 'percent' ? c.value + '%' : '₹' + c.value %></td>
-          <td class="px-4 py-3">
-            <%= c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—' %>
-          </td>
-          <td class="px-4 py-3 text-center"><%= c.perUserLimit || '∞' %></td>
-          <td class="px-4 py-3 text-center"><%= c.usageLimit || '∞' %></td>
+        <% if (coupons && coupons.length> 0) { %> <% coupons.forEach(c=> { %>
+            <tr class="hover:bg-gray-50">
+              <td class="px-4 py-3 font-semibold">
+                <%= c.code %>
+              </td>
+              <td class="px-4 py-3 capitalize">
+                <%= c.type %>
+              </td>
+              <td class="px-4 py-3">
+                <%= c.type==='percent' ? c.value + '%' : '₹' + c.value %>
+              </td>
+              <td class="px-4 py-3">
+                <%= c.expiresAt ? new Date(c.expiresAt).toLocaleDateString() : '—' %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <%= c.perUserLimit || '∞' %>
+              </td>
+              <td class="px-4 py-3 text-center">
+                <%= c.usageLimit || '∞' %>
+              </td>
 
-          <!-- ✅ REAL status based on isActive -->
-          <td class="px-4 py-3">
-            <% const isExpired = c.expiresAt && new Date(c.expiresAt) < new Date(); %> <% if
-            (isExpired) { %>
-            <span class="text-red-600 font-semibold">Expired</span>
-            <% } else if (c.isActive) { %>
-            <span class="text-green-600 font-semibold">Enabled</span>
-            <% } else { %>
-            <span class="text-gray-500 font-semibold">Disabled</span>
-            <% } %>
-          </td>
+              <!-- ✅ REAL status based on isActive -->
+              <td class="px-4 py-3">
+                <% const isExpired=c.expiresAt && new Date(c.expiresAt) < new Date(); %>
+                  <% if (isExpired) { %>
+                    <span class="text-red-600 font-semibold">Expired</span>
+                    <% } else if (c.isActive) { %>
+                      <span class="text-green-600 font-semibold">Enabled</span>
+                      <% } else { %>
+                        <span class="text-gray-500 font-semibold">Disabled</span>
+                        <% } %>
+              </td>
 
-          <td class="px-4 py-3 text-right space-x-3">
-            <button type="button" class="text-amber-600 js-toggle" data-id="<%= c._id %>">
-              Toggle
-            </button>
-            <button type="button" class="text-red-600 js-delete" data-id="<%= c._id %>">
-              Delete
-            </button>
-          </td>
-        </tr>
-        <% }) %> <% } else { %>
-        <tr>
-          <td colspan="8" class="text-center py-6 text-gray-500">No coupons available</td>
-        </tr>
-        <% } %>
+              <td class="px-4 py-3 text-right space-x-3">
+                <button type="button" class="text-amber-600 js-toggle" data-id="<%= c._id %>">
+                  Toggle
+                </button>
+                <button type="button" class="text-red-600 js-delete" data-id="<%= c._id %>">
+                  Delete
+                </button>
+              </td>
+            </tr>
+            <% }) %>
+              <% } else { %>
+                <tr>
+                  <td colspan="8" class="text-center py-6 text-gray-500">No coupons available</td>
+                </tr>
+                <% } %>
       </tbody>
     </table>
   </div>
@@ -82,66 +90,98 @@
 
     <form id="createCouponForm" class="p-6 space-y-6">
       <div>
-        <label class="block text-sm font-medium mb-1">Coupon Code</label>
-        <input
-          name="code"
-          required
-          class="w-full border rounded px-4 py-2 uppercase"
-          placeholder="SUMMER2025"
-        />
+        <label class="block text-sm font-medium mb-1">Coupon Code <span class="text-red-500">*</span></label>
+        <input name="code" id="code"
+          class="w-full border rounded px-4 py-2 uppercase focus:ring-2 focus:ring-blue-500 transition-colors"
+          placeholder="SUMMER2025" />
+        <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-code">Coupon Code is required (Alphanumeric
+          only)</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">Discount Type</label>
-          <select name="type" class="w-full border rounded px-4 py-2">
-            <option value="percent">Percentage (%)</option>
-            <option value="flat">Flat Amount (₹)</option>
-            <option value="cashback">Cashback</option>
-          </select>
+          <label class="block text-sm font-medium mb-2 text-gray-700">Discount Type</label>
+          <div class="grid grid-cols-3 gap-2" id="typeContainer">
+            <label class="cursor-pointer">
+              <input type="radio" name="type" value="percent" class="hidden peer" checked />
+              <div
+                class="border-2 rounded-lg py-2 px-1 text-center text-sm font-semibold text-gray-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 transition-all">
+                Percent (%)
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="type" value="flat" class="hidden peer" />
+              <div
+                class="border-2 rounded-lg py-2 px-1 text-center text-sm font-semibold text-gray-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 transition-all">
+                Flat (₹)
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="type" value="cashback" class="hidden peer" />
+              <div
+                class="border-2 rounded-lg py-2 px-1 text-center text-sm font-semibold text-gray-500 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 hover:bg-gray-50 transition-all">
+                Cashback
+              </div>
+            </label>
+          </div>
         </div>
 
         <div>
-          <label class="block text-sm font-medium mb-1">Discount Value</label>
-          <input name="value" type="number" required class="w-full border rounded px-4 py-2" />
+          <label class="block text-sm font-medium mb-1">Discount Value <span class="text-red-500">*</span></label>
+          <input name="value" id="value" type="number"
+            class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="10" />
+          <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-value">Positive value is required</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Min Purchase Amount</label>
-          <input name="minPurchaseAmount" type="number" class="w-full border rounded px-4 py-2" />
+          <input name="minPurchaseAmount" id="minPurchaseAmount" type="number"
+            class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="0" />
+          <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-minPurchaseAmount">Must be a positive number
+          </p>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Max Discount</label>
-          <input name="maxDiscount" type="number" class="w-full border rounded px-4 py-2" />
+          <input name="maxDiscount" id="maxDiscount" type="number"
+            class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="Leave empty for none" />
+          <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-maxDiscount">Must be a positive number</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">Per User Limit</label>
-          <input name="perUserLimit" type="number" class="w-full border rounded px-4 py-2" />
+          <input name="perUserLimit" id="perUserLimit" type="number"
+            class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="1" />
+          <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-perUserLimit">Must be at least 1</p>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">Total Usage Limit</label>
-          <input name="usageLimit" type="number" class="w-full border rounded px-4 py-2" />
+          <input name="usageLimit" id="usageLimit" type="number"
+            class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors"
+            placeholder="100" />
+          <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-usageLimit">Must be at least 1</p>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-1">Expiry Date</label>
-        <input name="expiresAt" type="date" class="w-full border rounded px-4 py-2" />
+        <label class="block text-sm font-medium mb-1">Expiry Date <span class="text-red-500">*</span></label>
+        <input name="expiresAt" id="expiresAt" type="date"
+          class="w-full border rounded px-4 py-2 focus:ring-2 focus:ring-blue-500 transition-colors" />
+        <p class="text-red-500 text-xs mt-1 hidden error-msg" id="error-expiresAt">Expiry date must be in the future</p>
       </div>
 
       <div class="flex justify-end gap-3 pt-4 border-t">
         <button type="button" id="cancelCouponBtn" class="px-6 py-2 rounded bg-gray-200">
           Cancel
         </button>
-        <button
-          type="submit"
-          class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold"
-        >
+        <button type="submit" class="px-6 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold">
           Create Coupon
         </button>
       </div>
@@ -176,11 +216,150 @@
       if (e.target === modal) closeModal();
     });
 
+    // --- VALIDATION LOGIC ---
+    const inputs = form.querySelectorAll('input, select');
+
+    const showError = (id, msg) => {
+      const el = document.getElementById(id);
+      const errEl = document.getElementById('error-' + id);
+      if (el) {
+        el.classList.add('border-red-500', 'ring-1', 'ring-red-500');
+      }
+      if (errEl) {
+        errEl.textContent = msg;
+        errEl.classList.remove('hidden');
+        errEl.style.display = 'block'; // Force display
+      }
+      return false;
+    };
+
+    const clearError = (id) => {
+      const el = document.getElementById(id);
+      const errEl = document.getElementById('error-' + id);
+      if (el) el.classList.remove('border-red-500', 'ring-1', 'ring-red-500');
+      if (errEl) {
+        errEl.classList.add('hidden');
+        errEl.style.display = 'none';
+      }
+    };
+
+    const validators = {
+      code: (value) => {
+        if (!value) return 'Coupon Code is required';
+        if (!/^[A-Z0-9]+$/i.test(value)) return 'Only letters and numbers allowed';
+
+        const letters = value.match(/[A-Z]/gi) || [];
+        const numbers = value.match(/[0-9]/g) || [];
+
+        if (letters.length < 3 || numbers.length < 1)
+          return 'Must contain at least 3 letters and 1 number';
+
+        return null;
+      },
+
+      value: (value) => {
+        if (!value) return 'Value is required';
+        const val = parseFloat(value);
+        if (isNaN(val) || val <= 0) return 'Must be positive';
+
+        const type = form.querySelector('input[name="type"]:checked')?.value || 'percent';
+        if (type === 'percent' && val > 100) return 'Max 100%';
+
+        return null;
+      },
+
+      expiresAt: (value) => {
+        if (!value) return 'Expiry Date is required';
+
+        const exp = new Date(value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (exp < today) return 'Cannot be in the past';
+
+        return null;
+      },
+
+      minPurchaseAmount: (value) => {
+        if (!value) return null;
+        if (parseFloat(value) < 0) return 'Cannot be negative';
+        return null;
+      },
+
+      maxDiscount: (value) => {
+        if (!value) return null;
+        if (parseFloat(value) <= 0) return 'Must be positive';
+        return null;
+      },
+
+      perUserLimit: (value) => {
+        if (!value) return null;
+        if (parseInt(value) < 1) return 'Min 1';
+        return null;
+      },
+
+      usageLimit: (value) => {
+        if (!value) return null;
+        if (parseInt(value) < 1) return 'Min 1';
+        return null;
+      }
+    };
+
+    // Real-time validation on input/change
+    inputs.forEach(input => {
+      const validateInput = () => {
+        if (input.id === 'code') {
+          input.value = input.value.toUpperCase();
+        }
+
+        if (validators[input.id]) {
+          const error = validators[input.id](input.value);
+          if (error) {
+            showError(input.id, error);
+          } else {
+            clearError(input.id);
+          }
+        }
+      };
+
+      input.addEventListener('input', validateInput);
+      input.addEventListener('change', validateInput);
+    });
+
+    // Re-validate 'value' when 'type' changes
+    document.getElementById('typeContainer').addEventListener('change', () => {
+      const valInput = document.getElementById('value');
+      if (valInput.value) {
+        const error = validators.value(valInput.value);
+        if (error) showError('value', error);
+        else clearError('value');
+      }
+    });
+
     // CREATE
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
+      let isValid = true;
+
+      // Final check before submission
+      Object.keys(validators).forEach((key) => {
+        const input = document.getElementById(key);
+        if (input) {
+          const error = validators[key](input.value);
+          if (error) {
+            isValid = showError(key, error) && false;
+          }
+        }
+      });
+
       const fd = new FormData(form);
       const payload = Object.fromEntries(fd.entries());
+
+
+      if (!isValid) {
+        console.warn("Coupon creation blocked: Validation failed.");
+        return;
+      }
 
       try {
         const res = await fetch('/admin/coupon-management/create', {

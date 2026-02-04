@@ -46,6 +46,7 @@ module.exports = {
   },
   ACTION_TYPES: {
     SCAN: 'scan',
+    SUBMIT: 'submit',
   },
   ERROR_MESSAGES: {
     AGREEMENT_NOT_SIGNED: 'AGREEMENT_NOT_SIGNED',

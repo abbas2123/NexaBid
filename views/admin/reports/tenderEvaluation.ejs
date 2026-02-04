@@ -264,11 +264,42 @@
     </div>
 
     <!-- Pagination -->
-    <%- include('../../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
+    <%- include('../../partials/admin/pagination.ejs', { pagination: pagination, queryParams: queryParams }) %>
 </div>
 
 <script>
+    // Date validation for filter form
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.querySelector('form[action="/admin/reports/tender-evaluation"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function (e) {
+                const startDateInput = this.querySelector('input[name="startDate"]');
+                const endDateInput = this.querySelector('input[name="endDate"]');
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (end < start) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
     function exportPDF() {
+        const csrfToken = '<%= csrfToken %>';
         const params = new URLSearchParams(window.location.search);
         const button = document.querySelector('button[onclick="exportPDF()"]');
         const originalText = button.innerHTML;
@@ -277,7 +308,10 @@
 
         fetch('/admin/reports/tender-evaluation/export-pdf', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'CSRF-Token': csrfToken
+            },
             body: JSON.stringify({
                 status: params.get('status') || '',
                 searchQuery: params.get('searchQuery') || '',

@@ -18,7 +18,7 @@ class ChatService {
   }
   static async getInbox(userId) {
     const threads = await ChatThread.find({ participants: userId })
-      .populate('participants', 'name avatar')
+      .populate('participants', 'name avatar isOnline lastSeen')
       .sort({ lastMessageAt: -1 });
     return threads.map((t) => {
       const other = t.participants.find((p) => p._id.toString() !== userId.toString());
@@ -27,7 +27,7 @@ class ChatService {
     });
   }
   static async getThread(threadId, userId) {
-    const t = await ChatThread.findById(threadId).populate('participants', 'name avatar');
+    const t = await ChatThread.findById(threadId).populate('participants', 'name avatar isOnline lastSeen');
     if (!t) return null;
     const other = t.participants.find((p) => p._id.toString() !== userId.toString());
     await ChatService.markThreadRead(threadId, userId);
@@ -67,7 +67,6 @@ class ChatService {
       const fullMsg = await ChatMessage.findById(msg._id).populate('senderId', 'name avatar');
       io.to(`chat_${threadId}`).emit('new_message', {
         ...fullMsg.toObject(),
-        _silentFor: fileUrl ? senderId.toString() : null,
       });
       if (thread) {
         const socketsFn = io.in(`chat_${threadId}`).fetchSockets

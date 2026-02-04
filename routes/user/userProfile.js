@@ -17,6 +17,13 @@ router.get('/about-us', authMiddleware.protectRoute, profileController.getAboutU
 router.get('/contact', authMiddleware.protectRoute, profileController.getContact);
 router.get('/my-participation', authMiddleware.protectRoute, vendorOpController.getMyParticipation);
 
+router.patch(
+  '/profile/avatar',
+  authMiddleware.protectRoute,
+  uploads('nexabid/avatars', ['jpg', 'jpeg', 'png'], 2 * 1024 * 1024, 'cloudinary').single('avatar'),
+  profileController.updateAvatar
+);
+
 router.get(
   '/my-participation/tender/:id',
   authMiddleware.protectRoute,

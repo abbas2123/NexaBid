@@ -3,6 +3,20 @@
     <!-- MAIN CONTENT -->
     <main class="flex-1 px-4 sm:px-6 md:px-10 lg:px-20 xl:px-40 py-10">
       <div class="max-w-4xl mx-auto">
+        <!-- Breadcrumbs -->
+        <div class="flex flex-wrap gap-2 text-sm mb-6">
+          <a class="text-[#617589] dark:text-gray-400 hover:text-blue-600 transition-colors"
+            href="/auth/dashboard">Dashboard</a>
+          <span class="text-[#617589] dark:text-gray-400">/</span>
+          <a class="text-[#617589] dark:text-gray-400 hover:text-blue-600 transition-colors"
+            href="/user/manage/my-listing">My Tenders</a>
+          <span class="text-[#617589] dark:text-gray-400">/</span>
+          <a class="text-[#617589] dark:text-gray-400 hover:text-blue-600 transition-colors"
+            href="/publisher/tender/<%= tender._id %>/post-award">Post Award</a>
+          <span class="text-[#617589] dark:text-gray-400">/</span>
+          <span class="text-[#111418] dark:text-white font-medium">View PO</span>
+        </div>
+
         <!-- HEADER -->
         <div class="flex justify-between items-center mb-10">
           <h1 class="text-3xl font-bold text-[#111418] dark:text-white">
@@ -11,22 +25,19 @@
 
           <div class="mt-8 flex justify-end">
             <% if (po.pdfFile) { %>
-            <a
-              href="<%= po.pdfFile.fileUrl %>"
-              class="px-4 py-2 rounded-lg bg-primary text-white shadow hover:bg-primary/90"
-              target="_blank"
-            >
-              Download PDF
-            </a>
-            <% } %>
+              <a href="<%= po.pdfFile.fileUrl %>"
+                class="px-4 py-2 rounded-lg bg-primary text-white shadow hover:bg-primary/90" target="_blank">
+                Download PDF
+              </a>
+              <% } %>
           </div>
         </div>
 
         <!-- PO STATUS -->
         <div class="mb-6">
           <% if(po.status==="generated" ){ %>
-          <span class="px-4 py-2 text-sm rounded-lg bg-blue-100 text-blue-700"> Generated </span>
-          <% } %>
+            <span class="px-4 py-2 text-sm rounded-lg bg-blue-100 text-blue-700"> Generated </span>
+            <% } %>
         </div>
 
         <!-- PO DETAILS CARD -->
@@ -34,10 +45,14 @@
           <h2 class="text-xl font-semibold mb-4">PO Details</h2>
 
           <p class="text-gray-600 dark:text-gray-400">PO Number:</p>
-          <p class="font-medium mb-3"><%= po.poNumber %></p>
+          <p class="font-medium mb-3">
+            <%= po.poNumber %>
+          </p>
 
           <p class="text-gray-600 dark:text-gray-400">Issue Date:</p>
-          <p class="font-medium mb-3"><%= po.createdAt.toDateString() %></p>
+          <p class="font-medium mb-3">
+            <%= po.createdAt.toDateString() %>
+          </p>
         </div>
 
         <!-- Tender Information -->
@@ -45,7 +60,9 @@
           <h2 class="text-xl font-semibold mb-4">Tender Information</h2>
 
           <p class="text-gray-600 dark:text-gray-400">Title:</p>
-          <p class="font-medium mb-3"><%= tender.title %></p>
+          <p class="font-medium mb-3">
+            <%= tender.title %>
+          </p>
         </div>
 
         <!-- Vendor Details -->
@@ -53,10 +70,14 @@
           <h2 class="text-xl font-semibold mb-4">Vendor Details</h2>
 
           <p class="text-gray-600 dark:text-gray-400">Name:</p>
-          <p class="font-medium mb-3"><%= vendor.name %></p>
+          <p class="font-medium mb-3">
+            <%= vendor.name %>
+          </p>
 
           <p class="text-gray-600 dark:text-gray-400">Email:</p>
-          <p class="font-medium mb-3"><%= vendor.email %></p>
+          <p class="font-medium mb-3">
+            <%= vendor.email %>
+          </p>
         </div>
 
         <!-- Contract Details -->
@@ -64,7 +85,8 @@
           <h2 class="text-xl font-semibold mb-4">Contract Details</h2>
 
           <p class="text-gray-600 dark:text-gray-400">Amount:</p>
-          <p class="font-medium mb-3">₹<%= po.amount %></p>
+          <p class="font-medium mb-3">₹<%= po.amount %>
+          </p>
 
           <p class="text-gray-600 dark:text-gray-400">Start Date:</p>
           <p class="font-medium mb-3">
@@ -86,10 +108,7 @@
           </p>
         </div>
 
-        <a
-          href="/publisher/tender/<%= tender._id %>/post-award"
-          class="text-primary font-semibold underline"
-        >
+        <a href="/publisher/tender/<%= tender._id %>/post-award" class="text-primary font-semibold underline">
           ← Back to Post Award
         </a>
       </div>

@@ -17,7 +17,6 @@ exports.getAllProperties = async (req, res) => {
       search: req.query.search || '',
       status: req.query.status || '',
     };
-    console.log('rgrvrrbr', req.query.status);
     const properties = await propertyService.getAllProperties(page, filter);
     res.render(VIEWS.ADMIN_PROPERTY_MANAGEMENT, {
       layout: LAYOUTS.ADMIN_LAYOUT,
@@ -232,7 +231,6 @@ exports.toggleBlockProperty = async (req, res) => {
     const { isBlocked, blockingReason } = req.body;
 
     const _property = await propertyService.toggleIsBlocked(id, isBlocked, blockingReason);
-    console.log('klnwdvlkv');
     res.json({
       success: true,
       message: `Property ${isBlocked ? 'blocked' : 'unblocked'} successfully`,

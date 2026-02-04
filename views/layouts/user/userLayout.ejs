@@ -151,7 +151,6 @@
 
     // Listen for realtime notifications
     socket.on("newNotification", (data) => {
-      console.log("📩 NEW notification:", data);
 
       const list = document.getElementById("notificationsList");
       const badge = document.getElementById("notificationBadge");

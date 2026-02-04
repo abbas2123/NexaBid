@@ -18,7 +18,6 @@ exports.getSignupPage = (req, res) => {
 exports.registerUser = async (req, res) => {
   try {
     const { name, email, phone, password } = req.body;
-    console.log(req.body);
     const response = await authService.registerUser({
       name,
       email,
@@ -83,14 +82,12 @@ exports.loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
     const response = await authService.LoginUser({ email, password });
-    console.log('[DEBUG] Setting token cookie:', response.token ? 'exists' : 'MISSING');
     res.cookie('token', response.token, {
       httpOnly: true,
       secure: false,
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
-    console.log('[DEBUG] Headers before send:', res.getHeaders());
     return res.status(statusCode.OK).json({
       success: true,
       message: response.message,
@@ -111,9 +108,7 @@ exports.getForgotPasswordPage = (req, res) => {
 };
 exports.postForgotPasswordPage = async (req, res) => {
   try {
-    console.log('postreqhit');
     const { email } = req.body;
-    console.log(email);
     const response = await authService.forgotPasswordService(email);
     res.status(statusCode.OK).json({
       success: true,
@@ -130,7 +125,6 @@ exports.getForgotOtpPage = async (req, res) => {
   try {
     const { userId } = req.query;
     const _mode = req.query.mode || 'signup';
-    console.log(userId);
     if (!userId || userId.trim() === '') {
       return res.redirect(REDIRECTS.FORGOT_PASSWORD);
     }
@@ -141,14 +135,12 @@ exports.getForgotOtpPage = async (req, res) => {
       mode: 'forgot',
     });
   } catch (err) {
-    console.log('Error loading forgot OTP page:', err);
     res.redirect(REDIRECTS.FORGOT_PASSWORD);
   }
 };
 exports.postForgotOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
-    console.log('req.body.....:', req.body);
     const _result = await authService.verifyForgotOtService({ userId, otp });
     res.status(statusCode.OK).json({
       success: true,
@@ -177,7 +169,6 @@ exports.resendOtp = async (req, res) => {
     });
     setTimeout(async () => {
       await authService.resendOtpByUserId(userId);
-      console.log('OTP resend operation completed');
     }, 0);
   } catch (err) {
     console.error('Resend OTP error:', err);
@@ -205,7 +196,6 @@ exports.getResetPasswordPage = async (req, res) => {
 exports.postRestPasswordPage = async (req, res) => {
   try {
     const { userId, password } = req.body;
-    console.log('RESET BODY:', req.body);
     const response = await authService.resetPasswordService({
       userId,
       password,
@@ -223,7 +213,6 @@ exports.postRestPasswordPage = async (req, res) => {
 };
 exports.getDashboard = async (req, res) => {
   try {
-    console.log('Dashboard Route Hit!');
     const { property: properties, tender: tenders } = await authService.getDashboard();
     return res.status(statusCode.OK).render(VIEWS.USER_DASHBOARD, {
       layout: LAYOUTS.USER_LAYOUT,

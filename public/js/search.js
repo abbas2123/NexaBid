@@ -60,7 +60,7 @@ async function fetchResults(query) {
     console.error('Search error:', err);
   }
 }
-console.log('Search JS loaded');
+
 searchInput.addEventListener(
   'input',
   debounce((e) => fetchResults(e.target.value), 400)

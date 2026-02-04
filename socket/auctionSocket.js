@@ -8,22 +8,18 @@ const lastBidMap = new Map();
 module.exports = (io, socket) => {
   const isAuthenticated = !!socket.user;
   const userId = socket.user?._id?.toString();
-  console.log();
   socket.on('join', () => {
     if (!isAuthenticated) return;
     socket.join(userId);
-    console.log();
   });
   socket.on('join_auction', ({ propertyId }, cb) => {
     if (!mongoose.Types.ObjectId.isValid(propertyId)) return;
     const room = `auction_${propertyId}`;
     socket.join(room);
-    console.log(`User ${userId} joined auction room: ${room}`);
     cb?.({ success: true, room });
     socket.emit('auction_joined', { room });
   });
   socket.on('disconnect', () => {
-    console.log(`❌ Socket disconnected: ${socket.user?.name || 'Guest'} (${socket.id})`);
   });
   socket.on('place_bid', async ({ propertyId, amount }) => {
     const bidAmount = Number(amount);
@@ -54,14 +50,12 @@ module.exports = (io, socket) => {
         return socket.emit('bid_error', { message: ERROR_MESSAGES.AUCTION_NOT_ENDED });
       }
       if (bidAmount <= property.currentHighestBid) {
-        console.log(`Bid Too Low: ${bidAmount} <= ${property.currentHighestBid}`);
         return socket.emit('bid_error', { message: ERROR_MESSAGES.BID_TOO_LOW || 'Bid too low' });
       }
       if (property.sellerId.toString() === userId) {
         return socket.emit('bid_error', { message: ERROR_MESSAGES.UNAUTHORIZED });
       }
       let payment;
-      console.log(`Searching payment for: User=${userId}, Property=${propertyId}`);
 
       payment = await Payment.findOne({
         userId: userId,
@@ -73,8 +67,6 @@ module.exports = (io, socket) => {
 
       if (!payment) {
         const allPaymentsForUser = await Payment.find({ userId: userId });
-        console.log(`Found ${allPaymentsForUser.length} total payments for user ${userId}`);
-        console.log('Payments:', JSON.stringify(allPaymentsForUser, null, 2));
 
         payment = await Payment.findOne({
           userId: userId,
@@ -93,13 +85,11 @@ module.exports = (io, socket) => {
         }
       }
       if (!payment) {
-        console.log(`Payment Required (Not Found): User ${userId} for Property ${propertyId}`);
         return socket.emit('bid_error', {
           message: ERROR_MESSAGES.PAYMENT_REQUIRED,
         });
       }
       if (payment.status !== 'success') {
-        console.log(`Payment Status Error: ${payment.status} for User ${userId}`);
         let msg = 'Payment not successful';
         if (payment.status === 'pending') msg = 'Payment verification pending';
         if (payment.status === 'refunded') msg = 'Participation fee was refunded';
@@ -130,7 +120,6 @@ module.exports = (io, socket) => {
           if (existingBid.isAutoBid && existingBid.autoBidMax > bidAmount) {
             isAutoBid = true;
             autoBidMax = existingBid.autoBidMax;
-            console.log(`Keep auto-bid active for ${userId}`);
           }
         }
 
@@ -197,14 +186,12 @@ module.exports = (io, socket) => {
           time: new Date(),
         });
 
-        console.log(`Bid placed: ${bidAmount} by ${userId} on ${propertyId}`);
 
         if (extended) {
           io.to(room).emit('auction_extended', {
             newEndTime: updatedProperty.auctionEndsAt,
             extendedBy: EXTENSION_TIME / 60000,
           });
-          console.log(`⏰ Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`);
         }
 
         if (!updatedProperty.autoBidLock) {

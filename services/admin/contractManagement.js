@@ -12,7 +12,7 @@ exports.getContractManagementData = async (publisherId, tab, isAdmin = false, pa
     tenderQuery.createdBy = publisherId;
   }
 
-  // Calculate pagination
+
   const skip = (page - 1) * limit;
   const totalTenders = await Tender.countDocuments(tenderQuery);
   const totalPages = Math.ceil(totalTenders / limit);
@@ -101,7 +101,6 @@ exports.getContractDetails = async (adminId, tenderId) => {
   })
     .populate('createdBy', 'name')
     .lean();
-  console.log('tender', tender);
   if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
   const bids = await TenderBid.find({ tenderId });
   const winnerBid = await TenderBid.findOne({

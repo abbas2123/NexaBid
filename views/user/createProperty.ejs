@@ -230,11 +230,9 @@
 
 
 <script>
-  console.log("🚀 JS Loaded");
 
   const form = document.getElementById("propertyForm");
   const isEditMode = form.dataset.id !== "";
-  console.log("Edit Mode?", isEditMode);
 
 
   // 🔥 Toggle auction fields
@@ -262,7 +260,6 @@
   // 📌 Submit Handler
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
-    console.log("🔥 SUBMIT STARTED");
 
     // NEW: Force Auction Checkbox
     if (!isAuctionInput.checked) {
@@ -316,7 +313,6 @@
       method = "PATCH";
     }
 
-    console.log("📌 Sending →", method, url);
 
     const res = await fetch(url, {
       method,
@@ -345,7 +341,6 @@
       return Swal.fire({ icon: "error", title: "Server Error", text: "Received invalid response from server." });
     }
 
-    console.log("🛬 API Response:", data);
 
     if (!data.success) {
       return Swal.fire({ icon: "error", title: "Submission Failed", text: data.message || "Something went wrong" });
@@ -396,7 +391,6 @@
 
 <script>
   async function deleteImage(propertyId, mediaId) {
-    console.log("🧹 deleteImage called", propertyId, mediaId);
 
     const result = await Swal.fire({
       title: "Delete this image?",
@@ -409,7 +403,6 @@
     });
 
     if (!result.isConfirmed) {
-      console.log("❌ Delete image cancelled");
       return;
     }
 
@@ -431,7 +424,6 @@
       });
 
       const data = await res.json();
-      console.log("🛬 Delete image response:", data);
 
       if (data.success) {
         const el = document.getElementById(`image-${mediaId}`);
@@ -462,7 +454,6 @@
   }
 
   async function deleteDoc(propertyId, docId) {
-    console.log("🧹 deleteDoc called", propertyId, docId);
 
     const result = await Swal.fire({
       title: "Delete this document?",
@@ -475,7 +466,6 @@
     });
 
     if (!result.isConfirmed) {
-      console.log("❌ Delete doc cancelled");
       return;
     }
 
@@ -496,7 +486,6 @@
       });
 
       const data = await res.json();
-      console.log("🛬 Delete doc response:", data);
 
       if (data.success) {
         const el = document.getElementById(`doc-${docId}`);

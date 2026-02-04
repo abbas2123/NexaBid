@@ -169,7 +169,6 @@
 
                 // Connection status
                 socket.on('connect', () => {
-                  console.log('✅ Publisher socket connected');
 
                   const statusEl = document.getElementById('connectionStatus');
                   if (statusEl) {
@@ -182,7 +181,6 @@
                 });
 
                 socket.on('disconnect', () => {
-                  console.log('❌ Socket disconnected');
                   const statusEl = document.getElementById('connectionStatus');
                   if (statusEl) {
                     statusEl.innerHTML = '🔴 Disconnected';
@@ -192,7 +190,6 @@
 
                 // New bid received
                 socket.on('new_bid', (data) => {
-                  console.log('🔥 New bid received', data);
 
                   const tbody = document.getElementById('bidFeed');
                   if (!tbody) return;
@@ -259,7 +256,6 @@
 
                 // ✅ Auction extended event
                 socket.on('auction_extended', (data) => {
-                  console.log('⏰ Auction extended:', data);
 
                   const newEndTime = new Date(data.newEndTime);
 
@@ -279,7 +275,6 @@
 
                 // Auction ended event
                 socket.on('auction_ended', (data) => {
-                  console.log('🏁 Auction ended:', data);
 
                   showNotification('Auction Ended!', 'Processing results...', 'success');
 

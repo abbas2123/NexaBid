@@ -328,8 +328,7 @@
 
 <script>
   // Injected labels from backend
-  const chartLabels = <%- JSON.stringify(stats.labels || []) %>;
-  console.log('Chart Labels:', chartLabels);
+  const chartLabels = <% - JSON.stringify(stats.labels || []) %>;
 
   const chartOptions = {
     responsive: true,
@@ -375,8 +374,8 @@
     });
   };
 
-  createChart('usersChart', 'Users', <%- JSON.stringify(stats.userStats) %>, '#3B82F6');
-  createChart('tendersChart', 'Tenders', <%- JSON.stringify(stats.tenderStats) %>, '#A855F7', 'bar');
-  createChart('propertiesChart', 'Properties', <%- JSON.stringify(stats.propertyStats) %>, '#F97316');
-  createChart('vendorsChart', 'Vendors', <%- JSON.stringify(stats.vendorStats) %>, '#10B981', 'bar');
+  createChart('usersChart', 'Users', <% - JSON.stringify(stats.userStats) %>, '#3B82F6');
+  createChart('tendersChart', 'Tenders', <% - JSON.stringify(stats.tenderStats) %>, '#A855F7', 'bar');
+  createChart('propertiesChart', 'Properties', <% - JSON.stringify(stats.propertyStats) %>, '#F97316');
+  createChart('vendorsChart', 'Vendors', <% - JSON.stringify(stats.vendorStats) %>, '#10B981', 'bar');
 </script>

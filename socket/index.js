@@ -2,7 +2,6 @@ const auctionSocket = require('./auctionSocket');
 const chatSocket = require('./chatSocket');
 module.exports = (io) => {
   io.on('connection', (socket) => {
-    console.log('🔌 Socket connected:', socket.user?.name || socket.user?._id || 'Unknown User');
     const userId = socket.user?._id?.toString();
     if (userId) {
       const User = require('../models/user');
@@ -20,7 +19,6 @@ module.exports = (io) => {
         return;
       }
       socket.join(userId.toString());
-      console.log(`User joined personal room: ${userId}`);
     });
     auctionSocket(io, socket);
     chatSocket(io, socket);

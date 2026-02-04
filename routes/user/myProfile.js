@@ -8,17 +8,10 @@ router.post(
   '/update-profile',
   authMiddleware.protectRoute,
   (req, res, next) => {
-    console.log('🔥 BEFORE MULTER');
     next();
   },
   uploadAvatar.any(),
   (req, res, next) => {
-    console.log(
-      '📄 AFTER MULTER: req.file =',
-      req.file,
-      'req.files =',
-      req.files && req.files.length
-    );
     next();
   },
   authController.updateProfile

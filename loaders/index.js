@@ -5,7 +5,6 @@ const registerRoutes = require('../routes');
 const initCron = require('./cron');
 module.exports = async ({ app, server }) => {
   await db();
-  console.log('Using centralized loaders...');
   configureExpress(app);
   let io;
   if (process.env.NODE_ENV !== 'test') {

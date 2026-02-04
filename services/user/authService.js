@@ -191,7 +191,7 @@ exports.resendOtpByUserId = async (userId) => {
     otpHash,
     expiresAt: Date.now() + 60 * 1000,
   });
-  await sendOtpEmail(user.email, otp).catch((err) => console.log('Resend OTP email error:', err));
+  await sendOtpEmail(user.email, otp).catch((err) => console.error('Resend OTP email error:', err));
   return {
     success: true,
     message: SUCCESS_MESSAGES.NEW_OTP_SENT,

@@ -128,24 +128,19 @@ exports.viewAgreementFile = async (fileId) => {
   return url || file.fileUrl;
 };
 exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
-  console.log('[DEBUG] issueWorkOrder started', { publisherId, tenderId });
   const existingWO = await WorkOrder.findOne({ tenderId });
   if (existingWO) throw new Error(ERROR_MESSAGES.WORK_ORDER_ALREADY_ISSUED);
-  console.log('[DEBUG] No existing WO found');
   const tender = await Tender.findOne({
     _id: tenderId,
     status: 'awarded',
     createdBy: publisherId,
   });
   if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
-  console.log('[DEBUG] Tender found');
   const winnerBid = await TenderBid.findOne({ tenderId, isWinner: true }).populate('vendorId');
   if (!winnerBid) throw new Error(ERROR_MESSAGES.WINNER_NOT_FOUND);
-  console.log('[DEBUG] Winner bid found');
   const agreement = await Agreement.findOne({ tenderId });
   if (!isTestEnv && (!agreement || !agreement.uploadedByVendor))
     throw new Error(ERROR_MESSAGES.AGREEMENT_NOT_SIGNED);
-  console.log('[DEBUG] Agreement found');
   let milestones = [];
   if (Array.isArray(body.milestones)) {
     milestones = body.milestones.map((m) => ({
@@ -155,7 +150,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
     }));
   }
   const woNumber = `WO-${Date.now()}`;
-  console.log('[DEBUG] Generating PDF for WO', woNumber);
   let cld;
   if (isTestEnv) {
     cld = { secure_url: 'http://mock-url.com/wo.pdf', public_id: 'mock_id', resource_type: 'image', type: 'upload', version: 1 };
@@ -167,7 +161,6 @@ exports.issueWorkOrder = async (publisherId, tenderId, body, _file) => {
       woNumber,
     });
   }
-  console.log('[DEBUG] PDF Generated', cld.secure_url);
   const fileDoc = await File.create({
     ownerId: publisherId,
     fileName: `WorkOrder-${woNumber}.pdf`,
@@ -249,13 +242,11 @@ exports.getIssuePageData = async (publisherId, tenderId) => {
   };
 };
 exports.getTrackingData = async (workOrderId) => {
-  console.log(workOrderId);
   const wo = await WorkOrder.findById(workOrderId)
     .populate('vendorId', 'name email')
     .populate('tenderId', 'title')
     .populate('notes.author', 'name')
     .populate('pdfFile');
-  console.log(wo);
   if (!wo) return { redirectToPostAward: true };
   return wo;
 };
@@ -306,21 +297,17 @@ exports.completeWorkOrder = async (workOrderId) => {
   return wo;
 };
 exports.getCompletionSummary = async (WorkOrderId) => {
-  console.log('[DEBUG] getCompletionSummary Service. ID:', WorkOrderId);
   const workOrderId = WorkOrderId.replace('completion-', '');
-  console.log('[DEBUG] Cleaned ID:', workOrderId);
   const wo = await WorkOrder.findById(workOrderId)
     .populate('vendorId', 'name')
     .populate('issuedBy', 'name')
     .populate('tenderId', 'title')
     .populate('completionReport')
     .lean();
-  console.log('[DEBUG] WorkOrder found:', !!wo);
   if (!wo) throw new Error('WORK_ORDER_NOT_FOUND');
   const totalMilestones = wo.milestones.length;
   const completed = wo.milestones.filter((m) => m.status === 'completed').length;
   const progress = totalMilestones === 0 ? 100 : Math.round((completed / totalMilestones) * 100);
-  console.log('sd', wo.vendorId.name);
   const vendorName = wo.vendorId?.name;
   return {
     workOrder: {

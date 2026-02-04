@@ -12,8 +12,6 @@ exports.initiatePayment = async (req, res) => {
   try {
     const { type, id } = req.query;
     const userId = req.user._id;
-    console.log('type', type);
-    console.log('id', id);
     if (!type || !id) return res.redirect(REDIRECTS.DASHBOARD);
     const payment = await paymentService.startInitiatePayment(userId, type, id);
     res.redirect(`${ROUTES.PAYMENT_ESCROW}/${payment._id}`);
@@ -33,7 +31,6 @@ exports.createOrder = async (req, res) => {
   try {
     const { paymentId, amount } = req.body;
     const result = await paymentService.createRazorpayOrder(paymentId, amount);
-    console.log('payment order creating......');
     return res.status(statusCode.OK).json({
       success: true,
       ...result,
@@ -76,9 +73,7 @@ exports.processWalletPayment = async (req, res) => {
   try {
     const { paymentId, amount } = req.body;
     const userId = req.user._id;
-    console.log('💳 Wallet payment:', { paymentId, amount, userId });
     const result = await paymentService.processWalletPayment(userId, paymentId, amount);
-    console.log('✅ Wallet payment successful');
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.PAYMENT_SUCCESSFUL,
@@ -95,16 +90,11 @@ exports.processWalletPayment = async (req, res) => {
 };
 exports.verifyPayment = async (req, res) => {
   try {
-    console.log('🚀 Verify Payment Route Hit');
-    console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
 
     const paymentId = req.query.paymentId || req.body.paymentId;
-    console.log('🆔 Payment ID extracted:', paymentId);
 
     const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
-    console.log('✅ Payment verified successfully:', payment._id);
 
-    console.log('🔄 Redirecting to success page...');
     return res.redirect(`/payments/success/${payment._id}`);
   } catch (err) {
     console.error('❌ Verify Payment Error:', err);
@@ -114,22 +104,18 @@ exports.verifyPayment = async (req, res) => {
     const reason = encodeURIComponent(err.message || 'Verification Failed');
 
     if (paymentId) {
-      console.log(`🔄 Redirecting to failure page (Payment ID: ${paymentId})`);
       return res.redirect(`/payments/failure/${paymentId}?reason=${reason}`);
     } else {
-      console.log('❌ No Payment ID found to redirect to failure page');
       return res.status(400).send('Payment Verification Failed and Payment ID missing.');
     }
   }
 };
 exports.paymentSuccessPage = async (req, res) => {
   try {
-    console.log('sdddvd');
     const payment = await paymentService.getSuccessPageData(req.params.paymentId);
     if (!payment) {
       return res.redirect(REDIRECTS.DASHBOARD);
     }
-    console.log('succ', payment);
     res.status(statusCode.OK).render(VIEWS.PAYMENT_SUCCESS, {
       layout: LAYOUTS.USER_LAYOUT,
       ...payment,
@@ -142,10 +128,8 @@ exports.paymentSuccessPage = async (req, res) => {
 };
 exports.paymentFailurePage = async (req, res) => {
   try {
-    console.log('❌ Payment failure route hit');
     const payment = await paymentService.getFailurePageData(req.params.paymentId);
     if (!payment) return res.redirect(REDIRECTS.DASHBOARD);
-    console.log('failed', payment);
     res.status(statusCode.OK).render(VIEWS.PAYMENT_FAILS, {
       layout: LAYOUTS.USER_LAYOUT,
       ...payment,
@@ -166,7 +150,6 @@ exports.applyCoupon = async (req, res) => {
         .json({ success: false, message: ERROR_MESSAGES.INVALID_REQUEST });
     }
     const result = await paymentService.applyCoupon(userId, intentId, couponCode);
-    console.log('✅ Coupon applied:', couponCode);
     return res.status(statusCode.OK).json({
       success: true,
       ...result,
@@ -182,9 +165,7 @@ exports.applyCoupon = async (req, res) => {
 exports.removeCoupon = async (req, res) => {
   try {
     const { intentId } = req.body;
-    console.log('🗑️ Removing coupon for payment:', intentId);
     const result = await paymentService.removeCoupon(intentId);
-    console.log('✅ Coupon removed:', result.removedCouponCode);
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.COUPON_REMOVED,

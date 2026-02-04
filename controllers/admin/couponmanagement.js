@@ -71,7 +71,6 @@ exports.createCoupon = async (req, res) => {
 exports.toggleCouponStatus = async (req, res) => {
   try {
     const result = await toggleCouponStatusService(req.params.id);
-    console.log('result',result);
     if (!result.ok && result.reason === COUPON_MESSAGES.NOT_FOUND) {
       return res.status(statusCode.NOT_FOUND).json({ success: false });
     }

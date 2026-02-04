@@ -25,7 +25,6 @@ exports.getMyParticipation = async (req, res) => {
   try {
     const userId = req.user._id;
     const { properties, tenders } = await myProfileService.getMyParticipationData(userId);
-    console.log(properties, tenders);
     return res.render('profile/myParticipation', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
@@ -78,9 +77,7 @@ exports.viewTenderPostAward = async (req, res) => {
       }
     }
     const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
-    console.log('result', result);
     if (result.po) {
-      console.log('📄 Vendor PO PDF:', result.po.pdfFile);
     }
     if (result.redirectToWorkOrder) {
       return res.redirect(`/user/work-orders/${result.workOrderId}`);
@@ -146,7 +143,6 @@ exports.vendorRespondPO = async (req, res) => {
       action: req.body.action,
       reason: req.body.reason,
     });
-    console.log('result', result);
     return res.redirect(
       `/user/my-participation/tender/${result.tenderId}?response=${result.response}`
     );
@@ -168,7 +164,6 @@ exports.vendorRespondPO = async (req, res) => {
 };
 exports.getUploadPage = async (req, res) => {
   try {
-    console.log('ssddsgsg');
     const { tenderId } = req.params;
     const data = await myProfileService.getAgreementUploadData(tenderId, req.user._id);
     return res.render('profile/agreementUpload', {
@@ -211,7 +206,6 @@ exports.uploadSignedAgreement = async (req, res) => {
 exports.getWorkOrderDetails = async (req, res, next) => {
   try {
     const workOrder = await myProfileService.getWorkOrderDetailsService(req.params.id);
-    console.log('dvwwv', workOrder.status);
     if (workOrder.status === 'completed') {
       return res.redirect(`/publisher/work-order/completed/completion-${workOrder._id}`);
     }
@@ -234,7 +228,6 @@ exports.getWorkOrderDetails = async (req, res, next) => {
 };
 exports.uploadProof = async (req, res) => {
   try {
-    console.log('files', req.file);
     await myProfileService.uploadProofService(
       req.params.woId,
       req.params.mid,

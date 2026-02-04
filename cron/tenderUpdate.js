@@ -82,7 +82,6 @@ module.exports = async (io) => {
                         message: `💸 Refund ₹${refundAmount} credited for tender "${tender.title}"`,
                         link: '/wallet',
                     });
-                    console.log(`Processed refund for Bidder ${bid.vendorId._id} on Tender ${tender._id}`);
                 } catch (e) {
                     await session.abortTransaction();
                     console.error(`Refund processing failed for bidder ${bid.vendorId?._id}:`, e);

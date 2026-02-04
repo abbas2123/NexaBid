@@ -25,15 +25,13 @@ const protectRoute = async (req, res, next) => {
     req.user = updatedUser;
     next();
   } catch (err) {
-    console.log('protectRoute ERROR:', err.message);
     return res.redirect('/auth/login');
   }
 };
 const preventAuthPages = (req, res, next) => {
-  console.log('➡️ preventAuthPages triggered for path:', req.path);
   const { token, adminToken } = req.cookies;
 
-  
+
   if (req.path.startsWith('/admin')) {
     if (adminToken) {
       try {
@@ -46,7 +44,7 @@ const preventAuthPages = (req, res, next) => {
       }
     }
   }
-  
+
   else {
     if (token) {
       try {
@@ -63,21 +61,17 @@ const preventAuthPages = (req, res, next) => {
 };
 const isAuthenticated = (req, res, next) => {
   if (req.user) {
-    console.log('Auth: Passport session user');
     return next();
   }
   const token = req.cookies?.token || req.headers.authorization?.replace('Bearer ', '');
   if (!token) {
-    console.log('Auth: No token found');
     return res.redirect('/auth/login');
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
-    console.log('Auth: JWT user');
     return next();
   } catch (err) {
-    console.log('Auth: Invalid token', err.message);
     return res.redirect('/auth/login');
   }
 };
@@ -96,7 +90,6 @@ const checkResetPassword = (req, res, next) => {
   next();
 };
 const nochache = function noCache(req, res, next) {
-  console.log('nocache..hit');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');

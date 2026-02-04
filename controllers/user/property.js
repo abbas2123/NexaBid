@@ -11,7 +11,6 @@ exports.getPropertyPage = async (req, res) => {
       maxPrice: req.query.maxPrice || '',
     };
     const { properties, pagination } = await propertyService.getProperties(page, filters);
-    console.log(properties);
     res.render('user/property', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
@@ -60,7 +59,6 @@ exports.getCreatePropertyPage = (req, res) =>
   });
 
 exports.postCreateProperty = async (req, res) => {
-  console.log('reached');
   try {
     const {
       title,

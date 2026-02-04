@@ -56,18 +56,14 @@ exports.completeWorkOrder = async (req, res) => {
   res.json({ success: true, workOrder: result.wo });
 };
 exports.workOrderCompletionPage = async (req, res) => {
-  console.log('[DEBUG] workOrderCompletionPage hit. Params:', req.params);
   try {
     const data = await postAwardService.getCompletionSummary(req.params.id);
-    console.log('[DEBUG] getCompletionSummary success. Data keys:', Object.keys(data));
-    console.log('data', data);
     res.render(VIEWS.WORK_ORDER_COMPLETED, {
       layout: LAYOUTS.USER_LAYOUT,
       ...data,
       user: req.user,
     });
   } catch (err) {
-    console.error('[DEBUG] workOrderCompletionPage error:', err);
     res.redirect('/auth/dashboard');
   }
 };
@@ -79,7 +75,6 @@ exports.downloadReport = async (req, res) => {
     if (workOrder.completionReport && workOrder.completionReport.fileUrl) {
       return res.redirect(workOrder.completionReport.fileUrl);
     }
-    console.log('data', data);
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     const buffers = [];
     doc.on('data', buffers.push.bind(buffers));

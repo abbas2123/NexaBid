@@ -387,7 +387,6 @@
     // notification handles ONLY sidebar update for OTHERS.
     // But server only sends notification to those NOT in room.
     // So this is safe.
-    console.log('Notification received:', data);
 
     if (data.type === 'message') {
       const tId = typeof data.threadId === 'object' ? data.threadId._id : data.threadId;
@@ -521,7 +520,6 @@
 
           const result = await response.json();
           if (result.success) {
-            console.log('File uploaded successfully');
           } else {
             alert(result.message || 'Failed to upload file');
           }
@@ -545,7 +543,6 @@
     setTimeout(() => {
       if (typeof window.loadUnreadMessageCount === 'function') {
         window.loadUnreadMessageCount();
-        console.log('🔄 Chat badge refreshed after opening thread');
       }
     }, 500);
   </script>

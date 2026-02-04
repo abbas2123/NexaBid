@@ -135,7 +135,6 @@ exports.getAdminLiveAuctionData = async (propertyId) => {
   };
 };
 exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
-  console.log('toglled');
   const update = { isBlocked };
   if (isBlocked) {
     update.blockingReason = reason;

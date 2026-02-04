@@ -63,11 +63,11 @@
           setTimeout(() => {
             audio.muted = false;
             audio.currentTime = 0;
-            audio.play().catch(e => console.log('Audio play failed:', e));
+            audio.play().catch(e => {});
           }, 300);
         })
         .catch((err) => {
-          console.log('Muted autoplay failed:', err);
+          console.error('Muted autoplay failed:', err);
         });
     }
   });

@@ -3,7 +3,6 @@ const Property = require('../../models/property');
 const Tender = require('../../models/tender');
 const router = express.Router();
 router.get('/', async (req, res) => {
-  console.log('search');
   const q = req.query.q || '';
   if (!q.trim()) {
     return res.json({ properties: [], tenders: [] });

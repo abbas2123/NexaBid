@@ -233,15 +233,11 @@ exports.createPO = async ({ tenderId, publisher, form, io }) => {
 };
 exports.getPOData = async (tenderId) => {
   const allPos = await PO.find({ tenderId }).select('poNumber status createdAt pdfFile');
-  console.log(`[PO Debug] Found ${allPos.length} POs for tender ${tenderId}:`);
-  allPos.forEach((p) =>
-    console.log(` - ID: ${p._id}, Status: ${p.status}, Created: ${p.createdAt}, PO#: ${p.poNumber}`)
-  );
+
   const po = await PO.findOne({ tenderId })
     .sort({ createdAt: -1 })
     .populate('vendorId')
     .populate('pdfFile');
-  if (po) console.log(`[PO Debug] Selected PO: ${po.poNumber}, FileID: ${po.pdfFile?._id}`);
   if (!po) throw new Error(ERROR_MESSAGES.PO_NOT_FOUND);
   const tender = await Tender.findById(tenderId);
   if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);

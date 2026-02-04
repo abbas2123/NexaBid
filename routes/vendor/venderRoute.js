@@ -8,7 +8,6 @@ const { vendorVerificationSchema } = require('../../validators/vendor.js');
 const reportManagementController = require('../../controllers/user/reportManagement');
 const workOrderController = require('../../controllers/vendor/workOrderController');
 
-console.log('🔥 vendor router LOADED');
 const router = express.Router();
 
 router.get(

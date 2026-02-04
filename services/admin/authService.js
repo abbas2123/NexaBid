@@ -299,7 +299,6 @@ exports.blockUser = async (userId, req) => {
   const user = await User.findByIdAndUpdate(userId, { status: 'blocked' }, { new: true });
   if (user) {
     const io = req.app.get('io');
-    console.log('🚨 Forcing logout of:', userId);
     io.to(userId.toString()).emit('forceLogout', {
       message: ERROR_MESSAGES.ACCOUNT_BLOCKED_BY_ADMIN,
     });

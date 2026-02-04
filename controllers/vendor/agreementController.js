@@ -3,7 +3,6 @@ const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 exports.getUploadPage = async (req, res) => {
   try {
-    console.log('❌dvdvddvwvwr');
     const tenderId = req.params.id;
     let data;
     data = await postAwardService.getPublisherAgreementUploadData(tenderId, req.user._id);
@@ -28,7 +27,6 @@ exports.getUploadPage = async (req, res) => {
 };
 exports.uploadAgreement = async (req, res) => {
   try {
-    console.log('file');
     await postAwardService.uploadPublisherAgreement({
       tenderId: req.params.id,
       publisherId: req.user._id,
@@ -50,7 +48,6 @@ exports.view = async (req, res) => {
       return res.status(statusCode.BAD_REQUEST).send('Invalid file ID');
     }
     const filePath = await postAwardService.viewAgreementFile(req.params.id);
-    console.log('Generated file path:', filePath);
     if (!filePath) {
       throw new Error(ERROR_MESSAGES.FILE_NOT_FOUND);
     }

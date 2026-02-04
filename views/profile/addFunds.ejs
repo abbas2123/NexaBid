@@ -231,7 +231,6 @@
         '<span class="material-icons animate-spin">refresh</span><span>Processing...</span>';
 
       try {
-        console.log('💳 Creating order for amount:', selectedAmount);
 
         // Create order on server
         const response = await fetch('/wallet/api/create-order', {
@@ -242,14 +241,12 @@
           body: JSON.stringify({ amount: selectedAmount }),
         });
 
-        console.log('📥 Response status:', response.status);
 
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('📥 Response ', data);
 
         if (!data.success) {
           console.error('❌ Order creation failed:', data.message);
@@ -259,7 +256,6 @@
           return;
         }
 
-        console.log('✅ Order created successfully:', data.orderId);
 
         // Check if Razorpay loaded
         if (typeof Razorpay === 'undefined') {
@@ -309,7 +305,6 @@
           },
           modal: {
             ondismiss: function () {
-              console.log('⚠️ Payment cancelled');
               proceedBtn.disabled = false;
               proceedBtn.innerHTML = originalBtnHTML;
             },
@@ -323,7 +318,6 @@
           },
         };
 
-        console.log('🚀 Opening Razorpay checkout...');
         const rzp = new Razorpay(options);
 
         rzp.on('payment.failed', function (response) {

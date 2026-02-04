@@ -15,5 +15,4 @@ module.exports = (io) => {
       cronRunning = false;
     }
   });
-  console.log('⏰ Cron jobs initialized');
 };

@@ -147,17 +147,15 @@
 <script>
   async function handleAvatarUpload(input) {
     if (!input.files || !input.files[0]) return;
-console.log('halooo',input.files);
-    
- 
+
+
 
     const file = input.files[0];
 
-const fileName = file.name;
-const extension = fileName.split('.').pop().toLowerCase();
+    const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
 
 
-    console.log(file);
     const formData = new FormData();
     formData.append('avatar', file);
 
@@ -170,15 +168,15 @@ const extension = fileName.split('.').pop().toLowerCase();
           Swal.showLoading();
         }
       });
-let allowed = ['jpg', 'png'];
+      let allowed = ['jpg', 'png'];
 
-if (!allowed.includes(extension)) {
-  Swal.fire({
-    title: 'Not allowed',
-    text: 'File type is not allowed',
-    icon: 'error'
-  });
-}
+      if (!allowed.includes(extension)) {
+        Swal.fire({
+          title: 'Not allowed',
+          text: 'File type is not allowed',
+          icon: 'error'
+        });
+      }
       const response = await fetch('/user/profile/avatar', {
         method: 'PATCH',
         body: formData

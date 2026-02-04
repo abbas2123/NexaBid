@@ -237,7 +237,6 @@ class AuctionService {
             isAutoBid: true,
           });
 
-          console.log(`🤖 AutoBid: ${candidate.bidderId.name} placed ${nextBidAmount}`);
 
           const timeLeft = updated.auctionEndsAt.getTime() - Date.now();
           if (timeLeft <= LAST_MINUTE_WINDOW && timeLeft > 0) {
@@ -249,9 +248,6 @@ class AuctionService {
                 extended: true,
               },
               { session }
-            );
-            console.log(
-              `⏰ AutoBid Extension: Auction ${propertyId} extended by ${EXTENSION_TIME / 60000} minutes`
             );
             io.to(room).emit('auction_extended', {
               newEndTime: updatedEndTime,

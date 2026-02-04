@@ -236,7 +236,6 @@
           const status = data.status;
           const isBlocked = data.isBlocked;
 
-          console.log('Status Check:', status, 'Blocked:', isBlocked);
 
           // If blocked state changed, reload
           if (isBlocked !== (<%= tender.isBlocked %>)) {

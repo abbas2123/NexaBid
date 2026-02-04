@@ -120,14 +120,6 @@ exports.getMyParticipationData = async (userId) => {
         now >= auctionStartDate &&
         now <= auctionEndDate;
 
-      console.log(`🕵️‍♂️ Debug Status [${property.title}]:`, {
-        status: property.status,
-        now: now.toISOString(),
-        start: auctionStartDate ? auctionStartDate.toISOString() : 'null',
-        end: auctionEndDate ? auctionEndDate.toISOString() : 'null',
-        isLive,
-        isEnded
-      });
 
       const isWinner = property.soldTo && property.soldTo.toString() === userId.toString();
       return {
@@ -195,7 +187,6 @@ exports.getMyParticipationData = async (userId) => {
   return { properties, tenders };
 };
 exports.getVendorPostAwardData = async (tenderId, userId) => {
-  console.log('dvdvdv', userId);
   const tender = await Tender.findById(tenderId);
   if (!tender) {
     throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
@@ -220,7 +211,6 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
   })
     .sort({ createdAt: -1 })
     .populate('pdfFile');
-  console.log('rvevec', po);
   const poCount = await PurchaseOrder.countDocuments({
     tenderId,
     status: { $ne: 'archived' },
@@ -258,7 +248,6 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
 };
 exports.respondToPO = async ({ poId, action, reason }) => {
   const po = await PurchaseOrder.findById(poId).populate('tenderId');
-  console.log('action', action);
   if (!po) {
     throw new Error(ERROR_MESSAGES.PO_NOT_FOUND);
   }
@@ -354,9 +343,7 @@ exports.getWorkOrderDetailsService = async (workOrderId) => {
     .populate('notes.author', 'name email');
 };
 exports.uploadProofService = async (woId, milestoneId, file, _userId) => {
-  console.log('woId', woId);
   const wo = await WorkOrder.findById(woId);
-  console.log(wo);
   if (!wo) throw new Error(ERROR_MESSAGES.WORK_ORDER_NOT_FOUND);
   const m = wo.milestones.id(milestoneId);
   if (!m) throw new Error(ERROR_MESSAGES.MILESTONE_NOT_FOUND);

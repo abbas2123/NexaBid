@@ -1,8 +1,13 @@
+const path = require('path');
 const vision = require('@google-cloud/vision');
 const { withTimeout } = require('./promiseUtils');
 
+const keyPath = process.env.GOOGLE_APPLICATION_CREDENTIALS
+  ? path.resolve(process.cwd(), process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  : undefined;
+
 const client = new vision.ImageAnnotatorClient({
-  keyFilename: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+  keyFilename: keyPath,
 });
 
 exports.extractTextFromImage = async (filePath) => {

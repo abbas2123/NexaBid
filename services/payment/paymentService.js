@@ -505,6 +505,8 @@ exports.processAutomaticRefunds = async (contextId, contextType, reason) => {
     status: PAYMENT_STATUS.SUCCESS,
   });
 
+  console.log(`Found ${successfulPayments.length} successful payments to refund for ${contextType} ${contextId}`);
+
   if (!successfulPayments.length) {
     return;
   }
@@ -561,9 +563,6 @@ const _processSingleRefund = async (payment, contextId, contextType, reason) => 
         refundStatus: 'completed',
         'metadata.refundNote': `System auto-refund (Item Blocked): ${reason}`,
       },
-      $unset: {
-        orderNumber: 1
-      }
     },
     { session }
   );

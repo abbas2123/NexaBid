@@ -142,8 +142,15 @@ exports.toggleIsBlocked = async (id, isBlocked, reason = '') => {
   const property = await Property.findByIdAndUpdate(id, update, { new: true });
 
   if (isBlocked && property) {
-    const paymentService = require('../payment/paymentService');
-    paymentService.processAutomaticRefunds(id, 'property', reason);
+    try {
+      const paymentService = require('../payment/paymentService');
+      console.log(`Creating auto-refunds for blocked property: ${id}`);
+      await paymentService.processAutomaticRefunds(id, 'property', reason);
+      console.log(`Auto-refunds completed for property: ${id}`);
+    } catch (refundError) {
+      console.error('Failed to process automatic refunds:', refundError);
+      // We log but don't throw, to ensure the block itself persists
+    }
   }
 
   return property;

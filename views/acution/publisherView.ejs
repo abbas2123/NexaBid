@@ -231,6 +231,14 @@
                     totalBidsEl.textContent = currentCount + 1;
                   }
 
+                  // Update highest bidder name
+                  const highestBidderNameEl = document.getElementById('highestBidderName');
+                  if (highestBidderNameEl) {
+                    highestBidderNameEl.textContent = data.bidderName || 'User';
+                    highestBidderNameEl.classList.add('text-green-600', 'transition-colors');
+                    setTimeout(() => highestBidderNameEl.classList.remove('text-green-600'), 1000);
+                  }
+
                   // UPDATE RESERVE PRICE STATUS
                   if (auctionReservePrice > 0) {
                     const statusEl = document.getElementById('reservePriceStatus');

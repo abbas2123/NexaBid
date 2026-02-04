@@ -11,12 +11,14 @@ module.exports = defineConfig({
             on('task', {
                 async seedUser({ name, email, password, role, isVendor }) {
                     if (mongoose.connection.readyState === 0) {
+                        console.log('Connecting to:', process.env.MONGO_URI);
                         await mongoose.connect(process.env.MONGO_URI);
                     }
+                    console.log('Using DB:', mongoose.connection.name);
 
                     await User.deleteOne({ email });
 
-                    const hash = await bcrypt.hash(password, 10);
+                    const hash = await bcrypt.hash(password || 'Password@123', 10);
                     const user = await User.create({
                         name,
                         email,
@@ -36,7 +38,7 @@ module.exports = defineConfig({
 
                     await User.deleteOne({ email });
 
-                    const hash = await bcrypt.hash(password, 10);
+                    const hash = await bcrypt.hash(password || 'Admin@123', 10);
                     const admin = await User.create({
                         name: 'E2E Admin',
                         email,
@@ -152,7 +154,7 @@ module.exports = defineConfig({
 
                     return { tenderId: tender._id.toString(), bidId: bid._id.toString() };
                 },
-                async seedLiveAuction({ sellerEmail, basePrice }) {
+                async seedLiveAuction({ sellerEmail, basePrice, title }) {
                     if (mongoose.connection.readyState === 0) {
                         await mongoose.connect(process.env.MONGO_URI);
                     }
@@ -162,7 +164,7 @@ module.exports = defineConfig({
                     if (!seller) throw new Error('Seller not found');
 
                     const property = await Property.create({
-                        title: 'Live Auction Property',
+                        title: title || 'Live Auction Property',
                         description: 'Prime location for live bidding test',
                         type: 'house',
                         address: '123 Auction St',
@@ -219,11 +221,11 @@ module.exports = defineConfig({
                     });
                     return code;
                 },
-                async seedPayment({ tenderId, email }) {
+                async seedPayment({ contextId, contextType, email, type, amount }) {
                     if (mongoose.connection.readyState === 0) {
                         await mongoose.connect(process.env.MONGO_URI);
                     }
-                    const Payment = require('./models/payment'); // Ensure model exists
+                    const Payment = require('./models/payment');
                     const User = require('./models/user');
 
                     const user = await User.findOne({ email });
@@ -231,15 +233,15 @@ module.exports = defineConfig({
 
                     await Payment.create({
                         userId: user._id,
-                        amount: 500,
+                        amount: amount || 500,
                         currency: 'INR',
                         status: 'success',
                         gateway: 'razorpay',
                         gatewayPaymentId: 'pay_mock_' + Date.now(),
                         gatewayTransactionId: 'order_mock_' + Date.now(),
-                        contextType: 'tender',
-                        contextId: tenderId,
-                        type: 'participation_fee',
+                        contextType: contextType || 'tender',
+                        contextId: contextId,
+                        type: type || 'participation_fee',
                         createdAt: new Date()
                     });
                     return true;

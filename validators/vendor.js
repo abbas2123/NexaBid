@@ -45,20 +45,44 @@ const vendorVerificationSchema = z
   .superRefine((data, ctx) => {
     if (data.actionType === 'scan') return;
 
-    if (data.actionType === 'submit' && data.isConfirmed !== 'true') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: VALIDATION_MESSAGES.CONFIRM_BUSINESS_DETAILS,
-        path: ['isConfirmed'],
-      });
-    }
+    if (data.actionType === 'submit') {
+      if (!data.businessName) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Business Name is required for submission',
+          path: ['businessName'],
+        });
+      }
+      if (!data.panNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'PAN Number is required for submission',
+          path: ['panNumber'],
+        });
+      }
+      if (!data.gstNumber) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'GST Number is required for submission',
+          path: ['gstNumber'],
+        });
+      }
 
-    if (data.actionType === 'submit' && data.terms !== true) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: VALIDATION_MESSAGES.ACCEPT_TERMS,
-        path: ['terms'],
-      });
+      if (data.isConfirmed !== 'true') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: VALIDATION_MESSAGES.CONFIRM_BUSINESS_DETAILS,
+          path: ['isConfirmed'],
+        });
+      }
+
+      if (data.terms !== true) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: VALIDATION_MESSAGES.ACCEPT_TERMS,
+          path: ['terms'],
+        });
+      }
     }
   });
 

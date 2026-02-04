@@ -255,7 +255,7 @@ exports.getPendingTasks = async () => {
   const tasks = [];
   pendingVendor.forEach((v) => {
     tasks.push({
-      name: v.companyDetails?.companyName || 'Unknown Vendor',
+      name: v.businessName || 'Unknown Vendor',
       task: 'Vendor Approval',
       status: 'Pending',
       dueDate: new Date(v.createdAt).toLocaleDateString(),

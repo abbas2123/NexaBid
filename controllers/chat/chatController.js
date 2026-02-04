@@ -95,7 +95,9 @@ exports.postMessage = async (req, res, next) => {
 exports.uploadFile = async (req, res, next) => {
   try {
     const { threadId } = req.params;
-    if (!req.file) return res.redirect(`/chat/thread/${threadId}`);
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No file provided' });
+    }
     let fileUrl = null;
     let fileType = 'text';
     if (req.file) {
@@ -127,9 +129,10 @@ exports.uploadFile = async (req, res, next) => {
       },
       req.app.get('io')
     );
-    res.redirect(`/chat/thread/${threadId}`);
+    res.json({ success: true, message: 'File uploaded successfully' });
   } catch (err) {
-    next(err);
+    console.error('Error uploading file:', err);
+    res.status(500).json({ success: false, message: 'Failed to upload file' });
   }
 };
 exports.unreaded = async (req, res) => {

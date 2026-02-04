@@ -14,23 +14,9 @@ describe('Auction Bidding Flow', () => {
         cy.task('seedUser', {
             name: 'Auction Seller',
             email: sellerEmail,
+            password: 'Password@123',
             role: 'vendor',
             isVendor: true
-        });
-
-        // 2. Seed Live Auction Property
-        const tomorrow = new Date();
-        tomorrow.setDate(tomorrow.getDate() + 1);
-
-        cy.task('seedProperty', {
-            sellerEmail: sellerEmail,
-            title: propertyTitle,
-            basePrice: 5000,
-            isAuction: true,
-            auctionStartsAt: new Date().toISOString(), // Started now
-            auctionEndsAt: tomorrow.toISOString(),
-            status: 'published',
-            verificationStatus: 'approved'
         });
 
         // 3. Seed Bidder
@@ -42,28 +28,51 @@ describe('Auction Bidding Flow', () => {
             isVendor: false
         });
 
-        // 4. Login as Bidder
-        cy.visit('/auth/login');
-        cy.get('#email').type(bidderEmail);
-        cy.get('#password').type('Password@123');
-        cy.contains('button', 'Login').click();
-        cy.url().should('include', '/auth/dashboard');
+        // 2. Seed Live Auction Property & Payment
+        cy.task('seedLiveAuction', {
+            sellerEmail: sellerEmail,
+            title: propertyTitle,
+            basePrice: 5000
+        }).then((propertyId) => {
+            // Seed Participation Fee for Bidder
+            cy.task('seedPayment', {
+                email: bidderEmail,
+                contextId: propertyId,
+                contextType: 'property',
+                type: 'participation_fee',
+                amount: 500
+            });
 
-        // 5. Navigate to Auctions
-        cy.visit('/auctions'); // Assuming this is the public auction list
-        cy.contains(propertyTitle).click(); // Click to view details
+            // 4. Login as Bidder
+            cy.visit('/auth/login');
+            cy.get('#email').type(bidderEmail);
+            cy.get('#password').type('Password@123');
+            cy.contains('button', 'Log in').click();
+            cy.url().should('include', '/auth/dashboard');
 
-        // 6. Place Bid
-        // Verify current price
-        cy.contains('5000').should('exist');
+            // 5. Navigate to Live Auction directly
+            cy.visit(`/auctions/live/${propertyId}`);
 
-        // Enter bid
-        // Need to find bid input. Selector might be 'input[name="amount"]'
-        cy.get('input[name="amount"]').type('6000');
-        cy.contains('button', 'Place Bid').click();
+            // 6. Place Bid
+            // Verify current price (flexible formatting)
+            cy.get('#currentBid', { timeout: 10000 }).invoke('text').then((text) => {
+                const cleanedText = text.replace(/[^0-9]/g, '');
+                expect(cleanedText).to.contain('5000');
+            });
 
-        // 7. Verify Success
-        cy.contains('Bid placed successfully').should('be.visible');
-        cy.contains('6000').should('exist'); // New highest bid
+            // Enter bid
+            cy.get('#bidAmount').type('6000');
+            cy.get('#placeBidBtn').click();
+
+            // 7. Verify Success
+            cy.get('#currentBid', { timeout: 10000 }).invoke('text').then((text) => {
+                const cleanedText = text.replace(/[^0-9]/g, '');
+                expect(cleanedText).to.contain('6000');
+            });
+            cy.get('#bidFeed').invoke('text').then((text) => {
+                const cleanedText = text.replace(/[^0-9]/g, '');
+                expect(cleanedText).to.contain('6000');
+            });
+        });
     });
 });

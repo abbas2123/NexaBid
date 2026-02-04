@@ -257,17 +257,40 @@
     </div>
 
     <!-- Pagination -->
-    <!-- Pagination -->
-    <% const queryParams=`&status=${filters.status || '' }&searchQuery=${filters.searchQuery || ''
-        }&startDate=${filters.startDate || '' }&endDate=${filters.endDate || '' }`; const paginationData={ currentPage:
-        typeof currentPage !=='undefined' ? currentPage : 1, totalPages: typeof totalPages !=='undefined' ? totalPages :
-        1, hasPrevPage: (typeof currentPage !=='undefined' ? currentPage : 1)> 1,
-        hasNextPage: (typeof currentPage !== 'undefined' ? currentPage : 1) < (typeof totalPages !=='undefined' ?
-            totalPages : 1) }; %>
-            <%- include('../partials/user/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
+    <%- include('../partials/user/pagination.ejs', { pagination: pagination, queryParams: queryParams }) %>
 </div>
 
 <script>
+    // Date validation for filter form
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterForm = document.querySelector('form[action*="tender-evaluation"]');
+        if (filterForm) {
+            filterForm.addEventListener('submit', function (e) {
+                const startDateInput = this.querySelector('input[name="startDate"]');
+                const endDateInput = this.querySelector('input[name="endDate"]');
+
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+
+                    if (end < start) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        return false;
+                    }
+                }
+            });
+        }
+    });
+
     function exportPDF() {
         const csrfToken = '<%= csrfToken %>';
         // Get current filters

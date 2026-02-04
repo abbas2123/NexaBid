@@ -132,52 +132,61 @@
       </div>
       <% }) %>
   </div>
-  <div id="contractModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
-    <div class="bg-white w-full max-w-5xl rounded-lg shadow-lg overflow-hidden">
-      <!-- HEADER -->
-      <div class="flex justify-between items-center px-6 py-4 border-b">
-        <h2 class="text-xl font-bold">Contract Details</h2>
-        <button onclick="closeContractModal()">✕</button>
-      </div>
 
-      <!-- BODY -->
-      <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
-        <!-- Tender Snapshot -->
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <p><b>Title:</b> <span id="cd-title"></span></p>
-          <p><b>Department:</b> <span id="cd-dept"></span></p>
-          <p><b>Publisher:</b> <span id="cd-publisher"></span></p>
-          <p><b>Awarded On:</b> <span id="cd-awarded"></span></p>
+  <!-- Pagination -->
+  <% const queryParams=`&tab=${activeTab || 'tender' }`; const paginationData={ currentPage: typeof currentPage
+    !=='undefined' ? currentPage : 1, totalPages: typeof totalPages !=='undefined' ? totalPages : 1, hasPrevPage:
+    (typeof currentPage !=='undefined' ? currentPage : 1)> 1,
+    hasNextPage: (typeof currentPage !== 'undefined' ? currentPage : 1) < (typeof totalPages !=='undefined' ? totalPages
+      : 1) }; %>
+      <%- include('../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
+
+        <div id="contractModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+          <div class="bg-white w-full max-w-5xl rounded-lg shadow-lg overflow-hidden">
+            <!-- HEADER -->
+            <div class="flex justify-between items-center px-6 py-4 border-b">
+              <h2 class="text-xl font-bold">Contract Details</h2>
+              <button onclick="closeContractModal()">✕</button>
+            </div>
+
+            <!-- BODY -->
+            <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+              <!-- Tender Snapshot -->
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <p><b>Title:</b> <span id="cd-title"></span></p>
+                <p><b>Department:</b> <span id="cd-dept"></span></p>
+                <p><b>Publisher:</b> <span id="cd-publisher"></span></p>
+                <p><b>Awarded On:</b> <span id="cd-awarded"></span></p>
+              </div>
+
+              <!-- Bidding Summary -->
+              <div class="border rounded p-4">
+                <p><b>Total Bids:</b> <span id="cd-bids"></span></p>
+                <p><b>Winner:</b> <span id="cd-winner"></span></p>
+                <p><b>Amount:</b> ₹<span id="cd-amount"></span></p>
+              </div>
+
+              <!-- Timeline -->
+              <div>
+                <h3 class="font-semibold mb-2">Contract Timeline</h3>
+                <ul class="space-y-2 text-sm" id="cd-timeline"></ul>
+              </div>
+
+              <!-- Documents -->
+              <div>
+                <h3 class="font-semibold mb-2">Documents</h3>
+                <div class="flex flex-wrap gap-3" id="cd-documents"></div>
+              </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="flex justify-end px-6 py-4 border-t">
+              <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-600 text-white rounded">
+                Close
+              </button>
+            </div>
+          </div>
         </div>
-
-        <!-- Bidding Summary -->
-        <div class="border rounded p-4">
-          <p><b>Total Bids:</b> <span id="cd-bids"></span></p>
-          <p><b>Winner:</b> <span id="cd-winner"></span></p>
-          <p><b>Amount:</b> ₹<span id="cd-amount"></span></p>
-        </div>
-
-        <!-- Timeline -->
-        <div>
-          <h3 class="font-semibold mb-2">Contract Timeline</h3>
-          <ul class="space-y-2 text-sm" id="cd-timeline"></ul>
-        </div>
-
-        <!-- Documents -->
-        <div>
-          <h3 class="font-semibold mb-2">Documents</h3>
-          <div class="flex flex-wrap gap-3" id="cd-documents"></div>
-        </div>
-      </div>
-
-      <!-- FOOTER -->
-      <div class="flex justify-end px-6 py-4 border-t">
-        <button onclick="closeContractModal()" class="px-4 py-2 bg-gray-600 text-white rounded">
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
 </div>
 <script>
   async function openContractModal(tenderId) {

@@ -50,6 +50,7 @@ module.exports = (app) => {
       '/wallet/api/verify-payment',
       '/socket.io',
       '/vendor/tender/upload',
+      '/chat/thread/',
     ];
 
     const isExcluded = excludedRoutes.some((route) =>

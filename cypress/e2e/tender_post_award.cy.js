@@ -71,8 +71,8 @@ describe('Tender Post-Award Flow', () => {
         // Confirm SweetAlert if any - forcing click on confirming element if it appears
         // cy.get('.swal2-confirm').click({ force: true }); // Commenting out as previous analysis showed direct link, but keeping if needed
 
-        // Verify Tender Awarded
-        cy.contains('Awarded').should('exist');
+        // Verify Tender Awarded (Redirects to Post-Award)
+        cy.contains('Tender Award Summary', { timeout: 10000 }).should('be.visible');
 
         // ----------------------------------------
         // 6. Post-Award: Generate PO

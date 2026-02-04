@@ -97,7 +97,14 @@ exports.submitVendorApplication = async (req, res) => {
     }
     await vendorApplication.findOneAndUpdate(
       { userId },
-      { $set: { status: APPLICATION_STATUS.SUBMITTED } },
+      {
+        $set: {
+          businessName: req.validatedData.businessName,
+          panNumber: req.validatedData.panNumber,
+          gstNumber: req.validatedData.gstNumber,
+          status: APPLICATION_STATUS.SUBMITTED,
+        },
+      },
       { new: true }
     );
     return res.status(statusCode.OK).json({

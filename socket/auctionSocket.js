@@ -188,10 +188,12 @@ module.exports = (io, socket) => {
         if (session) await session.commitTransaction();
 
         const room = `auction_${propertyId}`;
+        const bidderName = socket.user?.name || 'Unknown Bidder';
+
         io.to(room).emit('new_bid', {
           amount: bidAmount,
           bidderId: userId,
-          bidderName: socket.user.name,
+          bidderName: bidderName,
           time: new Date(),
         });
 

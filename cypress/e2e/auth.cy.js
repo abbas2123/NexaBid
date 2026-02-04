@@ -15,17 +15,16 @@ describe('Authentication Flows', () => {
         };
 
         cy.visit('/auth/signup');
-        cy.get('input[name="name"]').type(newUser.name);
-        cy.get('input[name="email"]').type(newUser.email);
-        cy.get('input[name="phone"]').type(newUser.phone);
-        cy.get('input[name="password"]').type(newUser.password);
-        cy.get('input[name="confirmPassword"]').type(newUser.password);
+        cy.get('#name').type(newUser.name);
+        cy.get('#email').type(newUser.email);
+        cy.get('#phone').type(newUser.phone);
+        cy.get('#password').type(newUser.password);
 
         // Submit form
-        cy.contains('button', 'Sign Up').click();
+        cy.contains('button', 'Sign up').click();
 
         // Verification - should redirect to verify-otp
-        cy.url().should('include', '/auth/verify-otp');
+        cy.url({ timeout: 10000 }).should('include', '/auth/verify-otp');
     });
 
     it('should allow an existing user to login', () => {
@@ -45,10 +44,10 @@ describe('Authentication Flows', () => {
         cy.visit('/auth/login');
         cy.get('#email').type(userEmail); // Using ID selector based on previous context
         cy.get('#password').type(userPassword);
-        cy.contains('button', 'Login').click();
+        cy.contains('button', 'Log in').click();
 
         cy.url().should('include', '/auth/dashboard');
-        cy.contains('Dashboard').should('exist');
+        cy.contains('Welcome back').should('exist');
     });
 
     it('should allow admin to login', () => {
@@ -68,6 +67,6 @@ describe('Authentication Flows', () => {
         cy.contains('button', 'Login').click();
 
         cy.url().should('include', '/admin/dashboard');
-        cy.contains('Admin Dashboard').should('exist');
+        cy.contains('Admin Dashboard Overview').should('be.visible');
     });
 });

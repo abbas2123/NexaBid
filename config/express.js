@@ -73,6 +73,7 @@ module.exports = (app) => {
       '/wallet/api/verify-payment',
       '/socket.io',
       '/vendor/tender/upload',
+      '/vendor/apply',
       '/chat/thread/',
     ];
 

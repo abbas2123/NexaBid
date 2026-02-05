@@ -153,7 +153,8 @@
     const file = input.files[0];
 
 let allowed = ['jpg', 'png'];
-
+const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
     if (!allowed.includes(extension)) {
       Swal.fire({
         title: 'Not allowed',
@@ -162,8 +163,7 @@ let allowed = ['jpg', 'png'];
       });
       return;
     }
-    const fileName = file.name;
-    const extension = fileName.split('.').pop().toLowerCase();
+    
 
 
     const formData = new FormData();

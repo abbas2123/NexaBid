@@ -151,6 +151,23 @@
 
 
     const file = input.files[0];
+<<<<<<< HEAD
+=======
+    let allowed = ['jpg', 'png'];
+
+    if (!allowed.includes(extension)) {
+      Swal.fire({
+        title: 'Not allowed',
+        text: 'File type is not allowed',
+        icon: 'error'
+      });
+      return;
+    }
+    const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
+
+
+>>>>>>> e382316 (auto bid)
     const formData = new FormData();
     formData.append('avatar', file);
 
@@ -163,7 +180,11 @@
           Swal.showLoading();
         }
       });
-     
+<<<<<<< HEAD
+
+=======
+
+>>>>>>> e382316 (auto bid)
       const response = await fetch('/user/profile/avatar', {
         method: 'PATCH',
         body: formData

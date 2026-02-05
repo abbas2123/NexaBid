@@ -11,7 +11,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "test": "NODE_ENV=test jest --runInBand --forceExit"
+    "test": "NODE_ENV=test jest --runInBand --forceExit",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run"
   },
   "keywords": [],
   "author": "",

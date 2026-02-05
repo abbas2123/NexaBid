@@ -1,13 +1,23 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const Property = require('./models/property');
-
+const Property = require('../models/property');
+require('../models/user'); // Ensure User model is registered
+const User = require('../models/user');
 async function seed() {
   await mongoose.connect(process.env.MONGO_URI);
 
-  // await Property.deleteMany({}); // optional clean
+  // await Property.deleteMany({});
 
-  const sellerId = new mongoose.Types.ObjectId('69454fa7548483e03b35c812');
+  const now = new Date();
+  const addDays = (days) => new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+  const subDays = (days) => new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+
+  const seller = await User.findOne();
+  if (!seller) {
+    console.log('No user found. Please run scripts/createAdmin.js first.');
+    process.exit(1);
+  }
+  const sellerId = seller._id;
 
   const properties = [
     {
@@ -26,13 +36,17 @@ async function seed() {
       basePrice: 5500000,
       auctionStep: 25000,
       auctionReservePrice: 6000000,
-      auctionStartsAt: new Date('2026-01-10T10:00:00Z'),
-      auctionEndsAt: new Date('2026-01-15T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c' }],
+      auctionStartsAt: subDays(2), // Live now
+      auctionEndsAt: addDays(5),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop',
+        },
+      ], // Modern Villa
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(10),
     },
     {
       sellerId,
@@ -49,13 +63,17 @@ async function seed() {
       basePrice: 7200000,
       auctionStep: 50000,
       auctionReservePrice: 8000000,
-      auctionStartsAt: new Date('2026-01-12T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-18T17:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1502005097973-6a7082348e28' }],
+      auctionStartsAt: addDays(2), // Upcoming
+      auctionEndsAt: addDays(10),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1542621334-a254cf47733d?q=80&w=2069&auto=format&fit=crop',
+        },
+      ], // Commercial Land
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(5),
     },
     {
       sellerId,
@@ -73,13 +91,17 @@ async function seed() {
       basePrice: 4200000,
       auctionStep: 20000,
       auctionReservePrice: 4700000,
-      auctionStartsAt: new Date('2026-01-08T09:30:00Z'),
-      auctionEndsAt: new Date('2026-01-13T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be' }],
+      auctionStartsAt: subDays(1), // Live now
+      auctionEndsAt: addDays(4),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1512918760383-eda2723ad6e1?q=80&w=2070&auto=format&fit=crop',
+        },
+      ], // Lake Apartment
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(7),
     },
     {
       sellerId,
@@ -97,13 +119,17 @@ async function seed() {
       basePrice: 6800000,
       auctionStep: 30000,
       auctionReservePrice: 7500000,
-      auctionStartsAt: new Date('2026-01-14T10:00:00Z'),
-      auctionEndsAt: new Date('2026-01-20T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1560185127-6ed189bf02a4' }],
+      auctionStartsAt: subDays(3), // Live now
+      auctionEndsAt: addDays(4),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop',
+        },
+      ], // Duplex House
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(10),
     },
     {
       sellerId,
@@ -121,13 +147,17 @@ async function seed() {
       basePrice: 5000000,
       auctionStep: 20000,
       auctionReservePrice: 5500000,
-      auctionStartsAt: new Date('2026-01-09T10:00:00Z'),
-      auctionEndsAt: new Date('2026-01-14T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae' }],
+      auctionStartsAt: addDays(1), // Upcoming
+      auctionEndsAt: addDays(6),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1499793983690-e29da59ef1c2?q=80&w=2070&auto=format&fit=crop',
+        },
+      ], // Beach House
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(5),
     },
     {
       sellerId,
@@ -144,13 +174,17 @@ async function seed() {
       basePrice: 3800000,
       auctionStep: 15000,
       auctionReservePrice: 4200000,
-      auctionStartsAt: new Date('2026-01-11T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-16T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1528909514045-2fa4ac7a08ba' }],
+      auctionStartsAt: subDays(2), // Live now
+      auctionEndsAt: addDays(3),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2832&auto=format&fit=crop',
+        },
+      ], // Land View
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(8),
     },
     {
       sellerId,
@@ -167,13 +201,17 @@ async function seed() {
       basePrice: 2500000,
       auctionStep: 10000,
       auctionReservePrice: 2800000,
-      auctionStartsAt: new Date('2026-01-10T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-15T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1554995207-c18c203602cb' }],
+      auctionStartsAt: subDays(5), // Live now (ending soon)
+      auctionEndsAt: addDays(1),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop',
+        },
+      ], // Shop Front
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(15),
     },
     {
       sellerId,
@@ -190,13 +228,17 @@ async function seed() {
       basePrice: 3000000,
       auctionStep: 15000,
       auctionReservePrice: 3400000,
-      auctionStartsAt: new Date('2026-01-13T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-19T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee' }],
+      auctionStartsAt: addDays(3), // Upcoming
+      auctionEndsAt: addDays(10),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?q=80&w=2071&auto=format&fit=crop',
+        },
+      ], // Farmland
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(2),
     },
     {
       sellerId,
@@ -214,13 +256,17 @@ async function seed() {
       basePrice: 9000000,
       auctionStep: 40000,
       auctionReservePrice: 9800000,
-      auctionStartsAt: new Date('2026-01-14T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-21T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1598928506311-c55dedb3c6f0' }],
+      auctionStartsAt: subDays(0), // Starts now
+      auctionEndsAt: addDays(7),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop',
+        },
+      ], // Luxury Interior
       docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       status: 'published',
       verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      verificationRequestedAt: subDays(1),
     },
     {
       sellerId,
@@ -237,13 +283,13 @@ async function seed() {
       basePrice: 6500000,
       auctionStep: 30000,
       auctionReservePrice: 7200000,
-      auctionStartsAt: new Date('2026-01-15T09:00:00Z'),
-      auctionEndsAt: new Date('2026-01-22T16:00:00Z'),
-      media: [{ url: 'https://images.unsplash.com/photo-1581091870627-3f92f8f47bb1' }],
-      docs: [{ url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
-      status: 'published',
-      verificationStatus: 'approved',
-      verificationRequestedAt: new Date(),
+      auctionStartsAt: addDays(5), // Upcoming
+      auctionEndsAt: addDays(12),
+      media: [
+        {
+          url: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop',
+        },
+      ], // Warehouse
     },
   ];
 

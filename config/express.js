@@ -21,8 +21,8 @@ module.exports = (app) => {
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, '../views'));
   app.use(expressLayouts);
-
   app.use(helmet({ contentSecurityPolicy: false }));
+
 
   // HTTP Logger (Morgan + Winston)
   const morganFormat = process.env.NODE_ENV === 'development' ? 'dev' : 'combined';

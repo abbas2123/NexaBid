@@ -22,6 +22,7 @@
     "axios": "^1.13.2",
     "bcrypt": "^6.0.0",
     "cloudinary": "^1.41.3",
+    "connect-mongo": "^6.0.0",
     "cookie-parser": "^1.4.7",
     "csurf": "^1.11.0",
     "dotenv": "^17.2.3",
@@ -50,6 +51,7 @@
     "streamifier": "^0.1.1",
     "sweetalert2": "^11.26.3",
     "uuid": "^13.0.0",
+    "winston": "^3.19.0",
     "zod": "^4.1.13"
   },
   "devDependencies": {

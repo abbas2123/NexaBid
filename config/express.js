@@ -10,7 +10,12 @@ const setLocals = require('../middlewares/setLocals');
 const helmet = require('helmet');
 const csrf = require('csurf');
 const authUser = require('../middlewares/authUser');
+
 const adminUser = require('../middlewares/adminUser');
+const morgan = require('morgan');
+const logger = require('../utils/logger');
+const MongoStore = require('connect-mongo').default || require('connect-mongo');
+const mongoose = require('mongoose');
 
 module.exports = (app) => {
   app.set('view engine', 'ejs');
@@ -19,23 +24,41 @@ module.exports = (app) => {
 
   app.use(helmet({ contentSecurityPolicy: false }));
 
+  // HTTP Logger (Morgan + Winston)
+  const morganFormat = process.env.NODE_ENV === 'development' ? 'dev' : 'combined';
+  app.use(
+    morgan(morganFormat, {
+      stream: {
+        write: (message) => logger.http(message.trim()),
+      },
+      skip: (req, _res) => req.url.startsWith('/uploads/'), // Skip logging large file uploads/static assets
+    })
+  );
+
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
   app.use(express.json({ limit: '50mb' }));
   app.use(cookieParser());
 
   app.use(
+
     session({
       secret: process.env.SECRET,
       resave: false,
       saveUninitialized: false,
+      store: MongoStore.create({
+        client: mongoose.connection.getClient(),
+        dbName: 'NexaBid',
+        ttl: 14 * 24 * 60 * 60, // 14 days
+      }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24,
+        maxAge: 1000 * 60 * 60 * 24 * 14, // 14 days
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       },
-    }),
+    })
   );
+
 
   app.use(passport.initialize());
   app.use(passport.session());

@@ -152,6 +152,16 @@
 
     const file = input.files[0];
 
+let allowed = ['jpg', 'png'];
+
+    if (!allowed.includes(extension)) {
+      Swal.fire({
+        title: 'Not allowed',
+        text: 'File type is not allowed',
+        icon: 'error'
+      });
+      return;
+    }
     const fileName = file.name;
     const extension = fileName.split('.').pop().toLowerCase();
 
@@ -168,15 +178,7 @@
           Swal.showLoading();
         }
       });
-      let allowed = ['jpg', 'png'];
-
-      if (!allowed.includes(extension)) {
-        Swal.fire({
-          title: 'Not allowed',
-          text: 'File type is not allowed',
-          icon: 'error'
-        });
-      }
+     
       const response = await fetch('/user/profile/avatar', {
         method: 'PATCH',
         body: formData

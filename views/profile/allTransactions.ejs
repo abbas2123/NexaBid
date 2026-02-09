@@ -203,10 +203,52 @@
         </div>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         function resetFilters() {
             window.location.href = '/wallet/transactions';
         }
+
+        document.getElementById('filterForm').addEventListener('submit', function (e) {
+            const fromDate = this.querySelector('input[name="fromDate"]').value;
+            const toDate = this.querySelector('input[name="toDate"]').value;
+
+            if (fromDate && toDate) {
+                if (new Date(toDate) < new Date(fromDate)) {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Date Range',
+                        text: 'To Date cannot be earlier than From Date',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                }
+            }
+        });
+
+        // Real-time validation
+        const fromDateInput = document.querySelector('input[name="fromDate"]');
+        const toDateInput = document.querySelector('input[name="toDate"]');
+
+        function validateTransactionDates() {
+            const fromDate = fromDateInput.value;
+            const toDate = toDateInput.value;
+
+            if (fromDate && toDate) {
+                if (new Date(toDate) < new Date(fromDate)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Date Range',
+                        text: 'To Date cannot be earlier than From Date',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    this.value = '';
+                }
+            }
+        }
+
+        if (fromDateInput) fromDateInput.addEventListener('change', validateTransactionDates);
+        if (toDateInput) toDateInput.addEventListener('change', validateTransactionDates);
     </script>
 
 </body>

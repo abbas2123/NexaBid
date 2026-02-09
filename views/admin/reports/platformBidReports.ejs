@@ -305,10 +305,11 @@
     <%- include('../../partials/admin/pagination.ejs', { pagination: paginationData, queryParams: queryParams }) %>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // Date validation for filter form
     document.addEventListener('DOMContentLoaded', function () {
-        const filterForm = document.querySelector('form[action="/admin/reports/platform-bid-reports"]');
+        const filterForm = document.querySelector('form[action*="my-bids"]');
         if (filterForm) {
             filterForm.addEventListener('submit', function (e) {
                 const startDateInput = this.querySelector('input[name="startDate"]');
@@ -333,6 +334,29 @@
                     }
                 }
             });
+
+            // Real-time validation
+            const startDateInput = filterForm.querySelector('input[name="startDate"]');
+            const endDateInput = filterForm.querySelector('input[name="endDate"]');
+
+            function validateDates() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    if (new Date(endDate) < new Date(startDate)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        this.value = ''; // Clear the invalid input
+                    }
+                }
+            }
+            if (startDateInput) startDateInput.addEventListener('change', validateDates);
+            if (endDateInput) endDateInput.addEventListener('change', validateDates);
         }
     });
 

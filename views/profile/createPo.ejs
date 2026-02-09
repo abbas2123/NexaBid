@@ -149,6 +149,7 @@
       </div>
     </main>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.getElementById('poForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -170,6 +171,10 @@
         Swal.fire({ icon: 'error', title: 'Validation Error', text: 'End Date is required.' });
         return;
       }
+      if (new Date(endDate) < new Date(startDate)) {
+        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'End Date cannot be earlier than Start Date.' });
+        return;
+      }
       if (!terms || terms.trim() === '') {
         Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Terms & Conditions are required.' });
         return;
@@ -177,5 +182,29 @@
 
       this.submit();
     });
+
+    // Real-time validation
+    const startDateInput = document.getElementById('startDate');
+    const endDateInput = document.getElementById('endDate');
+
+    function validateDates() {
+      const startDate = startDateInput.value;
+      const endDate = endDateInput.value;
+
+      if (startDate && endDate) {
+        if (new Date(endDate) < new Date(startDate)) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Invalid Date Range',
+            text: 'End Date cannot be earlier than Start Date.',
+            confirmButtonColor: '#2563eb'
+          });
+          this.value = ''; // Clear the invalid input
+        }
+      }
+    }
+
+    if (startDateInput) startDateInput.addEventListener('change', validateDates);
+    if (endDateInput) endDateInput.addEventListener('change', validateDates);
   </script>
 </body>

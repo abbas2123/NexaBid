@@ -288,6 +288,30 @@
                     }
                 }
             });
+
+            // Real-time validation
+            const startDateInput = filterForm.querySelector('input[name="startDate"]');
+            const endDateInput = filterForm.querySelector('input[name="endDate"]');
+
+            function validateDates() {
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                if (startDate && endDate) {
+                    if (new Date(endDate) < new Date(startDate)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Date Range',
+                            text: 'End date must be greater than or equal to start date',
+                            confirmButtonColor: '#2563eb'
+                        });
+                        this.value = ''; // Clear the invalid input
+                    }
+                }
+            }
+
+            if (startDateInput) startDateInput.addEventListener('change', validateDates);
+            if (endDateInput) endDateInput.addEventListener('change', validateDates);
         }
     });
 

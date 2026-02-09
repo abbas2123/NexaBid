@@ -51,6 +51,7 @@ exports.getUserStatuspage = async (req, res) => {
 };
 exports.logOut = (req, res) => {
   try {
+    console.log('logout');
     res.clearCookie('token');
     return res.redirect('/auth/login');
   } catch (error) {

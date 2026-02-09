@@ -151,8 +151,8 @@
 
 
     const file = input.files[0];
-<<<<<<< HEAD
-=======
+    const fileName = file.name;
+    const extension = fileName.split('.').pop().toLowerCase();
     let allowed = ['jpg', 'png'];
 
     if (!allowed.includes(extension)) {
@@ -163,11 +163,6 @@
       });
       return;
     }
-    const fileName = file.name;
-    const extension = fileName.split('.').pop().toLowerCase();
-
-
->>>>>>> e382316 (auto bid)
     const formData = new FormData();
     formData.append('avatar', file);
 
@@ -180,11 +175,7 @@
           Swal.showLoading();
         }
       });
-<<<<<<< HEAD
 
-=======
-
->>>>>>> e382316 (auto bid)
       const response = await fetch('/user/profile/avatar', {
         method: 'PATCH',
         body: formData
@@ -216,6 +207,7 @@
   }
 
   function confirmLogout() {
+    console.log('logout');
     Swal.fire({
       title: 'Logout?',
       text: 'Are you sure you want to log out?',

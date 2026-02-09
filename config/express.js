@@ -24,14 +24,14 @@ module.exports = (app) => {
   app.use(helmet({ contentSecurityPolicy: false }));
 
 
-  // HTTP Logger (Morgan + Winston)
+  
   const morganFormat = process.env.NODE_ENV === 'development' ? 'dev' : 'combined';
   app.use(
     morgan(morganFormat, {
       stream: {
         write: (message) => logger.http(message.trim()),
       },
-      skip: (req, _res) => req.url.startsWith('/uploads/'), // Skip logging large file uploads/static assets
+      skip: (req, _res) => req.url.startsWith('/uploads/'),
     })
   );
 
@@ -48,10 +48,10 @@ module.exports = (app) => {
       store: MongoStore.create({
         client: mongoose.connection.getClient(),
         dbName: 'NexaBid',
-        ttl: 14 * 24 * 60 * 60, // 14 days
+        ttl: 14 * 24 * 60 * 60, 
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 14, // 14 days
+        maxAge: 1000 * 60 * 60 * 24 * 14, 
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',

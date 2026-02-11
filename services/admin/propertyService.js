@@ -107,6 +107,8 @@ exports.getAuctionReportData = async (propertyId) => {
     bids,
   };
 };
+const { AUCTION_STATUS } = require('../../utils/constants');
+
 exports.getAdminLiveAuctionData = async (propertyId) => {
   const property = await Property.findById(propertyId)
     .populate('sellerId', 'name email phone')
@@ -118,11 +120,11 @@ exports.getAdminLiveAuctionData = async (propertyId) => {
     .sort({ createdAt: -1 })
     .lean();
   const now = new Date();
-  let auctionStatus = 'upcoming';
+  let auctionStatus = AUCTION_STATUS.NOT_STARTED;
   if (now >= property.auctionStartsAt && now <= property.auctionEndsAt) {
-    auctionStatus = 'live';
+    auctionStatus = AUCTION_STATUS.LIVE;
   } else if (now > property.auctionEndsAt) {
-    auctionStatus = 'ended';
+    auctionStatus = AUCTION_STATUS.ENDED;
   }
   return {
     property,

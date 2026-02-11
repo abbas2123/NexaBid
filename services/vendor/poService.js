@@ -229,10 +229,14 @@ exports.createPO = async ({ tenderId, publisher, form, io }) => {
     cld.secure_url,
     io
   );
-  return po;
+  return {
+    po,
+    tender,
+    winnerBid,
+    vendor
+  };
 };
 exports.getPOData = async (tenderId) => {
-  const allPos = await PO.find({ tenderId }).select('poNumber status createdAt pdfFile');
 
   const po = await PO.findOne({ tenderId })
     .sort({ createdAt: -1 })

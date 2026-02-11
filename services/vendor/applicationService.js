@@ -190,3 +190,21 @@ exports.submitApplicationService = async (user, files, actionType) => {
     session.endSession();
   }
 };
+
+exports.finalizeApplication = async (userId, validatedData) => {
+  const { businessName, panNumber, gstNumber } = validatedData;
+  const { APPLICATION_STATUS } = require('../../utils/constants');
+
+  return vendorApplication.findOneAndUpdate(
+    { userId },
+    {
+      $set: {
+        businessName,
+        panNumber,
+        gstNumber,
+        status: APPLICATION_STATUS.SUBMITTED,
+      },
+    },
+    { new: true }
+  );
+};

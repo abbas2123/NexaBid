@@ -206,7 +206,7 @@ exports.createRazorpayOrder = async (paymentId) => {
 
   const { withTimeout } = require('../../utils/promiseUtils');
   let razorOrder;
-  const RAZORPAY_TIMEOUT = 10000;
+  const RAZORPAY_TIMEOUT = 15000;
   const razorpayCall = async () => {
     try {
       const order = await razorpay.orders.create({
@@ -421,7 +421,7 @@ exports.getFailurePageData = async (paymentId) => {
     productType: payment.contextType,
     walletBalance: wallet?.balance || 0,
     canRetry: true,
-    errorReason: payment.metadata?.failureReason || ERROR_MESSAGES.BANK_DECLINED,
+    errorReason: payment.metadata?.failureReason || 'Verification failed. Please check your bank status or contact support.',
   };
 };
 

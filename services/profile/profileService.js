@@ -198,6 +198,23 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
   if (!bid) {
     throw new Error(ERROR_MESSAGES.NOT_PARTICIPATED);
   }
+
+  // Redirection logic from controller
+  const hasTechFiles = bid.techForms?.files && bid.techForms.files.length > 0;
+  const hasFinFiles = bid.finForms?.files && bid.finForms.files.length > 0;
+  const techStatus = bid.techReviewStatus;
+  const finStatus = bid.finReviewStatus;
+  const isTenderClosed = ['awarded', 'closed', 'completed'].includes(tender.status);
+
+  if (!isTenderClosed) {
+    if (!hasTechFiles || (hasTechFiles && techStatus !== 'accepted')) {
+      return { redirect: `/vendor/tender/${tenderId}/bid` };
+    }
+    if (!hasFinFiles || (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted')) {
+      return { redirect: `/vendor/tender/${tenderId}/financial` };
+    }
+  }
+
   if (!bid.isWinner) {
     return {
       loseView: true,

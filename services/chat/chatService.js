@@ -1,8 +1,33 @@
 const mongoose = require('mongoose');
+const Property = require('../../models/property');
+const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
 const ChatThread = require('../../models/chatThread');
 const ChatMessage = require('../../models/chatMessage');
 class ChatService {
   static async getOrCreateThread(me, other, type, relatedId) {
+    if (type === 'property') {
+      const property = await Property.findById(relatedId);
+      if (property && property.isAuction) {
+        if (new Date() < property.auctionEndsAt) {
+          throw new Error('Chat allowed only after auction ends');
+        }
+        const isSeller = property.sellerId.toString() === me.toString();
+        const isWinner =
+          property.currentHighestBidder &&
+          property.currentHighestBidder.toString() === me.toString();
+        if (!isSeller && !isWinner) {
+          throw new Error('Only winner and seller can chat');
+        }
+        const targetIsSeller = property.sellerId.toString() === other.toString();
+        const targetIsWinner =
+          property.currentHighestBidder &&
+          property.currentHighestBidder.toString() === other.toString();
+        if ((isSeller && !targetIsWinner) || (isWinner && !targetIsSeller)) {
+          throw new Error('Invalid chat participant');
+        }
+      }
+    }
+
     let thread = await ChatThread.findOne({
       participants: { $all: [me, other] },
       $expr: { $eq: [{ $size: '$participants' }, 2] },
@@ -87,6 +112,38 @@ class ChatService {
       }
     }
     return msg;
+  }
+  static async uploadAndSend(threadId, senderId, file, io) {
+    let fileUrl = null;
+    let fileType = 'text';
+    if (file.buffer) {
+      const cld = await uploadToCloudinary(
+        file.buffer,
+        'nexabid/chat',
+        file.originalname,
+        'auto'
+      );
+      fileUrl = cld.secure_url;
+    } else {
+      fileUrl = file.path;
+    }
+    const mime = file.mimetype;
+    if (mime.startsWith('image/')) fileType = 'image';
+    else if (mime.startsWith('video/')) fileType = 'video';
+    else if (mime.startsWith('audio/')) fileType = 'audio';
+    else fileType = 'file';
+
+    return this.send(
+      {
+        threadId,
+        senderId,
+        message: null,
+        fileUrl,
+        fileName: file.originalname,
+        fileType: fileType,
+      },
+      io
+    );
   }
   static async markThreadDelivered(threadId, userId) {
     const tId = new mongoose.Types.ObjectId(threadId);

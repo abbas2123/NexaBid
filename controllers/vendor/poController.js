@@ -2,8 +2,6 @@ const poService = require('../../services/vendor/poService');
 const postAwardService = require('../../services/vendor/postAward');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
-const Tender = require('../../models/tender');
-const TenderBid = require('../../models/tenderBid');
 exports.showCreatePOPage = async (req, res) => {
   try {
     const tenderId = req.params.id;
@@ -30,20 +28,16 @@ exports.showCreatePOPage = async (req, res) => {
 exports.createPO = async (req, res) => {
   try {
     const tenderId = req.params.id;
-    const po = await poService.createPO({
+    const { po, tender, winnerBid, vendor } = await poService.createPO({
       tenderId,
       publisher: req.user,
       form: req.body,
       io: req.app.get('io'),
     });
-    const winnerBid = await TenderBid.findOne({
-      tenderId,
-      isWinner: true,
-    }).populate('vendorId');
-    const vendor = winnerBid.vendorId;
+
     return res.render(VIEWS.CREATE_PO, {
       layout: LAYOUTS.USER_LAYOUT,
-      tender: await Tender.findById(tenderId),
+      tender,
       user: req.user,
       showSuccessModal: true,
       poNumber: po.poNumber,
@@ -52,6 +46,7 @@ exports.createPO = async (req, res) => {
       amount: winnerBid.quotes.amount,
     });
   } catch (err) {
+    console.error('Create PO Error:', err);
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: err.message,

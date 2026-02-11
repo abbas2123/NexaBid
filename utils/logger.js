@@ -1,5 +1,4 @@
 const winston = require('winston');
-const path = require('path');
 
 const logLevels = {
     error: 0,

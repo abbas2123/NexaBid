@@ -1,6 +1,5 @@
 const AuctionService = require('../../services/auction/auctionService');
 const statusCode = require('../../utils/statusCode');
-const Property = require('../../models/property');
 const {
   AUCTION_STATUS,
   ERROR_MESSAGES,
@@ -112,12 +111,7 @@ exports.getAutoBidPage = async (req, res) => {
 };
 exports.auctionLost = async (req, res) => {
   try {
-    const { propertyId } = req.params;
-    const property = await Property.findById(propertyId).lean();
-
-    if (!property) {
-      return res.redirect(REDIRECTS.PROPERTIES);
-    }
+    const property = await AuctionService.getAuctionLostData(req.params.propertyId);
 
     res.render(VIEWS.PROPERTY_AUCTION_LOST, {
       layout: LAYOUTS.USER_LAYOUT,
@@ -129,7 +123,7 @@ exports.auctionLost = async (req, res) => {
     res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: ERROR_MESSAGES.SERVER_ERROR,
-      user: req.user
+      user: req.user,
     });
   }
 };
@@ -137,14 +131,8 @@ exports.auctionLost = async (req, res) => {
 exports.success = async (req, res) => {
   try {
     const { propertyId } = req.params;
-    const userId = req.user._id;
-    const property = await Property.findById(propertyId).populate('soldTo', 'name email').lean();
-    if (!property) {
-      return res.redirect('/properties');
-    }
-    if (property.soldTo && property.soldTo._id.toString() !== userId.toString()) {
-      return res.redirect('/properties');
-    }
+    const property = await AuctionService.getAuctionSuccessData(propertyId, req.user._id);
+
     res.render('acution/success', {
       layout: LAYOUTS.USER_LAYOUT,
       property,
@@ -153,6 +141,12 @@ exports.success = async (req, res) => {
     });
   } catch (err) {
     console.error('Auction success page error:', err);
+    if (err.message === ERROR_MESSAGES.PROPERTY_NOT_FOUND) {
+      return res.redirect('/properties');
+    }
+    if (err.message === ERROR_MESSAGES.UNAUTHORIZED) {
+      return res.redirect('/properties');
+    }
     res.status(statusCode.INTERNAL_SERVER_ERROR).send(ERROR_MESSAGES.SERVER_ERROR);
   }
 };

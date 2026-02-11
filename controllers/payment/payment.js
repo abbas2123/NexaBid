@@ -90,22 +90,37 @@ exports.processWalletPayment = async (req, res) => {
 };
 exports.verifyPayment = async (req, res) => {
   try {
+    // 1. Consolidate data from body (POST) and query (GET/Redirect)
+    const verificationData = {
+      ...req.body,
+      ...req.query
+    };
 
-    const paymentId = req.query.paymentId || req.body.paymentId;
+    const paymentId = verificationData.paymentId;
 
-    const payment = await paymentService.verifyRazorpayPayment(paymentId, req.body);
+    console.log('--- Payment Verification Started ---');
+    console.log('Payment ID:', paymentId);
+    console.log('Verification Data Keys:', Object.keys(verificationData));
 
+    if (!paymentId) {
+      throw new Error('Payment ID is missing in verification request');
+    }
+
+    const payment = await paymentService.verifyRazorpayPayment(paymentId, verificationData);
+
+    console.log('--- Payment Verification Successful ---');
     return res.redirect(`/payments/success/${payment._id}`);
   } catch (err) {
-    console.error('❌ Verify Payment Error:', err);
-    console.error('❌ Error Stack:', err.stack);
+    console.error('❌ Verify Payment Error:', err.message);
 
-    const paymentId = req.query.paymentId || req.body.paymentId;
+    const verificationData = { ...req.body, ...req.query };
+    const paymentId = verificationData.paymentId;
     const reason = encodeURIComponent(err.message || 'Verification Failed');
 
     if (paymentId) {
       return res.redirect(`/payments/failure/${paymentId}?reason=${reason}`);
     } else {
+      console.error('❌ Critical: Payment ID missing during failure redirect');
       return res.status(400).send('Payment Verification Failed and Payment ID missing.');
     }
   }

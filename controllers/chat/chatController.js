@@ -1,8 +1,6 @@
 const ChatService = require('../../services/chat/chatService');
 const statusCode = require('../../utils/statusCode');
 const { ERROR_MESSAGES, VIEWS, LAYOUTS, TITLES } = require('../../utils/constants');
-const Property = require('../../models/property');
-const { uploadToCloudinary } = require('../../utils/cloudinaryHelper');
 exports.openInbox = async (req, res, next) => {
   try {
     const threads = await ChatService.getInbox(req.user._id);
@@ -22,33 +20,14 @@ exports.openInbox = async (req, res, next) => {
 exports.startChat = async (req, res, next) => {
   try {
     const { userId, type, relatedId } = req.params;
-    if (type === 'property') {
-      const property = await Property.findById(relatedId);
-      if (property && property.isAuction) {
-        if (new Date() < property.auctionEndsAt) {
-          return res.redirect(
-            `/properties/${relatedId}?error=Chat allowed only after auction ends`
-          );
-        }
-        const isSeller = property.sellerId.toString() === req.user._id.toString();
-        const isWinner =
-          property.currentHighestBidder &&
-          property.currentHighestBidder.toString() === req.user._id.toString();
-        if (!isSeller && !isWinner) {
-          return res.redirect(`/properties/${relatedId}?error=Only winner and seller can chat`);
-        }
-        const targetIsSeller = property.sellerId.toString() === userId.toString();
-        const targetIsWinner =
-          property.currentHighestBidder &&
-          property.currentHighestBidder.toString() === userId.toString();
-        if ((isSeller && !targetIsWinner) || (isWinner && !targetIsSeller)) {
-          return res.redirect(`/properties/${relatedId}?error=Invalid chat participant`);
-        }
-      }
-    }
     const thread = await ChatService.getOrCreateThread(req.user._id, userId, type, relatedId);
     res.redirect(`/chat/thread/${thread._id}`);
   } catch (err) {
+    if (err.message.includes('Chat allowed only after auction ends') ||
+      err.message.includes('Only winner and seller can chat') ||
+      err.message.includes('Invalid chat participant')) {
+      return res.redirect(`/properties/${req.params.relatedId}?error=${encodeURIComponent(err.message)}`);
+    }
     next(err);
   }
 };
@@ -92,47 +71,17 @@ exports.postMessage = async (req, res, next) => {
     next(err);
   }
 };
-exports.uploadFile = async (req, res, next) => {
+exports.uploadFile = async (req, res) => {
   try {
     const { threadId } = req.params;
     if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No file provided' });
+      return res.status(statusCode.BAD_REQUEST).json({ success: false, message: 'No file provided' });
     }
-    let fileUrl = null;
-    let fileType = 'text';
-    if (req.file) {
-      if (req.file.buffer) {
-        const cld = await uploadToCloudinary(
-          req.file.buffer,
-          'nexabid/chat',
-          req.file.originalname,
-          'auto'
-        );
-        fileUrl = cld.secure_url;
-      } else {
-        fileUrl = req.file.path;
-      }
-      const mime = req.file.mimetype;
-      if (mime.startsWith('image/')) fileType = 'image';
-      else if (mime.startsWith('video/')) fileType = 'video';
-      else if (mime.startsWith('audio/')) fileType = 'audio';
-      else fileType = 'file';
-    }
-    await ChatService.send(
-      {
-        threadId,
-        senderId: req.user._id,
-        message: null,
-        fileUrl,
-        fileName: req.file.originalname,
-        fileType: fileType,
-      },
-      req.app.get('io')
-    );
+    await ChatService.uploadAndSend(threadId, req.user._id, req.file, req.app.get('io'));
     res.json({ success: true, message: 'File uploaded successfully' });
   } catch (err) {
     console.error('Error uploading file:', err);
-    res.status(500).json({ success: false, message: 'Failed to upload file' });
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to upload file' });
   }
 };
 exports.unreaded = async (req, res) => {

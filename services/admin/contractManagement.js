@@ -4,6 +4,8 @@ const PurchaseOrder = require('../../models/purchaseOrder');
 const Agreement = require('../../models/agreement');
 const WorkOrder = require('../../models/workOrder');
 const { ERROR_MESSAGES } = require('../../utils/constants');
+const File = require('../../models/File');
+
 exports.getContractManagementData = async (publisherId, tab, isAdmin = false, page = 1, limit = 10) => {
   const tenderQuery = {
     status: 'awarded',
@@ -164,4 +166,11 @@ exports.getContractDetails = async (adminId, tenderId) => {
     ],
     documents,
   };
+};
+
+exports.getFileUrl = async (fileId) => {
+  if (!fileId) throw new Error(ERROR_MESSAGES.INVALID_FILE_ID);
+  const file = await File.findById(fileId);
+  if (!file) throw new Error(ERROR_MESSAGES.FILE_NOT_FOUND);
+  return file.fileUrl;
 };

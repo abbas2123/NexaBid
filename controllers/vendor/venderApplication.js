@@ -1,7 +1,6 @@
 const vendorService = require('../../services/vendor/applicationService');
 const statusCode = require('../../utils/statusCode');
 const OCRResult = require('../../models/OCR_Result');
-const vendorApplication = require('../../models/vendorApplication');
 const {
   LAYOUTS,
   ERROR_MESSAGES,
@@ -10,7 +9,6 @@ const {
   VIEWS,
   ACTION_TYPES,
   SUCCESS_MESSAGES,
-  APPLICATION_STATUS,
   TITLES,
 } = require('../../utils/constants');
 exports.getVendorApplicationPage = async (req, res) => {
@@ -95,18 +93,7 @@ exports.submitVendorApplication = async (req, res) => {
         message: ERROR_MESSAGES.TERMS_REQUIRED,
       });
     }
-    await vendorApplication.findOneAndUpdate(
-      { userId },
-      {
-        $set: {
-          businessName: req.validatedData.businessName,
-          panNumber: req.validatedData.panNumber,
-          gstNumber: req.validatedData.gstNumber,
-          status: APPLICATION_STATUS.SUBMITTED,
-        },
-      },
-      { new: true }
-    );
+    await vendorService.finalizeApplication(userId, req.validatedData);
     return res.status(statusCode.OK).json({
       success: true,
       message: SUCCESS_MESSAGES.APPLICATION_SUBMITTED,

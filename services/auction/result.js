@@ -55,3 +55,23 @@ exports.getBuyerAuctionResult = async (propertyId, buyerId) => {
     totalBids,
   };
 };
+
+exports.getBuyerLostAuctionData = async (propertyId, buyerId) => {
+  const property = await Property.findById(propertyId);
+  if (!property) throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
+
+  const winningBid = await PropertyBid.findOne({ propertyId, status: 'active' }).sort({
+    amount: -1,
+  });
+  const userBid = await PropertyBid.findOne({
+    propertyId,
+    bidderId: buyerId,
+    status: 'active',
+  }).sort({ amount: -1 });
+
+  return {
+    property,
+    winningBid,
+    userBid,
+  };
+};

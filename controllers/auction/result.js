@@ -1,8 +1,6 @@
 const auctionResultService = require('../../services/auction/result');
 const statusCode = require('../../utils/statusCode');
-const { LAYOUTS, VIEWS, ERROR_MESSAGES, REDIRECTS, TITLES } = require('../../utils/constants');
-const Property = require('../../models/property');
-const Bid = require('../../models/propertyBid');
+const { VIEWS, LAYOUTS, ERROR_MESSAGES, REDIRECTS, TITLES } = require('../../utils/constants');
 
 exports.loadAuctionResultPage = async (req, res) => {
   try {
@@ -45,21 +43,14 @@ exports.loadBuyerAuctionResultPage = async (req, res) => {
       try {
         const { propertyId } = req.params;
         const buyerId = req.user._id;
-        const property = await Property.findById(propertyId);
-        const winningBid = await Bid.findOne({ propertyId: propertyId, status: 'active' }).sort({
-          amount: -1,
-        });
-        const userBid = await Bid.findOne({
-          propertyId: propertyId,
-          bidderId: buyerId,
-          status: 'active',
-        }).sort({ amount: -1 });
+        const data = await auctionResultService.getBuyerLostAuctionData(propertyId, buyerId);
+
         return res.render(VIEWS.PROPERTY_AUCTION_LOST, {
           layout: LAYOUTS.USER_LAYOUT,
           title: 'Auction Result',
-          property,
-          winningBid,
-          userBid,
+          property: data.property,
+          winningBid: data.winningBid,
+          userBid: data.userBid,
         });
       } catch (fetchErr) {
         console.error('Error fetching lost view details:', fetchErr);

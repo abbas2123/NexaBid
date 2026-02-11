@@ -13,9 +13,20 @@ module.exports = {
     const tender = await Tender.findById(tenderId);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
     if (tender.isBlocked) throw new Error('This tender has been blocked by admin');
+
+    const isTenderClosed = ['awarded', 'closed', 'completed'].includes(tender.status);
+    if (isTenderClosed) {
+      return { redirect: `/user/my-participation/tender/${tenderId}` };
+    }
+
     const bid = await TenderBid.findOne({ tenderId, vendorId: user._id })
       .populate('proposal.files')
       .populate('techForms.files');
+
+    if (bid && bid.techReviewStatus === 'accepted') {
+      return { redirect: `/vendor/tender/${tenderId}/financial` };
+    }
+
     const payment = await Payment.findOne({
       userId: user._id,
       contextId: tenderId,
@@ -26,7 +37,7 @@ module.exports = {
       tender,
       bid,
       payments: { paymentStatus: payment ? 'paid' : 'pending' },
-      isTenderClosed: ['awarded', 'closed', 'completed'].includes(tender.status),
+      isTenderClosed: false,
     };
   },
 
@@ -204,16 +215,28 @@ module.exports = {
     const tender = await Tender.findById(tenderId);
     if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
     if (tender.isBlocked) throw new Error('This tender has been blocked by admin');
+
+    const isTenderClosed = ['awarded', 'closed', 'completed'].includes(tender.status);
+    if (isTenderClosed) {
+      return { redirect: `/user/my-participation/tender/${tenderId}` };
+    }
+
     const bid = await TenderBid.findOne({ tenderId, vendorId: userId })
       .populate('finForms.files')
       .populate('quotes.files');
-    if (!bid) throw new Error(ERROR_MESSAGES.NO_BID);
-    if (bid.techReviewStatus === 'rejected') throw new Error(ERROR_MESSAGES.TECH_REJECTED);
-    if (bid.techReviewStatus !== 'accepted') throw new Error(ERROR_MESSAGES.TECH_NOT_APPROVED);
+
+    if (!bid) return { errorRedirect: `/vendor/tender/${tenderId}/bid` };
+    if (bid.techReviewStatus === 'rejected') return { errorRedirect: `/vendor/tender/${tenderId}/bid?rejected=true` };
+    if (bid.techReviewStatus !== 'accepted') return { errorRedirect: `/vendor/tender/${tenderId}/bid?notApproved=true` };
+
+    if (bid.finReviewStatus === 'accepted') {
+      return { redirect: `/user/my-participation/tender/${tenderId}` };
+    }
+
     return {
       tender,
       bid,
-      isTenderClosed: ['awarded', 'closed', 'completed'].includes(tender.status),
+      isTenderClosed: false,
     };
   },
 };

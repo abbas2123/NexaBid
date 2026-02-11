@@ -112,7 +112,6 @@ module.exports = defineConfig({
                     if (mongoose.connection.readyState === 0) {
                         await mongoose.connect(process.env.MONGO_URI);
                     }
-                    const Property = require('./models/property');
                     const User = require('./models/user');
                     const Tender = require('./models/tender');
                     const TenderBid = require('./models/tenderBid');

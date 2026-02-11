@@ -66,7 +66,6 @@ module.exports = (io, socket) => {
       });
 
       if (!payment) {
-        const allPaymentsForUser = await Payment.find({ userId: userId });
 
         payment = await Payment.findOne({
           userId: userId,

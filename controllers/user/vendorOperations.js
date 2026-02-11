@@ -2,8 +2,6 @@ const myProfileService = require('../../services/profile/profileService');
 const listingService = require('../../services/user/listingService');
 const statusCode = require('../../utils/statusCode');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
-const TenderBid = require('../../models/tenderBid');
-const Tender = require('../../models/tender');
 exports.getMyListingPage = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -45,46 +43,21 @@ exports.viewTenderPostAward = async (req, res) => {
   try {
     const tenderId = req.params.id;
     const userId = req.user._id;
-    const tender = await Tender.findById(tenderId);
-    if (!tender) {
-      return res.status(404).render(VIEWS.ERROR, {
-        layout: LAYOUTS.USER_LAYOUT,
-        message: ERROR_MESSAGES.TENDER_NOT_FOUND,
-        user: req.user,
-      });
-    }
-    const bid = await TenderBid.findOne({ tenderId, vendorId: userId });
-    if (!bid) {
-      return res.redirect(`/vendor/tender/${tenderId}/bid`);
-    }
-    const hasTechFiles = bid.techForms?.files && bid.techForms.files.length > 0;
-    const hasFinFiles = bid.finForms?.files && bid.finForms.files.length > 0;
-    const techStatus = bid.techReviewStatus;
-    const finStatus = bid.finReviewStatus;
-    const isTenderClosed = ['awarded', 'closed', 'completed'].includes(tender.status);
-    if (!isTenderClosed) {
-      if (!hasTechFiles) {
-        return res.redirect(`/vendor/tender/${tenderId}/bid`);
-      }
-      if (hasTechFiles && techStatus !== 'accepted') {
-        return res.redirect(`/vendor/tender/${tenderId}/bid`);
-      }
-      if (techStatus === 'accepted' && !hasFinFiles) {
-        return res.redirect(`/vendor/tender/${tenderId}/financial`);
-      }
-      if (techStatus === 'accepted' && hasFinFiles && finStatus !== 'accepted') {
-        return res.redirect(`/vendor/tender/${tenderId}/financial`);
-      }
-    }
+
     const result = await myProfileService.getVendorPostAwardData(tenderId, userId);
-    if (result.po) {
+
+    if (result.redirect) {
+      return res.redirect(result.redirect);
     }
+
     if (result.redirectToWorkOrder) {
       return res.redirect(`/user/work-orders/${result.workOrderId}`);
     }
+
     if (result.redirectToAgreementUpload && !req.query.fromUpload) {
       return res.redirect(`/user/${tenderId}/upload`);
     }
+
     if (result.loseView) {
       return res.render('profile/tenderLoseView', {
         layout: LAYOUTS.USER_LAYOUT,
@@ -95,6 +68,7 @@ exports.viewTenderPostAward = async (req, res) => {
         error: req.query.error,
       });
     }
+
     return res.render('profile/vendorPostAward', {
       layout: LAYOUTS.USER_LAYOUT,
       tender: result.tender,
@@ -108,29 +82,17 @@ exports.viewTenderPostAward = async (req, res) => {
   } catch (err) {
     console.error('Post Award Error:', err.message);
     if (err.message === ERROR_MESSAGES.TENDER_NOT_FOUND) {
-      return res.status(404).render(VIEWS.ERROR, {
+      return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
         message: ERROR_MESSAGES.TENDER_NOT_FOUND,
         user: req.user,
       });
     }
     if (err.message === ERROR_MESSAGES.NOT_PARTICIPATED) {
-      return res.status(403).render(VIEWS.ERROR, {
+      return res.status(statusCode.FORBIDDEN).render(VIEWS.ERROR, {
         layout: LAYOUTS.USER_LAYOUT,
         message: 'You have not participated in this tender.',
         user: req.user,
-      });
-    }
-    if (req.query.error) {
-      return res.render('profile/vendorPostAward', {
-        layout: LAYOUTS.USER_LAYOUT,
-        tender: null,
-        bid: null,
-        po: null,
-        agreement: null,
-        workOrder: null,
-        user: req.user,
-        error: req.query.error,
       });
     }
     return res.redirect(`/user/my-participation?error=${encodeURIComponent(err.message)}`);

@@ -1,5 +1,4 @@
 const contractService = require('../../services/admin/contractManagement');
-const File = require('../../models/File');
 const statusCode = require('../../utils/statusCode');
 const { VIEWS, LAYOUTS, ERROR_MESSAGES, TITLES } = require('../../utils/constants');
 exports.contractManagementPage = async (req, res) => {
@@ -23,8 +22,6 @@ exports.contractManagementPage = async (req, res) => {
     summary,
     contracts,
     currentPage: 'contract-management',
-    // Pagination data
-    currentPage: pagination.currentPage,
     totalPages: pagination.totalPages,
   });
 };
@@ -41,19 +38,14 @@ exports.getContractDetails = async (req, res) => {
   }
 };
 exports.view = async (req, res) => {
-  const { id } = req.params;
-  if (!id || id === 'undefined') {
-    return res.status(statusCode.BAD_REQUEST).render(VIEWS.ERROR, {
-      layout: LAYOUTS.ADMIN_LAYOUT,
-      message: ERROR_MESSAGES.INVALID_FILE_ID,
-    });
-  }
-  const file = await File.findById(id);
-  if (!file) {
+  try {
+    const { id } = req.params;
+    const fileUrl = await contractService.getFileUrl(id);
+    return res.redirect(fileUrl);
+  } catch (err) {
     return res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
       layout: LAYOUTS.ADMIN_LAYOUT,
-      message: ERROR_MESSAGES.FILE_NOT_FOUND,
+      message: err.message,
     });
   }
-  return res.redirect(file.fileUrl);
 };

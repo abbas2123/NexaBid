@@ -21,12 +21,10 @@ exports.getPublisherPostAwardService = async (tenderId, userId) => {
   if (!tender) throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
   if (tender.createdBy.toString() !== userId.toString())
     throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
-  if (tender.status !== 'awarded') {
-    return {
-      redirectToEvaluation: true,
-      url: `/ vendor / tender / ${tender._id}/evaluation`,
-    };
-  }
+  // return {
+  //   redirectToEvaluation: true,
+  //   url: `/vendor/tender/${tender._id}/evaluation`,
+  // };
   const winnerBid = await TenderBid.findOne({ tenderId, isWinner: true }).populate('vendorId');
   if (!winnerBid) throw new Error(ERROR_MESSAGES.NO_WINNER_FOUND);
   const po = await PO.findOne({ tenderId }).sort({ createdAt: -1 });

@@ -114,20 +114,21 @@ exports.rejectAgreement = async (req, res) => {
 exports.issuePage = async (req, res) => {
   try {
     const { tenderId } = req.params;
+    const data = await postAwardService.getIssuePageData(req.user._id, tenderId);
 
-    const data = await postAwardService.getIssuePageData(
-      req.user._id,
-      tenderId
-    );
-
-    res.render("profile/workOrder", {
-      layout: 'layouts/user/userLayout',
+    res.render(VIEWS.WORK_ORDER, {
+      layout: LAYOUTS.USER_LAYOUT,
       tender: data.tender,
       vendor: data.vendor,
-      contractRef: data.contractRef
+      contractRef: data.contractRef,
+      user: req.user,
     });
   } catch (err) {
-    res.status(404).render("error", { layout: 'layouts/user/userLayout', message: err.message });
+    res.status(statusCode.NOT_FOUND).render(VIEWS.ERROR, {
+      layout: LAYOUTS.USER_LAYOUT,
+      message: err.message,
+      user: req.user,
+    });
   }
 };
 

@@ -5,7 +5,7 @@ const router = express.Router();
 router.get('/initiate', authMiddleware.protectRoute, paymentController.initiatePayment);
 router.get('/escrow/:paymentId', authMiddleware.protectRoute, paymentController.loadEscrowPage);
 router.post('/create-order', authMiddleware.protectRoute, paymentController.createOrder);
-router.post('/confirm', paymentController.verifyPayment);
+router.all('/confirm', paymentController.verifyPayment);
 router.get(
   '/success/:paymentId',
   authMiddleware.protectRoute,

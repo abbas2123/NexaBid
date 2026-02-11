@@ -4,26 +4,22 @@ const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 exports.getTenderTechBidForm = async (req, res) => {
   try {
     const tenderId = req.params.id;
-    const { tender, bid, payments, isTenderClosed } = await tenderBidService.getTechBidData(
-      tenderId,
-      req.user
-    );
-    if (isTenderClosed) {
-      return res.redirect(`/user/my-participation/tender/${tenderId}`);
+    const result = await tenderBidService.getTechBidData(tenderId, req.user);
+
+    if (result.redirect) {
+      return res.redirect(result.redirect);
     }
-    if (bid && bid.techReviewStatus === 'accepted') {
-      return res.redirect(`/vendor/tender/${tenderId}/financial`);
-    }
+
     return res.render('vendor/tenderTech', {
       layout: LAYOUTS.USER_LAYOUT,
       title: 'Tender - TechForm Submission',
       user: req.user,
       vendor: req.user,
-      tender,
+      tender: result.tender,
       tenderId,
       paymentUrl: `/vendor/payment/initiate/${tenderId}`,
-      paymentStatus: payments.paymentStatus,
-      bid,
+      paymentStatus: result.payments.paymentStatus,
+      bid: result.bid,
     });
   } catch (err) {
     console.error(err);
@@ -32,6 +28,7 @@ exports.getTenderTechBidForm = async (req, res) => {
     return res.status(statusCode.INTERNAL_ERROR).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
   }
 };
+
 exports.uploadTechnicalPhase = async (req, res) => {
   try {
     const tenderId = req.params.id;
@@ -46,6 +43,7 @@ exports.uploadTechnicalPhase = async (req, res) => {
     return res.redirect(`/vendor/tender/${tenderId}/bid?uploaded=false`);
   }
 };
+
 exports.uploadFinancialPhase = async (req, res) => {
   try {
     const tenderId = req.params.id;
@@ -60,35 +58,28 @@ exports.uploadFinancialPhase = async (req, res) => {
     return res.status(statusCode.INTERNAL_ERROR).send(err.message || ERROR_MESSAGES.SERVER_ERROR);
   }
 };
+
 exports.getTenderFin = async (req, res) => {
   try {
     const tenderId = req.params.id;
-    const { tender, bid, isTenderClosed } = await tenderBidService.getFinancialBidData(
-      tenderId,
-      req.user._id
-    );
-    if (isTenderClosed) {
-      return res.redirect(`/user/my-participation/tender/${tenderId}`);
+    const result = await tenderBidService.getFinancialBidData(tenderId, req.user._id);
+
+    if (result.redirect) {
+      return res.redirect(result.redirect);
     }
-    if (bid && bid.finReviewStatus === 'accepted') {
-      return res.redirect(`/user/my-participation/tender/${tenderId}`);
+    if (result.errorRedirect) {
+      return res.redirect(result.errorRedirect);
     }
+
     return res.render('vendor/tenderFin', {
       layout: LAYOUTS.USER_LAYOUT,
-      tender,
+      tender: result.tender,
       tenderId,
-      bid,
+      bid: result.bid,
       user: req.user,
     });
   } catch (err) {
     console.error(err);
-    const tenderId = req.params.id;
-    if (err.message === ERROR_MESSAGES.NO_BID)
-      return res.redirect(`/vendor/tender/${tenderId}/bid`);
-    if (err.message === ERROR_MESSAGES.TECH_REJECTED)
-      return res.redirect(`/vendor/tender/${tenderId}/bid?rejected=true`);
-    if (err.message === ERROR_MESSAGES.TECH_NOT_APPROVED)
-      return res.redirect(`/vendor/tender/${tenderId}/bid?notApproved=true`);
     return res.status(statusCode.INTERNAL_ERROR).render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: err.message,

@@ -279,5 +279,23 @@ class AuctionService {
       });
     }
   }
+  static async getAuctionLostData(propertyId) {
+    const property = await Property.findById(propertyId).lean();
+    if (!property) {
+      throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
+    }
+    return property;
+  }
+
+  static async getAuctionSuccessData(propertyId, userId) {
+    const property = await Property.findById(propertyId).populate('soldTo', 'name email').lean();
+    if (!property) {
+      throw new Error(ERROR_MESSAGES.PROPERTY_NOT_FOUND);
+    }
+    if (property.soldTo && property.soldTo._id.toString() !== userId.toString()) {
+      throw new Error(ERROR_MESSAGES.UNAUTHORIZED);
+    }
+    return property;
+  }
 }
 module.exports = AuctionService;

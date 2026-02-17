@@ -223,15 +223,25 @@ exports.getVendorPostAwardData = async (tenderId, userId) => {
   if (!tender) {
     throw new Error(ERROR_MESSAGES.TENDER_NOT_FOUND);
   }
-  const bid = await TenderBid.findOne({
+  let bid = await TenderBid.findOne({
     tenderId,
     vendorId: userId,
   });
+
   if (!bid) {
+    const isParticipant = await TenderParticipants.findOne({
+      tenderId,
+      userId,
+      status: 'active',
+    });
+
+    if (isParticipant && !['awarded', 'closed', 'completed'].includes(tender.status)) {
+      return { redirect: `/vendor/tender/${tenderId}/bid` };
+    }
     throw new Error(ERROR_MESSAGES.NOT_PARTICIPATED);
   }
 
-  // Redirection logic from controller
+
   const hasTechFiles = bid.techForms?.files && bid.techForms.files.length > 0;
   const hasFinFiles = bid.finForms?.files && bid.finForms.files.length > 0;
   const techStatus = bid.techReviewStatus;

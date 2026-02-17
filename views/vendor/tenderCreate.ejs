@@ -221,6 +221,16 @@
 
     const method = mode === "edit" ? "PATCH" : "POST";
 
+    // Show loading modal
+    Swal.fire({
+      title: mode === "edit" ? "Re-submitting Tender..." : "Creating Tender...",
+      text: "Please wait while we process your request.",
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     try {
       const res = await fetch(url, {
         method,

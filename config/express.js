@@ -83,9 +83,16 @@ module.exports = (app) => {
       req.originalUrl.startsWith(route),
     );
 
+    // Always run CSRF for GET requests so the token is generated and available in the UI
+    if (req.method === 'GET') {
+      return csrfProtection(req, res, next);
+    }
+
+    // Skip CSRF validation for excluded routes (webhooks, etc.) and tests
     if (isExcluded || process.env.NODE_ENV === 'test') {
       return next();
     }
+
     csrfProtection(req, res, next);
   });
 

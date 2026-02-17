@@ -8,9 +8,14 @@ module.exports = (err, req, res, _next) => {
   const statusCodeVal = err.statusCode || statusCode.INTERNAL_SERVER_ERROR;
   const message = err.message || 'Server Error';
   if (err.code === 'EBADCSRFTOKEN') {
-    console.warn('⚠️ CSRF Error:', err.message);
-    console.warn('URL:', req.originalUrl);
-    console.warn('Method:', req.method);
+    logger.warn('⚠️ CSRF Error:', {
+      message: err.message,
+      url: req.originalUrl,
+      method: req.method,
+      referer: req.headers.referer,
+      ip: req.ip,
+      userAgent: req.headers['user-agent']
+    });
 
     const paymentId = req.body?.paymentId || req.query?.paymentId || req.params?.paymentId;
     if (paymentId) {
@@ -18,9 +23,24 @@ module.exports = (err, req, res, _next) => {
     }
 
     if (req.headers.accept && req.headers.accept.includes('html')) {
-      return res.status(403).send('<h1>Session Expired</h1><p>Your session has expired or the form token is invalid. Please refresh the page and try again.</p>');
+      // Redirect to login or home with a clear message instead of a blank error page
+      return res.status(403).send(`
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+          window.onload = function() {
+            Swal.fire({
+              icon: 'error',
+              title: 'Session Expired',
+              text: 'Your security token has expired or is invalid. Please refresh the page and try again.',
+              confirmButtonText: 'Reload Page'
+            }).then(() => {
+              window.location.reload();
+            });
+          };
+        </script>
+      `);
     }
-    return res.status(403).json({ success: false, message: 'Session expired or invalid CSRF token' });
+    return res.status(403).json({ success: false, message: 'Session expired or invalid CSRF token. Please refresh.' });
   }
 
   if (req.headers.accept && req.headers.accept.indexOf('html') !== -1) {

@@ -262,7 +262,19 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">  });
+
+  document.getElementById('workOrderForm').addEventListener('submit', function () {
+    Swal.fire({
+      title: 'Issuing Work Order...',
+      text: 'Please wait while we generate the document',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+  });
+</script>
 <script>
   let milestoneCount = 1;
   const minDate = '<%= new Date().toISOString().split("T")[0] %>';

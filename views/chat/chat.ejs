@@ -539,8 +539,17 @@
         formData.append('file', file);
 
         const originalBtnContent = attachBtn.innerHTML;
-        attachBtn.innerHTML = '<span class="animate-spin inline-block">⏳</span>';
+        // attachBtn.innerHTML = '<span class="animate-spin inline-block">⏳</span>';
         attachBtn.disabled = true;
+
+        Swal.fire({
+          title: 'Uploading File...',
+          text: 'Please wait',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
 
         try {
           if (!THREADID) throw new Error('No thread selected');

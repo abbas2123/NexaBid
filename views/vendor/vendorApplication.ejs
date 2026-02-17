@@ -365,6 +365,15 @@
           [businessInput, panInput, gstInput].forEach(i => i.disabled = true);
         }
 
+        Swal.fire({
+          title: 'Submitting Application...',
+          text: 'Please wait while we verify your details',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
         const csrfToken = document.querySelector('input[name="_csrf"]').value;
         const res = await fetch('/vendor/apply', {
           method: 'POST',

@@ -314,9 +314,23 @@
     }
 
 
+    // Show loading modal
+    Swal.fire({
+      title: isEditMode ? 'Updating Property...' : 'Submitting Property...',
+      text: 'Please wait while we process your request.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     const res = await fetch(url, {
       method,
       body: formData,
+      headers: {
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      }
     });
 
     // Handle CSRF/Session mismatch
@@ -415,6 +429,9 @@
     try {
       const res = await fetch(`/user/manage/property/delete-media/${propertyId}/${mediaId}`, {
         method: "DELETE",
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
       });
 
       const data = await res.json();
@@ -474,6 +491,9 @@
     try {
       const res = await fetch(`/user/manage/property/delete-doc/${propertyId}/${docId}`, {
         method: "DELETE",
+        headers: {
+          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        }
       });
 
       const data = await res.json();

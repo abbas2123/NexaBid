@@ -124,6 +124,14 @@
     }
 
     // All good → submit native form
+    Swal.fire({
+      title: 'Submitting Financial Bid...',
+      text: 'Please wait while we upload your documents',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
     financialForm.submit();
   });
 

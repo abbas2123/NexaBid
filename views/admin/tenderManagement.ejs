@@ -340,6 +340,16 @@
 
     const comment = document.getElementById("tenderAdminComment").value;
 
+    // Show loading modal
+    Swal.fire({
+      title: 'Updating Tender Status...',
+      text: 'Please wait',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     const res = await safeFetch(`/admin/tender-management/status/${currentTenderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -412,6 +422,16 @@
       }
 
       try {
+        // Show loading modal
+        Swal.fire({
+          title: isBlocked ? 'Unblocking Tender...' : 'Blocking Tender...',
+          text: 'Please wait',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
         const res = await fetch(`/admin/tender-management/toggle-block/${id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },

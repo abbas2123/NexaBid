@@ -7,7 +7,7 @@ const WorkOrder = require('../../models/workOrder');
 const File = require('../../models/File');
 const { ERROR_MESSAGES } = require('../../utils/constants');
 const statusCode = require('../../utils/statusCode');
-const generateWorkOrderPDF = require('./workOrderPdf');
+const { generateWorkOrderPDF } = require('./workOrderPdf');
 const { uploadToCloudinary, generateSignedUrl } = require('../../utils/cloudinaryHelper');
 exports.getPublisherPostAwardService = async (tenderId, userId) => {
   const wo = await WorkOrder.findOne({ tenderId });

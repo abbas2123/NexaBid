@@ -2,7 +2,10 @@
 <script>
     (function () {
         const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-        if (!csrfTokenMeta) return;
+        if (!csrfTokenMeta) {
+            console.warn('CSRF Token Meta tag not found. Some actions may fail due to security protection.');
+            return;
+        }
 
         const originalFetch = window.fetch;
         window.fetch = function (url, options = {}) {

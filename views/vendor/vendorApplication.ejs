@@ -309,9 +309,6 @@
           const res = await fetch('/vendor/apply', {
             method: 'POST',
             body: new FormData(vendorForm),
-            headers: {
-              'X-CSRF-Token': csrfToken
-            }
           });
 
           if (!res.ok) {
@@ -372,9 +369,6 @@
         const res = await fetch('/vendor/apply', {
           method: 'POST',
           body: formData,
-          headers: {
-            'X-CSRF-Token': csrfToken
-          }
         });
         const data = await res.json();
         if (!data.success) return Swal.fire('Error', data.message, 'error');

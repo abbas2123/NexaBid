@@ -9,6 +9,8 @@ module.exports = (err, req, res, _next) => {
   const message = err.message || 'Server Error';
   if (err.code === 'EBADCSRFTOKEN') {
     console.warn('⚠️ CSRF Error:', err.message);
+    console.warn('URL:', req.originalUrl);
+    console.warn('Method:', req.method);
 
     const paymentId = req.body?.paymentId || req.query?.paymentId || req.params?.paymentId;
     if (paymentId) {

@@ -1,120 +1,108 @@
 <!-- PAGE TITLE -->
 <h1 class="text-3xl sm:text-4xl font-bold mb-8">All Properties</h1>
 
-<form action="/properties" method="GET" 
+<form action="/properties" method="GET"
   class="flex flex-col sm:flex-row flex-wrap gap-4 bg-white border rounded-lg shadow p-4">
 
   <!-- TYPE FILTER -->
   <select name="type" class="border p-2 rounded w-full sm:w-auto">
     <option value="">All Types</option>
-    <option value="house" <%= applied?.type==="house" ? "selected" : "" %>>House</option>
-    <option value="apartment" <%= applied?.type==="apartment" ? "selected" : "" %>>Apartment</option>
-    <option value="land" <%= applied?.type==="land" ? "selected" : "" %>>Land</option>
-    <option value="commercial" <%= applied?.type==="commercial" ? "selected" : "" %>>Commercial</option>
+    <option value="house" <%=applied?.type==="house" ? "selected" : "" %>>House</option>
+    <option value="apartment" <%=applied?.type==="apartment" ? "selected" : "" %>>Apartment</option>
+    <option value="land" <%=applied?.type==="land" ? "selected" : "" %>>Land</option>
+    <option value="commercial" <%=applied?.type==="commercial" ? "selected" : "" %>>Commercial</option>
   </select>
 
   <!-- DISTRICT FILTER -->
-  <input 
-    name="district"
-    placeholder="District"
-    value="<%= applied?.district || '' %>" 
-    class="border p-2 rounded w-full sm:w-auto"
-  />
+  <input name="district" placeholder="District" value="<%= applied?.district || '' %>"
+    class="border p-2 rounded w-full sm:w-auto" />
 
   <!-- MIN PRICE -->
-  <input 
-    name="minPrice"
-    type="number"
-    placeholder="Min Price"
-    value="<%= applied?.minPrice || '' %>" 
-    class="border p-2 rounded w-full sm:w-auto"
-  />
+  <input name="minPrice" type="number" placeholder="Min Price" value="<%= applied?.minPrice || '' %>"
+    class="border p-2 rounded w-full sm:w-auto" />
 
   <!-- MAX PRICE -->
-  <input 
-    name="maxPrice"
-    type="number"
-    placeholder="Max Price"
-    value="<%= applied?.maxPrice || '' %>" 
-    class="border p-2 rounded w-full sm:w-auto"
-  />
+  <input name="maxPrice" type="number" placeholder="Max Price" value="<%= applied?.maxPrice || '' %>"
+    class="border p-2 rounded w-full sm:w-auto" />
 
   <!-- SUBMIT -->
-  <button 
-    class="bg-primary text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-700"
-  >
+  <button class="bg-primary text-white px-6 py-2 rounded shadow font-semibold hover:bg-blue-700">
     Filter
   </button>
 
   <!-- RESET BUTTON -->
-  <% if (applied && Object.keys(applied).length > 0) { %>
-    <a href="/properties" 
-       class="px-6 py-2 rounded border hover:bg-gray-100">
+  <% if (applied && Object.keys(applied).length> 0) { %>
+    <a href="/properties" class="px-6 py-2 rounded border hover:bg-gray-100">
       Reset
     </a>
-  <% } %>
+    <% } %>
 
 </form>
 
 <!-- PROPERTY GRID -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-auto-fit gap-10 mt-10">
 
-  <% if (properties && properties.length > 0) { %>
+  <% if (properties && properties.length> 0) { %>
 
-    <% properties.forEach(p => { %>
+    <% properties.forEach(p=> { %>
 
-      <a 
-        href="/properties/<%= p._id %>" 
-        class="block group flex flex-col"
-      >
+      <a href="/properties/<%= p._id %>" class="block group flex flex-col">
 
         <!-- IMAGE -->
-        <img
-  src="<%= p.media && p.media.length > 0 ? p.media[0].url : 'https://via.placeholder.com/400x250' %>"
-  onerror="this.onerror=null;this.src='/images/default-property.jpg';"
-  alt="<%= p.title %>"
-  loading="lazy"
-  class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105"
-/>
+        <img src="<%= p.media && p.media.length > 0 ? p.media[0].url : 'https://via.placeholder.com/400x250' %>"
+          onerror="this.onerror=null;this.src='/images/default-property.jpg';" alt="<%= p.title %>" loading="lazy"
+          class="w-full h-48 object-cover rounded-lg mb-4 transition-transform duration-300 group-hover:scale-105" />
 
         <!-- TITLE -->
         <h3 class="font-semibold text-lg truncate text-slate-900 dark:text-slate-100">
           <%= p.title %>
         </h3>
 
-        <!-- BHK | SIZE | LOCATION -->
-        <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
-
-          <% if (p.bhk) { %>
-            <span><%= p.bhk %></span>
+        <!-- SELLER -->
+        <% if (p.sellerId && p.sellerId.name) { %>
+          <p class="text-[10px] text-gray-500 uppercase tracking-wider">By: <%= p.sellerId.name %>
+          </p>
           <% } %>
 
-          <% if (p.size) { %>
-            <span class="mx-1">|</span>
-            <span><%= p.size %></span>
-          <% } %>
+            <!-- BHK | SIZE | LOCATION -->
+            <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">
 
-          <% if (p.locationDistrict || p.location) { %>
-            <span class="mx-1">|</span>
-            <span><%= p.locationDistrict || p.location %></span>
-          <% } %>
+              <% if (p.bhk) { %>
+                <span>
+                  <%= p.bhk %>
+                </span>
+                <% } %>
 
-        </p>
+                  <% if (p.size) { %>
+                    <span class="mx-1">|</span>
+                    <span>
+                      <%= p.size %>
+                    </span>
+                    <% } %>
+
+                      <% if (p.locationDistrict || p.location) { %>
+                        <span class="mx-1">|</span>
+                        <span>
+                          <%= p.locationDistrict || p.location %>
+                        </span>
+                        <% } %>
+
+            </p>
 
       </a>
 
-    <% }) %>
+      <% }) %>
 
-  <% } else { %>
+        <% } else { %>
 
-    <p class="text-gray-500 col-span-full text-center text-lg py-10">
-      No properties found.
-    </p>
+          <p class="text-gray-500 col-span-full text-center text-lg py-10">
+            No properties found.
+          </p>
 
-  <% } %>
+          <% } %>
 
 </div>
 
 
 <!-- PAGINATION -->
- <%- include('../partials/user/pagination.ejs', { pagination}) %>
+<%- include('../partials/user/pagination.ejs', { pagination}) %>

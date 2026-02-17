@@ -28,20 +28,8 @@ const razorpay = new Razorpay({
 
 
 const _handlePostPaymentActions = async (payment, userId) => {
-  if (payment.contextType === CONTEXT_TYPES.PROPERTY) {
-    const property = await Property.findById(payment.contextId);
-    await PropertyBid.findOneAndUpdate(
-      { propertyId: payment.contextId, bidderId: userId },
-      {
-        propertyId: payment.contextId,
-        bidderId: userId,
-        amount: property.basePrice || 0,
-        escrowPaymentId: payment._id,
-        bidStatus: BID_STATUS.ACTIVE,
-      },
-      { upsert: true, new: true }
-    );
-  }
+
+
   if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
       couponId: payment.metadata.coupon.id,

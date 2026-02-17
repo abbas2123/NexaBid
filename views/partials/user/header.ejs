@@ -82,12 +82,14 @@
 
             <!-- Notifications List -->
             <div id="notificationsList" class="space-y-3 max-h-64 overflow-y-auto"></div>
-
+            <div id="notificationPagination" class="flex gap-1 mt-2 flex-wrap"></div>
             <!-- Empty State -->
             <div id="noNotifications" class="py-6 text-center text-gray-500 dark:text-gray-400 hidden">
               No notifications yet.
             </div>
           </div>
+
+
         </div>
 
         <style>
@@ -187,13 +189,12 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
           });
-
+          const paginationBox = document.getElementById('notificationPagination');
           if (res.ok) {
-            // Clear UI instantly
             list.innerHTML = '';
+            paginationBox.innerHTML = '';
             emptyMsg.classList.remove('hidden');
             badge.classList.add('hidden');
-
           }
         } catch (err) {
           console.error('Clear notifications failed', err);
@@ -206,48 +207,84 @@
 <!-- Load Notifications Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
+
     const list = document.getElementById('notificationsList');
     const emptyMsg = document.getElementById('noNotifications');
     const badge = document.getElementById('notificationBadge');
+    const paginationBox = document.getElementById('notificationPagination');
 
+    let page = 1;
+
+    // MAIN LOAD FUNCTION
     async function loadNotifications() {
-      try {
-        const res = await fetch('/notifications');
-        const data = await res.json();
 
-        if (!data.success) return;
+      const res = await fetch(`/notifications?page=${page}`);
+      const data = await res.json();
 
-        const items = data.notifications;
+      if (!data.success) return;
 
-        if (items.length === 0) {
-          emptyMsg.classList.remove('hidden');
-          badge.classList.add('hidden');
-          return;
-        }
+      const items = data.notifications;
+      const { currentPage, totalPages } = data.pagination;
 
-        emptyMsg.classList.add('hidden');
+      // EMPTY STATE
+      if (items.length === 0) {
+        list.innerHTML = '';
+        emptyMsg.classList.remove('hidden');
+        badge.classList.add('hidden');
+        paginationBox.innerHTML = '';
+        return;
+      }
+
+      emptyMsg.classList.add('hidden');
+
+      if (data.unreadCount > 0) {
         badge.classList.remove('hidden');
-        badge.textContent = items.length;
+        badge.textContent = data.unreadCount;
+      } else {
+        badge.classList.add('hidden');
+      }
 
-        list.innerHTML = items
-          .map(
-            (n) => `
-          <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
-            <a href="${n.link || '#'}" class="font-medium">${n.message}</a>
-            <p class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</p>
-          </div>
-        `
-          )
-          .join('');
-      } catch (err) {
-        console.error('Notification load failed', err);
+      // RENDER NOTIFICATIONS
+      list.innerHTML = items.map(n => `
+      <div class="p-3 bg-gray-100 dark:bg-gray-700 rounded-lg">
+        <a href="${n.link || '#'}">${n.message}</a>
+        <p class="text-xs text-gray-500">
+          ${new Date(n.createdAt).toLocaleString()}
+        </p>
+      </div>
+    `).join('');
+
+      // BUILD PAGINATION BUTTONS
+      paginationBox.innerHTML = '';
+
+      for (let i = 1; i <= totalPages; i++) {
+        paginationBox.innerHTML += `
+        <button
+          class="px-2 py-1 text-xs rounded ${i === currentPage
+            ? 'bg-primary text-white'
+            : 'bg-gray-200 dark:bg-gray-600'
+          }"
+          onclick="goToNotificationPage(${i})">
+          ${i}
+        </button>
+      `;
       }
     }
 
-    loadNotifications(); // load once
+    // GLOBAL FUNCTION FOR BUTTON CLICK
+    window.goToNotificationPage = function (p) {
+      page = p;
+      loadNotifications();
+    };
+
+    // LOAD WHEN MODAL OPENS
+    document.getElementById('notificationBtn').addEventListener('click', () => {
+      page = 1;
+      loadNotifications();
+    });
+
   });
 </script>
-
 <!-- Load Unread Message Count Script -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
@@ -274,12 +311,12 @@
       }
     }
 
-    loadUnreadMessageCount(); // Load on page load
+    loadUnreadMessageCount();
 
-    // Optional: Refresh every 30 seconds
+
     setInterval(loadUnreadMessageCount, 30000);
 
-    // Make function globally accessible for updates
+
     window.loadUnreadMessageCount = loadUnreadMessageCount;
   });
 </script>

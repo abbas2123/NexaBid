@@ -225,9 +225,6 @@
       const res = await fetch(url, {
         method,
         body: formData,
-        headers: {
-          'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
       });
 
       // Handle CSRF/Session mismatch

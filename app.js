@@ -5,22 +5,13 @@ const http = require('http');
 const initLoaders = require('./loaders');
 
 const logger = require('./utils/logger');
-const socketIo = require('socket.io');
+
 
 async function startApp() {
-  // Validate Env
   require('./config/env');
 
   const app = express();
   const server = http.createServer(app);
-
-  // Socket.io setup (Export io instance)
-  const io = socketIo(server, {
-    cors: {
-      origin: '*', // Adjust for prod
-    },
-  });
-  app.set('io', io);
 
   await initLoaders({ app, server });
   app.get('/health', (req, res) => res.status(200).send('ok'));
@@ -37,7 +28,6 @@ async function startApp() {
     });
   }
 
-  // Graceful Shutdown Logic
   const gracefulShutdown = () => {
     logger.info('Received kill signal, shutting down gracefully');
     server.close(() => {

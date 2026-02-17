@@ -38,6 +38,7 @@ exports.getProperties = async (page = 1, filters = {}) => {
   }
   const total = await Property.countDocuments(query);
   const properties = await Property.find(query)
+    .populate('sellerId', 'name')
     .sort({ createdAt: -1, _id: -1 })
     .skip((page - 1) * limit)
     .limit(limit)
@@ -64,7 +65,7 @@ exports.getPropertyDetails = async (propertyId, user) => {
   const isOwner = property.sellerId?._id?.toString() === user._id.toString();
 
 
-  
+
   if (property.verificationStatus !== 'approved' && !isOwner && user.role !== 'admin') {
     return { property: null, userHasPaidForProperty: false, isOwner: false };
   }

@@ -1,5 +1,6 @@
 const propertyService = require('../../services/property/propertyService.js');
 const statusCode = require('../../utils/statusCode');
+const { parseLocalDatetime } = require('../../utils/datetime');
 const { LAYOUTS, VIEWS, ERROR_MESSAGES, SUCCESS_MESSAGES } = require('../../utils/constants');
 exports.getPropertyPage = async (req, res) => {
   try {
@@ -11,6 +12,7 @@ exports.getPropertyPage = async (req, res) => {
       maxPrice: req.query.maxPrice || '',
     };
     const { properties, pagination } = await propertyService.getProperties(page, filters);
+    console.log('properties',properties);
     res.render('user/property', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
@@ -93,8 +95,8 @@ exports.postCreateProperty = async (req, res) => {
       geoLng: geoLng ? Number(geoLng) : undefined,
       basePrice: basePrice ? Number(basePrice) : undefined,
       isAuction: isAuctionBool,
-      auctionStartsAt: auctionStartsAt ? new Date(auctionStartsAt) : undefined,
-      auctionEndsAt: auctionEndsAt ? new Date(auctionEndsAt) : undefined,
+      auctionStartsAt: parseLocalDatetime(auctionStartsAt),
+      auctionEndsAt: parseLocalDatetime(auctionEndsAt),
       auctionStep: auctionStep ? Number(auctionStep) : undefined,
       auctionReservePrice: auctionReservePrice ? Number(auctionReservePrice) : undefined,
       bhk,

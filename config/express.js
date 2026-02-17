@@ -18,13 +18,17 @@ const MongoStore = require('connect-mongo').default || require('connect-mongo');
 const mongoose = require('mongoose');
 
 module.exports = (app) => {
+  app.set('trust proxy', 1);
   app.set('view engine', 'ejs');
   app.set('views', path.join(__dirname, '../views'));
   app.use(expressLayouts);
   app.use(helmet({ contentSecurityPolicy: false }));
 
 
-  
+
+  app.use(express.static(path.join(__dirname, '../public')));
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+
   const morganFormat = process.env.NODE_ENV === 'development' ? 'dev' : 'combined';
   app.use(
     morgan(morganFormat, {
@@ -40,7 +44,6 @@ module.exports = (app) => {
   app.use(cookieParser());
 
   app.use(
-
     session({
       secret: process.env.SECRET,
       resave: false,
@@ -48,17 +51,16 @@ module.exports = (app) => {
       store: MongoStore.create({
         client: mongoose.connection.getClient(),
         dbName: 'NexaBid',
-        ttl: 14 * 24 * 60 * 60, 
+        ttl: 14 * 24 * 60 * 60,
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 14, 
+        maxAge: 1000 * 60 * 60 * 24 * 14,
         httpOnly: true,
         sameSite: 'lax',
         secure: process.env.NODE_ENV === 'production',
       },
     })
   );
-
 
   app.use(passport.initialize());
   app.use(passport.session());
@@ -102,6 +104,4 @@ module.exports = (app) => {
   app.use(setLocals);
   app.use(nocache);
   app.use(rateLimiter);
-  app.use(express.static(path.join(__dirname, '../public')));
-  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 };

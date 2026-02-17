@@ -1,5 +1,6 @@
 const ChatService = require('../services/chat/chatService');
 const ChatThread = require('../models/chatThread');
+const chatTyping = require('./chatTyping');
 const rateLimit = {};
 module.exports = (io, socket) => {
   const userId = socket.user?._id?.toString();
@@ -42,10 +43,10 @@ module.exports = (io, socket) => {
     }
     const room = `chat_${threadId}`;
     socket.join(room);
-    await ChatService.markThreadDelivered(threadId, userId);
-    socket.to(room).emit('messages_delivered', {
+    await ChatService.markThreadRead(threadId, userId);
+    socket.to(room).emit('messages_seen', {
       threadId,
-      deliveredBy: userId,
+      seenBy: userId,
     });
   });
   socket.on('mark_read', async ({ threadId }) => {
@@ -57,24 +58,16 @@ module.exports = (io, socket) => {
       seenBy: userId,
     });
   });
-  socket.on('leave_chat', ({ threadId }) => {
-    const room = `chat_${threadId}`;
-    socket.leave(room);
-  });
-  socket.on('typing', ({ threadId }) => {
-    const room = `chat_${threadId}`;
-    socket.to(room).emit('typing', { userId });
-  });
-  socket.on('stop_typing', ({ threadId }) => {
-    const room = `chat_${threadId}`;
-    socket.to(room).emit('stop_typing', { userId });
-  });
+
   socket.on('disconnecting', () => {
     const rooms = socket.rooms;
     rooms.forEach((room) => {
       if (room.startsWith('chat_')) {
-        socket.to(room).emit('stop_typing', { userId });
+        socket.to(room).emit('userStopTyping', { userId });
       }
     });
   });
+
+  // Load typing logic
+  chatTyping(io, socket);
 };

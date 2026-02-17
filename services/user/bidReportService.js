@@ -6,7 +6,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
     const { bidType, status, searchQuery, startDate, endDate } = filters;
     const skip = (page - 1) * limit;
 
-    
+
     const propertyMatch = {};
     if (userRole !== 'admin') propertyMatch.bidderId = userId;
     if (status && bidType !== 'tender') propertyMatch.bidStatus = status;
@@ -16,7 +16,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         if (endDate) propertyMatch.createdAt.$lte = new Date(endDate);
     }
 
-    
+
     const tenderMatch = {};
     if (userRole !== 'admin') tenderMatch.vendorId = userId;
     if (status && bidType !== 'property') tenderMatch.status = status;
@@ -28,7 +28,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
 
     const pipeline = [];
 
-    
+
     if (!bidType || bidType === 'all' || bidType === 'property') {
         pipeline.push({ $match: propertyMatch });
         pipeline.push({
@@ -38,18 +38,18 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
                 amount: 1,
                 status: '$bidStatus',
                 date: '$createdAt',
-                refId: '$propertyId',
+                referenceId: '$propertyId',
                 userId: '$bidderId'
             }
         });
     } else {
-        
-        
-        
+
+
+
         pipeline.push({ $match: { _id: null } });
     }
 
-    
+
     if (!bidType || bidType === 'all' || bidType === 'tender') {
         pipeline.push({
             $unionWith: {
@@ -63,7 +63,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
                             amount: '$quotes.amount',
                             status: '$status',
                             date: '$createdAt',
-                            refId: '$tenderId',
+                            referenceId: '$tenderId',
                             userId: '$vendorId'
                         }
                     }
@@ -72,12 +72,12 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         });
     }
 
-    
+
     pipeline.push(
         {
             $lookup: {
                 from: 'properties',
-                localField: 'refId',
+                localField: 'referenceId',
                 foreignField: '_id',
                 as: 'property'
             }
@@ -85,7 +85,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         {
             $lookup: {
                 from: 'tenders',
-                localField: 'refId',
+                localField: 'referenceId',
                 foreignField: '_id',
                 as: 'tender'
             }
@@ -110,12 +110,12 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
                 bidderName: { $arrayElemAt: ['$user.name', 0] },
                 bidderEmail: { $arrayElemAt: ['$user.email', 0] },
                 isWinning: {
-                    
-                    
-                    
-                    
-                    
-                    
+
+
+
+
+
+
                     $or: [
                         { $eq: ['$status', 'won'] },
                         { $eq: ['$status', 'awarded'] }
@@ -125,7 +125,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         }
     );
 
-    
+
     if (searchQuery) {
         pipeline.push({
             $match: {
@@ -134,7 +134,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
         });
     }
 
-    
+
     pipeline.push(
         { $sort: { date: -1 } },
         {
@@ -171,7 +171,7 @@ exports.getBidReportsData = async (userId, userRole, filters, page = 1, limit = 
     const statsData = result.stats[0] || { totalAmount: 0, activeCount: 0, wonCount: 0 };
 
     return {
-        bids, 
+        bids,
         stats: {
             totalBids: totalRecords,
             activeBids: statsData.activeCount,

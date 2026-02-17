@@ -27,7 +27,7 @@ const propertySchema = z.object({
     // Media (Files)
     media: z.preprocess(
         (val) => (val === undefined || val === null ? [] : val),
-        z.array(z.any()).min(1, { message: "At least 1 property image is required" })
+        z.array(z.any()).optional()
     )
 }).superRefine((data, ctx) => {
     // Check auction status carefully
@@ -51,17 +51,7 @@ const propertySchema = z.object({
         verify('auctionStartsAt', 'Auction Start Date');
         verify('auctionEndsAt', 'Auction End Date');
 
-        if (data.auctionStartsAt && data.auctionEndsAt) {
-            const start = new Date(data.auctionStartsAt);
-            const end = new Date(data.auctionEndsAt);
-            if (end <= start) {
-                ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
-                    message: 'End Date must be after Start Date',
-                    path: ['auctionEndsAt'],
-                });
-            }
-        }
+        // Date validation removed as per user request
     }
 });
 

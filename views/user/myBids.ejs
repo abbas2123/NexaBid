@@ -417,10 +417,14 @@
                 </div>
 
                 <div class="flex gap-3 pt-4">
+                    ${bid.referenceId ? `
                     <a href="${bid.type === 'property' ? '/properties/' + bid.referenceId : '/tenders/' + bid.referenceId}" 
                        class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-center">
                         View ${bid.type === 'property' ? 'Property' : 'Tender'} Details
                     </a>
+                    ` : `
+                    <p class="text-sm text-red-500 italic">Details unavailable for this bid</p>
+                    `}
                     <button onclick="closeBidModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition">
                         Close
                     </button>

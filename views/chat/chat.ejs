@@ -179,8 +179,8 @@
           <span
             class="material-symbols-outlined text-blue-600 group-hover:scale-110 transition-transform">attach_file</span>
         </button>
-        <input name="message" autocomplete="off" placeholder="Type a message..."
-          class="flex-1 px-4 py-3 rounded-full text-sm bg-slate-50 border-2 border-slate-200 text-slate-800 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white transition-all duration-200" />
+        <textarea name="message" autocomplete="off" placeholder="Type a message..." rows="1"
+          class="flex-1 px-4 py-3 rounded-2xl text-sm bg-slate-50 border-2 border-slate-200 text-slate-800 outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500 focus:bg-white transition-all duration-200 resize-none overflow-y-hidden max-h-32"></textarea>
         <button
           class="px-5 py-3 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-sm font-semibold shadow-md hover:shadow-lg transition-all duration-200 flex items-center gap-2 group">
           <span>Send</span>
@@ -199,10 +199,10 @@
 <script>
   const socket = io();
 
-  const THREADID = '<%= thread ? thread._id : "" %>';
-  const USERID = '<%= user._id %>';
-  const OTHERUSERID = '<%= (thread && otherUser) ? otherUser._id : "" %>';
-  const HASTHREAD = <%= !!thread %>;
+  const THREADID = '<%= thread ? thread._id.toString() : "" %>';
+  const USERID = '<%= user._id.toString() %>';
+  const OTHERUSERID = '<%= (thread && otherUser) ? otherUser._id.toString() : "" %>';
+  const HASTHREAD = <%= thread ? "true" : "false" %>;
 
   // Avatar initials helper
   function createAvatarInitial(name) {
@@ -250,7 +250,7 @@
   });
 
   const form = document.getElementById('chat-form');
-  const input = form?.querySelector('input[name="message"]');
+  const input = form?.querySelector('textarea[name="message"]');
   const box = document.getElementById('messages');
   const fileInput = document.getElementById('file-input');
   const attachBtn = document.getElementById('attach-btn');
@@ -439,33 +439,71 @@
 
   // Typing indicators
   let typingTimeout;
-  const typingStatusEl = document.getElementById('typing-status'); // need to add this element in HTML
+  let isTyping = false;
+  const typingStatusEl = document.getElementById('typing-status');
+  const typingStatusMobileEl = document.getElementById('typing-status-mobile');
 
-  if (input) {
-    input.addEventListener('input', () => {
-      socket.emit('typing', { threadId: THREADID });
-      clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        socket.emit('stop_typing', { threadId: THREADID });
-      }, 1000);
+  function updateTypingUI(show, text = '') {
+    const statusEls = document.querySelectorAll('.user-status, .user-status-mobile');
+    const typingEls = [typingStatusEl, typingStatusMobileEl];
+
+    typingEls.forEach(el => {
+      if (el) {
+        if (show) {
+          el.textContent = text;
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+          el.textContent = '';
+        }
+      }
+    });
+
+    // Hide user status (Online/Offline) when typing
+    statusEls.forEach(el => {
+      if (el) {
+        if (show) el.classList.add('hidden');
+        else el.classList.remove('hidden');
+      }
     });
   }
 
-  socket.on('typing', (data) => {
-    if (data.userId === OTHERUSERID) {
-      if (typingStatusEl) {
-        typingStatusEl.textContent = 'typing...';
-        typingStatusEl.classList.remove('hidden');
+  if (input) {
+    // Auto-resize logic
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+
+      if (!isTyping) {
+        socket.emit('typing', { threadId: THREADID });
+        isTyping = true;
       }
+
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        socket.emit('stop_typing', { threadId: THREADID });
+        isTyping = false;
+      }, 1500); // stop after 1.5 sec idle
+    });
+
+    // Handle Enter to send
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        form.dispatchEvent(new Event('submit'));
+      }
+    });
+  }
+
+  socket.on('userTyping', (data) => {
+    if (data.userId === OTHERUSERID) {
+      updateTypingUI(true, 'typing...');
     }
   });
 
-  socket.on('stop_typing', (data) => {
+  socket.on('userStopTyping', (data) => {
     if (data.userId === OTHERUSERID) {
-      if (typingStatusEl) {
-        typingStatusEl.classList.add('hidden');
-        typingStatusEl.textContent = '';
-      }
+      updateTypingUI(false);
     }
   });
 
@@ -482,6 +520,12 @@
       });
 
       input.value = '';
+      input.style.height = 'auto'; // Reset height
+
+      // Stop typing immediately when message is sent
+      clearTimeout(typingTimeout);
+      socket.emit('stop_typing', { threadId: THREADID });
+      isTyping = false;
     });
   }
 

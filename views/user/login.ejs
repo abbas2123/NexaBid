@@ -12,37 +12,39 @@
   <!-- TailwindCSS -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <%- include("../partials/common/csrfInterceptor.ejs") %>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#1D4ED8',
-            'background-light': '#FFFFFF',
-            'background-dark': '#111827',
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1D4ED8',
+              'background-light': '#FFFFFF',
+              'background-dark': '#111827',
+            },
+            fontFamily: { display: ['Inter', 'sans-serif'] },
+            borderRadius: { DEFAULT: '0.5rem' },
           },
-          fontFamily: { display: ['Inter', 'sans-serif'] },
-          borderRadius: { DEFAULT: '0.5rem' },
         },
-      },
-    };
-  </script>
+      };
+    </script>
 
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
 
-    .error-msg {
-      color: red;
-      font-size: 0.875rem;
-      margin-top: 4px;
-    }
-  </style>
+      .error-msg {
+        color: red;
+        font-size: 0.875rem;
+        margin-top: 4px;
+      }
+    </style>
 </head>
 
 <body class="bg-background-light dark:bg-background-dark font-display">
@@ -247,25 +249,6 @@
         text: 'This email is registered using password. Please login with email & password.',
       });
     }
-    // CSRF Global Fetch Interceptor
-    (function () {
-      const originalFetch = window.fetch;
-      window.fetch = function (url, options) {
-        options = options || {};
-        const method = (options.method || 'GET').toUpperCase();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-          options.headers = options.headers || {};
-          if (options.headers instanceof Headers) {
-            options.headers.set('X-CSRF-Token', csrfToken);
-          } else {
-            options.headers['X-CSRF-Token'] = csrfToken;
-          }
-        }
-        return originalFetch(url, options);
-      };
-    })();
   </script>
 </body>
 

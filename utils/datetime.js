@@ -3,7 +3,12 @@ function parseLocalDatetime(localStr) {
   const [d, t] = localStr.split('T');
   const [y, m, day] = d.split('-').map(Number);
   const [hh, mm] = t.split(':').map(Number);
-  return new Date(y, m - 1, day, hh, mm, 0, 0);
+  // IST is UTC + 5:30
+  // So, input time in IST = UTC time - 5:30
+  // We construct UTC timestamp for input components, then subtract 5.5 hours
+  const utcMs = Date.UTC(y, m - 1, day, hh, mm, 0, 0);
+  const istOffsetMs = 5.5 * 60 * 60 * 1000;
+  return new Date(utcMs - istOffsetMs);
 }
 function formatIST(date) {
   if (!date) return null;

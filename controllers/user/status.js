@@ -8,13 +8,17 @@ exports.propertyStatus = async (req, res) => {
     if (!req.user) {
       return res.redirect('/auth/login');
     }
-    const { properties } = await statusService.getPropertyStatus(req.user._id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const { properties, pagination } = await statusService.getPropertyStatus(req.user._id, page, limit);
     return res.render('profile/propertyStatus', {
       layout: LAYOUTS.USER_LAYOUT,
       properties,
+      pagination,
       user: req.user,
     });
   } catch (err) {
+    console.error('Property status error:', err);
     res.render(VIEWS.ERROR, { layout: LAYOUTS.USER_LAYOUT, message: ERROR_MESSAGES.SERVER_ERROR });
   }
 };
@@ -92,14 +96,18 @@ exports.deleteSingleMedia = async (req, res) => {
 exports.getTenderStatusPage = async (req, res) => {
   try {
     if (!req.user) return res.redirect('/auth/login');
-    const { tenders } = await statusService.getTenderStatus(req.user._id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = 10;
+    const { tenders, pagination } = await statusService.getTenderStatus(req.user._id, page, limit);
     return res.render('profile/tenderStatus', {
       layout: LAYOUTS.USER_LAYOUT,
       tenders,
+      pagination,
       user: req.user,
       title: 'My Tender Status',
     });
   } catch (error) {
+    console.error('Tender status error:', error);
     return res.render(VIEWS.ERROR, {
       layout: LAYOUTS.USER_LAYOUT,
       message: ERROR_MESSAGES.UNABLE_LOAD_TENDER_STATUS,

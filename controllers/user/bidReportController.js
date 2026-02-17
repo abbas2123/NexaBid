@@ -41,8 +41,7 @@ exports.getBidReports = async (req, res) => {
             queryParams: new URLSearchParams(req.query).toString() ? '&' + new URLSearchParams(req.query).toString() : '',
         });
     } catch (error) {
-        console.error('Error fetching bid reports:', error);
-        res.status(statusCode.INTERNAL_SERVER_ERROR).render('error', { message: 'Failed to load bid reports' });
+        next(error);
     }
 };
 

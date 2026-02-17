@@ -6,64 +6,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="<%= csrfToken %>">
 
-  <title>
-    <%= title %> - NexaBid
-  </title>
+  <%- include("../../partials/common/csrfInterceptor.ejs") %>
 
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-  <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
+    <title>
+      <%= title %> - NexaBid
+    </title>
 
-  <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#007AFF',
-            'background-light': '#F7FAFC',
-            'background-dark': '#1A202C',
-          },
-          fontFamily: {
-            display: ['Inter', 'sans-serif'],
-          },
-          borderRadius: {
-            DEFAULT: '0.75rem',
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@200;300;400;500;600;700" />
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#007AFF',
+              'background-light': '#F7FAFC',
+              'background-dark': '#1A202C',
+            },
+            fontFamily: {
+              display: ['Inter', 'sans-serif'],
+            },
+            borderRadius: {
+              DEFAULT: '0.75rem',
+            },
           },
         },
-      },
-    };
-  </script>
+      };
+    </script>
 
-  <style>
-    .material-icons {
-      font-family: 'Material Icons';
-      font-weight: normal;
-      font-style: normal;
-      font-size: 24px;
-      line-height: 1;
-      letter-spacing: normal;
-      text-transform: none;
-      display: inline-block;
-      white-space: nowrap;
-      word-wrap: normal;
-      direction: ltr;
-      -webkit-font-feature-settings: 'liga';
-      -webkit-font-smoothing: antialiased;
-    }
-  </style>
-  <!-- your meta, tailwind, fonts -->
-
-  <style>
-    @layer utilities {
-      .grid-cols-auto-fit {
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    <style>
+      .material-icons {
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        -webkit-font-feature-settings: 'liga';
+        font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
       }
-    }
-  </style>
+    </style>
+    <!-- your meta, tailwind, fonts -->
+
+    <style>
+      @layer utilities {
+        .grid-cols-auto-fit {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+      }
+    </style>
+
+
 </head>
 
 <body class="bg-background-light dark:bg-background-dark font-display">
@@ -102,50 +107,53 @@
     // Initialize Socket.IO
     const socket = io();
 
-      <% if (user) { %>
-      socket.emit("joinUser", "<%= user._id.toString() %>");
-      <% } %>
+    const currentUserId = "<%= user ? user._id.toString() : '' %>";
+    if (currentUserId) {
+      socket.emit("joinUser", currentUserId);
+    }
 
-      // Load notifications from DB
-      async function loadNotifications() {
-        const list = document.getElementById("notificationsList");
-        const emptyMsg = document.getElementById("noNotifications");
-        const badge = document.getElementById("notificationBadge");
+    // Load notifications from DB
+    async function loadNotifications() {
+      const list = document.getElementById("notificationsList");
+      const emptyMsg = document.getElementById("noNotifications");
+      const badge = document.getElementById("notificationBadge");
 
-        const res = await fetch("/notifications");
-        const data = await res.json();
+      const res = await fetch("/notifications");
+      const data = await res.json();
 
-        list.innerHTML = ""; // clear old items
+      if (!data.success) return;
 
-        if (data.length === 0) {
-          emptyMsg.classList.remove("hidden");
-          badge.classList.add("hidden");
-          return;
-        }
+      const items = data.notifications;
+      const unreadCount = data.unreadCount;
 
-        emptyMsg.classList.add("hidden");
+      list.innerHTML = ""; // clear old items
 
-        // Count unread notifications
-        const unread = data.filter(n => !n.isRead).length;
-
-        if (unread > 0) {
-          badge.classList.remove("hidden");
-          badge.innerText = unread;
-        } else {
-          badge.classList.add("hidden");
-        }
-
-        // Render ONLY unread notifications
-        data.filter(n => !n.isRead).forEach(n => {
-          const item = document.createElement("div");
-          item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
-          item.innerHTML = `
-        <p class="text-sm text-gray-800 dark:text-gray-200">${n.message}</p>
-        <span class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</span>
-      `;
-          list.append(item);
-        });
+      if (items.length === 0) {
+        emptyMsg.classList.remove("hidden");
+        badge.classList.add("hidden");
+        return;
       }
+
+      emptyMsg.classList.add("hidden");
+
+      if (unreadCount > 0) {
+        badge.classList.remove("hidden");
+        badge.innerText = unreadCount;
+      } else {
+        badge.classList.add("hidden");
+      }
+
+      // Render notifications in the dropdown
+      items.forEach(n => {
+        const item = document.createElement("div");
+        item.className = "p-3 rounded-lg bg-gray-100 dark:bg-gray-700";
+        item.innerHTML = `
+            <p class="text-sm text-gray-800 dark:text-gray-200">${n.message}</p>
+            <span class="text-xs text-gray-500">${new Date(n.createdAt).toLocaleString()}</span>
+          `;
+        list.append(item);
+      });
+    }
 
     loadNotifications();
 
@@ -203,25 +211,6 @@
 
     });
 
-    // CSRF Global Fetch Interceptor
-    (function () {
-      const originalFetch = window.fetch;
-      window.fetch = function (url, options) {
-        options = options || {};
-        const method = (options.method || 'GET').toUpperCase();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-        if (csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-          options.headers = options.headers || {};
-          if (options.headers instanceof Headers) {
-            options.headers.set('X-CSRF-Token', csrfToken);
-          } else {
-            options.headers['X-CSRF-Token'] = csrfToken;
-          }
-        }
-        return originalFetch(url, options);
-      };
-    })();
   </script>
 </body>
 

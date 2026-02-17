@@ -5,12 +5,26 @@ const { LAYOUTS, VIEWS, ERROR_MESSAGES } = require('../../utils/constants');
 exports.getMyListingPage = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { properties, tenders } = await listingService.getMyListings(userId);
+    const pPage = parseInt(req.query.pPage) || 1;
+    const tPage = parseInt(req.query.tPage) || 1;
+    const limit = 10;
+
+    const { properties, tenders, paginationP, paginationT } = await listingService.getMyListings(
+      userId,
+      pPage,
+      tPage,
+      limit
+    );
+
     res.render('profile/myListing', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       tenders,
+      paginationP,
+      paginationT,
+      queryParamsP: `&tPage=${tPage}`,
+      queryParamsT: `&pPage=${pPage}`,
     });
   } catch (err) {
     return res.status(statusCode.INTERNAL_SERVER_ERROR).render(VIEWS.ERROR, {
@@ -22,12 +36,22 @@ exports.getMyListingPage = async (req, res) => {
 exports.getMyParticipation = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { properties, tenders } = await myProfileService.getMyParticipationData(userId);
+    const pPage = parseInt(req.query.pPage) || 1;
+    const tPage = parseInt(req.query.tPage) || 1;
+    const limit = 10;
+
+    const { properties, tenders, paginationP, paginationT } =
+      await myProfileService.getMyParticipationData(userId, pPage, tPage, limit);
+
     return res.render('profile/myParticipation', {
       layout: LAYOUTS.USER_LAYOUT,
       user: req.user,
       properties,
       tenders,
+      paginationP,
+      paginationT,
+      queryParamsP: `&tPage=${tPage}`,
+      queryParamsT: `&pPage=${pPage}`,
     });
   } catch (err) {
     console.error('Participation Page Error:', err);

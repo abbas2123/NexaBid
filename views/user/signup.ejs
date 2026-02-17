@@ -12,35 +12,37 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
 
-  <!-- Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <%- include("../partials/common/csrfInterceptor.ejs") %>
 
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            primary: '#007bff',
-            'background-light': '#ffffff',
-            'background-dark': '#111827',
-            'surface-light': '#f3f4f6',
-            'surface-dark': '#1f2937',
-            'text-light-primary': '#111827',
-            'text-dark-primary': '#f9fafb',
+    <!-- Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#007bff',
+              'background-light': '#ffffff',
+              'background-dark': '#111827',
+              'surface-light': '#f3f4f6',
+              'surface-dark': '#1f2937',
+              'text-light-primary': '#111827',
+              'text-dark-primary': '#f9fafb',
+            },
+            fontFamily: { display: ['Inter', 'sans-serif'] },
+            borderRadius: { DEFAULT: '0.5rem' },
           },
-          fontFamily: { display: ['Inter', 'sans-serif'] },
-          borderRadius: { DEFAULT: '0.5rem' },
         },
-      },
-    };
-  </script>
+      };
+    </script>
 
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+    </style>
 </head>
 
 <body
@@ -183,7 +185,6 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             },
             body: JSON.stringify(userData),
           });

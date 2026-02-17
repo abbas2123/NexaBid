@@ -81,6 +81,10 @@
             </table>
           </div>
         </div>
+
+        <!-- PAGINATION FOR PROPERTY BIDS -->
+        <%- include('../partials/user/pagination.ejs', { pagination: paginationP, paramName: 'pPage' , queryParams:
+          queryParamsP }) %>
       </section>
 
       <!-- ====================================================== -->
@@ -154,6 +158,10 @@
             </table>
           </div>
         </div>
+
+        <!-- PAGINATION FOR TENDER OFFERS -->
+        <%- include('../partials/user/pagination.ejs', { pagination: paginationT, paramName: 'tPage' , queryParams:
+          queryParamsT }) %>
       </section>
     </div>
   </div>

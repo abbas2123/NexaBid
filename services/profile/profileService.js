@@ -78,10 +78,25 @@ exports.userStatus = async (userId) => {
     userTenders,
   };
 };
-exports.getMyParticipationData = async (userId) => {
-  const [participations, tenderParticipations] = await Promise.all([
-    PropertyParticipant.find({ userId }).populate('propertyId').lean(),
-    TenderParticipants.find({ userId }).populate('tenderId').lean(),
+exports.getMyParticipationData = async (userId, pPage = 1, tPage = 1, limit = 10) => {
+  const pSkip = (pPage - 1) * limit;
+  const tSkip = (tPage - 1) * limit;
+
+  const [pTotal, tTotal, participations, tenderParticipations] = await Promise.all([
+    PropertyParticipant.countDocuments({ userId }),
+    TenderParticipants.countDocuments({ userId }),
+    PropertyParticipant.find({ userId })
+      .populate('propertyId')
+      .sort({ createdAt: -1 })
+      .skip(pSkip)
+      .limit(limit)
+      .lean(),
+    TenderParticipants.find({ userId })
+      .populate('tenderId')
+      .sort({ createdAt: -1 })
+      .skip(tSkip)
+      .limit(limit)
+      .lean(),
   ]);
 
   const [bids, tenderBids] = await Promise.all([
@@ -184,7 +199,24 @@ exports.getMyParticipationData = async (userId) => {
         blockingReason: tender.blockingReason,
       };
     });
-  return { properties, tenders };
+  return {
+    properties,
+    tenders,
+    paginationP: {
+      total: pTotal,
+      totalPages: Math.ceil(pTotal / limit),
+      currentPage: parseInt(pPage),
+      hasNextPage: pPage * limit < pTotal,
+      hasPrevPage: pPage > 1,
+    },
+    paginationT: {
+      total: tTotal,
+      totalPages: Math.ceil(tTotal / limit),
+      currentPage: parseInt(tPage),
+      hasNextPage: tPage * limit < tTotal,
+      hasPrevPage: tPage > 1,
+    },
+  };
 };
 exports.getVendorPostAwardData = async (tenderId, userId) => {
   const tender = await Tender.findById(tenderId);

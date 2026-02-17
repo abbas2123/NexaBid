@@ -291,7 +291,7 @@
     <script>
       const slides = document.getElementById("slides");
       let index = 0;
-      const total = <%= property.media?.length || 0 %>;
+      const total = parseInt('<%= property.media?.length || 0 %>') || 0;
 
       if (total > 1) {
         document.getElementById("nextBtn").addEventListener("click", () => {
@@ -320,17 +320,14 @@
         try {
           const res = await fetch(`/properties/status/${propertyId}`);
           const data = await res.json();
+          const originallyBlocked = Boolean(<%= !!property.isBlocked %>);
           // If state changed to blocked, reload to show banner
-          if (data.success && data.isBlocked) {
-             <% if (!property.isBlocked) { %>
-              location.reload();
-             <% } %>
+          if (data.success && data.isBlocked && !originallyBlocked) {
+            location.reload();
           }
           // If state changed from blocked to unblocked, also reload
-          if (data.success && !data.isBlocked) {
-              <% if (property.isBlocked) { %>
-              location.reload();
-             <% } %>
+          if (data.success && !data.isBlocked && originallyBlocked) {
+            location.reload();
           }
         } catch (e) {
           console.error('Property status check failed', e);

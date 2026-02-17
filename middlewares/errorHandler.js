@@ -1,6 +1,7 @@
 const multer = require('multer');
 const statusCode = require('../utils/statusCode');
 const { LAYOUTS, TITLES } = require('../utils/constants');
+const logger = require('../utils/logger');
 
 
 module.exports = (err, req, res, _next) => {

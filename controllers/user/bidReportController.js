@@ -2,7 +2,7 @@ const bidReportService = require('../../services/user/bidReportService');
 const { LAYOUTS } = require('../../utils/constants');
 const statusCode = require('../../utils/statusCode');
 
-exports.getBidReports = async (req, res) => {
+exports.getBidReports = async (req, res, next) => {
     try {
         const currentUser = req.user || req.admin;
         if (!currentUser) {

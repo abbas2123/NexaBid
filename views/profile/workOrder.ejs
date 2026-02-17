@@ -262,8 +262,8 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11">  });
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
   document.getElementById('workOrderForm').addEventListener('submit', function () {
     Swal.fire({
       title: 'Issuing Work Order...',
@@ -274,8 +274,7 @@
       }
     });
   });
-</script>
-<script>
+
   let milestoneCount = 1;
   const minDate = '<%= new Date().toISOString().split("T")[0] %>';
 

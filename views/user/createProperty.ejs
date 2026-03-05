@@ -23,12 +23,14 @@
         <div>
           <label>Title *</label>
           <input name="title" id="title" value="<%= property?.title || '' %>" class="w-full border rounded p-2" />
+          <p id="titleError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div>
           <label>Description *</label>
           <textarea name="description" id="description" rows="4"
             class="w-full border rounded p-2"><%= property?.description || '' %></textarea>
+          <p id="descriptionError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div>
@@ -40,6 +42,7 @@
             <option value="land" <%=property?.type==="land" ? "selected" : "" %>>Land</option>
             <option value="commercial" <%=property?.type==="commercial" ? "selected" : "" %>>Commercial</option>
           </select>
+          <p id="typeError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -47,6 +50,8 @@
           <input placeholder="Size in sqft" name="size" id="size" value="<%= property?.size || '' %>"
             class="border rounded p-2" />
         </div>
+        <p id="bhkError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
+        <p id="sizeError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
 
       </div>
     </section>
@@ -58,6 +63,7 @@
 
       <input name="address" id="address" value="<%= property?.address || '' %>" placeholder="Enter address"
         class="w-full border rounded p-2" />
+      <p id="addressError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <input placeholder="State" name="locationState" id="locationState" value="<%= property?.locationState || '' %>"
@@ -105,6 +111,7 @@
               class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="0.00">
           </div>
+          <p id="basePriceError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div>
@@ -115,6 +122,7 @@
               class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="Increment amount">
           </div>
+          <p id="auctionStepError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <!-- Row 2 -->
@@ -127,6 +135,7 @@
               class="pl-8 w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               placeholder="Minimum selling price">
           </div>
+          <p id="auctionReservePriceError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div><!-- Spacer for layout balance if needed, or collapse grid --></div>
@@ -138,6 +147,7 @@
           <input type="datetime-local" id="auctionStartsAt" name="auctionStartsAt"
             value="<%= property?.auctionStartsAt ? new Date(property.auctionStartsAt).toISOString().slice(0,16) : '' %>"
             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <p id="auctionStartsAtError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
         <div>
@@ -146,6 +156,7 @@
           <input type="datetime-local" id="auctionEndsAt" name="auctionEndsAt"
             value="<%= property?.auctionEndsAt ? new Date(property.auctionEndsAt).toISOString().slice(0,16) : '' %>"
             class="w-full border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-blue-500">
+          <p id="auctionEndsAtError" class="error-msg hidden text-red-500 text-xs mt-1"></p>
         </div>
 
       </div>
@@ -271,27 +282,82 @@
     }
 
     // VALIDATION
+    const errorIds = ["titleError", "descriptionError", "typeError", "bhkError", "sizeError", "addressError", "basePriceError", "auctionStepError", "auctionReservePriceError", "auctionStartsAtError", "auctionEndsAtError"];
+    errorIds.forEach(id => document.getElementById(id)?.classList.add("hidden"));
+
+    let hasError = false;
+
     const title = document.getElementById('title').value.trim();
-    if (!title) return Swal.fire({ icon: "error", title: "Validation Error", text: "Title is required" });
+    if (!title) {
+      document.getElementById('titleError').textContent = "Title is required";
+      document.getElementById('titleError').classList.remove("hidden");
+      hasError = true;
+    }
 
     const description = document.getElementById('description').value.trim();
-    if (!description) return Swal.fire({ icon: "error", title: "Validation Error", text: "Description is required" });
+    if (!description) {
+      document.getElementById('descriptionError').textContent = "Description is required";
+      document.getElementById('descriptionError').classList.remove("hidden");
+      hasError = true;
+    }
 
     const type = document.getElementById('type').value;
-    if (!type) return Swal.fire({ icon: "error", title: "Validation Error", text: "Property Type is required" });
+    if (!type) {
+      document.getElementById('typeError').textContent = "Property Type is required";
+      document.getElementById('typeError').classList.remove("hidden");
+      hasError = true;
+    }
+
+    const address = document.getElementById('address').value.trim();
+    if (!address) {
+      document.getElementById('addressError').textContent = "Address is required";
+      document.getElementById('addressError').classList.remove("hidden");
+      hasError = true;
+    }
 
     const isAuction = isAuctionInput.checked;
     if (isAuction) {
-      if (!document.getElementById('basePrice').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Base Price is required" });
-      if (!document.getElementById('auctionStep').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction Step is required" });
-      if (!document.getElementById('auctionReservePrice').value) return Swal.fire({ icon: "error", title: "Validation Error", text: "Reserve Price is required" });
+      const basePrice = document.getElementById('basePrice').value;
+      if (!basePrice) {
+        document.getElementById('basePriceError').textContent = "Base Price is required";
+        document.getElementById('basePriceError').classList.remove("hidden");
+        hasError = true;
+      }
+
+      const auctionStep = document.getElementById('auctionStep').value;
+      if (!auctionStep) {
+        document.getElementById('auctionStepError').textContent = "Auction Step is required";
+        document.getElementById('auctionStepError').classList.remove("hidden");
+        hasError = true;
+      }
+
+      const auctionReservePrice = document.getElementById('auctionReservePrice').value;
+      if (!auctionReservePrice) {
+        document.getElementById('auctionReservePriceError').textContent = "Reserve Price is required";
+        document.getElementById('auctionReservePriceError').classList.remove("hidden");
+        hasError = true;
+      }
 
       const start = document.getElementById('auctionStartsAt').value;
       const end = document.getElementById('auctionEndsAt').value;
-      if (!start) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction Start Date is required" });
-      if (!end) return Swal.fire({ icon: "error", title: "Validation Error", text: "Auction End Date is required" });
-      if (new Date(start) >= new Date(end)) return Swal.fire({ icon: "error", title: "Validation Error", text: "End Date must be after Start Date" });
+      if (!start) {
+        document.getElementById('auctionStartsAtError').textContent = "Auction Start Date is required";
+        document.getElementById('auctionStartsAtError').classList.remove("hidden");
+        hasError = true;
+      }
+      if (!end) {
+        document.getElementById('auctionEndsAtError').textContent = "Auction End Date is required";
+        document.getElementById('auctionEndsAtError').classList.remove("hidden");
+        hasError = true;
+      }
+      if (start && end && new Date(start) >= new Date(end)) {
+        document.getElementById('auctionEndsAtError').textContent = "End Date must be after Start Date";
+        document.getElementById('auctionEndsAtError').classList.remove("hidden");
+        hasError = true;
+      }
     }
+
+    if (hasError) return;
 
     const propertyId = form.dataset.id;
     const lat = document.getElementById("geoLat").value.trim();

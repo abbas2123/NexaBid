@@ -85,6 +85,7 @@
                     <p class="text-sm mt-2">Click to upload</p>
                   </label>
                   <input type="file" id="proposalFiles" name="proposalFiles" multiple hidden />
+                  <p id="proposalFilesError" class="error-msg hidden"></p>
                   <div id="proposalPreview" class="text-sm text-primary font-semibold mt-2"></div>
                   <% } %>
             </div>
@@ -102,6 +103,7 @@
                     <p class="text-sm mt-2">Click to upload</p>
                   </label>
                   <input type="file" id="techFiles" name="techFiles" multiple hidden />
+                  <p id="techFilesError" class="error-msg hidden"></p>
                   <div id="techPreview" class="text-sm text-primary font-semibold mt-2"></div>
                   <% } %>
             </div>
@@ -125,11 +127,13 @@
      File Previews
   ========================== */
   document.getElementById("proposalFiles")?.addEventListener("change", (e) => {
+    document.getElementById("proposalFilesError")?.classList.add("hidden");
     proposalPreview.innerHTML =
       [...e.target.files].map(f => `📄 ${f.name}`).join("<br>");
   });
 
   document.getElementById("techFiles")?.addEventListener("change", (e) => {
+    document.getElementById("techFilesError")?.classList.add("hidden");
     techPreview.innerHTML =
       [...e.target.files].map(f => `📄 ${f.name}`).join("<br>");
   });
@@ -138,28 +142,48 @@
      Submit Validation
   ========================== */
   document.getElementById("bidUploadForm").addEventListener("submit", (e) => {
+    const paymentStatus = '<%= paymentStatus %>';
     const alreadyProposal = <%= bid && bid.proposal.files.length > 0 ? "true" : "false" %>;
     const alreadyTech = <%= bid && bid.techForms.files.length > 0 ? "true" : "false" %>;
 
-    const proposalCount = proposalFiles?.files.length || 0;
-    const techCount = techFiles?.files.length || 0;
+    const proposalFilesInput = document.getElementById('proposalFiles');
+    const techFilesInput = document.getElementById('techFiles');
+    const proposalFilesError = document.getElementById('proposalFilesError');
+    const techFilesError = document.getElementById('techFilesError');
 
-    if (!alreadyProposal && proposalCount === 0) {
+    // Clear previous errors
+    if (proposalFilesError) proposalFilesError.classList.add('hidden');
+    if (techFilesError) techFilesError.classList.add('hidden');
+
+    // ⛔ PREVENT SUBMISSION IF PAYMENT NOT DONE
+    if (paymentStatus !== 'paid') {
       e.preventDefault();
       return Swal.fire({
-        icon: "warning",
-        title: "Proposal Missing",
-        text: "Please upload Proposal documents."
+        icon: 'warning',
+        title: 'Payment Required',
+        text: 'Please complete Participation Fee & EMD before submitting documents.',
       });
     }
 
+    const proposalCount = proposalFilesInput?.files.length || 0;
+    const techCount = techFilesInput?.files.length || 0;
+    let hasError = false;
+
+    if (!alreadyProposal && proposalCount === 0) {
+      proposalFilesError.textContent = 'Please upload Proposal documents';
+      proposalFilesError.classList.remove('hidden');
+      hasError = true;
+    }
+
     if (!alreadyTech && techCount === 0) {
+      techFilesError.textContent = 'Please upload Technical documents';
+      techFilesError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (hasError) {
       e.preventDefault();
-      return Swal.fire({
-        icon: "warning",
-        title: "Technical Files Missing",
-        text: "Please upload Technical documents."
-      });
+      return;
     }
 
     // Show loading modal

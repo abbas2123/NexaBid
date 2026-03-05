@@ -25,6 +25,12 @@
         text-align: center;
         font-size: 20px;
       }
+
+      .error-msg {
+        color: red;
+        font-size: 0.875rem;
+        margin-top: 4px;
+      }
     </style>
 </head>
 
@@ -50,20 +56,20 @@
     <!-- OTP Form -->
     <form id="otpForm" class="space-y-6" method="post">
       <input type="hidden" id="userIdHidden" value="<%= userId %>" />
-      <div class="flex justify-center gap-3">
-        <% for(let i=1; i <=6; i++) { %>
-          <input id="otp<%= i %>" maxlength="1" type="text"
-            class="otp-input border-b-2 border-gray-400 focus:border-blue-600 outline-none" />
-          <% } %>
-      </div>
+      <% for(let i=1; i <=6; i++) { %>
+        <input id="otp<%= i %>" maxlength="1" type="text"
+          class="otp-input border-b-2 border-gray-400 focus:border-blue-600 outline-none" />
+        <% } %>
+  </div>
+  <p id="otpError" class="error-msg hidden"></p>
 
-      <p id="otp-timer" class="text-red-500 font-semibold">00:59</p>
-      <button id="resendOtpBtn" class="hidden text-blue-600 underline">Resend OTP</button>
-      <button id="verifyBtn" type="submit"
-        class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">
-        Verify
-      </button>
-    </form>
+  <p id="otp-timer" class="text-red-500 font-semibold">00:59</p>
+  <button id="resendOtpBtn" class="hidden text-blue-600 underline">Resend OTP</button>
+  <button id="verifyBtn" type="submit"
+    class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700">
+    Verify
+  </button>
+  </form>
   </div>
 
   <!-- SweetAlert -->
@@ -164,12 +170,17 @@
     document.getElementById('otpForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
+      const otpError = document.getElementById('otpError');
+      otpError.classList.add('hidden');
+
       const otp = Array.from(inputs)
         .map((i) => i.value)
         .join('');
 
       if (otp.length !== 6) {
-        return Swal.fire('Invalid OTP', 'Please enter 6 digits', 'error');
+        otpError.textContent = 'Please enter all 6 digits';
+        otpError.classList.remove('hidden');
+        return;
       }
 
       const route = '<%= mode %>' === 'forgot' ? '/auth/forgot-otp' : '/auth/verify-otp';

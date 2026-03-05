@@ -16,30 +16,31 @@
 
       <!-- TITLE -->
       <div class="mb-4">
-        <label class="block text-sm font-medium">Tender Title</label>
-        <input type="text" name="title" required value="<%= tender ? tender.title : '' %>"
+        <input type="text" name="title" id="title" required value="<%= tender ? tender.title : '' %>"
           class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+        <p id="titleError" class="error-msg hidden"></p>
       </div>
 
       <!-- DEPARTMENT -->
       <div class="mb-4">
-        <label class="block text-sm font-medium">Department</label>
-        <input type="text" name="dept" required value="<%= tender ? tender.dept : '' %>"
+        <input type="text" name="dept" id="dept" required value="<%= tender ? tender.dept : '' %>"
           class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+        <p id="deptError" class="error-msg hidden"></p>
       </div>
 
       <!-- CATEGORY -->
       <div class="mb-4">
-        <label class="block text-sm font-medium">Category</label>
-        <input type="text" name="category" required value="<%= tender ? tender.category : '' %>"
+        <input type="text" name="category" id="category" required value="<%= tender ? tender.category : '' %>"
           class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+        <p id="categoryError" class="error-msg hidden"></p>
       </div>
 
       <!-- DESCRIPTION -->
       <div class="mb-4">
         <label class="block text-sm font-medium">Description</label>
-        <textarea name="description" rows="4"
+        <textarea name="description" id="description" rows="4"
           class="mt-1 block w-full border rounded-lg p-2 text-sm"><%= tender ? tender.description || '' : '' %></textarea>
+        <p id="descriptionError" class="error-msg hidden"></p>
       </div>
 
       <!-- ELIGIBILITY CATEGORY -->
@@ -71,15 +72,18 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
           <label class="block text-sm font-medium">EMD Amount</label>
-          <input type="number" name="emdAmount"
+          <input type="number" name="emdAmount" id="emdAmount"
             value="<%= tender && tender.emdAmount != null ? tender.emdAmount : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="emdAmountError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium">Document Fee</label>
-          <input type="number" name="docFee" value="<%= tender && tender.docFee != null ? tender.docFee : '' %>"
+          <input type="number" name="docFee" id="docFee"
+            value="<%= tender && tender.docFee != null ? tender.docFee : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="docFeeError" class="error-msg hidden"></p>
         </div>
       </div>
 
@@ -90,37 +94,42 @@
 
         <div>
           <label class="block text-sm font-medium">Publish Date</label>
-          <input type="date" name="publishAt"
+          <input type="date" name="publishAt" id="publishAt"
             value="<%= tender && tender.publishAt ? new Date(tender.publishAt).toISOString().slice(0,10) : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="publishAtError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium">Bid Start Date</label>
-          <input type="date" name="bidStartAt"
+          <input type="date" name="bidStartAt" id="bidStartAt"
             value="<%= tender && tender.bidStartAt ? new Date(tender.bidStartAt).toISOString().slice(0,10) : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="bidStartAtError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-red-700 font-bold">Bid End Date *</label>
-          <input type="date" name="bidEndAt" required
+          <input type="date" name="bidEndAt" id="bidEndAt" required
             value="<%= tender && tender.bidEndAt ? new Date(tender.bidEndAt).toISOString().slice(0,10) : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="bidEndAtError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium">Technical Bid Open At</label>
-          <input type="date" name="techOpenAt"
+          <input type="date" name="techOpenAt" id="techOpenAt"
             value="<%= tender && tender.techOpenAt ? new Date(tender.techOpenAt).toISOString().slice(0,10) : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="techOpenAtError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium">Financial Bid Open At</label>
-          <input type="date" name="finOpenAt"
+          <input type="date" name="finOpenAt" id="finOpenAt"
             value="<%= tender && tender.finOpenAt ? new Date(tender.finOpenAt).toISOString().slice(0,10) : '' %>"
             class="mt-1 block w-full border rounded-lg p-2 text-sm" />
+          <p id="finOpenAtError" class="error-msg hidden"></p>
         </div>
 
       </div>
@@ -174,44 +183,84 @@
 
     const formData = new FormData(form);
 
-    // --- Date Validation ---
-    const publishAt = formData.get('publishAt');
-    const bidStartAt = formData.get('bidStartAt');
-    const bidEndAt = formData.get('bidEndAt');
-    const techOpenAt = formData.get('techOpenAt');
-    const finOpenAt = formData.get('finOpenAt');
+    // --- In-form Validation ---
+    const errorIds = [
+      'titleError', 'deptError', 'categoryError', 'descriptionError',
+      'emdAmountError', 'docFeeError', 'publishAtError', 'bidStartAtError',
+      'bidEndAtError', 'techOpenAtError', 'finOpenAtError'
+    ];
+    errorIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
 
-    if (bidStartAt && bidEndAt && new Date(bidEndAt) < new Date(bidStartAt)) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Invalid Dates',
-        text: 'Bid End Date cannot be earlier than Bid Start Date'
-      });
+    let hasError = false;
+
+    const title = document.getElementById('title').value.trim();
+    if (!title) {
+      document.getElementById('titleError').textContent = 'Tender Title is required';
+      document.getElementById('titleError').classList.remove('hidden');
+      hasError = true;
     }
 
-    if (publishAt && bidStartAt && new Date(bidStartAt) < new Date(publishAt)) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Invalid Dates',
-        text: 'Bid Start Date cannot be earlier than Publish Date'
-      });
+    const dept = document.getElementById('dept').value.trim();
+    if (!dept) {
+      document.getElementById('deptError').textContent = 'Department is required';
+      document.getElementById('deptError').classList.remove('hidden');
+      hasError = true;
     }
 
-    if (bidEndAt && techOpenAt && new Date(techOpenAt) < new Date(bidEndAt)) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Invalid Dates',
-        text: 'Technical Bid Opening Date cannot be earlier than Bid End Date'
-      });
+    const category = document.getElementById('category').value.trim();
+    if (!category) {
+      document.getElementById('categoryError').textContent = 'Category is required';
+      document.getElementById('categoryError').classList.remove('hidden');
+      hasError = true;
     }
 
-    if (techOpenAt && finOpenAt && new Date(finOpenAt) < new Date(techOpenAt)) {
-      return Swal.fire({
-        icon: 'error',
-        title: 'Invalid Dates',
-        text: 'Financial Bid Opening Date cannot be earlier than Technical Bid Opening Date'
-      });
+    const description = document.getElementById('description').value.trim();
+    if (!description) {
+      document.getElementById('descriptionError').textContent = 'Description is required';
+      document.getElementById('descriptionError').classList.remove('hidden');
+      hasError = true;
     }
+
+    const publishAtVal = document.getElementById('publishAt').value;
+    const bidStartAtVal = document.getElementById('bidStartAt').value;
+    const bidEndAtVal = document.getElementById('bidEndAt').value;
+    const techOpenAtVal = document.getElementById('techOpenAt').value;
+    const finOpenAtVal = document.getElementById('finOpenAt').value;
+
+    if (!bidEndAtVal) {
+      document.getElementById('bidEndAtError').textContent = 'Bid End Date is required';
+      document.getElementById('bidEndAtError').classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (bidStartAtVal && bidEndAtVal && new Date(bidEndAtVal) < new Date(bidStartAtVal)) {
+      document.getElementById('bidEndAtError').textContent = 'Bid End Date cannot be earlier than Bid Start Date';
+      document.getElementById('bidEndAtError').classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (publishAtVal && bidStartAtVal && new Date(bidStartAtVal) < new Date(publishAtVal)) {
+      document.getElementById('bidStartAtError').textContent = 'Bid Start Date cannot be earlier than Publish Date';
+      document.getElementById('bidStartAtError').classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (bidEndAtVal && techOpenAtVal && new Date(techOpenAtVal) < new Date(bidEndAtVal)) {
+      document.getElementById('techOpenAtError').textContent = 'Technical Bid Opening Date cannot be earlier than Bid End Date';
+      document.getElementById('techOpenAtError').classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (techOpenAtVal && finOpenAtVal && new Date(finOpenAtVal) < new Date(techOpenAtVal)) {
+      document.getElementById('finOpenAtError').textContent = 'Financial Bid Opening Date cannot be earlier than Technical Bid Opening Date';
+      document.getElementById('finOpenAtError').classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (hasError) return;
     // -----------------------
 
     // ✅ Correct URL + METHOD

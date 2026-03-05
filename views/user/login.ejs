@@ -176,21 +176,36 @@
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // Clear previous errors
+        emailError.classList.add('hidden');
+        passwordError.classList.add('hidden');
+
         const email = emailInput.value.trim();
         const password = passwordInput.value.trim();
-        // Client validation with SweetAlert
+        let hasError = false;
+
+        // In-form validation
         if (!email) {
-          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Email is required' });
+          emailError.textContent = 'Email is required';
+          emailError.classList.remove('hidden');
+          hasError = true;
+        } else if (!emailRegex.test(email)) {
+          emailError.textContent = 'Please enter a valid email';
+          emailError.classList.remove('hidden');
+          hasError = true;
         }
-        if (!emailRegex.test(email)) {
-          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please enter a valid email' });
-        }
+
         if (!password) {
-          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Password is required' });
+          passwordError.textContent = 'Password is required';
+          passwordError.classList.remove('hidden');
+          hasError = true;
+        } else if (password.length < 6) {
+          passwordError.textContent = 'Password must be at least 6 characters';
+          passwordError.classList.remove('hidden');
+          hasError = true;
         }
-        if (password.length < 6) {
-          return Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Password must be at least 6 characters' });
-        }
+
+        if (hasError) return;
 
         try {
           const res = await fetch('/auth/login', {
@@ -204,6 +219,32 @@
           const data = await res.json();
 
           if (!data.success) {
+            if (data.needsVerification) {
+              return Swal.fire({
+                icon: 'warning',
+                title: 'Verification Required',
+                text: 'Please verify your OTP first before logging in.',
+                showCancelButton: true,
+                confirmButtonText: 'Verify Now',
+                confirmButtonColor: '#1D4ED8',
+                cancelButtonText: 'Later'
+              }).then(async (result) => {
+                if (result.isConfirmed) {
+                  // Trigger resend and redirect
+                  try {
+                    await fetch('/auth/resend-otp', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ userId: data.userId })
+                    });
+                    window.location.href = `/auth/verify-otp?userId=${data.userId}`;
+                  } catch (err) {
+                    Swal.fire('Error', 'Failed to send OTP. Please try again.', 'error');
+                  }
+                }
+              });
+            }
+
             return Swal.fire({
               icon: 'error',
               title: 'Login Failed',

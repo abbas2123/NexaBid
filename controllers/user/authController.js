@@ -8,7 +8,6 @@ const {
   REDIRECTS,
   SUCCESS_MESSAGES,
 } = require('../../utils/constants');
-const User = require('../../models/user');
 exports.getSignupPage = (req, res) => {
   res.render(VIEWS.USER_SIGNUP, {
     layout: false,
@@ -54,8 +53,8 @@ exports.getVerifyOtpPage = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
-    const user = await User.findById(userId);
-    const response = await authService.verifyOtpService({ userId, otp });
+    const response = await authService.verifyOtpService({ userId, otp, mode: 'signup' });
+    const user = response.user;
     const token = jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
@@ -97,6 +96,8 @@ exports.loginUser = async (req, res) => {
     return res.status(err.statusCode || statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message || 'Somthing went wrong',
+      userId: err.userId,
+      needsVerification: err.needsVerification,
     });
   }
 };
@@ -141,7 +142,7 @@ exports.getForgotOtpPage = async (req, res) => {
 exports.postForgotOtp = async (req, res) => {
   try {
     const { userId, otp } = req.body;
-    const _result = await authService.verifyForgotOtService({ userId, otp });
+    const _result = await authService.verifyOtpService({ userId, otp, mode: 'forgot' });
     res.status(statusCode.OK).json({
       success: true,
       message: _result.message,

@@ -27,7 +27,7 @@ const propertySchema = z.object({
     // Media (Files)
     media: z.preprocess(
         (val) => (val === undefined || val === null ? [] : val),
-        z.array(z.any()).optional()
+        z.array(z.any()).min(1, { message: "At least 1 property image is required" })
     )
 }).superRefine((data, ctx) => {
     // Check auction status carefully

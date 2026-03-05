@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 module.exports = async () => {
-  if (process.env.NODE_ENV === 'test') {
+  if (process.env.NODE_ENV === 'test' && !process.env.MONGO_URI) {
     return;
   }
   try {

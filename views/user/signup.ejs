@@ -42,6 +42,12 @@
       body {
         font-family: 'Inter', sans-serif;
       }
+
+      .error-msg {
+        color: red;
+        font-size: 0.875rem;
+        margin-top: 4px;
+      }
     </style>
 </head>
 
@@ -88,17 +94,20 @@
         <div>
           <label class="block text-sm font-medium mb-1">Full Name</label>
           <input type="text" id="name" placeholder="Enter your full name" class="w-full px-3 py-3 border rounded-lg" />
+          <p id="nameError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium mb-1">Email</label>
           <input type="email" id="email" placeholder="Enter your email" class="w-full px-3 py-3 border rounded-lg" />
+          <p id="emailError" class="error-msg hidden"></p>
         </div>
 
         <div>
           <label class="block text-sm font-medium mb-1">Phone Number</label>
           <input type="tel" id="phone" placeholder="Enter your phone number"
             class="w-full px-3 py-3 border rounded-lg" />
+          <p id="phoneError" class="error-msg hidden"></p>
         </div>
 
         <div>
@@ -109,6 +118,7 @@
             <span id="togglePassword"
               class="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-500">👁️</span>
           </div>
+          <p id="passwordError" class="error-msg hidden"></p>
         </div>
 
         <button type="submit" class="w-full py-3 bg-primary text-white rounded-lg hover:bg-blue-600 transition">
@@ -160,23 +170,51 @@
       document.getElementById('signupForm').addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const name = document.getElementById('name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const phone = document.getElementById('phone').value.trim();
-        const password = document.getElementById('password').value.trim();
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
+        const passwordInput = document.getElementById('password');
+
+        const nameError = document.getElementById('nameError');
+        const emailError = document.getElementById('emailError');
+        const phoneError = document.getElementById('phoneError');
+        const passwordError = document.getElementById('passwordError');
+
+        // Clear previous errors
+        [nameError, emailError, phoneError, passwordError].forEach(err => err.classList.add('hidden'));
+
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const password = passwordInput.value.trim();
+        let hasError = false;
 
         // Client validation
-        if (!name || name.length < 3)
-          return Swal.fire('Invalid Name', 'Enter a valid full name', 'warning');
+        if (!name || name.length < 3) {
+          nameError.textContent = 'Enter a valid full name (min 3 chars)';
+          nameError.classList.remove('hidden');
+          hasError = true;
+        }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-          return Swal.fire('Invalid Email', 'Enter a valid email address', 'warning');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          emailError.textContent = 'Enter a valid email address';
+          emailError.classList.remove('hidden');
+          hasError = true;
+        }
 
-        if (!/^[0-9]{10}$/.test(phone))
-          return Swal.fire('Invalid Phone', 'Enter a valid 10-digit phone number', 'warning');
+        if (!/^[0-9]{10}$/.test(phone)) {
+          phoneError.textContent = 'Enter a valid 10-digit phone number';
+          phoneError.classList.remove('hidden');
+          hasError = true;
+        }
 
-        if (password.length < 6)
-          return Swal.fire('Weak Password', 'Minimum 6 characters required', 'warning');
+        if (password.length < 6) {
+          passwordError.textContent = 'Minimum 6 characters required';
+          passwordError.classList.remove('hidden');
+          hasError = true;
+        }
+
+        if (hasError) return;
 
         const userData = { name, email, phone, password };
 

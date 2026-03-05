@@ -1,23 +1,19 @@
-<div
-  class="min-h-screen font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200"
->
+<div class="min-h-screen font-display bg-background-light dark:bg-background-dark text-gray-800 dark:text-gray-200">
   <main class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
     <div class="max-w-4xl mx-auto">
       <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Contact Us</h1>
 
       <!-- FORM START -->
-      <form class="mt-8 space-y-6 w-full">
+      <form id="contactForm" class="mt-8 space-y-6 w-full">
         <!-- NAME -->
         <div>
           <label for="name" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
             Your Name
           </label>
-          <input
-            type="text"
-            id="name"
+          <input type="text" id="name"
             class="block w-full h-12 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-primary focus:border-primary"
-            placeholder="Enter your name"
-          />
+            placeholder="Enter your name" />
+          <p id="nameError" class="error-msg hidden"></p>
         </div>
 
         <!-- EMAIL -->
@@ -25,12 +21,10 @@
           <label for="email" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
             Your Email
           </label>
-          <input
-            type="email"
-            id="email"
+          <input type="email" id="email"
             class="block w-full h-12 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-primary focus:border-primary"
-            placeholder="Enter your email"
-          />
+            placeholder="Enter your email" />
+          <p id="emailError" class="error-msg hidden"></p>
         </div>
 
         <!-- SUBJECT -->
@@ -38,12 +32,10 @@
           <label for="subject" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
             Subject
           </label>
-          <input
-            type="text"
-            id="subject"
+          <input type="text" id="subject"
             class="block w-full h-12 px-4 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-primary focus:border-primary"
-            placeholder="Enter the subject"
-          />
+            placeholder="Enter the subject" />
+          <p id="subjectError" class="error-msg hidden"></p>
         </div>
 
         <!-- MESSAGE -->
@@ -51,19 +43,15 @@
           <label for="message" class="block text-sm font-medium text-gray-600 dark:text-gray-300">
             Message
           </label>
-          <textarea
-            id="message"
-            rows="5"
+          <textarea id="message" rows="5"
             class="block w-full p-4 bg-gray-50 dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-md focus:ring-primary focus:border-primary"
-            placeholder="Write your message"
-          ></textarea>
+            placeholder="Write your message"></textarea>
+          <p id="messageError" class="error-msg hidden"></p>
         </div>
 
         <!-- SUBMIT BUTTON -->
-        <button
-          type="submit"
-          class="rounded-md bg-primary text-white font-semibold h-12 w-full sm:w-40 hover:bg-blue-800 transition-all duration-300"
-        >
+        <button type="submit"
+          class="rounded-md bg-primary text-white font-semibold h-12 w-full sm:w-40 hover:bg-blue-800 transition-all duration-300">
           Submit
         </button>
       </form>
@@ -102,37 +90,24 @@
         <h2 class="text-xl font-bold dark:text-gray-100">Follow us on social media</h2>
 
         <div class="grid grid-cols-3 gap-6 pt-6">
-          <a
-            class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary"
-            href="#"
-          >
-            <div
-              class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
-            >
+          <a class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary" href="#">
+            <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <span class="material-icons text-xl">public</span>
             </div>
             <span class="text-sm mt-2">Twitter</span>
           </a>
 
-          <a
-            class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary"
-            href="https://www.facebook.com/profile.php?id=100067907118935"
-          >
-            <div
-              class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
-            >
+          <a class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary"
+            href="https://www.facebook.com/profile.php?id=100067907118935">
+            <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <span class="material-icons text-xl">facebook</span>
             </div>
             <span class="text-sm mt-2">Facebook</span>
           </a>
 
-          <a
-            class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary"
-            href="https://www.instagram.com/_.abbaaazz/"
-          >
-            <div
-              class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"
-            >
+          <a class="flex flex-col items-center text-gray-600 dark:text-gray-400 hover:text-primary"
+            href="https://www.instagram.com/_.abbaaazz/">
+            <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
               <span class="material-icons text-xl">photo_camera</span>
             </div>
             <span class="text-sm mt-2">Instagram</span>
@@ -142,3 +117,63 @@
     </div>
   </main>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById('contactForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const nameInput = document.getElementById('name');
+    const emailInput = document.getElementById('email');
+    const subjectInput = document.getElementById('subject');
+    const messageInput = document.getElementById('message');
+
+    const nameError = document.getElementById('nameError');
+    const emailError = document.getElementById('emailError');
+    const subjectError = document.getElementById('subjectError');
+    const messageError = document.getElementById('messageError');
+
+    // Clear previous errors
+    [nameError, emailError, subjectError, messageError].forEach(err => err.classList.add('hidden'));
+
+    let hasError = false;
+
+    if (!nameInput.value.trim()) {
+      nameError.textContent = 'Name is required';
+      nameError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (!emailInput.value.trim()) {
+      emailError.textContent = 'Email is required';
+      emailError.classList.remove('hidden');
+      hasError = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+      emailError.textContent = 'Enter a valid email address';
+      emailError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (!subjectInput.value.trim()) {
+      subjectError.textContent = 'Subject is required';
+      subjectError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (!messageInput.value.trim()) {
+      messageError.textContent = 'Message is required';
+      messageError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Message Sent!',
+      text: 'Thank you for contacting us. We will get back to you soon.',
+    }).then(() => {
+      this.reset();
+    });
+  });
+</script>

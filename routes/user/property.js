@@ -27,7 +27,7 @@ router.patch(
     { name: 'media', maxCount: 10 },
     { name: 'docs', maxCount: 10 },
   ]),
-  validate(propertySchema),
+  // validate(propertySchema),
   authController.updatePropertyController
 );
 module.exports = router;

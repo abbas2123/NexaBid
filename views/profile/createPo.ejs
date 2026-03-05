@@ -84,18 +84,21 @@
                   <p class="text-sm font-medium pb-2">Contract Amount</p>
                   <input name="amount" type="number" id="amount" value="<%= amount || '' %>"
                     class="form-input rounded-lg h-12 border bg-white dark:bg-background-dark px-4" />
+                  <p id="amountError" class="error-msg hidden"></p>
                 </label>
 
                 <label class="flex flex-col">
                   <p class="text-sm font-medium pb-2">Start Date</p>
                   <input name="startDate" type="date" id="startDate"
                     class="form-input rounded-lg h-12 border bg-white dark:bg-background-dark px-4" />
+                  <p id="startDateError" class="error-msg hidden"></p>
                 </label>
 
                 <label class="flex flex-col">
                   <p class="text-sm font-medium pb-2">End Date</p>
                   <input name="endDate" type="date" id="endDate"
                     class="form-input rounded-lg h-12 border bg-white dark:bg-background-dark px-4" />
+                  <p id="endDateError" class="error-msg hidden"></p>
                 </label>
               </div>
             </div>
@@ -107,6 +110,7 @@
               <label class="flex flex-col pt-6">
                 <textarea name="terms" id="terms" rows="6" placeholder="Enter detailed terms and conditions..."
                   class="form-textarea rounded-lg p-4 border bg-white dark:bg-background-dark"></textarea>
+                <p id="termsError" class="error-msg hidden"></p>
               </label>
             </div>
           </div>
@@ -154,31 +158,51 @@
     document.getElementById('poForm').addEventListener('submit', function (e) {
       e.preventDefault();
 
-      const amount = document.getElementById('amount').value;
-      const startDate = document.getElementById('startDate').value;
-      const endDate = document.getElementById('endDate').value;
-      const terms = document.getElementById('terms').value;
+      const amountInput = document.getElementById('amount');
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      const termsInput = document.getElementById('terms');
+
+      const amountError = document.getElementById('amountError');
+      const startDateError = document.getElementById('startDateError');
+      const endDateError = document.getElementById('endDateError');
+      const termsError = document.getElementById('termsError');
+
+      // Clear previous errors
+      [amountError, startDateError, endDateError, termsError].forEach(err => err.classList.add('hidden'));
+
+      const amount = amountInput.value;
+      const startDate = startDateInput.value;
+      const endDate = endDateInput.value;
+      const terms = termsInput.value.trim();
+      let hasError = false;
 
       if (!amount || amount <= 0) {
-        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Contract Amount is required.' });
-        return;
+        amountError.textContent = 'Contract Amount is required and must be greater than 0';
+        amountError.classList.remove('hidden');
+        hasError = true;
       }
       if (!startDate) {
-        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Start Date is required.' });
-        return;
+        startDateError.textContent = 'Start Date is required';
+        startDateError.classList.remove('hidden');
+        hasError = true;
       }
       if (!endDate) {
-        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'End Date is required.' });
-        return;
+        endDateError.textContent = 'End Date is required';
+        endDateError.classList.remove('hidden');
+        hasError = true;
+      } else if (startDate && new Date(endDate) < new Date(startDate)) {
+        endDateError.textContent = 'End Date cannot be earlier than Start Date';
+        endDateError.classList.remove('hidden');
+        hasError = true;
       }
-      if (new Date(endDate) < new Date(startDate)) {
-        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'End Date cannot be earlier than Start Date.' });
-        return;
+      if (!terms) {
+        termsError.textContent = 'Terms & Conditions are required';
+        termsError.classList.remove('hidden');
+        hasError = true;
       }
-      if (!terms || terms.trim() === '') {
-        Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Terms & Conditions are required.' });
-        return;
-      }
+
+      if (hasError) return;
 
       this.submit();
     });

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const otpSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', require: true },
+  userId: { type: mongoose.Schema.Types.ObjectId, require: true },
   otpHash: { type: String, require: true },
   createdAt: {
     type: Date,

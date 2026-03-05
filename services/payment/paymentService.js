@@ -28,9 +28,7 @@ const razorpay = new Razorpay({
 
 
 const _handlePostPaymentActions = async (payment, userId) => {
-
-
-  if (payment.metadata?.coupon) {
+ if (payment.metadata?.coupon) {
     const alreadyRedeemed = await CouponRedemption.findOne({
       couponId: payment.metadata.coupon.id,
       userId,

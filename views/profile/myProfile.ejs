@@ -43,8 +43,9 @@
     <!-- Full Name -->
     <div>
       <label class="block font-medium mb-1">Full Name</label>
-      <input type="text" name="name" value="<%= user?.name || '' %>"
+      <input type="text" name="name" id="profileName" value="<%= user?.name || '' %>"
         class="w-full px-4 py-3 border rounded-lg focus:ring-primary focus:outline-none" />
+      <p id="profileNameError" class="error-msg hidden"></p>
     </div>
 
     <!-- Email -->
@@ -58,8 +59,9 @@
     <% if (user?.phone) { %>
       <div>
         <label class="block font-medium mb-1">Phone Number</label>
-        <input type="text" name="phone" value="<%= user.phone %>"
+        <input type="text" name="phone" id="profilePhone" value="<%= user.phone %>"
           class="w-full px-4 py-3 border rounded-lg focus:ring-primary focus:outline-none" />
+        <p id="profilePhoneError" class="error-msg hidden"></p>
       </div>
       <% } else { %>
         <div class="p-4 bg-yellow-100 border border-yellow-300 rounded-lg text-yellow-800">
@@ -85,22 +87,25 @@
         <!-- Current Password -->
         <div>
           <label class="block font-medium mb-1">Current Password</label>
-          <input type="password" name="currentPassword"
+          <input type="password" name="currentPassword" id="currentPassword"
             class="w-full px-4 py-3 border rounded-lg focus:ring-primary focus:outline-none" />
+          <p id="currentPasswordError" class="error-msg hidden"></p>
         </div>
 
         <!-- New Password -->
         <div>
           <label class="block font-medium mb-1">New Password</label>
-          <input type="password" name="newPassword"
+          <input type="password" name="newPassword" id="newPassword"
             class="w-full px-4 py-3 border rounded-lg focus:ring-primary focus:outline-none" />
+          <p id="newPasswordError" class="error-msg hidden"></p>
         </div>
 
         <!-- Confirm Password -->
         <div>
           <label class="block font-medium mb-1">Confirm New Password</label>
-          <input type="password" name="confirmPassword"
+          <input type="password" name="confirmPassword" id="confirmPassword"
             class="w-full px-4 py-3 border rounded-lg focus:ring-primary focus:outline-none" />
+          <p id="confirmPasswordError" class="error-msg hidden"></p>
         </div>
 
         <button type="submit"
@@ -125,28 +130,47 @@
   document.getElementById('passwordForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
-    // Validation
-    const currentPassword = formData.get('currentPassword');
-    const newPassword = formData.get('newPassword');
-    const confirmPassword = formData.get('confirmPassword');
+    const currentPasswordInput = document.getElementById('currentPassword');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
 
-    if (!currentPassword || currentPassword.trim() === '') {
-      Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Current Password is required.' });
-      return;
+    const currentPasswordError = document.getElementById('currentPasswordError');
+    const newPasswordError = document.getElementById('newPasswordError');
+    const confirmPasswordError = document.getElementById('confirmPasswordError');
+
+    // Clear previous errors
+    [currentPasswordError, newPasswordError, confirmPasswordError].forEach(err => err.classList.add('hidden'));
+
+    const currentPassword = currentPasswordInput.value.trim();
+    const newPassword = newPasswordInput.value.trim();
+    const confirmPassword = confirmPasswordInput.value.trim();
+    let hasError = false;
+
+    if (!currentPassword) {
+      currentPasswordError.textContent = 'Current Password is required';
+      currentPasswordError.classList.remove('hidden');
+      hasError = true;
     }
-    if (!newPassword || newPassword.trim() === '') {
-      Swal.fire({ icon: 'error', title: 'Validation Error', text: 'New Password is required.' });
-      return;
+    if (!newPassword) {
+      newPasswordError.textContent = 'New Password is required';
+      newPasswordError.classList.remove('hidden');
+      hasError = true;
+    } else if (newPassword.length < 6) {
+      newPasswordError.textContent = 'Password must be at least 6 characters';
+      newPasswordError.classList.remove('hidden');
+      hasError = true;
     }
-    if (!confirmPassword || confirmPassword.trim() === '') {
-      Swal.fire({ icon: 'error', title: 'Validation Error', text: 'Please confirm your new password.' });
-      return;
+    if (!confirmPassword) {
+      confirmPasswordError.textContent = 'Please confirm your new password';
+      confirmPasswordError.classList.remove('hidden');
+      hasError = true;
+    } else if (newPassword !== confirmPassword) {
+      confirmPasswordError.textContent = 'New passwords do not match';
+      confirmPasswordError.classList.remove('hidden');
+      hasError = true;
     }
-    if (newPassword !== confirmPassword) {
-      Swal.fire({ icon: 'error', title: 'Validation Error', text: 'New passwords do not match.' });
-      return;
-    }
+
+    if (hasError) return;
 
     const res = await fetch('/user/settings/change-password', {
       method: 'POST',
@@ -182,31 +206,40 @@
   document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(e.target);
-    const name = formData.get('name');
-    const phone = formData.get('phone');
+    const nameInput = document.getElementById('profileName');
+    const phoneInput = document.getElementById('profilePhone');
+    const nameError = document.getElementById('profileNameError');
+    const phoneError = document.getElementById('profilePhoneError');
+
+    // Clear previous errors
+    if (nameError) nameError.classList.add('hidden');
+    if (phoneError) phoneError.classList.add('hidden');
+
+    const name = nameInput.value.trim();
+    let hasError = false;
 
     // Validation
-    if (!name || name.trim() === '') {
-      Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        text: 'Name is required.',
-      });
-      return;
+    if (!name) {
+      nameError.textContent = 'Name is required';
+      nameError.classList.remove('hidden');
+      hasError = true;
     }
 
     // Check if phone field exists in form (might be absent for Google auth users)
-    if (document.querySelector('input[name="phone"]')) {
-      if (!phone || phone.trim() === '') {
-        Swal.fire({
-          icon: 'error',
-          title: 'Validation Error',
-          text: 'Phone number is required.',
-        });
-        return;
+    if (phoneInput) {
+      const phone = phoneInput.value.trim();
+      if (!phone) {
+        phoneError.textContent = 'Phone number is required';
+        phoneError.classList.remove('hidden');
+        hasError = true;
+      } else if (!/^[0-9]{10}$/.test(phone)) {
+        phoneError.textContent = 'Enter a valid 10-digit phone number';
+        phoneError.classList.remove('hidden');
+        hasError = true;
       }
     }
+
+    if (hasError) return;
 
     // Add avatar if selected
     const avatarFile = document.getElementById('avatarUpload').files[0];

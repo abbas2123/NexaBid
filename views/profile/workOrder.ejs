@@ -46,6 +46,7 @@
               <input name="title" required value="<%= tender?.title || '' %>"
                 class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a222c] text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 placeholder="e.g. Roof Replacement Phase 1" />
+              <p id="titleError" class="error-msg hidden"></p>
             </div>
 
             <div>
@@ -56,6 +57,7 @@
                 class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a222c] text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical transition-all"
                 placeholder="Detailed description of the work to be performed...">
 <%= tender?.description || '' %></textarea>
+              <p id="descriptionError" class="error-msg hidden"></p>
             </div>
 
             <div>
@@ -135,7 +137,8 @@
               </label>
               <input name="startDate" required min="<%= new Date().toISOString().split('T')[0] %>"
                 class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a222c] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:[color-scheme:dark]"
-                type="date" />
+                type="date" id="startDate" />
+              <p id="startDateError" class="error-msg hidden"></p>
             </div>
 
             <div>
@@ -144,7 +147,8 @@
               </label>
               <input name="completionDate" required min="<%= new Date().toISOString().split('T')[0] %>"
                 class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a222c] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:[color-scheme:dark]"
-                type="date" />
+                type="date" id="completionDate" />
+              <p id="completionDateError" class="error-msg hidden"></p>
             </div>
 
             <div>
@@ -156,8 +160,9 @@
                 <input name="value" required min="0" step="0.01"
                   value="<%= typeof amount !== 'undefined' ? amount : '' %>"
                   class="w-full pl-8 pr-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1a222c] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  placeholder="0.00" type="number" />
+                  placeholder="0.00" type="number" id="value" />
               </div>
+              <p id="valueError" class="error-msg hidden"></p>
             </div>
           </div>
         </div>
@@ -264,7 +269,59 @@
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-  document.getElementById('workOrderForm').addEventListener('submit', function () {
+  document.getElementById('workOrderForm').addEventListener('submit', function (e) {
+    const titleInput = this.querySelector('[name="title"]');
+    const descriptionInput = this.querySelector('[name="description"]');
+    const startDateInput = document.getElementById('startDate');
+    const completionDateInput = document.getElementById('completionDate');
+    const valueInput = document.getElementById('value');
+
+    const titleError = document.getElementById('titleError');
+    const descriptionError = document.getElementById('descriptionError');
+    const startDateError = document.getElementById('startDateError');
+    const completionDateError = document.getElementById('completionDateError');
+    const valueError = document.getElementById('valueError');
+
+    // Clear errors
+    [titleError, descriptionError, startDateError, completionDateError, valueError].forEach(err => err.classList.add('hidden'));
+
+    let hasError = false;
+
+    if (!titleInput.value.trim()) {
+      titleError.textContent = 'Work Order Title is required';
+      titleError.classList.remove('hidden');
+      hasError = true;
+    }
+    if (!descriptionInput.value.trim()) {
+      descriptionError.textContent = 'Description of Scope is required';
+      descriptionError.classList.remove('hidden');
+      hasError = true;
+    }
+    if (!startDateInput.value) {
+      startDateError.textContent = 'Start Date is required';
+      startDateError.classList.remove('hidden');
+      hasError = true;
+    }
+    if (!completionDateInput.value) {
+      completionDateError.textContent = 'Completion Date is required';
+      completionDateError.classList.remove('hidden');
+      hasError = true;
+    } else if (startDateInput.value && completionDateInput.value < startDateInput.value) {
+      completionDateError.textContent = 'Completion Date must be after Start Date';
+      completionDateError.classList.remove('hidden');
+      hasError = true;
+    }
+    if (!valueInput.value || valueInput.value <= 0) {
+      valueError.textContent = 'Value must be greater than 0';
+      valueError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (hasError) {
+      e.preventDefault();
+      return;
+    }
+
     Swal.fire({
       title: 'Issuing Work Order...',
       text: 'Please wait while we generate the document',

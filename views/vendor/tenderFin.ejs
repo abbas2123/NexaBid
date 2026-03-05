@@ -21,8 +21,9 @@
           <!-- Amount -->
           <div class="p-6 rounded-xl border bg-white">
             <label class="font-bold text-lg">Quotation Amount (₹)</label>
-            <input type="number" name="amount" required class="w-full mt-3 border p-3 rounded-lg"
+            <input type="number" name="amount" id="amount" required class="w-full mt-3 border p-3 rounded-lg"
               placeholder="Enter quotation amount" />
+            <p id="amountError" class="error-msg hidden"></p>
           </div>
 
           <!-- Upload Inputs -->
@@ -37,6 +38,7 @@
 
               <!-- MUST MATCH multer fields: name="finForms" -->
               <input type="file" id="finFiles" name="finForms" hidden multiple />
+              <p id="finFilesError" class="error-msg hidden"></p>
               <div id="finPreview" class="text-primary text-sm mt-3 font-medium"></div>
             </div>
 
@@ -50,6 +52,7 @@
 
               <!-- MUST MATCH multer fields: name="quotationFiles" -->
               <input type="file" id="quoteFiles" name="quotationFiles" hidden multiple />
+              <p id="quoteFilesError" class="error-msg hidden"></p>
               <div id="quotePreview" class="text-primary text-sm mt-3 font-medium"></div>
             </div>
           </div>
@@ -60,6 +63,7 @@
               <input id="confirmCheck" type="checkbox" class="w-5 h-5" />
               <p class="text-sm">I confirm all details are true.</p>
             </label>
+            <p id="confirmCheckError" class="error-msg hidden"></p>
           </div>
 
           <!-- Submit -->
@@ -97,31 +101,44 @@
 
   // Submit validation + submit
   submitBtn.addEventListener('click', () => {
-    if (!confirmCheck.checked) {
-      return Swal.fire({
-        icon: 'warning',
-        title: 'Please Confirm',
-        text: 'Tick confirmation checkbox.',
-      });
+    const amountInput = document.getElementById('amount');
+    const amountError = document.getElementById('amountError');
+    const finFilesError = document.getElementById('finFilesError');
+    const quoteFilesError = document.getElementById('quoteFilesError');
+    const confirmCheckError = document.getElementById('confirmCheckError');
+
+    // Clear previous errors
+    [amountError, finFilesError, quoteFilesError, confirmCheckError].forEach(err => err?.classList.add('hidden'));
+
+    let hasError = false;
+
+    if (!amountInput.value || amountInput.value <= 0) {
+      amountError.textContent = 'Enter a valid quotation amount';
+      amountError.classList.remove('hidden');
+      hasError = true;
     }
 
     const finCount = finInput?.files?.length || 0;
     const quoteCount = quoteInput?.files?.length || 0;
 
     if (finCount === 0) {
-      return Swal.fire({
-        icon: 'warning',
-        title: 'Missing Financial Forms',
-        text: 'Please upload financial forms.',
-      });
+      finFilesError.textContent = 'Please upload financial forms';
+      finFilesError.classList.remove('hidden');
+      hasError = true;
     }
     if (quoteCount === 0) {
-      return Swal.fire({
-        icon: 'warning',
-        title: 'Missing Quotation Docs',
-        text: 'Please upload quotation documents.',
-      });
+      quoteFilesError.textContent = 'Please upload quotation documents';
+      quoteFilesError.classList.remove('hidden');
+      hasError = true;
     }
+
+    if (!confirmCheck.checked) {
+      confirmCheckError.textContent = 'Please confirm all details are true';
+      confirmCheckError.classList.remove('hidden');
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     // All good → submit native form
     Swal.fire({

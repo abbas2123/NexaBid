@@ -74,6 +74,7 @@
               <input type="number" id="customAmount" min="100" step="100" placeholder="Enter amount"
                 class="w-full pl-12 pr-4 py-4 text-2xl font-bold border-2 border-gray-200 rounded-xl focus:border-indigo-600 focus:ring-0 transition-colors"
                 oninput="updateAmount(this.value)" />
+              <p id="amountError" class="error-msg hidden"></p>
             </div>
             <p class="text-sm text-gray-500 mt-2">Minimum amount: ₹100</p>
           </div>
@@ -202,17 +203,26 @@
 
     function updateAmount(amount) {
       selectedAmount = parseFloat(amount) || 0;
+      const amountError = document.getElementById('amountError');
+
       document.getElementById('displayAmount').textContent =
         '₹' + selectedAmount.toLocaleString('en-IN');
       document.getElementById('totalAmount').textContent =
         '₹' + selectedAmount.toLocaleString('en-IN');
 
-      // Enable/disable button
+      // Enable/disable button + show error
       const proceedBtn = document.getElementById('proceedBtn');
       if (selectedAmount >= 100) {
         proceedBtn.disabled = false;
+        amountError.classList.add('hidden');
       } else {
         proceedBtn.disabled = true;
+        if (selectedAmount > 0) {
+          amountError.textContent = 'Minimum amount: ₹100';
+          amountError.classList.remove('hidden');
+        } else {
+          amountError.classList.add('hidden');
+        }
       }
     }
 
